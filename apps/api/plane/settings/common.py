@@ -111,11 +111,27 @@ INSTALLED_APPS = [
     "plane.license",
     "plane.api",
     "plane.authentication",
+    "plane.curve",
     # Third-party things
     "rest_framework",
     "corsheaders",
     "django_celery_beat",
 ]
+
+# Curve is an additive, workspace-scoped module. Both the global switch and an
+# explicit workspace allowlist are required so an empty or missing local
+# configuration fails closed.
+CURVE_ENABLED = os.environ.get("CURVE_ENABLED", "0").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+CURVE_ENABLED_WORKSPACE_SLUGS = frozenset(
+    slug.strip()
+    for slug in os.environ.get("CURVE_ENABLED_WORKSPACE_SLUGS", "").split(",")
+    if slug.strip()
+)
 
 # Middlewares
 MIDDLEWARE = [

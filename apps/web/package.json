@@ -12,6 +12,7 @@
     "clean": "rm -rf .turbo && rm -rf .next && rm -rf .react-router && rm -rf node_modules && rm -rf dist && rm -rf build",
     "check:lint": "oxlint --max-warnings=11957 .",
     "check:types": "react-router typegen && tsc --noEmit",
+    "test": "vitest run",
     "check:format": "oxfmt --check .",
     "fix:lint": "oxlint --fix .",
     "fix:format": "oxfmt ."
@@ -78,14 +79,18 @@
     "@react-router/dev": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@tailwindcss/typography": "catalog:",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.0",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-color": "catalog:",
     "@types/react-dom": "catalog:",
     "dotenv": "catalog:",
+    "jsdom": "26.1.0",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-tsconfig-paths": "catalog:"
+    "vite-tsconfig-paths": "catalog:",
+    "vitest": "catalog:"
   }
 }
