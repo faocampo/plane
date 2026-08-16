@@ -20,6 +20,7 @@ import { ChevronRightIcon } from "@plane/propel/icons";
 import { cn } from "@plane/utils";
 // components
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
+import { CurveSidebarItem } from "@/components/curve/curve-sidebar-item";
 // store hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import useLocalStorage from "@/hooks/use-local-storage";
@@ -153,6 +154,7 @@ export const SidebarMenuItems = observer(function SidebarMenuItems() {
                   // oxlint-disable-next-line react/no-array-index-key
                   <SidebarItemBase key={`static_${_index}`} item={item} />
                 ))}
+                <CurveSidebarItem />
                 {sortedNavigationItems.map((item, _index) => (
                   // oxlint-disable-next-line react/no-array-index-key
                   <SidebarItemBase key={`dynamic_${_index}`} item={item} />

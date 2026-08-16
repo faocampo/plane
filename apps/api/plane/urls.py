@@ -24,6 +24,15 @@ urlpatterns = [
     path("", include("plane.web.urls")),
 ]
 
+
+def get_curve_urlpatterns():
+    if not settings.CURVE_ENABLED:
+        return []
+    return [path("api/v1/", include("plane.curve.urls"))]
+
+
+urlpatterns += get_curve_urlpatterns()
+
 if settings.ENABLE_DRF_SPECTACULAR:
     urlpatterns += [
         path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
