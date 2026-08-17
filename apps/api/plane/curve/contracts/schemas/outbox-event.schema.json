@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/outbox-event.schema.json",
+  "title": "Curve transactional outbox event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "event_id",
+    "destination",
+    "state",
+    "attempt_count",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "event_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "destination": { "type": "string", "pattern": "^[A-Z][A-Z0-9_.-]{0,127}$" },
+    "state": { "type": "string", "enum": ["PENDING", "CLAIMED", "DELIVERED", "RETRY_SCHEDULED", "DEAD_LETTER"] },
+    "attempt_count": { "type": "integer", "minimum": 0 },
+    "next_attempt_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "claimed_by": { "type": ["string", "null"], "maxLength": 255 },
+    "claimed_until": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "delivered_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "last_error": { "$ref": "common.schema.json#/$defs/SafeError" },
+    "created_at": { "$ref": "common.schema.json#/$defs/Instant" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "CLAIMED" } } },
+      "then": {
+        "properties": {
+          "claimed_by": { "type": "string", "minLength": 1, "maxLength": 255 },
+          "claimed_until": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["claimed_by", "claimed_until"]
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "RETRY_SCHEDULED" } } },
+      "then": {
+        "properties": {
+          "next_attempt_at": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["next_attempt_at", "last_error"]
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "DELIVERED" } } },
+      "then": {
+        "properties": {
+          "delivered_at": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["delivered_at"]
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "DEAD_LETTER" } } },
+      "then": { "required": ["last_error"] }
+    }
+  ]
+}

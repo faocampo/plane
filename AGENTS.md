@@ -23,6 +23,10 @@
 - **Testing**: All features require unit tests, use existing test framework per package
 - **Components**: Build in `@plane/ui` with Storybook for isolated development
 
+## Document References
+
+- Every reference to a document, specification, ADR, requirement set, task packet, or file must immediately include a brief title or content summary in parentheses. Apply this convention in agent updates, plans, reviews, implementation notes, PR descriptions, and generated documentation. Examples: `D-003 (runtime topology and trust-zone decision)` and `development-plan.md (milestones, dependencies, and delivery sequencing)`.
+
 ## Backend tests (Docker)
 
 The Django/pytest suite for `apps/api` runs in an isolated stack defined by `docker-compose-test.yml` at the repo root.

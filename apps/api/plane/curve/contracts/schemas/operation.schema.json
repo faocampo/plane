@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/operation.schema.json",
+  "title": "Curve Operation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "operation_type",
+    "status",
+    "version",
+    "command_type",
+    "target",
+    "idempotency_key_digest",
+    "created_at",
+    "updated_at",
+    "created_by",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "operation_type": {
+      "type": "string",
+      "enum": ["FOUNDATION_PROBE", "WORKFLOW_COMMAND", "PROVIDER_RECONCILIATION"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING", "QUEUED", "RUNNING", "WAITING_FOR_HUMAN", "CANCEL_REQUESTED", "SUCCEEDED", "FAILED", "CANCELLED"]
+    },
+    "version": { "$ref": "common.schema.json#/$defs/AggregateVersion" },
+    "command_type": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,99}$" },
+    "target": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "idempotency_key_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "causation_id": { "type": ["string", "null"], "maxLength": 255 },
+    "workflow_id": { "type": ["string", "null"], "maxLength": 1000 },
+    "policy_version_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "progress_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "progress_summary": { "type": ["string", "null"], "maxLength": 2000 },
+    "result_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "error": { "$ref": "common.schema.json#/$defs/SafeError" },
+    "created_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "updated_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "started_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "last_heartbeat_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "completed_at": {
+      "oneOf": [
+        { "$ref": "common.schema.json#/$defs/Instant" },
+        { "type": "null" }
+      ]
+    },
+    "created_by": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "effective_principal": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "correlation_id": { "type": "string", "minLength": 1, "maxLength": 255 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["SUCCEEDED", "FAILED", "CANCELLED"] } } },
+      "then": {
+        "properties": {
+          "completed_at": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["completed_at"]
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "FAILED" } } },
+      "then": {
+        "properties": { "error": { "$ref": "common.schema.json#/$defs/SafeError" } },
+        "required": ["error"]
+      }
+    }
+  ]
+}

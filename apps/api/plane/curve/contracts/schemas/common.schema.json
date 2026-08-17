@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/common.schema.json",
+  "title": "Curve common contract types",
+  "$defs": {
+    "OpaqueId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "WorkspaceId": {
+      "$ref": "#/$defs/OpaqueId"
+    },
+    "AggregateVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "Instant": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "ActorRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {
+          "type": "string",
+          "enum": ["HUMAN", "SERVICE", "AGENT", "SYSTEM"]
+        },
+        "actor_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      }
+    },
+    "DataClassification": {
+      "type": "string",
+      "enum": ["INTERNAL", "CONFIDENTIAL", "RESTRICTED"]
+    },
+    "ResourceRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource_type", "resource_id"],
+      "properties": {
+        "resource_type": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,99}$" },
+        "resource_id": { "$ref": "#/$defs/OpaqueId" },
+        "resource_version": { "$ref": "#/$defs/AggregateVersion" }
+      }
+    },
+    "ObjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["object_id", "digest", "size_bytes", "media_type"],
+      "properties": {
+        "object_id": { "$ref": "#/$defs/OpaqueId" },
+        "digest": { "$ref": "#/$defs/Digest" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "media_type": { "type": "string", "minLength": 1, "maxLength": 255 }
+      }
+    },
+    "SafeError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "retryable"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,99}$" },
+        "retryable": { "type": "boolean" },
+        "detail_ref": { "$ref": "#/$defs/ObjectRef" }
+      }
+    },
+    "ProblemDetails": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type", "title", "status", "correlation_id"],
+      "properties": {
+        "type": { "type": "string", "format": "uri-reference" },
+        "title": { "type": "string" },
+        "status": { "type": "integer", "minimum": 400, "maximum": 599 },
+        "detail": { "type": "string" },
+        "instance": { "type": "string", "format": "uri-reference" },
+        "correlation_id": { "type": "string", "minLength": 1 },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "field": { "type": "string" },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
