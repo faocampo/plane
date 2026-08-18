@@ -44,7 +44,7 @@ if SECRET_KEY in _INSECURE_SECRET_KEYS:
         "This makes your installation vulnerable to session forgery, CSRF bypass, and "
         "password-reset token forging. Set a unique SECRET_KEY before deploying to production. "
         "Generate one with: "
-        "python3 -c \"from django.utils.crypto import get_random_secret_key; print(get_random_secret_key())\""
+        'python3 -c "from django.utils.crypto import get_random_secret_key; print(get_random_secret_key())"'
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -74,9 +74,7 @@ for _cidr in _webhook_allowed_ips_raw.split(","):
 # Example: "silo,silo.namespace.svc.cluster.local,internal-api.lan"
 _webhook_allowed_hosts_raw = os.environ.get("WEBHOOK_ALLOWED_HOSTS", "")
 WEBHOOK_ALLOWED_HOSTS = [
-    _host.strip().rstrip(".").lower()
-    for _host in _webhook_allowed_hosts_raw.split(",")
-    if _host.strip()
+    _host.strip().rstrip(".").lower() for _host in _webhook_allowed_hosts_raw.split(",") if _host.strip()
 ]
 
 # Webhook disallowed domains — comma-separated hostnames. Webhooks targeting
@@ -85,9 +83,7 @@ WEBHOOK_ALLOWED_HOSTS = [
 # for self-hosted deployments; set to e.g. "plane.so" to block specific domains.
 _webhook_disallowed_domains_raw = os.environ.get("WEBHOOK_DISALLOWED_DOMAINS", "")
 WEBHOOK_DISALLOWED_DOMAINS = [
-    _d.strip().rstrip(".").lower()
-    for _d in _webhook_disallowed_domains_raw.split(",")
-    if _d.strip()
+    _d.strip().rstrip(".").lower() for _d in _webhook_disallowed_domains_raw.split(",") if _d.strip()
 ]
 
 # Allowed Hosts
@@ -128,10 +124,10 @@ CURVE_ENABLED = os.environ.get("CURVE_ENABLED", "0").strip().lower() in {
     "on",
 }
 CURVE_ENABLED_WORKSPACE_SLUGS = frozenset(
-    slug.strip()
-    for slug in os.environ.get("CURVE_ENABLED_WORKSPACE_SLUGS", "").split(",")
-    if slug.strip()
+    slug.strip() for slug in os.environ.get("CURVE_ENABLED_WORKSPACE_SLUGS", "").split(",") if slug.strip()
 )
+CURVE_ENVIRONMENT = os.environ.get("CURVE_ENVIRONMENT", "").strip().upper()
+CURVE_POLICY_RECORDER_ACTOR_ID = os.environ.get("CURVE_POLICY_RECORDER_ACTOR_ID", "").strip()
 
 # Middlewares
 MIDDLEWARE = [

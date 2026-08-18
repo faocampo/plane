@@ -13,6 +13,7 @@ from plane.curve.models import (
     InboxMessage,
     Operation,
     OutboxEvent,
+    PolicyDecision,
 )
 
 
@@ -168,4 +169,35 @@ def serialize_audit_event(event: AuditEvent) -> dict[str, Any]:
             causation_id=event.causation_id,
             idempotency_key_digest=event.idempotency_key_digest,
         ),
+    }
+
+
+def serialize_policy_decision(decision: PolicyDecision) -> dict[str, Any]:
+    resource_ref = {
+        "resource_type": decision.resource_type,
+        "resource_id": str(decision.resource_id),
+    }
+    if decision.resource_version is not None:
+        resource_ref["resource_version"] = decision.resource_version
+    return {
+        "schema_version": decision.schema_version,
+        "id": str(decision.id),
+        "workspace_id": str(decision.workspace_id),
+        "sequence": decision.sequence,
+        "action": decision.action,
+        "resource_ref": resource_ref,
+        "subject": decision.subject,
+        "effective_principal": decision.effective_principal,
+        "effect": decision.effect,
+        "reason_codes": decision.reason_codes,
+        "policy_key": decision.policy_key,
+        "policy_version": decision.policy_version,
+        "policy_manifest_digest": decision.policy_manifest_digest,
+        "input_digest": decision.input_digest,
+        "normalized_classification": decision.normalized_classification,
+        "permitted_projection": decision.permitted_projection,
+        "evaluated_at": decision.evaluated_at.isoformat(),
+        "recorded_at": decision.recorded_at.isoformat(),
+        "recorded_by": decision.recorded_by,
+        "correlation_id": decision.correlation_id,
     }

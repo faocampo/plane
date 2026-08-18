@@ -2,6 +2,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 import json
+from types import SimpleNamespace
 
 import pytest
 from django.db import close_old_connections
@@ -15,13 +16,19 @@ from plane.curve.models import (
     InboxMessage,
     Operation,
     OperationStatus,
-    OperationType,
     OutboxEvent,
     OutboxState,
+    PolicyDecision,
+)
+from plane.curve.policy_services import (
+    CurvePolicyDenied,
+    CurvePolicyResourceNotFound,
+    start_foundation_probe,
+    transition_operation_with_service_authorization,
 )
 from plane.curve.services import (
     CommandAlreadyInProgress,
-    CurveResourceNotFound,
+    CurveAuthorizationReceiptRequired,
     IdempotencyConflict,
     InvalidCommand,
     InvalidOperationTransition,
@@ -38,36 +45,75 @@ from plane.curve.services import (
     retry_outbox,
     transition_operation,
 )
+from plane.db.models import User, Workspace, WorkspaceMember
 import plane.curve.services as curve_services
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db(transaction=True)]
 
 ACTOR = {"actor_type": "HUMAN", "actor_id": "federico"}
+SERVICE = {"actor_type": "SERVICE", "actor_id": "curve-worker-test"}
 REQUEST = b'{"command":"CREATE_FOUNDATION_PROBE"}'
 SAFE_ERROR = {"code": "TRANSIENT_TEST", "retryable": True}
 
 
-def target_ref(workspace_id):
-    return {
-        "resource_type": "WORKSPACE",
-        "resource_id": str(workspace_id),
-        "resource_version": 1,
-    }
+@pytest.fixture(autouse=True)
+def _curve_policy_settings(settings):
+    settings.CURVE_ENABLED = True
+    settings.CURVE_ENABLED_WORKSPACE_SLUGS = frozenset({"alpha"})
+    settings.CURVE_ENVIRONMENT = "LOCAL"
+    settings.CURVE_POLICY_RECORDER_ACTOR_ID = "curve-api-test"
+
+
+def _policy_request(workspace_id):
+    user, _ = User.objects.get_or_create(
+        email="curve-policy-owner@example.com",
+        defaults={"username": "curve-policy-owner@example.com"},
+    )
+    workspace, _ = Workspace.objects.get_or_create(
+        id=workspace_id,
+        defaults={"name": "Alpha", "slug": "alpha", "owner": user},
+    )
+    WorkspaceMember.objects.get_or_create(
+        workspace=workspace,
+        member=user,
+        defaults={"role": 20, "is_active": True},
+    )
+    return SimpleNamespace(user=user)
 
 
 def create_command(workspace_id, raw_key="curve-test-idempotency-key", request=REQUEST):
-    return create_operation(
-        workspace_id=workspace_id,
-        principal_scope="HUMAN:federico",
-        command_scope=f"CREATE_FOUNDATION_PROBE:{workspace_id}",
+    return start_foundation_probe(
+        request=_policy_request(workspace_id),
+        workspace_slug="alpha",
         raw_idempotency_key=raw_key,
         canonical_request=request,
-        operation_type=OperationType.FOUNDATION_PROBE,
         command_type="CREATE_FOUNDATION_PROBE",
-        target=target_ref(workspace_id),
-        actor=ACTOR,
-        correlation_id="curve-service-test",
+    )
+
+
+def _service_authorization(workspace_id):
+    now = timezone.now()
+    return {
+        "authorization_id": "curve-worker-test-authorization",
+        "authorization_version": 1,
+        "workspace_id": str(workspace_id),
+        "service": dict(SERVICE),
+        "active": True,
+        "allowed_actions": ["CURVE.OPERATION.TRANSITION"],
+        "issued_at": (now - timedelta(minutes=1)).isoformat().replace("+00:00", "Z"),
+        "expires_at": (now + timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
+    }
+
+
+def transition_command(**kwargs):
+    kwargs.pop("actor", None)
+    kwargs.pop("effective_principal", None)
+    workspace_id = kwargs["workspace_id"]
+    return transition_operation_with_service_authorization(
+        **kwargs,
+        service_actor=dict(SERVICE),
+        service_authorization=_service_authorization(workspace_id),
     )
 
 
@@ -76,6 +122,12 @@ def test_create_operation_commits_aggregate_event_outbox_audit_and_replay_record
     result = create_command(workspace_id)
 
     assert result.replayed is False
+    decision = PolicyDecision.objects.get(workspace_id=workspace_id)
+    assert result.operation.policy_version_ref == {
+        "resource_type": "POLICY_DECISION",
+        "resource_id": str(decision.id),
+        "resource_version": 1,
+    }
     assert Operation.objects.filter(workspace_id=workspace_id, id=result.operation.id).count() == 1
     assert (
         DomainEvent.objects.filter(
@@ -116,34 +168,36 @@ def test_create_operation_commits_aggregate_event_outbox_audit_and_replay_record
 @pytest.mark.parametrize(
     "overrides",
     [
-        {"operation_type": "UNRECOGNIZED"},
         {"command_type": "lowercase-command"},
-        {"actor": {"actor_type": "AGENT", "actor_id": "agent", "extra": True}},
-        {"target": {"resource_type": "WORKSPACE", "resource_id": "not-a-uuid"}},
+        {"canonical_request": b""},
         {"destination": "lowercase-destination"},
     ],
 )
-def test_create_rejects_non_contract_command_metadata_without_database_effects(overrides):
+def test_policy_owned_create_rejects_invalid_command_without_database_effects(overrides):
     workspace_id = uuid.uuid4()
     arguments = {
-        "workspace_id": workspace_id,
-        "principal_scope": "HUMAN:federico",
-        "command_scope": f"CREATE_FOUNDATION_PROBE:{workspace_id}",
+        "request": _policy_request(workspace_id),
+        "workspace_slug": "alpha",
         "raw_idempotency_key": "invalid-command-test",
         "canonical_request": REQUEST,
-        "operation_type": OperationType.FOUNDATION_PROBE,
         "command_type": "CREATE_FOUNDATION_PROBE",
-        "target": target_ref(workspace_id),
-        "actor": ACTOR,
-        "correlation_id": "curve-invalid-command-test",
+        "destination": "CURVE_LOCAL",
     }
     arguments.update(overrides)
 
     with pytest.raises(InvalidCommand):
-        create_operation(**arguments)
+        start_foundation_probe(**arguments)
 
     assert Operation.objects.filter(workspace_id=workspace_id).count() == 0
     assert IdempotencyRecord.objects.filter(workspace_id=workspace_id).count() == 0
+    assert PolicyDecision.objects.filter(workspace_id=workspace_id).count() == 0
+
+
+def test_direct_create_and_transition_primitives_reject_without_receipt():
+    with pytest.raises(CurveAuthorizationReceiptRequired):
+        create_operation()
+    with pytest.raises(CurveAuthorizationReceiptRequired):
+        transition_operation()
 
 
 def test_same_request_replays_database_operation_without_duplicate_effects():
@@ -159,13 +213,14 @@ def test_same_request_replays_database_operation_without_duplicate_effects():
     assert Operation.objects.filter(workspace_id=workspace_id).count() == 1
     assert DomainEvent.objects.filter(workspace_id=workspace_id).count() == 1
     assert OutboxEvent.objects.filter(workspace_id=workspace_id).count() == 1
-    assert AuditEvent.objects.filter(workspace_id=workspace_id).count() == 1
+    assert AuditEvent.objects.filter(workspace_id=workspace_id).count() == 2
+    assert PolicyDecision.objects.filter(workspace_id=workspace_id).count() == 2
 
 
 def test_same_request_replays_original_response_reference_after_operation_advances():
     workspace_id = uuid.uuid4()
     first = create_command(workspace_id)
-    transition_operation(
+    transition_command(
         workspace_id=workspace_id,
         operation_id=first.operation.id,
         expected_version=1,
@@ -201,6 +256,7 @@ def test_concurrent_same_request_commits_one_operation_and_replays_one_result():
     from threading import Barrier
 
     workspace_id = uuid.uuid4()
+    _policy_request(workspace_id)
     barrier = Barrier(2)
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = list(
@@ -251,6 +307,7 @@ def test_command_transaction_rolls_back_every_record_when_audit_append_fails(mon
     assert DomainEvent.objects.filter(workspace_id=workspace_id).count() == 0
     assert OutboxEvent.objects.filter(workspace_id=workspace_id).count() == 0
     assert IdempotencyRecord.objects.filter(workspace_id=workspace_id).count() == 0
+    assert PolicyDecision.objects.filter(workspace_id=workspace_id).count() == 0
 
 
 def test_raw_idempotency_key_is_absent_from_all_persisted_records():
@@ -264,15 +321,17 @@ def test_raw_idempotency_key_is_absent_from_all_persisted_records():
         "outbox": list(OutboxEvent.objects.filter(workspace_id=workspace_id).values()),
         "idempotency": list(IdempotencyRecord.objects.filter(workspace_id=workspace_id).values()),
         "audit": list(AuditEvent.objects.filter(workspace_id=workspace_id).values()),
+        "policy": list(PolicyDecision.objects.filter(workspace_id=workspace_id).values()),
     }
     assert raw_key not in json.dumps(persisted, default=str)
 
 
 def test_existing_in_progress_request_is_not_executed_again():
     workspace_id = uuid.uuid4()
+    request = _policy_request(workspace_id)
     IdempotencyRecord.objects.create(
         workspace_id=workspace_id,
-        principal_scope="HUMAN:federico",
+        principal_scope=f"HUMAN:{request.user.id}",
         command_scope=f"CREATE_FOUNDATION_PROBE:{workspace_id}",
         key_digest=idempotency_key_digest("curve-test-idempotency-key"),
         request_digest=f"sha256:{__import__('hashlib').sha256(REQUEST).hexdigest()}",
@@ -291,7 +350,7 @@ def test_stale_version_writes_only_no_effect_audit():
     initial_outbox_count = OutboxEvent.objects.filter(workspace_id=workspace_id).count()
 
     with pytest.raises(OptimisticConcurrencyError):
-        transition_operation(
+        transition_command(
             workspace_id=workspace_id,
             operation_id=operation.id,
             expected_version=99,
@@ -314,12 +373,47 @@ def test_stale_version_writes_only_no_effect_audit():
     )
 
 
+def test_inactive_service_authorization_denies_without_transition_effect():
+    workspace_id = uuid.uuid4()
+    operation = create_command(workspace_id).operation
+    authorization = _service_authorization(workspace_id)
+    authorization["active"] = False
+    event_count = DomainEvent.objects.filter(workspace_id=workspace_id).count()
+    outbox_count = OutboxEvent.objects.filter(workspace_id=workspace_id).count()
+
+    with pytest.raises(CurvePolicyDenied) as denial:
+        transition_operation_with_service_authorization(
+            workspace_id=workspace_id,
+            operation_id=operation.id,
+            expected_version=1,
+            status=OperationStatus.QUEUED,
+            service_actor=dict(SERVICE),
+            service_authorization=authorization,
+            correlation_id="curve-inactive-service-test",
+        )
+
+    assert denial.value.reason_codes == ("SERVICE_AUTHORIZATION_INACTIVE",)
+    operation.refresh_from_db()
+    assert operation.aggregate_version == 1
+    assert operation.status == OperationStatus.PENDING
+    assert DomainEvent.objects.filter(workspace_id=workspace_id).count() == event_count
+    assert OutboxEvent.objects.filter(workspace_id=workspace_id).count() == outbox_count
+    assert (
+        AuditEvent.objects.filter(
+            workspace_id=workspace_id,
+            target_id=operation.id,
+            outcome=AuditOutcome.DENIED,
+        ).count()
+        == 1
+    )
+
+
 def test_transition_is_workspace_scoped_and_follows_the_operation_state_matrix():
     workspace_id = uuid.uuid4()
     operation = create_command(workspace_id).operation
 
-    with pytest.raises(CurveResourceNotFound):
-        transition_operation(
+    with pytest.raises(CurvePolicyResourceNotFound):
+        transition_command(
             workspace_id=uuid.uuid4(),
             operation_id=operation.id,
             expected_version=1,
@@ -328,7 +422,7 @@ def test_transition_is_workspace_scoped_and_follows_the_operation_state_matrix()
             correlation_id="curve-service-test",
         )
 
-    queued = transition_operation(
+    queued = transition_command(
         workspace_id=workspace_id,
         operation_id=operation.id,
         expected_version=1,
@@ -336,7 +430,7 @@ def test_transition_is_workspace_scoped_and_follows_the_operation_state_matrix()
         actor=ACTOR,
         correlation_id="curve-service-test",
     )
-    running = transition_operation(
+    running = transition_command(
         workspace_id=workspace_id,
         operation_id=operation.id,
         expected_version=2,
@@ -348,6 +442,19 @@ def test_transition_is_workspace_scoped_and_follows_the_operation_state_matrix()
     assert queued.aggregate_version == 2
     assert running.aggregate_version == 3
     assert running.started_at is not None
+    latest_decision = (
+        PolicyDecision.objects.filter(
+            workspace_id=workspace_id,
+            action="CURVE.OPERATION.TRANSITION",
+        )
+        .order_by("-recorded_at")
+        .first()
+    )
+    assert running.policy_version_ref == {
+        "resource_type": "POLICY_DECISION",
+        "resource_id": str(latest_decision.id),
+        "resource_version": 1,
+    }
     assert DomainEvent.objects.filter(
         workspace_id=workspace_id,
         aggregate_id=operation.id,
@@ -362,7 +469,7 @@ def test_invalid_or_terminal_operation_transition_is_no_effect_and_audited():
     initial_outbox_count = OutboxEvent.objects.filter(workspace_id=workspace_id).count()
 
     with pytest.raises(InvalidOperationTransition):
-        transition_operation(
+        transition_command(
             workspace_id=workspace_id,
             operation_id=operation.id,
             expected_version=1,
@@ -386,7 +493,7 @@ def test_invalid_or_terminal_operation_transition_is_no_effect_and_audited():
         == 1
     )
 
-    failed = transition_operation(
+    failed = transition_command(
         workspace_id=workspace_id,
         operation_id=operation.id,
         expected_version=1,
@@ -396,7 +503,7 @@ def test_invalid_or_terminal_operation_transition_is_no_effect_and_audited():
         correlation_id="curve-service-test",
     )
     with pytest.raises(InvalidOperationTransition):
-        transition_operation(
+        transition_command(
             workspace_id=workspace_id,
             operation_id=operation.id,
             expected_version=failed.aggregate_version,

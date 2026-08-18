@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/policy-decision.schema.json",
+  "title": "Curve immutable policy decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "sequence",
+    "action",
+    "resource_ref",
+    "subject",
+    "effective_principal",
+    "effect",
+    "reason_codes",
+    "policy_key",
+    "policy_version",
+    "policy_manifest_digest",
+    "input_digest",
+    "normalized_classification",
+    "permitted_projection",
+    "evaluated_at",
+    "recorded_at",
+    "recorded_by",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "action": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_.-]{0,127}$"
+    },
+    "resource_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "subject": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "effective_principal": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "effect": {
+      "type": "string",
+      "enum": ["ALLOW", "DENY", "REQUIRE_HUMAN_CONFIRMATION"]
+    },
+    "reason_codes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]{0,99}$"
+      }
+    },
+    "policy_key": { "const": "CURVE_CORE_POLICY" },
+    "policy_version": { "const": 1 },
+    "policy_manifest_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "input_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "normalized_classification": {
+      "$ref": "common.schema.json#/$defs/DataClassification"
+    },
+    "permitted_projection": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]{0,99}$"
+      }
+    },
+    "evaluated_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "recorded_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "recorded_by": {
+      "allOf": [
+        { "$ref": "common.schema.json#/$defs/ActorRef" },
+        {
+          "properties": {
+            "actor_type": { "enum": ["SERVICE", "SYSTEM"] }
+          }
+        }
+      ]
+    },
+    "correlation_id": { "type": "string", "minLength": 1, "maxLength": 255 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "effect": { "const": "ALLOW" } } },
+      "then": {
+        "properties": {
+          "reason_codes": {
+            "minItems": 1,
+            "maxItems": 1,
+            "prefixItems": [{ "const": "POLICY_ALLOWED" }]
+          },
+          "permitted_projection": { "minItems": 1 }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "effect": { "enum": ["DENY", "REQUIRE_HUMAN_CONFIRMATION"] }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason_codes": {
+            "not": { "contains": { "const": "POLICY_ALLOWED" } }
+          },
+          "permitted_projection": { "maxItems": 0 }
+        }
+      }
+    }
+  ]
+}

@@ -3,31 +3,23 @@
 # See the LICENSE file for details.
 
 from rest_framework import status
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from plane.api.views.base import BaseAPIView
-from plane.app.permissions import WorkspaceMemberPermission
-from plane.curve.config import is_curve_enabled_for_workspace
-from plane.db.models import Workspace
+from plane.curve.permissions import (
+    CurveCorePolicyPermission,
+    query_authorization_receipt,
+)
 
 
 class CurveWorkspaceShellEndpoint(BaseAPIView):
-    """Return the empty Curve workspace shell after Plane membership checks."""
+    """Return the empty Curve shell projection after audited policy evaluation."""
 
-    permission_classes = [IsAuthenticated, WorkspaceMemberPermission]
+    permission_classes = [IsAuthenticated, CurveCorePolicyPermission]
+    curve_policy_action = "CURVE.SHELL.VIEW"
+    curve_policy_resource_type = "WORKSPACE"
 
     def get(self, request, slug):
-        if not is_curve_enabled_for_workspace(slug):
-            raise NotFound()
-
-        workspace = Workspace.objects.only("id").get(slug=slug)
-        return Response(
-            {
-                "workspace_id": str(workspace.id),
-                "workspace_slug": slug,
-                "state": "EMPTY",
-            },
-            status=status.HTTP_200_OK,
-        )
+        receipt = query_authorization_receipt(request)
+        return Response(dict(receipt.projection), status=status.HTTP_200_OK)

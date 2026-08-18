@@ -1,0 +1,179 @@
+{
+  "schema_version": "curve-context-pack/v1",
+  "task_id": "M0-03",
+  "curve_revision": "097016ffe2eb259cc780ad2a6cd41ca3422366b2",
+  "plane_base_revision": "eff8686a69aa112ea8fda79be0e1316dc1fd97d6",
+  "context_digest": "sha256:113fcd3cf9795585a5db5a59e5d21965dd4e6ba9525fe5ea9d3bd4b15e546359",
+  "human_owner": "Federico Ocampo",
+  "human_reviewer": "Federico Ocampo",
+  "data_classification": "INTERNAL",
+  "files": [
+    {
+      "path": "contracts/database/m0-03-policy-contract.md",
+      "sha256": "sha256:3d211c9a92a25585da699cd0b6002855eae5911823bae93dddefb7865ac93d4e"
+    },
+    {
+      "path": "contracts/policy/core-policy-v1.json",
+      "sha256": "sha256:e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
+    },
+    {
+      "path": "contracts/schemas/core-policy-manifest.schema.json",
+      "sha256": "sha256:bdc10bd52e9189a6d1994248bb791b07c5011eeb1c3ffc668ba44bf8d523f46f"
+    },
+    {
+      "path": "contracts/schemas/examples/core-policy-manifest.invalid.json",
+      "sha256": "sha256:d2bbca950255e0bea3d6eedb97ae70f5b7b700aa96237f3132c18936991c604b"
+    },
+    {
+      "path": "contracts/schemas/examples/core-policy-manifest.valid.json",
+      "sha256": "sha256:c39163700f0bcd623ef43b9ac69aa583fb4843a3de00c9eaffb2edbd1076f664"
+    },
+    {
+      "path": "contracts/schemas/examples/policy-decision.invalid.json",
+      "sha256": "sha256:a01075bde2ddcc620400d2b5e0200fe6c48ed8ff0595e339cc1690da6192db0c"
+    },
+    {
+      "path": "contracts/schemas/examples/policy-decision.valid.json",
+      "sha256": "sha256:e0780f6a48475799eb944f9d04dbaf82211d274567718cb6618294f0f616d7db"
+    },
+    {
+      "path": "contracts/schemas/examples/policy-evaluation.invalid.json",
+      "sha256": "sha256:f897021366dce419a235cb580287d2f4da0cb4c1730f58c2cc496facbc2b3dba"
+    },
+    {
+      "path": "contracts/schemas/examples/policy-evaluation.valid.json",
+      "sha256": "sha256:978ba811807a2b163cc0ebf98543a55411e23ea7ba9e92d38c57b27d9d12e1ee"
+    },
+    {
+      "path": "contracts/schemas/policy-decision.schema.json",
+      "sha256": "sha256:5faa121136c59420da7fb1582985c3d445b6486e1e52a77c8d6ff853634f4bd8"
+    },
+    {
+      "path": "contracts/schemas/policy-evaluation.schema.json",
+      "sha256": "sha256:75622a18bbbdaa69795beee16254106f12aab2aa150e1619f237d3bf67d724f8"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-decision-allow-reason.invalid.json",
+      "sha256": "sha256:a0ed2026d530ed53d95d825cdd78106a4b4dbaa1cd432be6838b68449b786986"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-decision-human-recorder.invalid.json",
+      "sha256": "sha256:a600e56570a303b75434343bcb901aee1174a60f2a5d03b7584522e77f8068ec"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-gate-assignment.invalid.json",
+      "sha256": "sha256:8991aaa747e2d4ba78eea12073150af5c348e0c2211dfb93e01a901215134482"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-gate-assignment.valid.json",
+      "sha256": "sha256:65d94f72cfbb2dca5e25fb6a82932270ec6fe889df7eca887b51ce87702a50fe"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-human-service-auth.invalid.json",
+      "sha256": "sha256:04d75e25b2587cd2c53fabf0bb5253e5c2c2493a14df672fc89f4ab15ed285fe"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-human-service-role.invalid.json",
+      "sha256": "sha256:ed5f042bf1a83b4e88e2572ba2f1b8e27f3a5f102fdf84149128aa57a8af668d"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-service-human-role.invalid.json",
+      "sha256": "sha256:1614e429ec6fe04f4b99b88b8ef06936e842237bdd81188b3410e9d3f03145b7"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-service-membership.invalid.json",
+      "sha256": "sha256:10b85afdf05723d996170fc4c593ce16e08a5446b64cf00dd8347c090b6abaaa"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-service-version.invalid.json",
+      "sha256": "sha256:127a7ce392d97fe2141069b4db57ac574ac6383e1d64912f00d5ab0580b11bcd"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-service.valid.json",
+      "sha256": "sha256:6015051738fbfa9a4fac601e0cd2b52cc01b13e941944a02bbf5daacf9223641"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-target-version.invalid.json",
+      "sha256": "sha256:5b3d60b47558aa7d44521a3df46ae89fdd57dea6f1a3b448645c205718ee0415"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-target-version.valid.json",
+      "sha256": "sha256:1775021ad3282e9c0dd8d2b1a8a84be8cd60fd74ba23285ef7a22d2a57cc7267"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-transition-service.valid.json",
+      "sha256": "sha256:c4468f4ea0ff53a6c957fd0acab4d155cb87292897d27e44a4a6d74af99b5503"
+    },
+    {
+      "path": "docs/curve-ai-native-sdlc-prd.md",
+      "sha256": "sha256:9ff9f56f8763e191b17a09127cf6d5258b13e5f0357824bd5c2b45d15669eee8"
+    },
+    {
+      "path": "docs/technical/architecture.md",
+      "sha256": "sha256:3e1056a5e1c61deb328625783b4c83a69cdfe03d82d374eb1d25b746ebf0c0fa"
+    },
+    {
+      "path": "docs/technical/domain-model.md",
+      "sha256": "sha256:47d450b3830fb560b13ff588adc032c25d050b502e8fd1c82e31821548cfaa23"
+    },
+    {
+      "path": "docs/technical/m0-03-core-policy-task-packet.md",
+      "sha256": "sha256:d0228761945f71b8262bbb6d8a7e2cb7602cfc759880fa30dfbca102c90a47f7"
+    },
+    {
+      "path": "docs/technical/m0-authorization-and-state-matrices.md",
+      "sha256": "sha256:06947b6b191ce6f94fbf1c6b895c7461381ccc5f77b1dedb6ce1f4f21ddac9c6"
+    },
+    {
+      "path": "docs/technical/m0-s2-implementation-evidence.md",
+      "sha256": "sha256:c9990fbda2dda6d60c4c8d7a379ca903358ab9ac547d823b695980355beefb99"
+    },
+    {
+      "path": "docs/technical/security-and-operations.md",
+      "sha256": "sha256:acefe747a14d256f407d00baeac7ab3da95a1bb57b8da3a27a850e90015575f8"
+    },
+    {
+      "path": "scripts/lib/context-pack.mjs",
+      "sha256": "sha256:2bde18da826168a5b2bab8d866b5cbdfd98a4c5e30efee98be230a4fd8d92794"
+    },
+    {
+      "path": "scripts/validate-contracts.mjs",
+      "sha256": "sha256:e3ce1c28042c5badccf817ef47ab11afddbfde7a62ae2eb11a1fff72e95f7a7a"
+    }
+  ],
+  "paths": [
+    "contracts/database/m0-03-policy-contract.md",
+    "contracts/policy/core-policy-v1.json",
+    "contracts/schemas/core-policy-manifest.schema.json",
+    "contracts/schemas/examples/core-policy-manifest.invalid.json",
+    "contracts/schemas/examples/core-policy-manifest.valid.json",
+    "contracts/schemas/examples/policy-decision.invalid.json",
+    "contracts/schemas/examples/policy-decision.valid.json",
+    "contracts/schemas/examples/policy-evaluation.invalid.json",
+    "contracts/schemas/examples/policy-evaluation.valid.json",
+    "contracts/schemas/policy-decision.schema.json",
+    "contracts/schemas/policy-evaluation.schema.json",
+    "contracts/schemas/semantic-fixtures/policy-decision-allow-reason.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-decision-human-recorder.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-gate-assignment.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-gate-assignment.valid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-human-service-auth.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-human-service-role.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-service-human-role.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-service-membership.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-service-version.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-service.valid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-target-version.invalid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-target-version.valid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-transition-service.valid.json",
+    "docs/curve-ai-native-sdlc-prd.md",
+    "docs/technical/architecture.md",
+    "docs/technical/domain-model.md",
+    "docs/technical/m0-03-core-policy-task-packet.md",
+    "docs/technical/m0-authorization-and-state-matrices.md",
+    "docs/technical/m0-s2-implementation-evidence.md",
+    "docs/technical/security-and-operations.md",
+    "scripts/lib/context-pack.mjs",
+    "scripts/validate-contracts.mjs"
+  ]
+}

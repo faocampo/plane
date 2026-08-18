@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/core-policy-manifest.schema.json",
+  "title": "Curve core policy manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_key",
+    "policy_version",
+    "default_effect",
+    "unknown_classification",
+    "allow_reason_code",
+    "deny_precedence",
+    "actions"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "policy_key": { "const": "CURVE_CORE_POLICY" },
+    "policy_version": { "const": 1 },
+    "default_effect": { "const": "DENY" },
+    "unknown_classification": { "const": "RESTRICTED" },
+    "allow_reason_code": { "const": "POLICY_ALLOWED" },
+    "deny_precedence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/reasonCode" }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/actionPolicy" }
+    }
+  },
+  "$defs": {
+    "reasonCode": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,99}$"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "WORKSPACE_MEMBER",
+        "PRODUCT_APPROVER",
+        "TECHNICAL_APPROVER",
+        "CODE_APPROVER",
+        "PLATFORM_ADMINISTRATOR",
+        "TRUSTED_SERVICE"
+      ]
+    },
+    "actionPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "allowed_resource_types",
+        "allowed_actor_types",
+        "allowed_roles",
+        "allowed_classifications",
+        "allowed_environments",
+        "object_acl",
+        "owner_satisfies_acl",
+        "assignment",
+        "separation_of_duty",
+        "target_allowlist",
+        "external_side_effect",
+        "permitted_projection"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_.-]{0,127}$"
+        },
+        "allowed_resource_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]{0,99}$"
+          }
+        },
+        "allowed_actor_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["HUMAN", "SERVICE", "SYSTEM"]
+          }
+        },
+        "allowed_roles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/role" }
+        },
+        "allowed_classifications": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/DataClassification"
+          }
+        },
+        "allowed_environments": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["LOCAL", "STAGING", "PRODUCTION"]
+          }
+        },
+        "object_acl": {
+          "type": "string",
+          "enum": ["NOT_APPLICABLE", "OPTIONAL_NARROWING", "REQUIRED"]
+        },
+        "owner_satisfies_acl": { "type": "boolean" },
+        "assignment": {
+          "type": "string",
+          "enum": [
+            "NONE",
+            "PRODUCT_APPROVER",
+            "TECHNICAL_APPROVER",
+            "CODE_APPROVER"
+          ]
+        },
+        "separation_of_duty": {
+          "type": "string",
+          "enum": ["NONE", "GATE_RISK_TIER"]
+        },
+        "target_allowlist": {
+          "type": "string",
+          "enum": ["NOT_APPLICABLE", "OPTIONAL_NARROWING", "REQUIRED"]
+        },
+        "external_side_effect": { "const": false },
+        "permitted_projection": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]{0,99}$"
+          }
+        }
+      }
+    }
+  }
+}
