@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/inbox-message.schema.json",
+  "title": "Curve deduplicating inbox message",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "consumer_id",
+    "event_id",
+    "state",
+    "received_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "consumer_id": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "event_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "state": { "type": "string", "enum": ["RECEIVED", "PROCESSING", "PROCESSED", "FAILED_TERMINAL"] },
+    "received_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "processed_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "result_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "last_error": { "$ref": "common.schema.json#/$defs/SafeError" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "const": "PROCESSED" } } },
+      "then": {
+        "properties": {
+          "processed_at": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["processed_at", "result_digest"]
+      }
+    },
+    {
+      "if": { "properties": { "state": { "const": "FAILED_TERMINAL" } } },
+      "then": {
+        "properties": {
+          "processed_at": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["processed_at", "last_error"]
+      }
+    }
+  ]
+}

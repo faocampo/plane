@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/operation-event-v1.schema.json",
+  "title": "Curve M0 Operation Event Payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_id",
+    "operation_id",
+    "operation_version",
+    "status"
+  ],
+  "properties": {
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/WorkspaceId"
+    },
+    "operation_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "operation_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "QUEUED",
+        "RUNNING",
+        "WAITING_FOR_HUMAN",
+        "CANCEL_REQUESTED",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "progress": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "error": {
+      "$ref": "common.schema.json#/$defs/SafeError"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "FAILED"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["error"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["SUCCEEDED", "CANCELLED"]
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "not": {
+          "required": ["error"]
+        }
+      }
+    }
+  ]
+}

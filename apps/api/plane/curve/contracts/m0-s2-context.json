@@ -1,0 +1,28 @@
+{
+  "schema_version": "curve-context-pack/v1",
+  "task_id": "CURVE-M0-S2-DELIVERY-KERNEL",
+  "curve_revision": "ab2c81a33ede719c02ff0a2a6ab35eabcf304de1",
+  "plane_base_revision": "7685bbc7cc5e1ab34f11e3912d9e47d31c365a9a",
+  "context_digest": "sha256:45c266e1ab0d096747d6493a828d689251584bad70a1570582478bfe1a91cedc",
+  "human_owner": "Federico Ocampo",
+  "human_reviewer": "Federico Ocampo",
+  "data_classification": "INTERNAL",
+  "paths": [
+    "contracts/database/m0-s2-relational-contract.md",
+    "contracts/schemas/audit-event.schema.json",
+    "contracts/schemas/common.schema.json",
+    "contracts/schemas/event-envelope.schema.json",
+    "contracts/schemas/idempotency-record.schema.json",
+    "contracts/schemas/immutable-history-record.schema.json",
+    "contracts/schemas/inbox-message.schema.json",
+    "contracts/schemas/operation-event-v1.schema.json",
+    "contracts/schemas/operation.schema.json",
+    "contracts/schemas/outbox-event.schema.json",
+    "contracts/schemas/workspace-record.schema.json",
+    "docs/curve-ai-native-sdlc-prd.md",
+    "docs/technical/domain-model.md",
+    "docs/technical/m0-authorization-and-state-matrices.md",
+    "docs/technical/m0-local-skeleton-task-packets.md",
+    "docs/technical/m0-traceability.md"
+  ]
+}

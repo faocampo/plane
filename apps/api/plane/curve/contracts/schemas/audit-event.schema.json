@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/audit-event.schema.json",
+  "title": "Curve immutable audit event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "sequence",
+    "action",
+    "target_ref",
+    "outcome",
+    "actor",
+    "occurred_at",
+    "recorded_at",
+    "correlation_id"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "action": { "type": "string", "pattern": "^[A-Z][A-Z0-9_.-]{0,127}$" },
+    "target_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "outcome": { "type": "string", "enum": ["ALLOWED", "DENIED", "SUCCEEDED", "FAILED", "NO_EFFECT"] },
+    "actor": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "effective_principal": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "policy_decision_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "before_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "after_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "details_ref": { "$ref": "common.schema.json#/$defs/ObjectRef" },
+    "classification": { "$ref": "common.schema.json#/$defs/DataClassification" },
+    "occurred_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "recorded_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "correlation_id": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "causation_id": { "type": ["string", "null"], "maxLength": 255 },
+    "idempotency_key_digest": { "$ref": "common.schema.json#/$defs/Digest" }
+  }
+}

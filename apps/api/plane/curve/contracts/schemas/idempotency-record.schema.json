@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/idempotency-record.schema.json",
+  "title": "Curve command idempotency record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "principal_scope",
+    "command_scope",
+    "key_digest",
+    "request_digest",
+    "state",
+    "external_effect_refs",
+    "created_at",
+    "expires_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "principal_scope": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "command_scope": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "key_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "request_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "state": { "type": "string", "enum": ["IN_PROGRESS", "COMPLETED", "FAILED_TERMINAL", "RECONCILIATION_REQUIRED"] },
+    "response_status": { "type": "integer", "minimum": 100, "maximum": 599 },
+    "response_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "response_resource_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "external_effect_refs": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/ResourceRef" }
+    },
+    "created_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "completed_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "expires_at": { "$ref": "common.schema.json#/$defs/Instant" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "state": { "enum": ["COMPLETED", "FAILED_TERMINAL"] } } },
+      "then": {
+        "properties": {
+          "completed_at": { "$ref": "common.schema.json#/$defs/Instant" }
+        },
+        "required": ["response_status", "response_digest", "response_resource_ref", "completed_at"]
+      }
+    }
+  ]
+}
