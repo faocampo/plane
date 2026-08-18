@@ -20,6 +20,8 @@ from plane.curve.models import (
     OperationType,
     OutboxEvent,
     OutboxState,
+    PolicyDecision,
+    PolicyEffect,
     WorkspaceScopedModel,
 )
 
@@ -103,6 +105,30 @@ def idempotency_values(workspace_id=None, **overrides):
     return values
 
 
+def policy_decision_values(workspace_id=None, resource_id=None, sequence=1, **overrides):
+    values = {
+        "workspace_id": workspace_id or uuid.uuid4(),
+        "sequence": sequence,
+        "action": "CURVE.SHELL.VIEW",
+        "resource_type": "WORKSPACE",
+        "resource_id": resource_id or uuid.uuid4(),
+        "resource_version": 1,
+        "subject": ACTOR,
+        "effective_principal": ACTOR,
+        "effect": PolicyEffect.ALLOW,
+        "reason_codes": ["POLICY_ALLOWED"],
+        "policy_manifest_digest": DIGEST,
+        "input_digest": OTHER_DIGEST,
+        "normalized_classification": "INTERNAL",
+        "permitted_projection": ["WORKSPACE_ID"],
+        "correlation_id": "curve-policy-test",
+        "evaluated_at": timezone.now(),
+        "recorded_by": {"actor_type": "SERVICE", "actor_id": "curve-api"},
+    }
+    values.update(overrides)
+    return values
+
+
 def assert_constraint_rejects(create_record):
     with pytest.raises(IntegrityError), transaction.atomic():
         create_record()
@@ -139,6 +165,17 @@ def test_context_manifest_pins_approved_curve_and_plane_revisions():
     assert manifest["plane_base_revision"] == "7685bbc7cc5e1ab34f11e3912d9e47d31c365a9a"
     assert manifest["context_digest"] == ("sha256:45c266e1ab0d096747d6493a828d689251584bad70a1570582478bfe1a91cedc")
     assert manifest["human_owner"] == manifest["human_reviewer"] == "Federico Ocampo"
+
+
+def test_m003_context_manifest_pins_contract_and_base_revisions():
+    manifest_path = Path(__file__).parents[1] / "contracts" / "m0-03-context.json"
+    manifest = json.loads(manifest_path.read_text())
+
+    assert manifest["curve_revision"] == "097016ffe2eb259cc780ad2a6cd41ca3422366b2"
+    assert manifest["plane_base_revision"] == "eff8686a69aa112ea8fda79be0e1316dc1fd97d6"
+    assert manifest["context_digest"] == ("sha256:113fcd3cf9795585a5db5a59e5d21965dd4e6ba9525fe5ea9d3bd4b15e546359")
+    assert len(manifest["files"]) == len(manifest["paths"]) == 33
+    assert manifest["paths"] == sorted(manifest["paths"])
 
 
 @pytest.mark.parametrize("status", [OperationStatus.SUCCEEDED, OperationStatus.FAILED, OperationStatus.CANCELLED])
@@ -223,6 +260,37 @@ def test_workspace_scoped_uniqueness_allows_same_domain_sequence_in_other_worksp
     assert DomainEvent.objects.filter(aggregate_id=aggregate_id).count() == 2
 
 
+def test_policy_decision_sequence_is_unique_per_workspace_resource():
+    workspace_id = uuid.uuid4()
+    resource_id = uuid.uuid4()
+    PolicyDecision.objects.create(**policy_decision_values(workspace_id=workspace_id, resource_id=resource_id))
+
+    assert_constraint_rejects(
+        lambda: PolicyDecision.objects.create(
+            **policy_decision_values(workspace_id=workspace_id, resource_id=resource_id)
+        )
+    )
+    PolicyDecision.objects.create(**policy_decision_values(workspace_id=uuid.uuid4(), resource_id=resource_id))
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"sequence": 0},
+        {"reason_codes": []},
+        {"reason_codes": {"reason": "POLICY_ALLOWED"}},
+        {"policy_manifest_digest": "raw-digest"},
+        {"input_digest": "raw-digest"},
+        {"recorded_by": {"actor_type": "HUMAN", "actor_id": "federico"}},
+        {"effect": PolicyEffect.DENY, "reason_codes": ["FEATURE_DISABLED"]},
+        {"permitted_projection": []},
+        {"permitted_projection": {"projection": "WORKSPACE_ID"}},
+    ],
+)
+def test_policy_decision_database_constraints_fail_closed(overrides):
+    assert_constraint_rejects(lambda: PolicyDecision.objects.create(**policy_decision_values(**overrides)))
+
+
 def test_domain_event_uniqueness_rejects_duplicate_workspace_aggregate_sequence():
     workspace_id = uuid.uuid4()
     aggregate_id = uuid.uuid4()
@@ -272,9 +340,13 @@ def test_outbox_inbox_idempotency_and_audit_uniqueness_are_workspace_scoped():
     )
 
 
-@pytest.mark.parametrize("model_factory", [domain_event_values, audit_event_values])
+@pytest.mark.parametrize("model_factory", [domain_event_values, audit_event_values, policy_decision_values])
 def test_immutable_history_rejects_update_and_delete(model_factory):
-    model = DomainEvent if model_factory is domain_event_values else AuditEvent
+    model = {
+        domain_event_values: DomainEvent,
+        audit_event_values: AuditEvent,
+        policy_decision_values: PolicyDecision,
+    }[model_factory]
     record = model.objects.create(**model_factory())
 
     with pytest.raises(ImmutableRecordError, match="append-only"):

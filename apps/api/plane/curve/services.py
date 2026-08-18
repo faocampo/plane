@@ -68,6 +68,10 @@ class InvalidOperationTransition(CurveKernelError):
     code = "CURVE_INVALID_OPERATION_TRANSITION"
 
 
+class CurveAuthorizationReceiptRequired(CurveKernelError):
+    code = "CURVE_AUTHORIZATION_RECEIPT_REQUIRED"
+
+
 @dataclass(frozen=True)
 class OperationCommandResult:
     operation: Operation
@@ -340,6 +344,7 @@ def _append_audit_event(
     after_digest: str | None = None,
     causation_id: str | None = None,
     key_digest: str | None = None,
+    policy_decision_ref: dict | None = None,
 ) -> AuditEvent:
     target_type = target_ref["resource_type"]
     target_id = uuid.UUID(str(target_ref["resource_id"]))
@@ -364,6 +369,7 @@ def _append_audit_event(
         outcome=outcome,
         actor=actor,
         effective_principal=effective_principal,
+        policy_decision_ref=policy_decision_ref,
         before_digest=before_digest,
         after_digest=after_digest,
         classification=DataClassification.INTERNAL,
@@ -459,8 +465,9 @@ def _resolve_operation_replay(*, workspace_id: uuid.UUID, resource_ref: dict | N
     return operation
 
 
-def create_operation(
+def _create_operation_authorized(
     *,
+    authorization_receipt,
     workspace_id: uuid.UUID,
     principal_scope: str,
     command_scope: str,
@@ -476,6 +483,18 @@ def create_operation(
     destination: str = "CURVE_LOCAL",
     idempotency_ttl: timedelta = timedelta(days=1),
 ) -> OperationCommandResult:
+    from plane.curve.policy_services import (
+        assert_active_mutation_receipt,
+        policy_decision_ref_for_receipt,
+    )
+
+    assert_active_mutation_receipt(
+        authorization_receipt,
+        action="CURVE.FOUNDATION_PROBE.START",
+        workspace_id=workspace_id,
+        resource_ref=target,
+    )
+    policy_decision_ref = policy_decision_ref_for_receipt(authorization_receipt)
     _validate_create_operation_command(
         workspace_id=workspace_id,
         principal_scope=principal_scope,
@@ -497,6 +516,7 @@ def create_operation(
     expires_at = timezone.now() + idempotency_ttl
 
     conflict = False
+    already_in_progress = False
     result = None
     with transaction.atomic():
         record = (
@@ -538,6 +558,7 @@ def create_operation(
                 correlation_id=correlation_id,
                 causation_id=causation_id,
                 key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
             )
             conflict = True
         elif record.state in IdempotencyRecord.TERMINAL_STATES:
@@ -552,8 +573,32 @@ def create_operation(
                 response_digest=record.response_digest,
                 response_resource_ref=record.response_resource_ref,
             )
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.IDEMPOTENT_REPLAY",
+                target_ref=operation_resource_ref(operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
         elif not record_created:
-            raise CommandAlreadyInProgress
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.ALREADY_IN_PROGRESS",
+                target_ref=target,
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+            already_in_progress = True
         else:
             operation = Operation.objects.create(
                 workspace_id=workspace_id,
@@ -563,6 +608,7 @@ def create_operation(
                 target=target,
                 idempotency_key_digest=key_digest,
                 causation_id=causation_id,
+                policy_version_ref=policy_decision_ref,
                 created_by=actor,
                 updated_by=actor,
                 effective_principal=effective_principal,
@@ -594,6 +640,7 @@ def create_operation(
                 causation_id=causation_id,
                 after_digest=response_digest,
                 key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
             )
             record.state = IdempotencyState.COMPLETED
             record.response_status = response_status
@@ -619,13 +666,20 @@ def create_operation(
 
     if conflict:
         raise IdempotencyConflict
+    if already_in_progress:
+        raise CommandAlreadyInProgress
     if result is None:
         raise RuntimeError("operation command completed without a result")
     return result
 
 
-def transition_operation(
+def create_operation(*args, **kwargs):
+    raise CurveAuthorizationReceiptRequired("create_operation requires the policy-owned mutation wrapper")
+
+
+def _transition_operation_authorized(
     *,
+    authorization_receipt,
     workspace_id: uuid.UUID,
     operation_id: uuid.UUID,
     expected_version: int,
@@ -638,6 +692,23 @@ def transition_operation(
     error: dict | None = None,
     destination: str = "CURVE_LOCAL",
 ) -> Operation:
+    from plane.curve.policy_services import (
+        assert_active_mutation_receipt,
+        policy_decision_ref_for_receipt,
+    )
+
+    receipt_resource_ref = dict(authorization_receipt.resource_ref)
+    assert_active_mutation_receipt(
+        authorization_receipt,
+        action="CURVE.OPERATION.TRANSITION",
+        workspace_id=workspace_id,
+        resource_ref={
+            "resource_type": "OPERATION",
+            "resource_id": str(operation_id),
+            "resource_version": receipt_resource_ref.get("resource_version"),
+        },
+    )
+    policy_decision_ref = policy_decision_ref_for_receipt(authorization_receipt)
     _validate_transition_command(
         workspace_id=workspace_id,
         operation_id=operation_id,
@@ -668,6 +739,7 @@ def transition_operation(
                 effective_principal=effective_principal,
                 correlation_id=correlation_id,
                 causation_id=causation_id,
+                policy_decision_ref=policy_decision_ref,
             )
             version_conflict = True
         elif status not in ALLOWED_OPERATION_TRANSITIONS.get(operation.status, frozenset()):
@@ -680,6 +752,7 @@ def transition_operation(
                 effective_principal=effective_principal,
                 correlation_id=correlation_id,
                 causation_id=causation_id,
+                policy_decision_ref=policy_decision_ref,
             )
             invalid_transition = True
         else:
@@ -687,6 +760,7 @@ def transition_operation(
             operation.progress_percent = progress_percent
             operation.error = error
             operation.aggregate_version += 1
+            operation.policy_version_ref = policy_decision_ref
             operation.updated_by = actor
             if status == OperationStatus.RUNNING and operation.started_at is None:
                 operation.started_at = timezone.now()
@@ -715,6 +789,7 @@ def transition_operation(
                 effective_principal=effective_principal,
                 correlation_id=correlation_id,
                 causation_id=causation_id,
+                policy_decision_ref=policy_decision_ref,
             )
             result = operation
 
@@ -725,6 +800,10 @@ def transition_operation(
     if result is None:
         raise RuntimeError("operation transition completed without a result")
     return result
+
+
+def transition_operation(*args, **kwargs):
+    raise CurveAuthorizationReceiptRequired("transition_operation requires the policy-owned mutation wrapper")
 
 
 def claim_due_outbox(

@@ -5,6 +5,7 @@
 import uuid
 
 from django.db import models
+from django.db.models.lookups import Exact, GreaterThan
 from django.utils import timezone
 
 
@@ -369,6 +370,130 @@ class AuditOutcome(models.TextChoices):
     SUCCEEDED = "SUCCEEDED", "Succeeded"
     FAILED = "FAILED", "Failed"
     NO_EFFECT = "NO_EFFECT", "No effect"
+
+
+class PolicyEffect(models.TextChoices):
+    ALLOW = "ALLOW", "Allow"
+    DENY = "DENY", "Deny"
+    REQUIRE_HUMAN_CONFIRMATION = (
+        "REQUIRE_HUMAN_CONFIRMATION",
+        "Require human confirmation",
+    )
+
+
+class PolicyDecision(ImmutableRecordModel):
+    """Append-only, workspace-scoped authorization evidence."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    sequence = models.PositiveBigIntegerField(editable=False)
+    action = models.CharField(max_length=128, editable=False)
+    resource_type = models.CharField(max_length=100, editable=False)
+    resource_id = models.UUIDField(editable=False)
+    resource_version = models.PositiveBigIntegerField(null=True, blank=True, editable=False)
+    subject = models.JSONField(editable=False)
+    effective_principal = models.JSONField(editable=False)
+    effect = models.CharField(max_length=32, choices=PolicyEffect.choices, editable=False)
+    reason_codes = models.JSONField(editable=False)
+    policy_key = models.CharField(max_length=100, default="CURVE_CORE_POLICY", editable=False)
+    policy_version = models.PositiveIntegerField(default=1, editable=False)
+    policy_manifest_digest = models.CharField(max_length=DIGEST_MAX_LENGTH, editable=False)
+    input_digest = models.CharField(max_length=DIGEST_MAX_LENGTH, editable=False)
+    normalized_classification = models.CharField(
+        max_length=20,
+        choices=DataClassification.choices,
+        editable=False,
+    )
+    permitted_projection = models.JSONField(default=list, editable=False)
+    correlation_id = models.CharField(max_length=255, editable=False)
+    evaluated_at = models.DateTimeField(editable=False)
+    recorded_at = models.DateTimeField(auto_now_add=True, editable=False)
+    recorded_by = models.JSONField(editable=False)
+
+    class Meta:
+        db_table = "curve_policy_decision"
+        indexes = [
+            models.Index(
+                fields=["workspace_id", "-evaluated_at"],
+                name="curve_policy_ws_eval_idx",
+            ),
+            models.Index(
+                fields=["workspace_id", "resource_type", "resource_id", "-evaluated_at"],
+                name="curve_policy_res_eval_idx",
+            ),
+            models.Index(
+                fields=["workspace_id", "effect", "-evaluated_at"],
+                name="curve_policy_effect_eval_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace_id", "resource_type", "resource_id", "sequence"],
+                name="curve_policy_ws_res_seq_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(sequence__gte=1),
+                name="curve_policy_seq_pos_ck",
+            ),
+            models.CheckConstraint(
+                condition=(models.Q(resource_version__isnull=True) | models.Q(resource_version__gte=1)),
+                name="curve_policy_res_ver_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(effect=PolicyEffect.ALLOW) & ~models.Q(permitted_projection=[])
+                    | ~models.Q(effect=PolicyEffect.ALLOW) & models.Q(permitted_projection=[])
+                ),
+                name="curve_policy_proj_effect_ck",
+            ),
+            models.CheckConstraint(
+                condition=Exact(
+                    models.Func(models.F("permitted_projection"), function="jsonb_typeof"),
+                    models.Value("array"),
+                ),
+                name="curve_policy_proj_type_ck",
+            ),
+            models.CheckConstraint(
+                condition=Exact(
+                    models.Func(models.F("reason_codes"), function="jsonb_typeof"),
+                    models.Value("array"),
+                )
+                & GreaterThan(
+                    models.Func(
+                        models.F("reason_codes"),
+                        function="jsonb_array_length",
+                        output_field=models.IntegerField(),
+                    ),
+                    models.Value(0),
+                ),
+                name="curve_policy_reasons_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(policy_manifest_digest__regex=r"^sha256:[0-9a-f]{64}$"),
+                name="curve_policy_manifest_sha_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(input_digest__regex=r"^sha256:[0-9a-f]{64}$"),
+                name="curve_policy_input_sha_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(schema_version="1.0"),
+                name="curve_policy_schema_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(policy_key="CURVE_CORE_POLICY", policy_version=1),
+                name="curve_policy_identity_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(recorded_by__actor_type__in=["SERVICE", "SYSTEM"]),
+                name="curve_policy_recorder_type_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(recorded_at__gte=models.F("evaluated_at")),
+                name="curve_policy_recorded_time_ck",
+            ),
+        ]
 
 
 class AuditEvent(ImmutableRecordModel):
