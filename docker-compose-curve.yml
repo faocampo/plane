@@ -1,0 +1,132 @@
+services:
+  api:
+    build:
+      context: ${CURVE_SOURCE_ROOT:-.}/apps/api
+      dockerfile: Dockerfile.dev
+      args:
+        DOCKER_BUILDKIT: 1
+    volumes:
+      - ${CURVE_SOURCE_ROOT:-.}/apps/api:/code
+
+  curve-temporal-volume-init:
+    image: docker.io/temporalio/temporal:1.8.1@sha256:59561b9ef060eaeb1f46cb6a1842d6cbdd8a393eb3b6d315ecef5fe2f0b1d7a6
+    profiles:
+      - curve
+    user: "0:0"
+    entrypoint:
+      - sh
+      - -c
+    command:
+      - chown 1000:1000 /var/lib/temporal
+    network_mode: none
+    read_only: true
+    volumes:
+      - curve_temporal_data:/var/lib/temporal
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+    pids_limit: 16
+
+  temporal:
+    image: docker.io/temporalio/temporal:1.8.1@sha256:59561b9ef060eaeb1f46cb6a1842d6cbdd8a393eb3b6d315ecef5fe2f0b1d7a6
+    profiles:
+      - curve
+    restart: unless-stopped
+    depends_on:
+      curve-temporal-volume-init:
+        condition: service_completed_successfully
+    command:
+      - server
+      - start-dev
+      - --ip
+      - 0.0.0.0
+      - --namespace
+      - curve-local
+      - --db-filename
+      - /var/lib/temporal/temporal.db
+      - --ui-port
+      - "8233"
+    networks:
+      - dev_env
+    ports:
+      - "127.0.0.1:7233:7233"
+      - "127.0.0.1:8233:8233"
+    volumes:
+      - curve_temporal_data:/var/lib/temporal
+    healthcheck:
+      test:
+        - CMD
+        - temporal
+        - operator
+        - cluster
+        - health
+        - --address
+        - 127.0.0.1:7233
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+
+  curve-worker:
+    profiles:
+      - curve
+    build:
+      context: ${CURVE_SOURCE_ROOT:-.}/apps/api
+      dockerfile: Dockerfile.dev
+      args:
+        DOCKER_BUILDKIT: 1
+    restart: unless-stopped
+    command:
+      - python
+      - -m
+      - plane.curve.temporal.worker
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    volumes:
+      - ${CURVE_SOURCE_ROOT:-.}/apps/api:/code:ro
+    environment:
+      DJANGO_SETTINGS_MODULE: plane.settings.curve_worker
+      DATABASE_URL: postgresql://${POSTGRES_USER:-plane}:${POSTGRES_PASSWORD:-plane}@plane-db:5432/${POSTGRES_DB:-plane}
+      CURVE_ENABLED: "1"
+      CURVE_ENABLED_WORKSPACE_SLUGS: ${CURVE_ENABLED_WORKSPACE_SLUGS:-curve-local-proof}
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_NAMESPACE: curve-local
+      TEMPORAL_TASK_QUEUE: curve-control-plane-v1
+      TEMPORAL_WORKER_IDENTITY: curve-worker-local
+      LOG_LEVEL: INFO
+    depends_on:
+      temporal:
+        condition: service_healthy
+      plane-db:
+        condition: service_started
+    networks:
+      - dev_env
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -m
+        - plane.curve.temporal.health
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    cpus: 2.0
+    mem_limit: 8g
+
+volumes:
+  curve_temporal_data:
