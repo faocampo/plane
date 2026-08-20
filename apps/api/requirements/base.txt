@@ -71,6 +71,8 @@ opentelemetry-sdk==1.28.1
 opentelemetry-instrumentation-django==0.49b1
 opentelemetry-exporter-otlp==1.28.1
 opentelemetry-exporter-otlp-proto-grpc==1.28.1
+# durable Curve orchestration (D-003 local Temporal profile)
+temporalio==1.31.0
 # OpenAPI Specification
 drf-spectacular==0.29.0
 # html sanitizer

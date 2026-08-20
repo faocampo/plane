@@ -1,0 +1,31 @@
+{
+  "schema_version": "curve-temporal-supply-chain/v1",
+  "scope": "D-003_LOCAL_ONLY",
+  "package": {
+    "name": "temporalio",
+    "version": "1.31.0",
+    "license_expression": "MIT",
+    "requires_python": ">=3.10",
+    "source": "https://github.com/temporalio/sdk-python",
+    "documentation": "https://python.temporal.io/",
+    "metadata": "https://pypi.org/pypi/temporalio/1.31.0/json",
+    "wheels": [
+      {
+        "platform": "musllinux_1_2_aarch64",
+        "filename": "temporalio-1.31.0-cp310-abi3-musllinux_1_2_aarch64.whl",
+        "sha256": "sha256:f23f36d0e5d2e67f2129fc1cb876cf1e4e614f791a717d692f7c15fb732abe41"
+      },
+      {
+        "platform": "musllinux_1_2_x86_64",
+        "filename": "temporalio-1.31.0-cp310-abi3-musllinux_1_2_x86_64.whl",
+        "sha256": "sha256:52f8cc7f0b5a19d49f0c2d748420267aaacc2be0bb614743de8d10faf77a57c9"
+      }
+    ]
+  },
+  "server": {
+    "image": "docker.io/temporalio/temporal:1.8.1@sha256:59561b9ef060eaeb1f46cb6a1842d6cbdd8a393eb3b6d315ecef5fe2f0b1d7a6",
+    "embedded_server_version": "1.31.2",
+    "license_expression": "MIT",
+    "source": "https://github.com/temporalio/cli"
+  }
+}

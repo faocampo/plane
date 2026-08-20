@@ -21,6 +21,7 @@ from plane.curve.models import (
     IdempotencyRecord,
     IdempotencyState,
     InboxMessage,
+    InboxState,
     Operation,
     OperationStatus,
     OperationType,
@@ -258,6 +259,7 @@ def _validate_transition_command(
     progress_percent,
     error,
     destination,
+    workflow_id,
 ):
     _validate_uuid(workspace_id, "workspace_id")
     _validate_uuid(operation_id, "operation_id")
@@ -276,6 +278,16 @@ def _validate_transition_command(
     if status != OperationStatus.FAILED and error is not None:
         _invalid("error")
     _validate_text(destination, "destination", maximum=128, pattern=DESTINATION_PATTERN)
+    if workflow_id is not None:
+        _validate_text(workflow_id, "workflow_id", maximum=1000)
+        if re.fullmatch(
+            r"curve:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:"
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+            workflow_id,
+        ) is None:
+            _invalid("workflow_id")
+        if status not in {OperationStatus.QUEUED, OperationStatus.CANCEL_REQUESTED}:
+            _invalid("workflow_id")
 
 
 def sha256_digest(value: bytes) -> str:
@@ -691,6 +703,7 @@ def _transition_operation_authorized(
     progress_percent: int | None = None,
     error: dict | None = None,
     destination: str = "CURVE_LOCAL",
+    workflow_id: str | None = None,
 ) -> Operation:
     from plane.curve.policy_services import (
         assert_active_mutation_receipt,
@@ -721,6 +734,7 @@ def _transition_operation_authorized(
         progress_percent=progress_percent,
         error=error,
         destination=destination,
+        workflow_id=workflow_id,
     )
     version_conflict = False
     invalid_transition = False
@@ -755,8 +769,23 @@ def _transition_operation_authorized(
                 policy_decision_ref=policy_decision_ref,
             )
             invalid_transition = True
+        elif workflow_id is not None and operation.workflow_id not in {None, workflow_id}:
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.WORKFLOW_ID_CONFLICT",
+                target_ref=operation_resource_ref(operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                policy_decision_ref=policy_decision_ref,
+            )
+            invalid_transition = True
         else:
             operation.status = status
+            if workflow_id is not None:
+                operation.workflow_id = workflow_id
             operation.progress_percent = progress_percent
             operation.error = error
             operation.aggregate_version += 1
@@ -813,6 +842,7 @@ def claim_due_outbox(
     limit: int,
     lease_duration: timedelta,
     now=None,
+    destination: str | None = None,
 ) -> list[OutboxEvent]:
     _validate_uuid(workspace_id, "workspace_id")
     _validate_text(worker_id, "worker_id", maximum=255)
@@ -826,13 +856,15 @@ def claim_due_outbox(
         _invalid("lease_duration")
     now = now or timezone.now()
     _validate_utc_datetime(now, "now")
+    if destination is not None:
+        _validate_text(destination, "destination", maximum=128, pattern=DESTINATION_PATTERN)
     with transaction.atomic():
-        due = (
-            OutboxEvent.objects.select_for_update(skip_locked=True)
-            .filter(workspace_id=workspace_id)
-            .filter(Q(state=OutboxState.PENDING) | Q(state=OutboxState.RETRY_SCHEDULED, next_attempt_at__lte=now))
-            .order_by("created_at", "id")[:limit]
-        )
+        due = OutboxEvent.objects.select_for_update(skip_locked=True).filter(workspace_id=workspace_id)
+        if destination is not None:
+            due = due.filter(destination=destination)
+        due = due.filter(
+            Q(state=OutboxState.PENDING) | Q(state=OutboxState.RETRY_SCHEDULED, next_attempt_at__lte=now)
+        ).order_by("created_at", "id")[:limit]
         claimed = list(due)
         for item in claimed:
             item.state = OutboxState.CLAIMED
@@ -1031,3 +1063,37 @@ def receive_inbox_message(
             ),
             False,
         )
+
+
+def complete_inbox_message(
+    *, workspace_id: uuid.UUID, consumer_id: str, event_id: uuid.UUID, result_digest: str, now=None
+) -> InboxMessage:
+    """Complete one idempotent activity command without rewriting its result."""
+
+    _validate_uuid(workspace_id, "workspace_id")
+    _validate_text(consumer_id, "consumer_id", maximum=255)
+    _validate_uuid(event_id, "event_id")
+    if not isinstance(result_digest, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", result_digest) is None:
+        _invalid("result_digest")
+    now = now or timezone.now()
+    _validate_utc_datetime(now, "now")
+    with transaction.atomic():
+        message = (
+            InboxMessage.objects.select_for_update()
+            .filter(workspace_id=workspace_id, consumer_id=consumer_id, event_id=event_id)
+            .first()
+        )
+        if message is None:
+            raise CurveResourceNotFound
+        if message.state == InboxState.PROCESSED:
+            if message.result_digest != result_digest:
+                raise IdempotencyConflict
+            return message
+        if message.state != InboxState.RECEIVED:
+            raise InvalidCommand("inbox message cannot be completed from its current state")
+        message.state = InboxState.PROCESSED
+        message.processed_at = now
+        message.result_digest = result_digest
+        message.last_error = None
+        message.save(update_fields=["state", "processed_at", "result_digest", "last_error"])
+        return message

@@ -1,0 +1,209 @@
+{
+  "schema_version": "curve-context-pack/v1",
+  "task_id": "M0-S3",
+  "curve_revision": "aece53943525c6e7f7993551453954fe27b00746",
+  "plane_base_revision": "922dd6de5d5ed5081f35cd88343154022867ccad",
+  "context_digest": "sha256:0edadab2d51b7898ed91b556ea3f072f4127b909d0755bd7d5993597fe618f26",
+  "human_owner": "Federico Ocampo",
+  "human_reviewer": "Federico Ocampo",
+  "data_classification": "INTERNAL",
+  "files": [
+    {
+      "path": "contracts/database/m0-03-policy-contract.md",
+      "sha256": "sha256:3d211c9a92a25585da699cd0b6002855eae5911823bae93dddefb7865ac93d4e"
+    },
+    {
+      "path": "contracts/database/m0-s2-relational-contract.md",
+      "sha256": "sha256:45bcb02ff0cddd7347cb4eaf6e9a96fb9b37642970bf8e41f95bcab6976fce1c"
+    },
+    {
+      "path": "contracts/policy/core-policy-v1.json",
+      "sha256": "sha256:e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
+    },
+    {
+      "path": "contracts/schemas/audit-event.schema.json",
+      "sha256": "sha256:36fcb1f4023cc26619f5e20bf78670e83b2bf4bb48112fdaca1481daa84157f1"
+    },
+    {
+      "path": "contracts/schemas/common.schema.json",
+      "sha256": "sha256:b00c8c420f7e78f20adea2b3a097d74a4e97e73c0f2cc71ad9ac5c4933e31583"
+    },
+    {
+      "path": "contracts/schemas/event-envelope.schema.json",
+      "sha256": "sha256:de28a9654520b2f27d307b246a48f4d6b847e924d53e1d95513c47c29c5166ed"
+    },
+    {
+      "path": "contracts/schemas/idempotency-record.schema.json",
+      "sha256": "sha256:9c40ad05af41e89d1fa8890550f03591c106070337c2cf5ff091aedd74210801"
+    },
+    {
+      "path": "contracts/schemas/inbox-message.schema.json",
+      "sha256": "sha256:e1b06e1cb5ea157e2249014229dceac3c1ea0f07bda393a2832ba886dcd84527"
+    },
+    {
+      "path": "contracts/schemas/operation-event-v1.schema.json",
+      "sha256": "sha256:fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0"
+    },
+    {
+      "path": "contracts/schemas/operation.schema.json",
+      "sha256": "sha256:887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff"
+    },
+    {
+      "path": "contracts/schemas/outbox-event.schema.json",
+      "sha256": "sha256:fd5db47b56f359eb7333e06c0c7ec1f9f90b00a6b4b07f791f10d0177cc79711"
+    },
+    {
+      "path": "contracts/schemas/policy-decision.schema.json",
+      "sha256": "sha256:5faa121136c59420da7fb1582985c3d445b6486e1e52a77c8d6ff853634f4bd8"
+    },
+    {
+      "path": "contracts/schemas/policy-evaluation.schema.json",
+      "sha256": "sha256:75622a18bbbdaa69795beee16254106f12aab2aa150e1619f237d3bf67d724f8"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/idempotency-completed.valid.json",
+      "sha256": "sha256:8963d2929f2a9e460dd6dd6f24fef683cb0f017349f75a1c7187e550375484a2"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/idempotency-raw-key.invalid.json",
+      "sha256": "sha256:83c44f8d99ca36b07ca37e7f228e16a2d7e665706d31a3cfb25ea558ce74b762"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/idempotency-terminal-null.invalid.json",
+      "sha256": "sha256:b4bd51bec064ebfbf67e3d27668079e59c857317ccfe94475a4726233d445ffc"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/inbox-processed-null.invalid.json",
+      "sha256": "sha256:754703101192b31aada38f4ec0283d040705bc6d4f87b1577407502b75734642"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/operation-terminal-null.invalid.json",
+      "sha256": "sha256:f206dca2d562660ed5a5b9f1e961149939c8624dd6ace06d5e77ccddb52fb27e"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/operation-terminal.valid.json",
+      "sha256": "sha256:2be8e4523ddb8b8a4bea51b9b0d681c7d8e794c1946b8795aaf5b675e89f9a63"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/outbox-claim-null.invalid.json",
+      "sha256": "sha256:39620d27770f8f815944e819fed25d46da0a707bcf05a4a5419b3eb614694090"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/outbox-claim.valid.json",
+      "sha256": "sha256:0a1e55b48105fa4d274f4a342351956a5effabf83cc25613b75ac27d7137fbce"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/outbox-delivery-null.invalid.json",
+      "sha256": "sha256:29298dc61fc0d39cecce1472dfc03ab32c086f68e7949a8cfa1df38ba59266c9"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/outbox-delivery.valid.json",
+      "sha256": "sha256:759801cd26b7e5e78cbfb2c5eb5d9d4f70537ad29c8deb8999d8b7014fabf702"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/outbox-retry-null.invalid.json",
+      "sha256": "sha256:4c23acbe68d11038536e9a91e3d9c25e10a4e911023ee344fc9750f1fd23a011"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/outbox-retry.valid.json",
+      "sha256": "sha256:8ca93000de6b1f76904ceda0cecd0e6e194635494a494e37212ad958fb29fb8e"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/policy-evaluation-transition-service.valid.json",
+      "sha256": "sha256:c4468f4ea0ff53a6c957fd0acab4d155cb87292897d27e44a4a6d74af99b5503"
+    },
+    {
+      "path": "contracts/temporal/m0-workflow-contract.md",
+      "sha256": "sha256:67e1306c21b7f0e87180232706f5c1b86da3f845c5f7628b65d0d27e541f5dbf"
+    },
+    {
+      "path": "docs/curve-ai-native-sdlc-prd.md",
+      "sha256": "sha256:04768c4a6949d6e6eda319459946f0f96ceda11df1963aceed0a90c8db53650d"
+    },
+    {
+      "path": "docs/technical/adr-003-runtime-topology.md",
+      "sha256": "sha256:9d727895287b6fe0d588ba5c44d3b2c2a36c28a19f8a4d9ec611899350ee6cb8"
+    },
+    {
+      "path": "docs/technical/architecture.md",
+      "sha256": "sha256:d5747d49ea7c8fadd784d8d63a9faeb25fd813965fcc2af8ef6256cd39f656d8"
+    },
+    {
+      "path": "docs/technical/d003-local-topology-decision-packet.md",
+      "sha256": "sha256:03f22d8d630cc8acbab40d91dd2c28b3cd43cc75bc3401e5740e7ea6a486e9f4"
+    },
+    {
+      "path": "docs/technical/d003-private-platform-connectivity-amendment.md",
+      "sha256": "sha256:e2dcd583607a28a5835f263fece9008066b7456936c308ead300798ea9acecac"
+    },
+    {
+      "path": "docs/technical/m0-03-implementation-evidence.md",
+      "sha256": "sha256:63dcc767f021051cf8f0a78a3c41e9d0e78d04512344ebfa63cd951113e8fb03"
+    },
+    {
+      "path": "docs/technical/m0-authorization-and-state-matrices.md",
+      "sha256": "sha256:66ba736a585b4745f35df486a196ad9e86a764270c22e57c736d51ba80b0fcb9"
+    },
+    {
+      "path": "docs/technical/m0-local-skeleton-task-packets.md",
+      "sha256": "sha256:cdee858a931c0dcec9f83c8303499fc1afa55659077d3553932f12b76b9c6fca"
+    },
+    {
+      "path": "docs/technical/m0-s2-implementation-evidence.md",
+      "sha256": "sha256:6478f3a8e093f3b26cab331b9b56c93e67854aa7bce2530908335686b2c8234e"
+    },
+    {
+      "path": "docs/technical/security-and-operations.md",
+      "sha256": "sha256:db4a5437c8700775ca24b398445ff58ba9c4ea68ae86fb9015d72e5ead3daa81"
+    },
+    {
+      "path": "scripts/lib/context-pack.mjs",
+      "sha256": "sha256:886193a736487190ff8f75e2344fc8037f911711d56d68e5f0fe319cb915c16f"
+    },
+    {
+      "path": "scripts/validate-contracts.mjs",
+      "sha256": "sha256:eeb9772b860025a6b3623517a4094d406cadfd46bfbcf837ddee959c2b352b02"
+    }
+  ],
+  "paths": [
+    "contracts/database/m0-03-policy-contract.md",
+    "contracts/database/m0-s2-relational-contract.md",
+    "contracts/policy/core-policy-v1.json",
+    "contracts/schemas/audit-event.schema.json",
+    "contracts/schemas/common.schema.json",
+    "contracts/schemas/event-envelope.schema.json",
+    "contracts/schemas/idempotency-record.schema.json",
+    "contracts/schemas/inbox-message.schema.json",
+    "contracts/schemas/operation-event-v1.schema.json",
+    "contracts/schemas/operation.schema.json",
+    "contracts/schemas/outbox-event.schema.json",
+    "contracts/schemas/policy-decision.schema.json",
+    "contracts/schemas/policy-evaluation.schema.json",
+    "contracts/schemas/semantic-fixtures/idempotency-completed.valid.json",
+    "contracts/schemas/semantic-fixtures/idempotency-raw-key.invalid.json",
+    "contracts/schemas/semantic-fixtures/idempotency-terminal-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/inbox-processed-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/operation-terminal-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/operation-terminal.valid.json",
+    "contracts/schemas/semantic-fixtures/outbox-claim-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/outbox-claim.valid.json",
+    "contracts/schemas/semantic-fixtures/outbox-delivery-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/outbox-delivery.valid.json",
+    "contracts/schemas/semantic-fixtures/outbox-retry-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/outbox-retry.valid.json",
+    "contracts/schemas/semantic-fixtures/policy-evaluation-transition-service.valid.json",
+    "contracts/temporal/m0-workflow-contract.md",
+    "docs/curve-ai-native-sdlc-prd.md",
+    "docs/technical/adr-003-runtime-topology.md",
+    "docs/technical/architecture.md",
+    "docs/technical/d003-local-topology-decision-packet.md",
+    "docs/technical/d003-private-platform-connectivity-amendment.md",
+    "docs/technical/m0-03-implementation-evidence.md",
+    "docs/technical/m0-authorization-and-state-matrices.md",
+    "docs/technical/m0-local-skeleton-task-packets.md",
+    "docs/technical/m0-s2-implementation-evidence.md",
+    "docs/technical/security-and-operations.md",
+    "scripts/lib/context-pack.mjs",
+    "scripts/validate-contracts.mjs"
+  ]
+}

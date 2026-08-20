@@ -652,6 +652,7 @@ def transition_operation_with_service_authorization(
     progress_percent: int | None = None,
     error: dict | None = None,
     destination: str = "CURVE_LOCAL",
+    workflow_id: str | None = None,
 ):
     """Apply a worker transition through a trusted service-authorization boundary."""
 
@@ -729,6 +730,7 @@ def transition_operation_with_service_authorization(
             progress_percent=progress_percent,
             error=error,
             destination=destination,
+            workflow_id=workflow_id,
         )
 
     from plane.curve.services import (
