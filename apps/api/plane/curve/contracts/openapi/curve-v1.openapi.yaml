@@ -1,0 +1,247 @@
+openapi: 3.1.0
+info:
+  title: Curve API
+  version: 1.0.0
+  license:
+    name: GNU Affero General Public License v3.0 only
+    identifier: AGPL-3.0-only
+  description: >-
+    Workspace-scoped Curve control-plane API. Every request is authorized against
+    Plane workspace membership and Curve object policy before object retrieval.
+servers:
+  - url: /api/v1
+security:
+  - planeSession: []
+paths:
+  /workspaces/{workspace_slug}/curve/operations:
+    get:
+      operationId: listCurveOperations
+      summary: List operations visible to the current principal
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Operation page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationPage'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/operations/{operation_id}:
+    get:
+      operationId: getCurveOperation
+      summary: Read one operation
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200':
+          description: Current operation state
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/operation.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/operations/{operation_id}/cancel:
+    post:
+      operationId: cancelCurveOperation
+      summary: Request cancellation of a cancellable operation
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/OperationId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202':
+          description: Cancellation accepted or replayed idempotently
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/operation.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/events:
+    get:
+      operationId: streamCurveEvents
+      summary: Stream authorized workspace events with resume support
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - name: Last-Event-ID
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Server-sent event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '410':
+          description: Resume cursor is outside the retained stream window
+          content:
+            application/problem+json:
+              schema:
+                $ref: '../schemas/common.schema.json#/$defs/ProblemDetails'
+  /workspaces/{workspace_slug}/curve/foundation-probes:
+    post:
+      operationId: createCurveFoundationProbe
+      summary: Start the synthetic local M0 proof workflow
+      description: >-
+        Available only when DEBUG and CURVE_FOUNDATION_PROBE_ENABLED are true.
+        Production and staging deployments must return 404.
+      x-curve-environments:
+        - local
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                requested_delay_ms:
+                  type: integer
+                  minimum: 0
+                  maximum: 5000
+      responses:
+        '202':
+          description: Probe accepted or replayed idempotently
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/operation.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+components:
+  securitySchemes:
+    planeSession:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: Plane authenticated session; mutating requests also require Plane's CSRF protection.
+  parameters:
+    WorkspaceSlug:
+      name: workspace_slug
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 80
+    OperationId:
+      name: operation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 255
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema:
+        type: string
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+  schemas:
+    OperationPage:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '../schemas/operation.schema.json'
+        next_cursor:
+          type:
+            - string
+            - 'null'
+  responses:
+    Problem:
+      description: Curve Problem Details response
+      content:
+        application/problem+json:
+          schema:
+            $ref: '../schemas/common.schema.json#/$defs/ProblemDetails'
