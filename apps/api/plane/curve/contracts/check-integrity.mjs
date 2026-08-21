@@ -67,21 +67,23 @@ const expectedM0S3Files = {
 };
 
 const expectedM0S4Context = {
-  curveRevision: "39940b014a4311eb3d2110c2285b34572d582dbf",
+  curveRevision: "6cae96b572653b22fd9df5a23480527f37cde498",
   approvedProductRevision: "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
   planeBaseRevision: "d99342f589db4eb488695487d3ae3f2c16bf0874",
-  contextDigest: "sha256:69a53872955137f4276474c351c62802c2ad4a90c207c42d76c15f8a0e61e540",
+  contextDigest: "sha256:d5ee2ba83d3216a1c2debc304d8a8b2f1821c441b7cbc5504fd85a18956fa44d",
   owner: "Federico Ocampo",
   reviewer: "Federico Ocampo",
 };
 
 const expectedM0S4VendoredFiles = {
-  "contracts/openapi/curve-v1.openapi.yaml": "875a0af70d0ce554846b1af66dec3ae6b146eab86a21bf3377b522b17f6839ba",
+  "contracts/openapi/curve-v1.openapi.yaml": "9ac74e53ef1763e8a54b6e001f1d23812a1997381c73e051f9d8eb8398c0ae0e",
   "contracts/policy/core-policy-v1.json": "e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52",
   "contracts/schemas/common.schema.json": "b00c8c420f7e78f20adea2b3a097d74a4e97e73c0f2cc71ad9ac5c4933e31583",
   "contracts/schemas/event-envelope.schema.json": "de28a9654520b2f27d307b246a48f4d6b847e924d53e1d95513c47c29c5166ed",
   "contracts/schemas/operation-event-v1.schema.json":
     "fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0",
+  "contracts/schemas/operation-summary.schema.json":
+    "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
   "contracts/schemas/operation.schema.json": "887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff",
   "contracts/schemas/sse-event.schema.json": "58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80",
 };

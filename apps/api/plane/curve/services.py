@@ -280,14 +280,52 @@ def _validate_transition_command(
     _validate_text(destination, "destination", maximum=128, pattern=DESTINATION_PATTERN)
     if workflow_id is not None:
         _validate_text(workflow_id, "workflow_id", maximum=1000)
-        if re.fullmatch(
-            r"curve:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:"
-            r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
-            workflow_id,
-        ) is None:
+        if (
+            re.fullmatch(
+                r"curve:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:"
+                r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
+                workflow_id,
+            )
+            is None
+        ):
             _invalid("workflow_id")
         if status not in {OperationStatus.QUEUED, OperationStatus.CANCEL_REQUESTED}:
             _invalid("workflow_id")
+
+
+def _validate_cancel_operation_command(
+    *,
+    workspace_id,
+    operation_id,
+    expected_version,
+    principal_scope,
+    command_scope,
+    raw_idempotency_key,
+    canonical_request,
+    actor,
+    effective_principal,
+    correlation_id,
+    causation_id,
+    destination,
+    idempotency_ttl,
+):
+    _validate_uuid(workspace_id, "workspace_id")
+    _validate_uuid(operation_id, "operation_id")
+    if type(expected_version) is not int or expected_version < 1:
+        _invalid("expected_version")
+    _validate_text(principal_scope, "principal_scope", maximum=500)
+    _validate_text(command_scope, "command_scope", maximum=500)
+    _validate_text(raw_idempotency_key, "idempotency_key", maximum=4096)
+    if not isinstance(canonical_request, bytes) or not canonical_request:
+        _invalid("canonical_request")
+    _validate_actor(actor, "actor", required=True)
+    _validate_actor(effective_principal, "effective_principal", required=False)
+    _validate_text(correlation_id, "correlation_id", maximum=255)
+    if causation_id is not None:
+        _validate_text(causation_id, "causation_id", maximum=255)
+    _validate_text(destination, "destination", maximum=128, pattern=DESTINATION_PATTERN)
+    if not isinstance(idempotency_ttl, timedelta) or idempotency_ttl.total_seconds() <= 0:
+        _invalid("idempotency_ttl")
 
 
 def sha256_digest(value: bytes) -> str:
@@ -635,7 +673,7 @@ def _create_operation_authorized(
                 key_digest=key_digest,
                 destination=destination,
             )
-            response_status = 201
+            response_status = 202
             response_resource_ref = operation_resource_ref(operation)
             response_digest = operation_response_digest(
                 response_status=response_status,
@@ -687,6 +725,242 @@ def _create_operation_authorized(
 
 def create_operation(*args, **kwargs):
     raise CurveAuthorizationReceiptRequired("create_operation requires the policy-owned mutation wrapper")
+
+
+def _request_operation_cancellation_authorized(
+    *,
+    authorization_receipt,
+    workspace_id: uuid.UUID,
+    operation_id: uuid.UUID,
+    expected_version: int,
+    principal_scope: str,
+    command_scope: str,
+    raw_idempotency_key: str,
+    canonical_request: bytes,
+    actor: dict,
+    correlation_id: str,
+    effective_principal: dict | None = None,
+    causation_id: str | None = None,
+    destination: str = "CURVE_TEMPORAL_OPERATION_V1",
+    idempotency_ttl: timedelta = timedelta(days=1),
+) -> OperationCommandResult:
+    """Request cancellation atomically through the human policy boundary."""
+
+    from plane.curve.policy_services import (
+        assert_active_mutation_receipt,
+        policy_decision_ref_for_receipt,
+    )
+
+    receipt_resource_ref = dict(authorization_receipt.resource_ref)
+    assert_active_mutation_receipt(
+        authorization_receipt,
+        action="CURVE.OPERATION.CANCEL",
+        workspace_id=workspace_id,
+        resource_ref={
+            "resource_type": "OPERATION",
+            "resource_id": str(operation_id),
+            "resource_version": receipt_resource_ref.get("resource_version"),
+        },
+    )
+    policy_decision_ref = policy_decision_ref_for_receipt(authorization_receipt)
+    _validate_cancel_operation_command(
+        workspace_id=workspace_id,
+        operation_id=operation_id,
+        expected_version=expected_version,
+        principal_scope=principal_scope,
+        command_scope=command_scope,
+        raw_idempotency_key=raw_idempotency_key,
+        canonical_request=canonical_request,
+        actor=actor,
+        effective_principal=effective_principal,
+        correlation_id=correlation_id,
+        causation_id=causation_id,
+        destination=destination,
+        idempotency_ttl=idempotency_ttl,
+    )
+    key_digest = idempotency_key_digest(raw_idempotency_key)
+    request_digest = sha256_digest(canonical_request)
+    expires_at = timezone.now() + idempotency_ttl
+
+    conflict = False
+    already_in_progress = False
+    version_conflict = False
+    invalid_transition = False
+    result = None
+    with transaction.atomic():
+        operation = Operation.objects.select_for_update().filter(workspace_id=workspace_id, id=operation_id).first()
+        if operation is None:
+            raise CurveResourceNotFound
+
+        record = (
+            IdempotencyRecord.objects.select_for_update()
+            .filter(
+                workspace_id=workspace_id,
+                principal_scope=principal_scope,
+                command_scope=command_scope,
+                key_digest=key_digest,
+            )
+            .first()
+        )
+        if record is not None and record.request_digest != request_digest:
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.COMMAND.IDEMPOTENCY_CONFLICT",
+                target_ref=operation_resource_ref(operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+            conflict = True
+        elif record is not None and record.state in IdempotencyRecord.TERMINAL_STATES:
+            replayed_operation = _resolve_operation_replay(
+                workspace_id=workspace_id,
+                resource_ref=record.response_resource_ref,
+            )
+            result = OperationCommandResult(
+                operation=replayed_operation,
+                replayed=True,
+                response_status=record.response_status,
+                response_digest=record.response_digest,
+                response_resource_ref=record.response_resource_ref,
+            )
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.CANCEL_IDEMPOTENT_REPLAY",
+                target_ref=operation_resource_ref(replayed_operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+        elif record is not None:
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.CANCEL_ALREADY_IN_PROGRESS",
+                target_ref=operation_resource_ref(operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+            already_in_progress = True
+        elif operation.aggregate_version != expected_version:
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.VERSION_CONFLICT",
+                target_ref=operation_resource_ref(operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+            version_conflict = True
+        elif operation.status not in {OperationStatus.QUEUED, OperationStatus.RUNNING} or not operation.workflow_id:
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.INVALID_CANCEL_STATE",
+                target_ref=operation_resource_ref(operation),
+                outcome=AuditOutcome.NO_EFFECT,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+            invalid_transition = True
+        else:
+            record = IdempotencyRecord.objects.create(
+                workspace_id=workspace_id,
+                principal_scope=principal_scope,
+                command_scope=command_scope,
+                key_digest=key_digest,
+                request_digest=request_digest,
+                expires_at=expires_at,
+            )
+            operation.status = OperationStatus.CANCEL_REQUESTED
+            operation.aggregate_version += 1
+            operation.policy_version_ref = policy_decision_ref
+            operation.updated_by = actor
+            operation.save()
+            _append_operation_event(
+                operation=operation,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                key_digest=key_digest,
+                destination=destination,
+            )
+            response_status = 202
+            response_resource_ref = operation_resource_ref(operation)
+            response_digest = operation_response_digest(
+                response_status=response_status,
+                resource_ref=response_resource_ref,
+            )
+            _append_audit_event(
+                workspace_id=workspace_id,
+                action="CURVE.OPERATION.CANCEL_REQUEST",
+                target_ref=response_resource_ref,
+                outcome=AuditOutcome.SUCCEEDED,
+                actor=actor,
+                effective_principal=effective_principal,
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                after_digest=response_digest,
+                key_digest=key_digest,
+                policy_decision_ref=policy_decision_ref,
+            )
+            record.state = IdempotencyState.COMPLETED
+            record.response_status = response_status
+            record.response_digest = response_digest
+            record.response_resource_ref = response_resource_ref
+            record.completed_at = timezone.now()
+            record.save(
+                update_fields=[
+                    "state",
+                    "response_status",
+                    "response_digest",
+                    "response_resource_ref",
+                    "completed_at",
+                ]
+            )
+            result = OperationCommandResult(
+                operation=operation,
+                replayed=False,
+                response_status=response_status,
+                response_digest=response_digest,
+                response_resource_ref=response_resource_ref,
+            )
+
+    if conflict:
+        raise IdempotencyConflict
+    if already_in_progress:
+        raise CommandAlreadyInProgress
+    if version_conflict:
+        raise OptimisticConcurrencyError
+    if invalid_transition:
+        raise InvalidOperationTransition
+    if result is None:
+        raise RuntimeError("cancellation command completed without a result")
+    return result
+
+
+def request_operation_cancellation(*args, **kwargs):
+    raise CurveAuthorizationReceiptRequired("request_operation_cancellation requires the policy-owned mutation wrapper")
 
 
 def _transition_operation_authorized(

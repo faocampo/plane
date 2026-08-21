@@ -153,12 +153,12 @@ def test_create_operation_commits_aggregate_event_outbox_audit_and_replay_record
         "resource_id": str(result.operation.id),
         "resource_version": 1,
     }
-    assert result.response_status == record.response_status == 201
+    assert result.response_status == record.response_status == 202
     assert (
         result.response_digest
         == record.response_digest
         == operation_response_digest(
-            response_status=201,
+            response_status=202,
             resource_ref=record.response_resource_ref,
         )
     )
@@ -234,7 +234,7 @@ def test_same_request_replays_original_response_reference_after_operation_advanc
     replay = create_command(workspace_id)
 
     assert replay.replayed is True
-    assert replay.response_status == first.response_status == 201
+    assert replay.response_status == first.response_status == 202
     assert replay.response_digest == first.response_digest
     assert replay.response_resource_ref == first.response_resource_ref
     assert replay.response_resource_ref["resource_version"] == 1

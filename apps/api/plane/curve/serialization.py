@@ -60,6 +60,42 @@ def serialize_operation(operation: Operation) -> dict[str, Any]:
     }
 
 
+def serialize_operation_summary(operation: Operation) -> dict[str, Any]:
+    """Serialize only the API-safe Operation metadata approved by core policy."""
+
+    return {
+        "schema_version": operation.schema_version,
+        "id": str(operation.id),
+        "workspace_id": str(operation.workspace_id),
+        "operation_type": operation.operation_type,
+        "status": operation.status,
+        "version": operation.aggregate_version,
+        **_optional_values(progress_percent=operation.progress_percent),
+    }
+
+
+def serialize_sse_event(event: DomainEvent) -> dict[str, Any]:
+    """Serialize one authorized event through an explicit safe-field allowlist."""
+
+    data = {"status": event.payload.get("status")}
+    progress = event.payload.get("progress")
+    if type(progress) is int and 0 <= progress <= 100:
+        data["progress_percent"] = progress
+    return {
+        "schema_version": "1.0",
+        "event_id": str(event.id),
+        "workspace_id": str(event.workspace_id),
+        "event_type": event.event_type,
+        "occurred_at": event.occurred_at.isoformat(),
+        "resource": {
+            "type": event.aggregate_type,
+            "id": str(event.aggregate_id),
+            "version": event.aggregate_version,
+        },
+        "data": data,
+    }
+
+
 def serialize_domain_event(event: DomainEvent) -> dict[str, Any]:
     return {
         "schema_version": event.schema_version,

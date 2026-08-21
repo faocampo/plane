@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/operation-summary.schema.json",
+  "title": "Curve Operation API summary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "operation_type",
+    "status",
+    "version"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "operation_type": {
+      "type": "string",
+      "enum": ["FOUNDATION_PROBE", "WORKFLOW_COMMAND", "PROVIDER_RECONCILIATION"]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "QUEUED",
+        "RUNNING",
+        "WAITING_FOR_HUMAN",
+        "CANCEL_REQUESTED",
+        "SUCCEEDED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "version": { "$ref": "common.schema.json#/$defs/AggregateVersion" },
+    "progress_percent": { "type": "integer", "minimum": 0, "maximum": 100 }
+  }
+}

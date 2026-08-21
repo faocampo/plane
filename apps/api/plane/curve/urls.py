@@ -4,7 +4,14 @@
 
 from django.urls import path
 
-from plane.curve.views import CurveWorkspaceShellEndpoint
+from plane.curve.views import (
+    CurveEventStreamEndpoint,
+    CurveFoundationProbeEndpoint,
+    CurveOperationCancelEndpoint,
+    CurveOperationDetailEndpoint,
+    CurveOperationListEndpoint,
+    CurveWorkspaceShellEndpoint,
+)
 
 
 urlpatterns = [
@@ -12,5 +19,30 @@ urlpatterns = [
         "workspaces/<str:slug>/curve/",
         CurveWorkspaceShellEndpoint.as_view(),
         name="curve-workspace-shell",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/operations/",
+        CurveOperationListEndpoint.as_view(),
+        name="curve-operation-list",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/operations/<uuid:resource_id>/",
+        CurveOperationDetailEndpoint.as_view(),
+        name="curve-operation-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/operations/<uuid:resource_id>/cancel/",
+        CurveOperationCancelEndpoint.as_view(),
+        name="curve-operation-cancel",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/events/",
+        CurveEventStreamEndpoint.as_view(),
+        name="curve-event-stream",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/foundation-probes/",
+        CurveFoundationProbeEndpoint.as_view(),
+        name="curve-foundation-probe",
     ),
 ]

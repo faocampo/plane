@@ -1,10 +1,10 @@
 {
   "schema_version": "curve-context-pack/v1",
   "task_id": "M0-S4",
-  "curve_revision": "39940b014a4311eb3d2110c2285b34572d582dbf",
+  "curve_revision": "6cae96b572653b22fd9df5a23480527f37cde498",
   "approved_product_revision": "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
   "plane_base_revision": "d99342f589db4eb488695487d3ae3f2c16bf0874",
-  "context_digest": "sha256:69a53872955137f4276474c351c62802c2ad4a90c207c42d76c15f8a0e61e540",
+  "context_digest": "sha256:d5ee2ba83d3216a1c2debc304d8a8b2f1821c441b7cbc5504fd85a18956fa44d",
   "human_owner": "Federico Ocampo",
   "human_reviewer": "Federico Ocampo",
   "data_classification": "INTERNAL",
@@ -20,7 +20,7 @@
   },
   "planning_reconciliation": {
     "curve_pr": "https://github.com/faocampo/curve/pull/18",
-    "revision": "39940b014a4311eb3d2110c2285b34572d582dbf",
+    "revision": "6cae96b572653b22fd9df5a23480527f37cde498",
     "state": "DRAFT_PENDING_HUMAN_REVIEW"
   },
   "paths": [
@@ -35,6 +35,7 @@
     "contracts/schemas/examples/operation.invalid.json",
     "contracts/schemas/examples/operation.valid.json",
     "contracts/schemas/operation-event-v1.schema.json",
+    "contracts/schemas/operation-summary.schema.json",
     "contracts/schemas/operation.schema.json",
     "contracts/schemas/semantic-fixtures/idempotency-completed.valid.json",
     "contracts/schemas/semantic-fixtures/idempotency-raw-key.invalid.json",
@@ -65,7 +66,7 @@
   "files": [
     {
       "path": "contracts/openapi/curve-v1.openapi.yaml",
-      "sha256": "sha256:875a0af70d0ce554846b1af66dec3ae6b146eab86a21bf3377b522b17f6839ba"
+      "sha256": "sha256:9ac74e53ef1763e8a54b6e001f1d23812a1997381c73e051f9d8eb8398c0ae0e"
     },
     {
       "path": "contracts/policy/core-policy-v1.json",
@@ -106,6 +107,10 @@
     {
       "path": "contracts/schemas/operation-event-v1.schema.json",
       "sha256": "sha256:fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0"
+    },
+    {
+      "path": "contracts/schemas/operation-summary.schema.json",
+      "sha256": "sha256:3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1"
     },
     {
       "path": "contracts/schemas/operation.schema.json",
@@ -205,7 +210,7 @@
     },
     {
       "path": "scripts/lib/context-pack.mjs",
-      "sha256": "sha256:0a0343221fc444a0457733f70857a9abb08595af5fa1b31cba247802b8a7b5df"
+      "sha256": "sha256:dcc488effd7fbb0eebe02361bd6201a3143cd816692f445029de4399b1a9a394"
     },
     {
       "path": "scripts/validate-contracts.mjs",

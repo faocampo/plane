@@ -34,6 +34,8 @@ paths:
           $ref: '#/components/responses/Problem'
         '404':
           $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
   /workspaces/{workspace_slug}/curve/operations/{operation_id}:
     get:
       operationId: getCurveOperation
@@ -51,7 +53,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/operation.schema.json'
+                $ref: '../schemas/operation-summary.schema.json'
         '401':
           $ref: '#/components/responses/Problem'
         '403':
@@ -77,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/operation.schema.json'
+                $ref: '../schemas/operation-summary.schema.json'
         '401':
           $ref: '#/components/responses/Problem'
         '403':
@@ -160,7 +162,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '../schemas/operation.schema.json'
+                $ref: '../schemas/operation-summary.schema.json'
         '401':
           $ref: '#/components/responses/Problem'
         '403':
@@ -233,7 +235,7 @@ components:
         results:
           type: array
           items:
-            $ref: '../schemas/operation.schema.json'
+            $ref: '../schemas/operation-summary.schema.json'
         next_cursor:
           type:
             - string

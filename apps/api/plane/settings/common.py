@@ -128,6 +128,21 @@ CURVE_ENABLED_WORKSPACE_SLUGS = frozenset(
 )
 CURVE_ENVIRONMENT = os.environ.get("CURVE_ENVIRONMENT", "").strip().upper()
 CURVE_POLICY_RECORDER_ACTOR_ID = os.environ.get("CURVE_POLICY_RECORDER_ACTOR_ID", "").strip()
+CURVE_FOUNDATION_PROBE_ENABLED = os.environ.get("CURVE_FOUNDATION_PROBE_ENABLED", "0").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+CURVE_SSE_REPLAY_LIMIT = max(1, min(1000, int(os.environ.get("CURVE_SSE_REPLAY_LIMIT", "100"))))
+CURVE_SSE_POLL_INTERVAL_SECONDS = max(
+    0.1,
+    min(10.0, float(os.environ.get("CURVE_SSE_POLL_INTERVAL_SECONDS", "1"))),
+)
+CURVE_SSE_CONNECTION_SECONDS = max(
+    1.0,
+    min(60.0, float(os.environ.get("CURVE_SSE_CONNECTION_SECONDS", "25"))),
+)
 
 # Middlewares
 MIDDLEWARE = [
