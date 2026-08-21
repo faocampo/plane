@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import { useParams, usePathname } from "next/navigation";
@@ -12,8 +12,11 @@ import { SIDEBAR_WIDTH } from "@plane/constants";
 import { useLocalStorage } from "@plane/hooks";
 // components
 import { ResizableSidebar } from "@/components/sidebar/resizable-sidebar";
+import { CurveMobileNavigation } from "@/components/curve/curve-mobile-navigation";
 // hooks
 import { useAppTheme } from "@/hooks/store/use-app-theme";
+import { useCurveWorkspaceShell } from "@/hooks/use-curve-workspace-shell";
+import useSize from "@/hooks/use-window-size";
 // local imports
 import { ExtendedAppSidebar } from "./extended-sidebar";
 import { AppSidebar } from "./sidebar";
@@ -34,6 +37,10 @@ export const ProjectAppSidebar = observer(function ProjectAppSidebar() {
   // routes
   const { workspaceSlug } = useParams();
   const pathname = usePathname();
+  const { isEnabled: isCurveEnabled } = useCurveWorkspaceShell(workspaceSlug?.toString());
+  const windowSize = useSize();
+  const isCurveMobile = isCurveEnabled && windowSize[0] < 768;
+  const wasCurveMobile = useRef(false);
   // derived values
   const isAnyExtendedSidebarOpen = isExtendedSidebarOpened;
 
@@ -42,7 +49,20 @@ export const ProjectAppSidebar = observer(function ProjectAppSidebar() {
   // handlers
   const handleWidthChange = (width: number) => setValue(width);
 
+  useEffect(() => {
+    if (isCurveMobile && !wasCurveMobile.current) toggleSidebar(true);
+    wasCurveMobile.current = isCurveMobile;
+  }, [isCurveMobile, toggleSidebar]);
+
   if (isNotificationsPath) return null;
+
+  if (isCurveMobile) {
+    return (
+      <CurveMobileNavigation open={sidebarCollapsed === false} onOpenChange={(open) => toggleSidebar(!open)}>
+        <AppSidebar />
+      </CurveMobileNavigation>
+    );
+  }
 
   return (
     <>

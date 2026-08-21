@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-21T00:00:00Z",
+  "title": "Design System: Curve",
+  "extensions": {
+    "colorMeta": {
+      "curve-accent": {
+        "role": "primary",
+        "displayName": "Curve Operational Blue",
+        "canonical": "var(--background-color-accent-primary)",
+        "tonalRamp": [
+          "oklch(0.2093 0.0438 234.02)",
+          "oklch(0.2626 0.0578 237.5)",
+          "oklch(0.3399 0.0783 240.32)",
+          "oklch(0.4347 0.104093 242.4823)",
+          "oklch(0.4799 0.1158 242.91)",
+          "oklch(0.6766 0.1665 243.91)",
+          "oklch(0.8414 0.0947 233.08)",
+          "oklch(0.9715 0.0167 230.9)"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Workspace Canvas",
+        "canonical": "var(--background-color-canvas)",
+        "tonalRamp": [
+          "oklch(0.1472 0.0034 230.83)",
+          "oklch(0.2378 0.0029 230.83)",
+          "oklch(0.4377 0.0066 230.87)",
+          "oklch(0.6161 0.009153 230.867)",
+          "oklch(0.8612 0.0032 230.71)",
+          "oklch(0.9235 0.001733 230.6853)",
+          "oklch(0.9696 0.0007 230.67)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Primary Surface",
+        "canonical": "var(--background-color-surface-1)",
+        "tonalRamp": [
+          "oklch(0.1472 0.0034 230.83)",
+          "oklch(0.2378 0.0029 230.83)",
+          "oklch(0.4377 0.0066 230.87)",
+          "oklch(0.6161 0.009153 230.867)",
+          "oklch(0.8612 0.0032 230.71)",
+          "oklch(0.9235 0.001733 230.6853)",
+          "oklch(0.9696 0.0007 230.67)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "layer": {
+        "role": "neutral",
+        "displayName": "Evidence Layer",
+        "canonical": "var(--background-color-layer-1)",
+        "tonalRamp": [
+          "oklch(0.1472 0.0034 230.83)",
+          "oklch(0.2378 0.0029 230.83)",
+          "oklch(0.4377 0.0066 230.87)",
+          "oklch(0.6161 0.009153 230.867)",
+          "oklch(0.8612 0.0032 230.71)",
+          "oklch(0.9235 0.001733 230.6853)",
+          "oklch(0.9696 0.0007 230.67)",
+          "oklch(1 0 0)"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Verified Green",
+        "canonical": "var(--background-color-success-primary)",
+        "tonalRamp": [
+          "oklch(0.2654 0.0651 152.77)",
+          "oklch(0.3935 0.0957 152.28)",
+          "oklch(0.4468 0.1187 151.4)",
+          "oklch(0.5296 0.149485 148.9899)",
+          "oklch(0.6567 0.1599 148.98)",
+          "oklch(0.7785 0.1398 151.07)",
+          "oklch(0.9624 0.0434 156.74)",
+          "oklch(0.9819 0.0181 155.83)"
+        ]
+      },
+      "warning-subtle": {
+        "role": "tertiary",
+        "displayName": "Attention Amber",
+        "canonical": "var(--background-color-warning-subtle)",
+        "tonalRamp": [
+          "oklch(0.279 0.0773 45.6)",
+          "oklch(0.4149 0.1126 45.88)",
+          "oklch(0.4747 0.135757 44.9806)",
+          "oklch(0.557 0.158291 45.3594)",
+          "oklch(0.6671 0.1685 53.38)",
+          "oklch(0.829 0.1712 81.04)",
+          "oklch(0.9617 0.0592 95.89)",
+          "oklch(0.9869 0.0214 95.28)"
+        ]
+      },
+      "danger-subtle": {
+        "role": "tertiary",
+        "displayName": "Diagnostic Red",
+        "canonical": "var(--background-color-danger-subtle)",
+        "tonalRamp": [
+          "oklch(0.3493 0.1215 25.21)",
+          "oklch(0.3967 0.1408 25.71)",
+          "oklch(0.4446 0.1774 26.79)",
+          "oklch(0.5095 0.208583 28.513)",
+          "oklch(0.583 0.238666 28.4765)",
+          "oklch(0.7022 0.1892 22.23)",
+          "oklch(0.9365 0.032 17.74)",
+          "oklch(0.9705 0.0129 17.38)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Surface Headline",
+        "purpose": "Names one operational surface and its outcome."
+      },
+      "title": {
+        "displayName": "Evidence Title",
+        "purpose": "Names a summary state or evidence region."
+      },
+      "body": {
+        "displayName": "Operational Body",
+        "purpose": "Explains state, impact, and recovery."
+      },
+      "label": {
+        "displayName": "Status Label",
+        "purpose": "Supports compact status, metadata, and controls."
+      }
+    },
+    "shadows": [
+      {
+        "name": "raised-evidence",
+        "value": "0px 1px 6px -1px #292f3d08, 0px 1px 4px 0px #292f3d0a",
+        "purpose": "Separates operational evidence cards from the canvas."
+      }
+    ],
+    "motion": [
+      {
+        "name": "sidebar-transition",
+        "value": "300ms ease-in-out",
+        "purpose": "Moves the persistent sidebar between expanded and collapsed states; reduced motion removes decorative progress movement."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "curve-mobile-drawer",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ],
+    "components": [
+      {
+        "name": "Primary Action",
+        "kind": "button",
+        "refersTo": "button-primary",
+        "description": "Runs or retries the current Curve task.",
+        "html": "<button class=\"ds-button-primary\">Run foundation probe</button>",
+        "css": ".ds-button-primary { height: 2rem; padding: 0 0.5rem; border: 0; border-radius: 0.375rem; background: var(--background-color-accent-primary); color: var(--text-color-on-color); font: 500 0.75rem/1.25 'Inter Variable', ui-sans-serif, system-ui, sans-serif; transition: background-color 150ms ease; } .ds-button-primary:hover { background: var(--background-color-accent-primary-hover); } .ds-button-primary:active { background: var(--background-color-accent-primary-active); } .ds-button-primary:focus-visible { outline: 2px solid var(--border-color-accent-strong); outline-offset: 2px; }"
+      },
+      {
+        "name": "Secondary Action",
+        "kind": "button",
+        "refersTo": "button-secondary",
+        "description": "Offers a reversible alternative such as cancellation entry or retry.",
+        "html": "<button class=\"ds-button-secondary\">Cancel probe</button>",
+        "css": ".ds-button-secondary { height: 2rem; padding: 0 0.5rem; border: 1px solid var(--border-color-strong); border-radius: 0.375rem; background: var(--background-color-layer-2); color: var(--text-color-secondary); box-shadow: 0 1px 6px -1px #292f3d08, 0 1px 4px #292f3d0a; font: 500 0.75rem/1.25 'Inter Variable', ui-sans-serif, system-ui, sans-serif; transition: background-color 150ms ease; } .ds-button-secondary:hover { background: var(--background-color-layer-2-hover); } .ds-button-secondary:focus-visible { outline: 2px solid var(--border-color-accent-strong); outline-offset: 2px; }"
+      },
+      {
+        "name": "Foundation Status Card",
+        "kind": "card",
+        "refersTo": "status-card",
+        "description": "Pairs the current outcome with its explanation, evidence metadata, and next action.",
+        "html": "<section class=\"ds-status-card\"><span class=\"ds-status-icon\" aria-hidden=\"true\">✓</span><div><h2>Foundation verified</h2><p>Curve recorded, orchestrated, and reported the Operation successfully.</p></div></section>",
+        "css": ".ds-status-card { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 1.25rem; align-items: center; padding: 1.25rem; border: 1px solid var(--border-color-success-subtle); border-radius: 0.75rem; background: var(--background-color-layer-1); color: var(--text-color-primary); box-shadow: 0 1px 6px -1px #292f3d08, 0 1px 4px #292f3d0a; font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; } .ds-status-card h2 { margin: 0; font-size: 1.125rem; line-height: 1.5; font-weight: 600; } .ds-status-card p { margin: 0.25rem 0 0; color: var(--text-color-secondary); font-size: 0.875rem; line-height: 1.5; } .ds-status-icon { display: grid; width: 3rem; height: 3rem; place-items: center; border-radius: 0.75rem; background: var(--background-color-success-subtle); color: var(--text-color-success-primary); }"
+      },
+      {
+        "name": "Live Connection Pill",
+        "kind": "chip",
+        "description": "Communicates connection health using text, iconography, and semantic color.",
+        "html": "<span class=\"ds-connection-pill\"><svg aria-hidden=\"true\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M5 12.55a11 11 0 0 1 14.08 0\"/><path d=\"M8.5 16a6 6 0 0 1 7 0\"/><path d=\"M12 20h.01\"/></svg>Updates live</span>",
+        "css": ".ds-connection-pill { display: inline-flex; min-height: 2rem; align-items: center; gap: 0.5rem; padding: 0 0.75rem; border: 1px solid var(--border-color-success-subtle); border-radius: 9999px; background: var(--background-color-success-subtle); color: var(--text-color-success-primary); font: 500 0.75rem/1.25 'Inter Variable', ui-sans-serif, system-ui, sans-serif; }"
+      },
+      {
+        "name": "Mobile Workspace Navigation",
+        "kind": "nav",
+        "refersTo": "mobile-navigation",
+        "description": "A modal Curve-first navigation drawer for viewports below 768px.",
+        "html": "<nav class=\"ds-mobile-nav\" aria-label=\"Curve workspace navigation\"><strong>Curve</strong><a href=\"#\" aria-current=\"page\">Foundation status</a><a href=\"#\">Projects <span>Plane-backed</span></a></nav>",
+        "css": ".ds-mobile-nav { display: flex; width: min(20rem, calc(100vw - 3rem)); min-height: 20rem; flex-direction: column; gap: 0.5rem; padding: 1.25rem; border-right: 1px solid var(--border-color-subtle); background: var(--background-color-surface-1); color: var(--text-color-primary); font-family: 'Inter Variable', ui-sans-serif, system-ui, sans-serif; } .ds-mobile-nav a { display: flex; justify-content: space-between; padding: 0.5rem; border-radius: 0.25rem; color: var(--text-color-secondary); text-decoration: none; } .ds-mobile-nav a:hover { background: var(--background-color-layer-1-hover); } .ds-mobile-nav a[aria-current='page'] { background: var(--background-color-accent-subtle); color: var(--text-color-accent-primary); } .ds-mobile-nav a:focus-visible { outline: 2px solid var(--border-color-accent-strong); outline-offset: 2px; } .ds-mobile-nav span { font-size: 0.625rem; color: var(--text-color-tertiary); }"
+      }
+    ],
+    "narrative": {
+      "northStar": "The Auditable Control Room",
+      "overview": "Curve presents complex product-delivery infrastructure as a calm, attributable operating surface. The hierarchy leads with the current outcome, action, and evidence; implementation detail remains available in progressive disclosure. Curve owns the product shell and lifecycle language. Plane appears inside that shell as the embedded work-management foundation, with visible attribution. The visual system extends Plane's semantic tokens and Propel components while preserving light, dark, and high-contrast theme behavior.",
+      "keyCharacteristics": [
+        "Curve-first shell ownership with explicit Plane-backed work-management areas.",
+        "Neutral layered surfaces with a restrained blue operational accent.",
+        "Outcome-first summaries followed by ordered evidence and technical detail.",
+        "Status communication that combines language, iconography, and color.",
+        "Compact, responsive controls that preserve keyboard and screen-reader behavior."
+      ],
+      "rules": [
+        {
+          "name": "The Semantic Token Rule",
+          "body": "Curve components consume semantic theme roles; the light, dark, and high-contrast palettes remain centralized in Plane's token system.",
+          "section": "colors"
+        },
+        {
+          "name": "The Redundant Status Rule",
+          "body": "Every state uses readable text and an icon in addition to color.",
+          "section": "colors"
+        },
+        {
+          "name": "The One Outcome Rule",
+          "body": "Each operational surface has one h1; subsequent headings describe evidence regions rather than restating the page title.",
+          "section": "typography"
+        },
+        {
+          "name": "The Shell Ownership Rule",
+          "body": "Curve branding, navigation, breadcrumbs, and lifecycle language frame every enabled Curve workspace; Plane-backed records remain reachable inside the Work management group.",
+          "section": "layout"
+        },
+        {
+          "name": "The Evidence Above Chrome Rule",
+          "body": "Elevation distinguishes evidence regions and modal interaction; navigation structure relies primarily on surface and border contrast.",
+          "section": "elevation"
+        }
+      ],
+      "dos": [
+        "Do lead with the current outcome and next available action.",
+        "Do preserve the Curve-first shell around Plane-backed work-management capabilities.",
+        "Do derive progress from the current Foundation Operation and its observed delivery evidence.",
+        "Do use modal drawer semantics for Curve navigation below 48rem.",
+        "Do bind AGPL source attribution to an exact immutable public commit."
+      ],
+      "donts": [
+        "Don't use an unrelated Operation as Foundation status or cancellation state.",
+        "Don't infer completed workflow or worker stages from cancellation or failure alone.",
+        "Don't allow a narrow viewport sidebar to compress the Foundation content.",
+        "Don't render a source link for a branch name, short SHA, or missing revision.",
+        "Don't present Plane as the owning product shell when Curve is enabled."
+      ]
+    }
+  }
+}

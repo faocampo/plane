@@ -21,6 +21,7 @@ paths:
         - $ref: '#/components/parameters/WorkspaceSlug'
         - $ref: '#/components/parameters/Cursor'
         - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/OperationType'
       responses:
         '200':
           description: Operation page
@@ -225,6 +226,17 @@ components:
         minimum: 1
         maximum: 100
         default: 25
+    OperationType:
+      name: operation_type
+      in: query
+      required: false
+      description: Restrict results before pagination to one supported Operation type.
+      schema:
+        type: string
+        enum:
+          - FOUNDATION_PROBE
+          - WORKFLOW_COMMAND
+          - PROVIDER_RECONCILIATION
   schemas:
     OperationPage:
       type: object

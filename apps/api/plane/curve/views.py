@@ -14,6 +14,7 @@ from django.db.models import Q
 from django.http import StreamingHttpResponse
 from django.utils.dateparse import parse_datetime
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
@@ -23,11 +24,13 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 from rest_framework.response import Response
 
+from plane.api.middleware.api_authentication import APIKeyAuthentication
 from plane.api.views.base import BaseAPIView
 from plane.curve.config import CurvePolicyConfigurationError
-from plane.curve.models import DomainEvent, Operation
+from plane.curve.models import DomainEvent, Operation, OperationType
 from plane.curve.permissions import (
     CurveCorePolicyPermission,
     query_authorization_receipt,
@@ -76,6 +79,20 @@ class CurveStaleCursor(CurveAPIRequestError):
             title="The event cursor can no longer be resumed",
             field="Last-Event-ID",
         )
+
+
+class CurveEventStreamRenderer(BaseRenderer):
+    """Negotiate SSE while retaining JSON Problem Details on stream errors."""
+
+    media_type = "text/event-stream"
+    format = "event-stream"
+    charset = None
+    render_style = "binary"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        if data is None:
+            return b""
+        return json.dumps(data, separators=(",", ":")).encode("utf-8")
 
 
 def operation_etag(*, operation_id: str, version: int) -> str:
@@ -135,6 +152,20 @@ def _page_size(request) -> int:
     return value
 
 
+def _operation_type_filter(request) -> str | None:
+    value = request.query_params.get("operation_type")
+    if value is None:
+        return None
+    if value not in OperationType.values:
+        raise CurveAPIRequestError(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            code="CURVE_OPERATION_TYPE_INVALID",
+            title="operation_type is not supported",
+            field="operation_type",
+        )
+    return value
+
+
 def _encode_page_cursor(operation: Operation) -> str:
     payload = canonical_json_bytes(
         {
@@ -173,6 +204,8 @@ def _human_actor(user) -> dict[str, str]:
 
 class CurveAPIView(BaseAPIView):
     """Curve API base with safe RFC 9457 Problem Details responses."""
+
+    authentication_classes = [SessionAuthentication, APIKeyAuthentication]
 
     def problem(self, request, *, status_code: int, code: str, title: str, field: str | None = None, extra=None):
         body = {
@@ -297,11 +330,14 @@ class CurveOperationListEndpoint(CurveAPIView):
     def get(self, request, slug):
         workspace_receipt = query_authorization_receipt(request)
         page_size = _page_size(request)
+        operation_type = _operation_type_filter(request)
         cursor = _decode_page_cursor(request.query_params.get("cursor"))
         candidates = Operation.objects.filter(
             workspace_id=workspace_receipt.workspace_id,
             created_by=_human_actor(request.user),
         ).only("id", "created_at")
+        if operation_type:
+            candidates = candidates.filter(operation_type=operation_type)
         if cursor:
             created_at, operation_id = cursor
             candidates = candidates.filter(Q(created_at__lt=created_at) | Q(created_at=created_at, id__lt=operation_id))
@@ -458,6 +494,7 @@ def _format_sse(event: DomainEvent) -> str:
 
 class CurveEventStreamEndpoint(CurveAPIView):
     permission_classes = [IsAuthenticated, CurveCorePolicyPermission]
+    renderer_classes = [JSONRenderer, CurveEventStreamRenderer]
     curve_policy_action = "CURVE.SHELL.VIEW"
     curve_policy_resource_type = "WORKSPACE"
 
@@ -530,5 +567,6 @@ class CurveEventStreamEndpoint(CurveAPIView):
 
         response = StreamingHttpResponse(stream(), content_type="text/event-stream")
         response["Cache-Control"] = "no-cache, no-store"
+        response["Content-Encoding"] = "identity"
         response["X-Accel-Buffering"] = "no"
         return response

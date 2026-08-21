@@ -1,10 +1,10 @@
 {
   "schema_version": "curve-context-pack/v1",
   "task_id": "M0-S4",
-  "curve_revision": "6cae96b572653b22fd9df5a23480527f37cde498",
+  "curve_revision": "79c7cd6cced82f8f3dede6cbad2706ae3d7befb8",
   "approved_product_revision": "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
   "plane_base_revision": "d99342f589db4eb488695487d3ae3f2c16bf0874",
-  "context_digest": "sha256:d5ee2ba83d3216a1c2debc304d8a8b2f1821c441b7cbc5504fd85a18956fa44d",
+  "context_digest": "sha256:79cf9f3c0267c4a42f7142aa457ac1e086c8a990a41e20703729d0aa9cca1bf3",
   "human_owner": "Federico Ocampo",
   "human_reviewer": "Federico Ocampo",
   "data_classification": "INTERNAL",
@@ -13,14 +13,11 @@
     "curve_pr": "https://github.com/faocampo/curve/pull/17",
     "approved_head": "a4638761bcbdb8e522e8db0af5a2ae00cb6480a8",
     "squash_commit": "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
-    "ux_records": [
-      "UX-004-M0-S4",
-      "UX-005-M0-S4"
-    ]
+    "ux_records": ["UX-004-M0-S4", "UX-005-M0-S4"]
   },
   "planning_reconciliation": {
     "curve_pr": "https://github.com/faocampo/curve/pull/18",
-    "revision": "6cae96b572653b22fd9df5a23480527f37cde498",
+    "revision": "79c7cd6cced82f8f3dede6cbad2706ae3d7befb8",
     "state": "DRAFT_PENDING_HUMAN_REVIEW"
   },
   "paths": [
@@ -66,7 +63,7 @@
   "files": [
     {
       "path": "contracts/openapi/curve-v1.openapi.yaml",
-      "sha256": "sha256:9ac74e53ef1763e8a54b6e001f1d23812a1997381c73e051f9d8eb8398c0ae0e"
+      "sha256": "sha256:8ee9dc46de9cec7a7cd88d4a4b923221900f7a046e367f73fde0328df850c54a"
     },
     {
       "path": "contracts/policy/core-policy-v1.json",
@@ -190,7 +187,7 @@
     },
     {
       "path": "docs/technical/m0-local-skeleton-task-packets.md",
-      "sha256": "sha256:cbeb21c67954efb575e3413287fcc27b7d68fc721fd052063e1fb6676854012b"
+      "sha256": "sha256:7a5c4a9a19a16a7db09687ee01429c8902c23532b2b916c8db92a701942cc65c"
     },
     {
       "path": "docs/technical/m0-readiness-board.md",
@@ -206,7 +203,7 @@
     },
     {
       "path": "docs/technical/ux-m0-s4-foundation-probe.md",
-      "sha256": "sha256:6ad49c5fc6db1db55f5df3c2bfb70e2578d0ec7face42c588869eee64066e40e"
+      "sha256": "sha256:016e5f2ac9ae857a3cbb3b67015a514b16f93d1703b9edc5c83eb167c5eba473"
     },
     {
       "path": "scripts/lib/context-pack.mjs",

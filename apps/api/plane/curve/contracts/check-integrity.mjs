@@ -67,23 +67,22 @@ const expectedM0S3Files = {
 };
 
 const expectedM0S4Context = {
-  curveRevision: "6cae96b572653b22fd9df5a23480527f37cde498",
+  curveRevision: "79c7cd6cced82f8f3dede6cbad2706ae3d7befb8",
   approvedProductRevision: "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
   planeBaseRevision: "d99342f589db4eb488695487d3ae3f2c16bf0874",
-  contextDigest: "sha256:d5ee2ba83d3216a1c2debc304d8a8b2f1821c441b7cbc5504fd85a18956fa44d",
+  contextDigest: "sha256:79cf9f3c0267c4a42f7142aa457ac1e086c8a990a41e20703729d0aa9cca1bf3",
   owner: "Federico Ocampo",
   reviewer: "Federico Ocampo",
 };
 
 const expectedM0S4VendoredFiles = {
-  "contracts/openapi/curve-v1.openapi.yaml": "9ac74e53ef1763e8a54b6e001f1d23812a1997381c73e051f9d8eb8398c0ae0e",
+  "contracts/openapi/curve-v1.openapi.yaml": "8ee9dc46de9cec7a7cd88d4a4b923221900f7a046e367f73fde0328df850c54a",
   "contracts/policy/core-policy-v1.json": "e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52",
   "contracts/schemas/common.schema.json": "b00c8c420f7e78f20adea2b3a097d74a4e97e73c0f2cc71ad9ac5c4933e31583",
   "contracts/schemas/event-envelope.schema.json": "de28a9654520b2f27d307b246a48f4d6b847e924d53e1d95513c47c29c5166ed",
   "contracts/schemas/operation-event-v1.schema.json":
     "fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0",
-  "contracts/schemas/operation-summary.schema.json":
-    "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
+  "contracts/schemas/operation-summary.schema.json": "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
   "contracts/schemas/operation.schema.json": "887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff",
   "contracts/schemas/sse-event.schema.json": "58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80",
 };
@@ -243,8 +242,7 @@ if (
   m0s4Context.approval_evidence?.curve_pr !== "https://github.com/faocampo/curve/pull/17" ||
   m0s4Context.approval_evidence?.approved_head !== "a4638761bcbdb8e522e8db0af5a2ae00cb6480a8" ||
   m0s4Context.approval_evidence?.squash_commit !== expectedM0S4Context.approvedProductRevision ||
-  JSON.stringify(m0s4Context.approval_evidence?.ux_records) !==
-    JSON.stringify(["UX-004-M0-S4", "UX-005-M0-S4"])
+  JSON.stringify(m0s4Context.approval_evidence?.ux_records) !== JSON.stringify(["UX-004-M0-S4", "UX-005-M0-S4"])
 ) {
   fail("unexpected M0-S4 approval evidence");
 }

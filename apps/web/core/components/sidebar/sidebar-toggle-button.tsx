@@ -10,12 +10,19 @@ import { PanelLeft } from "lucide-react";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { IconButton } from "@plane/propel/icon-button";
 
-export const AppSidebarToggleButton = observer(function AppSidebarToggleButton() {
+export const AppSidebarToggleButton = observer(function AppSidebarToggleButton({
+  controlsId = "main-sidebar",
+}: {
+  controlsId?: string;
+}) {
   // store hooks
-  const { toggleSidebar, sidebarPeek, toggleSidebarPeek } = useAppTheme();
+  const { sidebarCollapsed, toggleSidebar, sidebarPeek, toggleSidebarPeek } = useAppTheme();
 
   return (
     <IconButton
+      aria-label="Toggle workspace navigation"
+      aria-controls={controlsId}
+      aria-expanded={sidebarCollapsed === false}
       size="base"
       variant="ghost"
       icon={PanelLeft}

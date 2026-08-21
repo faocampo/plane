@@ -3,11 +3,13 @@ from datetime import timedelta
 from types import SimpleNamespace
 
 import pytest
+from django.conf import settings
+from django.middleware.csrf import _get_new_csrf_string
 from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from plane.curve.models import DomainEvent, IdempotencyRecord, Operation, OperationStatus
+from plane.curve.models import DomainEvent, IdempotencyRecord, Operation, OperationStatus, OperationType
 from plane.curve.policy_services import (
     start_foundation_probe,
     transition_operation_with_service_authorization,
@@ -184,6 +186,46 @@ def test_operation_list_and_detail_are_owner_scoped_safe_projections():
         assert protected_name not in serialized
 
 
+def test_operation_list_filters_foundation_probes_before_pagination():
+    owner = _user("filtered-operation-owner@example.com")
+    workspace = _workspace("Alpha", "alpha", owner)
+    client = _client(owner)
+    foundation_operation_id = _create_probe(client).json()["id"]
+    actor = {"actor_type": "HUMAN", "actor_id": str(owner.id)}
+    Operation.objects.create(
+        workspace_id=workspace.id,
+        operation_type=OperationType.WORKFLOW_COMMAND,
+        command_type="RUN_WORKFLOW_COMMAND",
+        target={"resource_type": "WORKSPACE", "resource_id": str(workspace.id)},
+        idempotency_key_digest=f"sha256:{'a' * 64}",
+        created_by=actor,
+        updated_by=actor,
+        correlation_id="newer-non-foundation-operation",
+    )
+
+    response = client.get("/api/v1/workspaces/alpha/curve/operations/?page_size=1&operation_type=FOUNDATION_PROBE")
+
+    assert response.status_code == 200
+    assert [operation["id"] for operation in response.json()["results"]] == [foundation_operation_id]
+    assert response.json()["results"][0]["operation_type"] == OperationType.FOUNDATION_PROBE
+
+
+def test_operation_list_rejects_unknown_operation_type_filter():
+    owner = _user("invalid-operation-filter@example.com")
+    _workspace("Alpha", "alpha", owner)
+
+    response = _client(owner).get("/api/v1/workspaces/alpha/curve/operations/?operation_type=UNSUPPORTED_OPERATION")
+
+    assert response.status_code == 422
+    assert response.json()["errors"] == [
+        {
+            "code": "CURVE_OPERATION_TYPE_INVALID",
+            "field": "operation_type",
+            "message": "operation_type is not supported",
+        }
+    ]
+
+
 def test_cross_workspace_operation_read_is_denied_without_disclosure():
     alpha_user = _user("alpha-reader@example.com")
     beta_user = _user("beta-owner@example.com")
@@ -258,15 +300,20 @@ def test_sse_is_ordered_resumable_and_redacts_internal_event_fields():
     ]
     client = _client(user)
 
-    initial = client.get("/api/v1/workspaces/alpha/curve/events/")
+    initial = client.get(
+        "/api/v1/workspaces/alpha/curve/events/",
+        HTTP_ACCEPT="text/event-stream",
+    )
     initial_body = _stream_text(initial)
     resumed = client.get(
         "/api/v1/workspaces/alpha/curve/events/",
+        HTTP_ACCEPT="text/event-stream",
         HTTP_LAST_EVENT_ID=ordered_ids[1],
     )
     resumed_body = _stream_text(resumed)
 
     assert initial.status_code == resumed.status_code == 200
+    assert initial["Content-Encoding"] == resumed["Content-Encoding"] == "identity"
     assert _stream_event_ids(initial_body) == ordered_ids
     assert _stream_event_ids(resumed_body) == ordered_ids[2:]
     assert "SYNTHETIC_INTERNAL_FAILURE" not in initial_body
@@ -290,9 +337,46 @@ def test_sse_stale_cursor_returns_recoverable_410():
 
     response = _client(user).get(
         "/api/v1/workspaces/alpha/curve/events/",
+        HTTP_ACCEPT="text/event-stream",
         HTTP_LAST_EVENT_ID=first_event_id,
     )
 
     assert response.status_code == 410
     assert response.json()["resync"] == {"action": "FETCH_CURRENT_OPERATIONS", "cursor": None}
     assert response["Content-Type"].startswith("application/problem+json")
+
+
+def test_curve_browser_contract_headers_are_cross_origin_compatible():
+    allowed = {header.lower() for header in settings.CORS_ALLOW_HEADERS}
+    exposed = {header.lower() for header in settings.CORS_EXPOSE_HEADERS}
+
+    assert {"idempotency-key", "if-match", "last-event-id", "x-csrftoken"}.issubset(allowed)
+    assert {"etag", "location"}.issubset(exposed)
+
+
+def test_session_foundation_probe_requires_and_accepts_csrf():
+    user = _user("session-probe@example.com")
+    _workspace("Alpha", "alpha", user)
+    client = APIClient(enforce_csrf_checks=True)
+    client.force_login(user)
+    url = "/api/v1/workspaces/alpha/curve/foundation-probes/"
+
+    rejected = client.post(
+        url,
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="session-probe-key-rejected",
+    )
+
+    csrf_token = _get_new_csrf_string()
+    client.cookies[settings.CSRF_COOKIE_NAME] = csrf_token
+    accepted = client.post(
+        url,
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="session-probe-key-accepted",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
+
+    assert rejected.status_code == 403
+    assert accepted.status_code == 202
