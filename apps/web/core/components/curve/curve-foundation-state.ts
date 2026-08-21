@@ -37,12 +37,7 @@ const PROGRESS_STAGES = [
   ["browser", "Status received", "Browser received the terminal projection"],
 ] as const;
 
-const WORKFLOW_ACCEPTED_STATUSES = new Set<TCurveOperationStatus>([
-  "QUEUED",
-  "RUNNING",
-  "WAITING_FOR_HUMAN",
-  "SUCCEEDED",
-]);
+const WORKFLOW_STARTED_STATUSES = new Set<TCurveOperationStatus>(["RUNNING", "WAITING_FOR_HUMAN", "SUCCEEDED"]);
 
 export const deriveCurveProgressStages = (
   operation?: ICurveOperationSummary,
@@ -50,20 +45,18 @@ export const deriveCurveProgressStages = (
 ): ICurveProgressStage[] => {
   const evidence = new Set(observedStatuses);
   if (operation) evidence.add(operation.status);
-  const workflowAccepted = [...evidence].some((status) => WORKFLOW_ACCEPTED_STATUSES.has(status));
-  const completed = operation ? (operation.status === "SUCCEEDED" ? 5 : workflowAccepted ? 3 : 2) : 0;
+  const workflowStarted = [...evidence].some((status) => WORKFLOW_STARTED_STATUSES.has(status));
+  const completed = operation ? (operation.status === "SUCCEEDED" ? 5 : workflowStarted ? 3 : 2) : 0;
   const activeIndex =
     operation && !CURVE_TERMINAL_STATUSES.has(operation.status) && operation.status !== "CANCEL_REQUESTED"
       ? Math.min(completed, 4)
       : -1;
-  const failedIndex = operation?.status === "FAILED" ? Math.min(completed, 4) : -1;
 
   return PROGRESS_STAGES.map(([key, label, description], index) => ({
     key,
     label,
     description,
-    state:
-      index === failedIndex ? "failed" : index < completed ? "complete" : index === activeIndex ? "active" : "waiting",
+    state: index < completed ? "complete" : index === activeIndex ? "active" : "waiting",
   }));
 };
 

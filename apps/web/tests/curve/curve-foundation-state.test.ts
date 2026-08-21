@@ -82,7 +82,7 @@ describe("Curve Foundation state projection", () => {
   });
 
   it.each([
-    ["queued cancellation", "CANCELLED", ["QUEUED", "CANCEL_REQUESTED", "CANCELLED"], 3],
+    ["queued cancellation", "CANCELLED", ["QUEUED", "CANCEL_REQUESTED", "CANCELLED"], 2],
     ["running cancellation", "CANCELLED", ["RUNNING", "CANCEL_REQUESTED", "CANCELLED"], 3],
   ] as const)("retains only completed evidence for %s", (_label, status, observedStatuses, completedCount) => {
     const stages = deriveCurveProgressStages({ ...operation, status }, [...observedStatuses]);
@@ -92,15 +92,15 @@ describe("Curve Foundation state projection", () => {
   });
 
   it.each([
-    ["early failure", [], 2, 2],
-    ["late failure", ["QUEUED", "RUNNING"], 3, 3],
-  ] as const)("marks the actual failing stage for %s", (_label, observedStatuses, completedCount, failedIndex) => {
+    ["early failure", [], 2],
+    ["late failure", ["QUEUED", "RUNNING"], 3],
+  ] as const)("retains only completed evidence for %s", (_label, observedStatuses, completedCount) => {
     const stages = deriveCurveProgressStages({ ...operation, status: "FAILED" }, [
       ...observedStatuses,
     ] as TCurveOperationStatus[]);
 
     expect(stages.filter((stage) => stage.state === "complete")).toHaveLength(completedCount);
-    expect(stages[failedIndex].state).toBe("failed");
+    expect(stages.slice(completedCount).every((stage) => stage.state === "waiting")).toBe(true);
   });
 
   it("exposes only safe Problem Details fields", () => {
