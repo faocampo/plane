@@ -7,6 +7,12 @@ services:
         DOCKER_BUILDKIT: 1
     volumes:
       - ${CURVE_SOURCE_ROOT:-.}/apps/api:/code
+    environment:
+      CURVE_ENABLED: "1"
+      CURVE_ENABLED_WORKSPACE_SLUGS: ${CURVE_ENABLED_WORKSPACE_SLUGS:-curve-local-proof}
+      CURVE_ENVIRONMENT: LOCAL
+      CURVE_POLICY_RECORDER_ACTOR_ID: curve-api-local
+      CURVE_FOUNDATION_PROBE_ENABLED: "1"
 
   curve-temporal-volume-init:
     image: docker.io/temporalio/temporal:1.8.1@sha256:59561b9ef060eaeb1f46cb6a1842d6cbdd8a393eb3b6d315ecef5fe2f0b1d7a6

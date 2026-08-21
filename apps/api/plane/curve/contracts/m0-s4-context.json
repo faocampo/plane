@@ -1,0 +1,217 @@
+{
+  "schema_version": "curve-context-pack/v1",
+  "task_id": "M0-S4",
+  "curve_revision": "79c7cd6cced82f8f3dede6cbad2706ae3d7befb8",
+  "approved_product_revision": "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
+  "plane_base_revision": "d99342f589db4eb488695487d3ae3f2c16bf0874",
+  "context_digest": "sha256:79cf9f3c0267c4a42f7142aa457ac1e086c8a990a41e20703729d0aa9cca1bf3",
+  "human_owner": "Federico Ocampo",
+  "human_reviewer": "Federico Ocampo",
+  "data_classification": "INTERNAL",
+  "execution_scope": "LOCAL_ONLY",
+  "approval_evidence": {
+    "curve_pr": "https://github.com/faocampo/curve/pull/17",
+    "approved_head": "a4638761bcbdb8e522e8db0af5a2ae00cb6480a8",
+    "squash_commit": "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
+    "ux_records": ["UX-004-M0-S4", "UX-005-M0-S4"]
+  },
+  "planning_reconciliation": {
+    "curve_pr": "https://github.com/faocampo/curve/pull/18",
+    "revision": "79c7cd6cced82f8f3dede6cbad2706ae3d7befb8",
+    "state": "DRAFT_PENDING_HUMAN_REVIEW"
+  },
+  "paths": [
+    "contracts/openapi/curve-v1.openapi.yaml",
+    "contracts/policy/core-policy-v1.json",
+    "contracts/schemas/common.schema.json",
+    "contracts/schemas/event-envelope.schema.json",
+    "contracts/schemas/examples/event-envelope.invalid.json",
+    "contracts/schemas/examples/event-envelope.valid.json",
+    "contracts/schemas/examples/operation-event-v1.invalid.json",
+    "contracts/schemas/examples/operation-event-v1.valid.json",
+    "contracts/schemas/examples/operation.invalid.json",
+    "contracts/schemas/examples/operation.valid.json",
+    "contracts/schemas/operation-event-v1.schema.json",
+    "contracts/schemas/operation-summary.schema.json",
+    "contracts/schemas/operation.schema.json",
+    "contracts/schemas/semantic-fixtures/idempotency-completed.valid.json",
+    "contracts/schemas/semantic-fixtures/idempotency-raw-key.invalid.json",
+    "contracts/schemas/semantic-fixtures/idempotency-terminal-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/operation-terminal-null.invalid.json",
+    "contracts/schemas/semantic-fixtures/operation-terminal.valid.json",
+    "contracts/schemas/sse-event.schema.json",
+    "contracts/temporal/m0-workflow-contract.md",
+    "docs/curve-ai-native-sdlc-prd.md",
+    "docs/design/curve-brand.md",
+    "docs/design/mockups/curve-foundation-probe-v2.png",
+    "docs/design/prototypes/m0-s4-foundation-probe/curve-logo-light-ui-v1.webp",
+    "docs/design/prototypes/m0-s4-foundation-probe/index.html",
+    "docs/technical/adr-003-runtime-topology.md",
+    "docs/technical/architecture.md",
+    "docs/technical/curve-experience-blueprint.md",
+    "docs/technical/development-plan.md",
+    "docs/technical/integration-contracts.md",
+    "docs/technical/m0-authorization-and-state-matrices.md",
+    "docs/technical/m0-local-skeleton-task-packets.md",
+    "docs/technical/m0-readiness-board.md",
+    "docs/technical/m0-s3-implementation-evidence.md",
+    "docs/technical/security-and-operations.md",
+    "docs/technical/ux-m0-s4-foundation-probe.md",
+    "scripts/lib/context-pack.mjs",
+    "scripts/validate-contracts.mjs"
+  ],
+  "files": [
+    {
+      "path": "contracts/openapi/curve-v1.openapi.yaml",
+      "sha256": "sha256:8ee9dc46de9cec7a7cd88d4a4b923221900f7a046e367f73fde0328df850c54a"
+    },
+    {
+      "path": "contracts/policy/core-policy-v1.json",
+      "sha256": "sha256:e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
+    },
+    {
+      "path": "contracts/schemas/common.schema.json",
+      "sha256": "sha256:b00c8c420f7e78f20adea2b3a097d74a4e97e73c0f2cc71ad9ac5c4933e31583"
+    },
+    {
+      "path": "contracts/schemas/event-envelope.schema.json",
+      "sha256": "sha256:de28a9654520b2f27d307b246a48f4d6b847e924d53e1d95513c47c29c5166ed"
+    },
+    {
+      "path": "contracts/schemas/examples/event-envelope.invalid.json",
+      "sha256": "sha256:3f2b3393bd21b8a9e0cb9c7b2397a2a93eb5813ffd3ce7bf35304ca20f2250b7"
+    },
+    {
+      "path": "contracts/schemas/examples/event-envelope.valid.json",
+      "sha256": "sha256:7381e0745bf5ad2c9ba8f6f607658cbe7c1a6dc8a95dfebe15c8c3784d6f6e96"
+    },
+    {
+      "path": "contracts/schemas/examples/operation-event-v1.invalid.json",
+      "sha256": "sha256:f1f377244d2da6b4362ce257f1d9ebdc947791aa5ede9c1efca96b6e1477aebe"
+    },
+    {
+      "path": "contracts/schemas/examples/operation-event-v1.valid.json",
+      "sha256": "sha256:32f05c86b49df0175bd24342c3e02a2632d70cbb048d73b0e616ef5b7bcfd178"
+    },
+    {
+      "path": "contracts/schemas/examples/operation.invalid.json",
+      "sha256": "sha256:d57c7094b3e8dc2af7e0e5e3bebea695f7631d92d3eefd2d6fe4e64658b33996"
+    },
+    {
+      "path": "contracts/schemas/examples/operation.valid.json",
+      "sha256": "sha256:6023f59d8e967f6e574ad5a58f1adb5ac5ef05611117a3cac2f0ab4ce49666b2"
+    },
+    {
+      "path": "contracts/schemas/operation-event-v1.schema.json",
+      "sha256": "sha256:fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0"
+    },
+    {
+      "path": "contracts/schemas/operation-summary.schema.json",
+      "sha256": "sha256:3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1"
+    },
+    {
+      "path": "contracts/schemas/operation.schema.json",
+      "sha256": "sha256:887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/idempotency-completed.valid.json",
+      "sha256": "sha256:8963d2929f2a9e460dd6dd6f24fef683cb0f017349f75a1c7187e550375484a2"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/idempotency-raw-key.invalid.json",
+      "sha256": "sha256:83c44f8d99ca36b07ca37e7f228e16a2d7e665706d31a3cfb25ea558ce74b762"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/idempotency-terminal-null.invalid.json",
+      "sha256": "sha256:b4bd51bec064ebfbf67e3d27668079e59c857317ccfe94475a4726233d445ffc"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/operation-terminal-null.invalid.json",
+      "sha256": "sha256:f206dca2d562660ed5a5b9f1e961149939c8624dd6ace06d5e77ccddb52fb27e"
+    },
+    {
+      "path": "contracts/schemas/semantic-fixtures/operation-terminal.valid.json",
+      "sha256": "sha256:2be8e4523ddb8b8a4bea51b9b0d681c7d8e794c1946b8795aaf5b675e89f9a63"
+    },
+    {
+      "path": "contracts/schemas/sse-event.schema.json",
+      "sha256": "sha256:58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80"
+    },
+    {
+      "path": "contracts/temporal/m0-workflow-contract.md",
+      "sha256": "sha256:67e1306c21b7f0e87180232706f5c1b86da3f845c5f7628b65d0d27e541f5dbf"
+    },
+    {
+      "path": "docs/curve-ai-native-sdlc-prd.md",
+      "sha256": "sha256:3c37f73a97c903c7e4dd626e13e90be879bac1edd5de518660a63c0e9d6cfc6d"
+    },
+    {
+      "path": "docs/design/curve-brand.md",
+      "sha256": "sha256:4c2c7aa053b6a9a9a43afb8a65818147265ec56af1c312b7881c8477c7928685"
+    },
+    {
+      "path": "docs/design/mockups/curve-foundation-probe-v2.png",
+      "sha256": "sha256:8e696bc03da5f02db43f5105baec893ef265d52d1393e4b9948d8ed0d7620476"
+    },
+    {
+      "path": "docs/design/prototypes/m0-s4-foundation-probe/curve-logo-light-ui-v1.webp",
+      "sha256": "sha256:3146bfa08cc250735f8b07e09333cacda9b1808d6751f808b5c4c1b9560cb90e"
+    },
+    {
+      "path": "docs/design/prototypes/m0-s4-foundation-probe/index.html",
+      "sha256": "sha256:9b62de887fe88c6d8344d146c88636389a87a6699cb97e382591ebd5c1763385"
+    },
+    {
+      "path": "docs/technical/adr-003-runtime-topology.md",
+      "sha256": "sha256:1f178fdea1afc68f4a2dab723ad936d54ec44869f9d6bbc8775a87003a3f6df8"
+    },
+    {
+      "path": "docs/technical/architecture.md",
+      "sha256": "sha256:a44d9aeb1bb2d7a56fd4c1edd21487873b010725194d738c29108b10f7ac81c8"
+    },
+    {
+      "path": "docs/technical/curve-experience-blueprint.md",
+      "sha256": "sha256:4a9abc4015a4475297f1d5ca37b16b0487217bd05a07cf53c09829a51aa2fe1e"
+    },
+    {
+      "path": "docs/technical/development-plan.md",
+      "sha256": "sha256:614f437f9f69d455241c124216fe8e934ca0818594a3ff714109e5b0ac130779"
+    },
+    {
+      "path": "docs/technical/integration-contracts.md",
+      "sha256": "sha256:e42308c1e6f78d75922bc00f24186d592b4d37a5be7182d01f1c5e454ecf3a7f"
+    },
+    {
+      "path": "docs/technical/m0-authorization-and-state-matrices.md",
+      "sha256": "sha256:c509d0f1159e981e31490ababbe17fc1f7e1a82d7c8e2fa77bb571cc2c8c1e0d"
+    },
+    {
+      "path": "docs/technical/m0-local-skeleton-task-packets.md",
+      "sha256": "sha256:7a5c4a9a19a16a7db09687ee01429c8902c23532b2b916c8db92a701942cc65c"
+    },
+    {
+      "path": "docs/technical/m0-readiness-board.md",
+      "sha256": "sha256:8421b0bb0e8d380418438ac5f4146d46a4412ca661fdc806e2186c9ed10a2aee"
+    },
+    {
+      "path": "docs/technical/m0-s3-implementation-evidence.md",
+      "sha256": "sha256:69a6fed33741b219c208d78183ccba7051e7a4a4cccdcdf01ea16d049c3dcddf"
+    },
+    {
+      "path": "docs/technical/security-and-operations.md",
+      "sha256": "sha256:5223c206225efb448007ffba0fb5a127062e62c3e6ed9b6496ce03dadb5fdbdb"
+    },
+    {
+      "path": "docs/technical/ux-m0-s4-foundation-probe.md",
+      "sha256": "sha256:016e5f2ac9ae857a3cbb3b67015a514b16f93d1703b9edc5c83eb167c5eba473"
+    },
+    {
+      "path": "scripts/lib/context-pack.mjs",
+      "sha256": "sha256:dcc488effd7fbb0eebe02361bd6201a3143cd816692f445029de4399b1a9a394"
+    },
+    {
+      "path": "scripts/validate-contracts.mjs",
+      "sha256": "sha256:eeb9772b860025a6b3623517a4094d406cadfd46bfbcf837ddee959c2b352b02"
+    }
+  ]
+}

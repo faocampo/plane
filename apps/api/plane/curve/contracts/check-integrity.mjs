@@ -5,7 +5,9 @@ const repositoryRoot = new URL("../../../../../", import.meta.url);
 const contextPath = new URL("apps/api/plane/curve/contracts/m0-s2-context.json", repositoryRoot);
 const m003ContextPath = new URL("apps/api/plane/curve/contracts/m0-03-context.json", repositoryRoot);
 const m0s3ContextPath = new URL("apps/api/plane/curve/contracts/m0-s3-context.json", repositoryRoot);
+const m0s4ContextPath = new URL("apps/api/plane/curve/contracts/m0-s4-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
+const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
 const policyDirectory = new URL("apps/api/plane/curve/contracts/policy/", repositoryRoot);
 
@@ -62,6 +64,27 @@ const expectedM0S3Files = {
   "contracts/schemas/outbox-event.schema.json": "fd5db47b56f359eb7333e06c0c7ec1f9f90b00a6b4b07f791f10d0177cc79711",
   "contracts/schemas/policy-decision.schema.json": "5faa121136c59420da7fb1582985c3d445b6486e1e52a77c8d6ff853634f4bd8",
   "contracts/schemas/policy-evaluation.schema.json": "75622a18bbbdaa69795beee16254106f12aab2aa150e1619f237d3bf67d724f8",
+};
+
+const expectedM0S4Context = {
+  curveRevision: "79c7cd6cced82f8f3dede6cbad2706ae3d7befb8",
+  approvedProductRevision: "42ea32981a3d5ce814a74c18e458ac8152a7e2fa",
+  planeBaseRevision: "d99342f589db4eb488695487d3ae3f2c16bf0874",
+  contextDigest: "sha256:79cf9f3c0267c4a42f7142aa457ac1e086c8a990a41e20703729d0aa9cca1bf3",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+};
+
+const expectedM0S4VendoredFiles = {
+  "contracts/openapi/curve-v1.openapi.yaml": "8ee9dc46de9cec7a7cd88d4a4b923221900f7a046e367f73fde0328df850c54a",
+  "contracts/policy/core-policy-v1.json": "e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52",
+  "contracts/schemas/common.schema.json": "b00c8c420f7e78f20adea2b3a097d74a4e97e73c0f2cc71ad9ac5c4933e31583",
+  "contracts/schemas/event-envelope.schema.json": "de28a9654520b2f27d307b246a48f4d6b847e924d53e1d95513c47c29c5166ed",
+  "contracts/schemas/operation-event-v1.schema.json":
+    "fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0",
+  "contracts/schemas/operation-summary.schema.json": "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
+  "contracts/schemas/operation.schema.json": "887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff",
+  "contracts/schemas/sse-event.schema.json": "58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80",
 };
 
 const fail = (message) => {
@@ -193,6 +216,82 @@ await Promise.all(
 
 console.log(
   `Curve M0-S3 context integrity passed: ${m0s3Context.paths.length} files at ${expectedM0S3Context.curveRevision}`
+);
+
+const m0s4Context = JSON.parse(await readFile(m0s4ContextPath, "utf8"));
+if (m0s4Context.schema_version !== "curve-context-pack/v1" || m0s4Context.task_id !== "M0-S4") {
+  fail("unexpected M0-S4 context identity");
+}
+if (
+  m0s4Context.curve_revision !== expectedM0S4Context.curveRevision ||
+  m0s4Context.approved_product_revision !== expectedM0S4Context.approvedProductRevision ||
+  m0s4Context.plane_base_revision !== expectedM0S4Context.planeBaseRevision ||
+  m0s4Context.context_digest !== expectedM0S4Context.contextDigest
+) {
+  fail("unexpected M0-S4 revision or context digest");
+}
+if (
+  m0s4Context.human_owner !== expectedM0S4Context.owner ||
+  m0s4Context.human_reviewer !== expectedM0S4Context.reviewer ||
+  m0s4Context.data_classification !== "INTERNAL" ||
+  m0s4Context.execution_scope !== "LOCAL_ONLY"
+) {
+  fail("unexpected M0-S4 ownership, classification, or execution scope");
+}
+if (
+  m0s4Context.approval_evidence?.curve_pr !== "https://github.com/faocampo/curve/pull/17" ||
+  m0s4Context.approval_evidence?.approved_head !== "a4638761bcbdb8e522e8db0af5a2ae00cb6480a8" ||
+  m0s4Context.approval_evidence?.squash_commit !== expectedM0S4Context.approvedProductRevision ||
+  JSON.stringify(m0s4Context.approval_evidence?.ux_records) !== JSON.stringify(["UX-004-M0-S4", "UX-005-M0-S4"])
+) {
+  fail("unexpected M0-S4 approval evidence");
+}
+if (
+  m0s4Context.planning_reconciliation?.curve_pr !== "https://github.com/faocampo/curve/pull/18" ||
+  m0s4Context.planning_reconciliation?.revision !== expectedM0S4Context.curveRevision ||
+  m0s4Context.planning_reconciliation?.state !== "DRAFT_PENDING_HUMAN_REVIEW"
+) {
+  fail("unexpected M0-S4 planning reconciliation state");
+}
+if (!Array.isArray(m0s4Context.files) || !Array.isArray(m0s4Context.paths)) {
+  fail("M0-S4 context paths and per-file digests are required");
+}
+if (JSON.stringify(m0s4Context.paths) !== JSON.stringify([...m0s4Context.paths].toSorted())) {
+  fail("M0-S4 context paths are not sorted");
+}
+if (JSON.stringify(m0s4Context.files.map(({ path }) => path)) !== JSON.stringify(m0s4Context.paths)) {
+  fail("M0-S4 context files and paths differ");
+}
+if (new Set(m0s4Context.paths).size !== m0s4Context.paths.length) {
+  fail("M0-S4 context paths are not unique");
+}
+for (const file of m0s4Context.files) {
+  if (!/^sha256:[0-9a-f]{64}$/.test(file.sha256)) {
+    fail(`M0-S4 context digest is invalid for ${file.path}`);
+  }
+}
+
+const recordedM0S4Digests = new Map(m0s4Context.files.map(({ path, sha256: digest }) => [path, digest]));
+await Promise.all(
+  Object.entries(expectedM0S4VendoredFiles).map(async ([sourcePath, expectedDigest]) => {
+    const fileName = sourcePath.split("/").at(-1);
+    const directory = sourcePath.includes("/openapi/")
+      ? openapiDirectory
+      : sourcePath.includes("/policy/")
+        ? policyDirectory
+        : schemaDirectory;
+    const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+    if (observedDigest !== expectedDigest) {
+      fail(`${sourcePath} digest ${observedDigest} does not match M0-S4 source ${expectedDigest}`);
+    }
+    if (recordedM0S4Digests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+      fail(`${sourcePath} is not byte-bound by the M0-S4 context manifest`);
+    }
+  })
+);
+
+console.log(
+  `Curve M0-S4 context integrity passed: ${m0s4Context.paths.length} files at ${expectedM0S4Context.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));

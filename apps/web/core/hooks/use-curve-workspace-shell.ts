@@ -20,10 +20,15 @@ export const useCurveWorkspaceShell = (workspaceSlug: string | undefined) => {
     }
   );
 
+  const errorStatus = error && typeof error === "object" && "status" in error ? Number(error.status) : undefined;
+
   return {
     shell: data,
     isEnabled: data?.state === "EMPTY",
     isLoading,
     error,
+    errorStatus,
+    isUnavailable: errorStatus === 404,
+    isPermissionLimited: errorStatus === 401 || errorStatus === 403,
   };
 };

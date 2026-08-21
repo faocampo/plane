@@ -88,6 +88,12 @@ def _correlation_id(request) -> str:
     return value
 
 
+def correlation_id_for_request(request) -> str:
+    """Return the request-scoped safe correlation identifier."""
+
+    return _correlation_id(request)
+
+
 def _human_actor(user) -> dict[str, str]:
     if user is None or not getattr(user, "is_authenticated", False):
         return {"actor_type": "SYSTEM", "actor_id": "anonymous"}
@@ -254,17 +260,27 @@ def _load_permitted_projection(*, workspace: Workspace, resource_ref: Mapping[st
                 id=resource_ref["resource_id"],
                 aggregate_version=resource_ref.get("resource_version"),
             )
-            .only("id", "aggregate_version", "status", "progress_percent")
+            .only(
+                "id",
+                "workspace_id",
+                "operation_type",
+                "aggregate_version",
+                "status",
+                "progress_percent",
+            )
             .first()
         )
         if operation is None:
             raise CurvePolicyResourceNotFound
         return MappingProxyType(
             {
-                "operation_id": str(operation.id),
-                "operation_version": operation.aggregate_version,
+                "schema_version": "1.0",
+                "id": str(operation.id),
+                "workspace_id": str(operation.workspace_id),
+                "operation_type": operation.operation_type,
                 "status": operation.status,
-                "progress_percent": operation.progress_percent,
+                "version": operation.aggregate_version,
+                **({"progress_percent": operation.progress_percent} if operation.progress_percent is not None else {}),
             }
         )
     raise CurvePolicyResourceNotFound
@@ -636,6 +652,73 @@ def start_foundation_probe(
         context_builder=context_builder,
         mutation_callback=mutation_callback,
         no_effect_exceptions=(IdempotencyConflict, CommandAlreadyInProgress),
+    )
+
+
+def request_operation_cancellation(
+    *,
+    request,
+    workspace_slug: str,
+    operation_id: uuid.UUID,
+    expected_version: int,
+    raw_idempotency_key: str,
+    canonical_request: bytes,
+    destination: str = "CURVE_TEMPORAL_OPERATION_V1",
+):
+    """Request a human-authorized, idempotent Operation cancellation."""
+
+    correlation_id = _correlation_id(request)
+
+    def context_builder():
+        try:
+            workspace = Workspace.objects.select_for_update().only("id", "slug", "owner_id").get(slug=workspace_slug)
+        except Workspace.DoesNotExist as error:
+            raise CurvePolicyResourceNotFound from error
+        resource = _operation_resource(workspace=workspace, resource_id=operation_id)
+        return _build_query_context(
+            workspace=workspace,
+            user=request.user,
+            action="CURVE.OPERATION.CANCEL",
+            resource=resource,
+            correlation_id=correlation_id,
+        )
+
+    def mutation_callback(receipt):
+        from plane.curve.services import _request_operation_cancellation_authorized
+
+        actor = _human_actor(request.user)
+        return _request_operation_cancellation_authorized(
+            authorization_receipt=receipt,
+            workspace_id=receipt.workspace_id,
+            operation_id=operation_id,
+            expected_version=expected_version,
+            principal_scope=f"{actor['actor_type']}:{actor['actor_id']}",
+            command_scope=f"CANCEL_OPERATION:{operation_id}",
+            raw_idempotency_key=raw_idempotency_key,
+            canonical_request=canonical_request,
+            actor=actor,
+            effective_principal=dict(actor),
+            correlation_id=correlation_id,
+            causation_id=f"cancel:{operation_id}",
+            destination=destination,
+        )
+
+    from plane.curve.services import (
+        CommandAlreadyInProgress,
+        IdempotencyConflict,
+        InvalidOperationTransition,
+        OptimisticConcurrencyError,
+    )
+
+    return execute_authorized_mutation(
+        context_builder=context_builder,
+        mutation_callback=mutation_callback,
+        no_effect_exceptions=(
+            IdempotencyConflict,
+            CommandAlreadyInProgress,
+            OptimisticConcurrencyError,
+            InvalidOperationTransition,
+        ),
     )
 
 

@@ -1,3 +1,7 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
+
 import hashlib
 import json
 import uuid
@@ -23,8 +27,10 @@ from plane.curve.serialization import (
     serialize_idempotency_record,
     serialize_inbox_message,
     serialize_operation,
+    serialize_operation_summary,
     serialize_outbox_event,
     serialize_policy_decision,
+    serialize_sse_event,
 )
 from plane.db.models import User, Workspace, WorkspaceMember
 
@@ -39,10 +45,12 @@ SCHEMA_DIGESTS = {
     "idempotency-record.schema.json": "9c40ad05af41e89d1fa8890550f03591c106070337c2cf5ff091aedd74210801",
     "inbox-message.schema.json": "e1b06e1cb5ea157e2249014229dceac3c1ea0f07bda393a2832ba886dcd84527",
     "operation-event-v1.schema.json": "fdba17d38e5e930b9abca6ceae47a7dd7b33c4bdd88b5e740e684c89548315d0",
+    "operation-summary.schema.json": "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
     "operation.schema.json": "887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff",
     "outbox-event.schema.json": "fd5db47b56f359eb7333e06c0c7ec1f9f90b00a6b4b07f791f10d0177cc79711",
     "policy-decision.schema.json": "5faa121136c59420da7fb1582985c3d445b6486e1e52a77c8d6ff853634f4bd8",
     "policy-evaluation.schema.json": "75622a18bbbdaa69795beee16254106f12aab2aa150e1619f237d3bf67d724f8",
+    "sse-event.schema.json": "58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80",
 }
 
 
@@ -119,6 +127,8 @@ def test_persisted_records_serialize_against_pinned_json_schemas(schema_contract
 
     documents = {
         "operation.schema.json": serialize_operation(operation),
+        "operation-summary.schema.json": serialize_operation_summary(operation),
+        "sse-event.schema.json": serialize_sse_event(event),
         "event-envelope.schema.json": serialize_domain_event(event),
         "operation-event-v1.schema.json": event.payload,
         "outbox-event.schema.json": serialize_outbox_event(outbox),

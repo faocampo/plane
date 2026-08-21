@@ -1,3 +1,7 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
+
 import pytest
 from django.test import override_settings
 from rest_framework.test import APIClient
@@ -57,6 +61,29 @@ def test_authorized_member_can_open_empty_curve_shell():
     ]
     assert audit.outcome == AuditOutcome.ALLOWED
     assert audit.policy_decision_ref["resource_id"] == str(decision.id)
+
+
+@override_settings(
+    ROOT_URLCONF="plane.curve.tests.urls",
+    CURVE_ENABLED=True,
+    CURVE_ENABLED_WORKSPACE_SLUGS=frozenset({"alpha"}),
+    CURVE_ENVIRONMENT="LOCAL",
+    CURVE_POLICY_RECORDER_ACTOR_ID="curve-api-test",
+)
+def test_authorized_member_can_open_curve_shell_with_plane_session():
+    user = _user("session@example.com")
+    workspace = _workspace("Alpha", "alpha", user)
+    client = APIClient()
+    client.force_login(user)
+
+    response = client.get("/api/v1/workspaces/alpha/curve/")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "workspace_id": str(workspace.id),
+        "workspace_slug": "alpha",
+        "state": "EMPTY",
+    }
 
 
 @override_settings(
