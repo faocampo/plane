@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 5s
+  scrape_timeout: 4s
+  evaluation_interval: 5s
+
+rule_files:
+  - /etc/prometheus/rules/curve-m0-alerts.yaml
+  - /etc/prometheus/rules/curve-path-alerts.yaml
+
+scrape_configs:
+  - job_name: curve-otel-metrics
+    static_configs:
+      - targets:
+          - otel-collector:8889
+    metric_relabel_configs:
+      - source_labels:
+          - __name__
+        regex: curve_outbox_backlog_ratio
+        target_label: __name__
+        replacement: curve_outbox_backlog
+
+  - job_name: otel-collector-self
+    static_configs:
+      - targets:
+          - otel-collector:8888

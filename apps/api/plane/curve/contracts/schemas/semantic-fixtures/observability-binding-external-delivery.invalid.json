@@ -1,0 +1,112 @@
+{
+  "$schema": "https://curve.x3m.internal/contracts/schemas/observability-binding.schema.json",
+  "schema_version": "curve.observability-binding/v1",
+  "binding_id": "OBS-BIND-001",
+  "decision": {
+    "status": "DECIDED_LOCAL_ONLY",
+    "scope": "LOCAL",
+    "selected_on": "2026-08-22",
+    "decision_owner": "Federico Ocampo",
+    "environment_owner": "DEVELOPER_RUNNING_LOCAL_STACK",
+    "platform_operations_approval": "NOT_REQUIRED_FOR_LOCAL_PROOF"
+  },
+  "topology": {
+    "runtime": "DOCKER_COMPOSE",
+    "compose_files": ["docker-compose-local.yml", "docker-compose-curve.yml"],
+    "profile": "curve-observability",
+    "network": "dev_env",
+    "host_bind_address": "127.0.0.1",
+    "connectivity_policy": "SHARED_LOCAL_NETWORK"
+  },
+  "images": {
+    "collector": {
+      "reference": "otel/opentelemetry-collector-contrib:0.159.0@sha256:1f2c54a30e713fac6b3ae77a1ec84010c2007e29ced8ec666214fc2f6739c1cc",
+      "source": "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/tag/v0.159.0"
+    },
+    "prometheus": {
+      "reference": "prom/prometheus:v3.10.0@sha256:4a61322ac1103a0e3aea2a61ef1718422a48fa046441f299d71e660a3bc71ae9",
+      "source": "https://github.com/prometheus/prometheus/releases/tag/v3.10.0"
+    },
+    "grafana": {
+      "reference": "grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63",
+      "source": "https://github.com/grafana/grafana/releases/tag/v13.1.0"
+    }
+  },
+  "otlp": {
+    "docker_endpoint": "http://otel-collector:4317",
+    "host_endpoint": "http://localhost:4317",
+    "protocol": "grpc",
+    "tls": "DISABLED_LOCAL_ONLY",
+    "insecure": true,
+    "authentication_secret_reference": null,
+    "signals": ["TRACES", "METRICS"],
+    "trace_sink": "COLLECTOR_DEBUG_EXPORTER_LOCAL_ONLY"
+  },
+  "prometheus": {
+    "internal_url": "http://prometheus:9090",
+    "host_url": "http://localhost:9091",
+    "collector_metrics_endpoint": "http://otel-collector:8889/metrics",
+    "collector_self_metrics_endpoint": "http://otel-collector:8888/metrics",
+    "ingestion": "SCRAPE_COLLECTOR_PROMETHEUS_EXPORTER",
+    "metric_translation_strategy": "UnderscoreEscapingWithSuffixes",
+    "rule_evaluator": "PROMETHEUS",
+    "rule_file": "apps/api/plane/curve/observability/prometheus/curve-m0-alerts.yaml",
+    "scrape_jobs": ["curve-otel-metrics", "otel-collector-self"]
+  },
+  "grafana": {
+    "internal_url": "http://grafana:3000",
+    "host_url": "http://localhost:3001",
+    "organization": "DEFAULT",
+    "folder_title": "Curve",
+    "folder_uid": "curve",
+    "datasource_name": "Prometheus Local",
+    "datasource_uid": "prometheus-local",
+    "datasource_type": "prometheus",
+    "provisioning": "FILE_BASED_VERSION_CONTROLLED",
+    "alert_surface": "LOCAL_GRAFANA_UI",
+    "external_alert_delivery": "ENABLED",
+    "local_access": "LOOPBACK_ANONYMOUS_VIEWER"
+  },
+  "path_health": {
+    "collector_health_endpoint": "http://otel-collector:13133/",
+    "collector_self_metrics": "http://otel-collector:8888/metrics",
+    "prometheus_scrape_health": [
+      "up{job=\"otel-collector-self\"}",
+      "up{job=\"curve-otel-metrics\"}"
+    ],
+    "required_rules": ["CURVE_OTEL_COLLECTOR_DOWN", "CURVE_OTEL_EXPORT_PATH_DOWN"],
+    "owner": "DEVELOPER_RUNNING_LOCAL_STACK"
+  },
+  "persistence": {
+    "mode": "DOCKER_NAMED_VOLUMES",
+    "volumes": ["curve_prometheus_data", "curve_grafana_data"],
+    "prometheus_retention": "24h",
+    "retention_class": "DEVELOPMENT_DISPOSABLE",
+    "cleanup_command": "docker compose -f docker-compose-local.yml -f docker-compose-curve.yml --profile curve --profile curve-observability down -v"
+  },
+  "data_policy": {
+    "classification": "INTERNAL_SYNTHETIC_ONLY",
+    "allowed_data": "TELEMETRY_MANIFEST_ALLOWLIST_ONLY",
+    "workspace_scope_key": "EPHEMERAL_UNTRACKED_LOCAL_ENV",
+    "credentials": "NONE_FOR_OTLP",
+    "network_egress": "NO_EXTERNAL_TELEMETRY_DESTINATION"
+  },
+  "implementation": {
+    "compose_overlay": "docker-compose-curve.yml",
+    "configuration_root": "deployments/curve-observability",
+    "proof_command": "node scripts/curve-observability-proof.mjs",
+    "disablement": "CURVE_TELEMETRY_MODE=DISABLED_AND_PROFILE_OMITTED",
+    "migration": "NONE"
+  },
+  "acceptance": [
+    "Real Curve metrics reach Prometheus through the Collector.",
+    "The provisioned M0-S5A dashboard displays contracted Curve metrics through datasource UID prometheus-local.",
+    "All four application alerts and both telemetry-path alerts can be evaluated and observed locally without external delivery.",
+    "Collector or Collector-to-Prometheus export-path failure is detected independently through health and scrape signals."
+  ],
+  "promotion": {
+    "criterion": "LOCAL_ACCEPTANCE_COMPLETE",
+    "next_environment": "STAGING",
+    "staging_authority": "SEPARATE_MATERIAL_DECISION_REQUIRED"
+  }
+}

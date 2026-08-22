@@ -111,6 +111,15 @@ build/
 temp/
 scripts/
 !packages/i18n/scripts/
+!/scripts/
+/scripts/*
+!/scripts/curve-observability-proof.mjs
+!/scripts/tests/
+/scripts/tests/*
+!/scripts/tests/curve-observability-proof.test.mjs
+
+# Curve local observability proof state
+/.curve-local/
 
 # i18n auto-generated types (regenerated on every build)
 packages/i18n/src/types/keys.generated.ts
