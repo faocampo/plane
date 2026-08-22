@@ -31,6 +31,9 @@ from plane.api.middleware.api_authentication import APIKeyAuthentication
 from plane.api.views.base import BaseAPIView
 from plane.curve.config import CurvePolicyConfigurationError
 from plane.curve.models import DomainEvent, Operation, OperationType
+from plane.curve.observability.instrumentation import observe_curve_span
+from plane.curve.observability.propagation import event_contract
+from plane.curve.observability.runtime import get_telemetry_runtime
 from plane.curve.permissions import (
     CurveCorePolicyPermission,
     query_authorization_receipt,
@@ -298,10 +301,7 @@ class CurveAPIView(BaseAPIView):
                 code="CURVE_REQUEST_REJECTED",
                 title="The Curve request was rejected",
             )
-        logger.exception(
-            "Curve request failed",
-            extra={"correlation_id": correlation_id_for_request(self.request)},
-        )
+        logger.error("Curve request failed")
         return self.problem(
             self.request,
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -487,9 +487,38 @@ def _events_after(queryset, event):
     return queryset.filter(Q(recorded_at__gt=event.recorded_at) | Q(recorded_at=event.recorded_at, id__gt=event.id))
 
 
-def _format_sse(event: DomainEvent) -> str:
-    data = json.dumps(serialize_sse_event(event), separators=(",", ":"))
-    return f"id: {event.id}\nevent: {event.event_type}\ndata: {data}\n\n"
+def _record_sse_metric(runtime, name: str, value: int, *, result: str | None = None) -> None:
+    if not runtime.enabled:
+        return
+    attributes = {"curve.component": "SSE"}
+    if result is not None:
+        attributes["curve.result"] = result
+    try:
+        runtime.registry.record(name, value, attributes=attributes)
+    except Exception:
+        return
+
+
+def _format_sse(event: DomainEvent, *, telemetry_runtime=None) -> str:
+    try:
+        _, traceparent = event_contract(event.payload_schema, event.payload)
+    except ValueError:
+        traceparent = None
+    with observe_curve_span(
+        component="API",
+        span_name="curve.sse.publish",
+        workspace_id=event.workspace_id,
+        parent_traceparent=traceparent,
+        attributes={
+            "curve.component": "SSE",
+            "curve.event.id": str(event.id),
+            "curve.operation.id": str(event.aggregate_id),
+            "curve.result": "SUCCEEDED",
+        },
+        runtime=telemetry_runtime,
+    ):
+        data = json.dumps(serialize_sse_event(event), separators=(",", ":"))
+        return f"id: {event.id}\nevent: {event.event_type}\ndata: {data}\n\n"
 
 
 class CurveEventStreamEndpoint(CurveAPIView):
@@ -500,6 +529,7 @@ class CurveEventStreamEndpoint(CurveAPIView):
 
     def get(self, request, slug):
         workspace_receipt = query_authorization_receipt(request)
+        telemetry_runtime = get_telemetry_runtime(component="API")
         replay_limit = getattr(settings, "CURVE_SSE_REPLAY_LIMIT", 100)
         events = _visible_event_queryset(workspace_id=workspace_receipt.workspace_id, user=request.user)
         last_event_id = request.headers.get("Last-Event-ID")
@@ -514,44 +544,20 @@ class CurveEventStreamEndpoint(CurveAPIView):
                 raise CurveStaleCursor
             later = _events_after(events, cursor_event)
             if later.count() > replay_limit:
+                _record_sse_metric(telemetry_runtime, "curve.sse.resume", 1, result="FAILED")
                 raise CurveStaleCursor
             initial_events = list(later.order_by("recorded_at", "id")[:replay_limit])
+            _record_sse_metric(telemetry_runtime, "curve.sse.resume", 1, result="SUCCEEDED")
         else:
             initial_events = list(events.order_by("-recorded_at", "-id")[:replay_limit])
             initial_events.reverse()
 
         def stream():
             latest = cursor_event
-            yield "retry: 1000\n\n"
-            for event in initial_events:
-                try:
-                    authorize_query(
-                        request=request,
-                        action="CURVE.OPERATION.READ",
-                        workspace_slug=slug,
-                        resource_type="OPERATION",
-                        resource_id=event.aggregate_id,
-                    )
-                except (CurvePolicyDenied, CurvePolicyResourceNotFound):
-                    continue
-                latest = event
-                yield _format_sse(event)
-
-            deadline = time.monotonic() + getattr(settings, "CURVE_SSE_CONNECTION_SECONDS", 25.0)
-            poll_interval = getattr(settings, "CURVE_SSE_POLL_INTERVAL_SECONDS", 1.0)
-            while time.monotonic() < deadline:
-                time.sleep(poll_interval)
-                current_events = _visible_event_queryset(
-                    workspace_id=workspace_receipt.workspace_id,
-                    user=request.user,
-                )
-                if latest is not None:
-                    current_events = _events_after(current_events, latest)
-                batch = list(current_events.order_by("recorded_at", "id")[:replay_limit])
-                if not batch:
-                    yield ": keep-alive\n\n"
-                    continue
-                for event in batch:
+            _record_sse_metric(telemetry_runtime, "curve.sse.connections", 1)
+            try:
+                yield "retry: 1000\n\n"
+                for event in initial_events:
                     try:
                         authorize_query(
                             request=request,
@@ -563,7 +569,37 @@ class CurveEventStreamEndpoint(CurveAPIView):
                     except (CurvePolicyDenied, CurvePolicyResourceNotFound):
                         continue
                     latest = event
-                    yield _format_sse(event)
+                    yield _format_sse(event, telemetry_runtime=telemetry_runtime)
+
+                deadline = time.monotonic() + getattr(settings, "CURVE_SSE_CONNECTION_SECONDS", 25.0)
+                poll_interval = getattr(settings, "CURVE_SSE_POLL_INTERVAL_SECONDS", 1.0)
+                while time.monotonic() < deadline:
+                    time.sleep(poll_interval)
+                    current_events = _visible_event_queryset(
+                        workspace_id=workspace_receipt.workspace_id,
+                        user=request.user,
+                    )
+                    if latest is not None:
+                        current_events = _events_after(current_events, latest)
+                    batch = list(current_events.order_by("recorded_at", "id")[:replay_limit])
+                    if not batch:
+                        yield ": keep-alive\n\n"
+                        continue
+                    for event in batch:
+                        try:
+                            authorize_query(
+                                request=request,
+                                action="CURVE.OPERATION.READ",
+                                workspace_slug=slug,
+                                resource_type="OPERATION",
+                                resource_id=event.aggregate_id,
+                            )
+                        except (CurvePolicyDenied, CurvePolicyResourceNotFound):
+                            continue
+                        latest = event
+                        yield _format_sse(event, telemetry_runtime=telemetry_runtime)
+            finally:
+                _record_sse_metric(telemetry_runtime, "curve.sse.connections", -1)
 
         response = StreamingHttpResponse(stream(), content_type="text/event-stream")
         response["Cache-Control"] = "no-cache, no-store"

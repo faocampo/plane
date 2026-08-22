@@ -1,0 +1,37 @@
+{
+  "groups": [
+    {
+      "name": "curve-m0",
+      "rules": [
+        {
+          "alert": "CURVE_AUDIT_APPEND_FAILURE",
+          "annotations": { "summary": "A Curve audit append failed; protected mutations remain fail-closed." },
+          "expr": "sum(increase(curve_audit_append_total{curve_result=\"FAILED\"}[5m])) > 0",
+          "for": "1m",
+          "labels": { "severity": "CRITICAL" }
+        },
+        {
+          "alert": "CURVE_OUTBOX_STUCK",
+          "annotations": { "summary": "The oldest deliverable Curve outbox item has exceeded the local M0 age threshold." },
+          "expr": "max(curve_outbox_oldest_age_seconds) > 30",
+          "for": "5m",
+          "labels": { "severity": "WARNING" }
+        },
+        {
+          "alert": "CURVE_WORKER_HEARTBEAT_STALE",
+          "annotations": { "summary": "The trusted local Curve worker heartbeat is stale." },
+          "expr": "max(curve_worker_heartbeat_age_seconds) > 30 or absent(curve_worker_heartbeat_age_seconds)",
+          "for": "2m",
+          "labels": { "severity": "CRITICAL" }
+        },
+        {
+          "alert": "CURVE_OPERATION_FAILURE_RATIO",
+          "annotations": { "summary": "The local Curve operation failure ratio exceeds five percent." },
+          "expr": "sum(increase(curve_operation_completed_total{curve_result=\"FAILED\"}[5m])) / clamp_min(sum(increase(curve_operation_completed_total[5m])), 1) > 0.05",
+          "for": "5m",
+          "labels": { "severity": "WARNING" }
+        }
+      ]
+    }
+  ]
+}

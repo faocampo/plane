@@ -1,0 +1,89 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Operation throughput",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum(rate(curve_operation_started_total[5m]))", "refId": "A" }]
+    },
+    {
+      "id": 2,
+      "title": "Operation terminal outcomes",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum by (curve_result) (rate(curve_operation_completed_total[5m]))", "refId": "A" }]
+    },
+    {
+      "id": 3,
+      "title": "Operation p95 duration",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(curve_operation_duration_seconds_bucket[5m])))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Outbox backlog",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum by (curve_outbox_state) (curve_outbox_backlog)", "refId": "A" }]
+    },
+    {
+      "id": 5,
+      "title": "Oldest outbox item age",
+      "type": "timeseries",
+      "targets": [{ "expr": "max(curve_outbox_oldest_age_seconds)", "refId": "A" }]
+    },
+    {
+      "id": 6,
+      "title": "Activity retries",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum by (curve_activity_type) (rate(curve_activity_retry_total[5m]))", "refId": "A" }]
+    },
+    {
+      "id": 7,
+      "title": "Worker heartbeat age",
+      "type": "timeseries",
+      "targets": [{ "expr": "max(curve_worker_heartbeat_age_seconds)", "refId": "A" }]
+    },
+    {
+      "id": 8,
+      "title": "Active SSE connections",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum(curve_sse_connections)", "refId": "A" }]
+    },
+    {
+      "id": 9,
+      "title": "Audit append failures",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum(rate(curve_audit_append_total{curve_result=\"FAILED\"}[5m]))", "refId": "A" }]
+    },
+    {
+      "id": 10,
+      "title": "SSE resume rate",
+      "type": "timeseries",
+      "targets": [{ "expr": "sum(rate(curve_sse_resume_total[5m]))", "refId": "A" }]
+    }
+  ],
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Prometheus",
+        "name": "DS_PROMETHEUS",
+        "query": "prometheus",
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "title": "Curve M0 Operations",
+  "uid": "curve-m0-operations",
+  "version": 1
+}

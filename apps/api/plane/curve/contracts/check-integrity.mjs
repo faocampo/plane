@@ -6,10 +6,12 @@ const contextPath = new URL("apps/api/plane/curve/contracts/m0-s2-context.json",
 const m003ContextPath = new URL("apps/api/plane/curve/contracts/m0-03-context.json", repositoryRoot);
 const m0s3ContextPath = new URL("apps/api/plane/curve/contracts/m0-s3-context.json", repositoryRoot);
 const m0s4ContextPath = new URL("apps/api/plane/curve/contracts/m0-s4-context.json", repositoryRoot);
+const m0s5ContextPath = new URL("apps/api/plane/curve/contracts/m0-s5-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
 const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
 const policyDirectory = new URL("apps/api/plane/curve/contracts/policy/", repositoryRoot);
+const observabilityDirectory = new URL("apps/api/plane/curve/contracts/observability/", repositoryRoot);
 
 const expectedContext = {
   curveRevision: "ab2c81a33ede719c02ff0a2a6ab35eabcf304de1",
@@ -85,6 +87,23 @@ const expectedM0S4VendoredFiles = {
   "contracts/schemas/operation-summary.schema.json": "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
   "contracts/schemas/operation.schema.json": "887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff",
   "contracts/schemas/sse-event.schema.json": "58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80",
+};
+
+const expectedM0S5Context = {
+  curveRevision: "a23dab99e9afcc9dbfad7f5a3dc8b394ef60e529",
+  approvedContractHead: "fa6fd677fc41d0bc73a8587e78d33d55a6824429",
+  planeBaseRevision: "e762fbbd2c1726a2833745add8245a1679c60d88",
+  contextDigest: "sha256:720a70bb9146761e7b4f1852e889127460812d25d84cbafd1304e20caa18ac1a",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+};
+
+const expectedM0S5VendoredFiles = {
+  "contracts/observability/m0-s5-telemetry-v1.json": "8ba95e5e605188e829df03374114eb2ec0d2cbea0218f1d286198cbbb2d34d9b",
+  "contracts/schemas/operation-event-v2.schema.json":
+    "3d3b67fa2939b93517f061d852f4562087db87728b66893dd05823b44881fa73",
+  "contracts/schemas/telemetry-manifest.schema.json":
+    "b25c1d758fa995370a01996b811770bdbd335374bda7ea88a790359d4c126942",
 };
 
 const fail = (message) => {
@@ -292,6 +311,72 @@ await Promise.all(
 
 console.log(
   `Curve M0-S4 context integrity passed: ${m0s4Context.paths.length} files at ${expectedM0S4Context.curveRevision}`
+);
+
+const m0s5Context = JSON.parse(await readFile(m0s5ContextPath, "utf8"));
+if (m0s5Context.schema_version !== "curve-context-pack/v1" || m0s5Context.task_id !== "M0-08") {
+  fail("unexpected M0-S5 context identity");
+}
+if (
+  m0s5Context.curve_revision !== expectedM0S5Context.curveRevision ||
+  m0s5Context.approved_contract_head !== expectedM0S5Context.approvedContractHead ||
+  m0s5Context.plane_base_revision !== expectedM0S5Context.planeBaseRevision ||
+  m0s5Context.context_digest !== expectedM0S5Context.contextDigest
+) {
+  fail("unexpected M0-S5 revision or context digest");
+}
+if (
+  m0s5Context.human_owner !== expectedM0S5Context.owner ||
+  m0s5Context.human_reviewer !== expectedM0S5Context.reviewer ||
+  m0s5Context.data_classification !== "INTERNAL" ||
+  m0s5Context.execution_scope !== "LOCAL_ONLY"
+) {
+  fail("unexpected M0-S5 ownership, classification, or execution scope");
+}
+if (
+  m0s5Context.approval_evidence?.curve_pr !== "https://github.com/faocampo/curve/pull/19" ||
+  m0s5Context.approval_evidence?.approved_head !== expectedM0S5Context.approvedContractHead ||
+  m0s5Context.approval_evidence?.squash_commit !== expectedM0S5Context.curveRevision
+) {
+  fail("unexpected M0-S5 approval evidence");
+}
+if (!Array.isArray(m0s5Context.files) || !Array.isArray(m0s5Context.paths)) {
+  fail("M0-S5 context paths and per-file digests are required");
+}
+if (JSON.stringify(m0s5Context.paths) !== JSON.stringify([...m0s5Context.paths].toSorted())) {
+  fail("M0-S5 context paths are not sorted");
+}
+if (JSON.stringify(m0s5Context.files.map(({ path }) => path)) !== JSON.stringify(m0s5Context.paths)) {
+  fail("M0-S5 context files and paths differ");
+}
+if (new Set(m0s5Context.paths).size !== m0s5Context.paths.length) {
+  fail("M0-S5 context paths are not unique");
+}
+if (!m0s5Context.paths.includes("docs/technical/m0-s4-implementation-evidence.md")) {
+  fail("M0-S5 context omits accepted M0-S4 implementation evidence");
+}
+for (const file of m0s5Context.files) {
+  if (!/^sha256:[0-9a-f]{64}$/.test(file.sha256)) {
+    fail(`M0-S5 context digest is invalid for ${file.path}`);
+  }
+}
+const recordedM0S5Digests = new Map(m0s5Context.files.map(({ path, sha256: digest }) => [path, digest]));
+await Promise.all(
+  Object.entries(expectedM0S5VendoredFiles).map(async ([sourcePath, expectedDigest]) => {
+    const fileName = sourcePath.split("/").at(-1);
+    const directory = sourcePath.includes("/observability/") ? observabilityDirectory : schemaDirectory;
+    const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+    if (observedDigest !== expectedDigest) {
+      fail(`${sourcePath} digest ${observedDigest} does not match M0-S5 source ${expectedDigest}`);
+    }
+    if (recordedM0S5Digests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+      fail(`${sourcePath} is not byte-bound by the M0-S5 context manifest`);
+    }
+  })
+);
+
+console.log(
+  `Curve M0-S5 context integrity passed: ${m0s5Context.paths.length} files at ${expectedM0S5Context.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));
