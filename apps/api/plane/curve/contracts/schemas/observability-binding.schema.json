@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/observability-binding.schema.json",
+  "title": "Curve local observability binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "binding_id",
+    "decision",
+    "topology",
+    "images",
+    "otlp",
+    "prometheus",
+    "grafana",
+    "path_health",
+    "persistence",
+    "data_policy",
+    "implementation",
+    "acceptance",
+    "promotion"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://curve.x3m.internal/contracts/schemas/observability-binding.schema.json"
+    },
+    "schema_version": { "const": "curve.observability-binding/v1" },
+    "binding_id": { "const": "OBS-BIND-001" },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "scope", "selected_on", "decision_owner", "environment_owner", "platform_operations_approval"],
+      "properties": {
+        "status": { "const": "DECIDED_LOCAL_ONLY" },
+        "scope": { "const": "LOCAL" },
+        "selected_on": { "type": "string", "format": "date" },
+        "decision_owner": { "const": "Federico Ocampo" },
+        "environment_owner": { "const": "DEVELOPER_RUNNING_LOCAL_STACK" },
+        "platform_operations_approval": { "const": "NOT_REQUIRED_FOR_LOCAL_PROOF" }
+      }
+    },
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtime", "compose_files", "profile", "network", "host_bind_address", "connectivity_policy"],
+      "properties": {
+        "runtime": { "const": "DOCKER_COMPOSE" },
+        "compose_files": {
+          "const": ["docker-compose-local.yml", "docker-compose-curve.yml"]
+        },
+        "profile": { "const": "curve-observability" },
+        "network": { "const": "dev_env" },
+        "host_bind_address": { "const": "127.0.0.1" },
+        "connectivity_policy": { "const": "SHARED_LOCAL_NETWORK" }
+      }
+    },
+    "images": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collector", "prometheus", "grafana"],
+      "properties": {
+        "collector": { "$ref": "#/$defs/image" },
+        "prometheus": { "$ref": "#/$defs/image" },
+        "grafana": { "$ref": "#/$defs/image" }
+      }
+    },
+    "otlp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["docker_endpoint", "host_endpoint", "protocol", "tls", "insecure", "authentication_secret_reference", "signals", "trace_sink"],
+      "properties": {
+        "docker_endpoint": { "const": "http://otel-collector:4317" },
+        "host_endpoint": { "const": "http://localhost:4317" },
+        "protocol": { "const": "grpc" },
+        "tls": { "const": "DISABLED_LOCAL_ONLY" },
+        "insecure": { "const": true },
+        "authentication_secret_reference": { "type": "null" },
+        "signals": { "const": ["TRACES", "METRICS"] },
+        "trace_sink": { "const": "COLLECTOR_DEBUG_EXPORTER_LOCAL_ONLY" }
+      }
+    },
+    "prometheus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "internal_url",
+        "host_url",
+        "collector_metrics_endpoint",
+        "collector_self_metrics_endpoint",
+        "ingestion",
+        "metric_translation_strategy",
+        "rule_evaluator",
+        "rule_file",
+        "scrape_jobs"
+      ],
+      "properties": {
+        "internal_url": { "const": "http://prometheus:9090" },
+        "host_url": { "const": "http://localhost:9091" },
+        "collector_metrics_endpoint": { "const": "http://otel-collector:8889/metrics" },
+        "collector_self_metrics_endpoint": { "const": "http://otel-collector:8888/metrics" },
+        "ingestion": { "const": "SCRAPE_COLLECTOR_PROMETHEUS_EXPORTER" },
+        "metric_translation_strategy": { "const": "UnderscoreEscapingWithSuffixes" },
+        "rule_evaluator": { "const": "PROMETHEUS" },
+        "rule_file": { "const": "apps/api/plane/curve/observability/prometheus/curve-m0-alerts.yaml" },
+        "scrape_jobs": { "const": ["curve-otel-metrics", "otel-collector-self"] }
+      }
+    },
+    "grafana": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "internal_url",
+        "host_url",
+        "organization",
+        "folder_title",
+        "folder_uid",
+        "datasource_name",
+        "datasource_uid",
+        "datasource_type",
+        "provisioning",
+        "alert_surface",
+        "external_alert_delivery",
+        "local_access"
+      ],
+      "properties": {
+        "internal_url": { "const": "http://grafana:3000" },
+        "host_url": { "const": "http://localhost:3001" },
+        "organization": { "const": "DEFAULT" },
+        "folder_title": { "const": "Curve" },
+        "folder_uid": { "const": "curve" },
+        "datasource_name": { "const": "Prometheus Local" },
+        "datasource_uid": { "const": "prometheus-local" },
+        "datasource_type": { "const": "prometheus" },
+        "provisioning": { "const": "FILE_BASED_VERSION_CONTROLLED" },
+        "alert_surface": { "const": "LOCAL_GRAFANA_UI" },
+        "external_alert_delivery": { "const": "DISABLED" },
+        "local_access": { "const": "LOOPBACK_ANONYMOUS_VIEWER" }
+      }
+    },
+    "path_health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collector_health_endpoint", "collector_self_metrics", "prometheus_scrape_health", "required_rules", "owner"],
+      "properties": {
+        "collector_health_endpoint": { "const": "http://otel-collector:13133/" },
+        "collector_self_metrics": { "const": "http://otel-collector:8888/metrics" },
+        "prometheus_scrape_health": { "const": ["up{job=\"otel-collector-self\"}", "up{job=\"curve-otel-metrics\"}"] },
+        "required_rules": { "const": ["CURVE_OTEL_COLLECTOR_DOWN", "CURVE_OTEL_EXPORT_PATH_DOWN"] },
+        "owner": { "const": "DEVELOPER_RUNNING_LOCAL_STACK" }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "volumes", "prometheus_retention", "retention_class", "cleanup_command"],
+      "properties": {
+        "mode": { "const": "DOCKER_NAMED_VOLUMES" },
+        "volumes": { "const": ["curve_prometheus_data", "curve_grafana_data"] },
+        "prometheus_retention": { "const": "24h" },
+        "retention_class": { "const": "DEVELOPMENT_DISPOSABLE" },
+        "cleanup_command": { "const": "docker compose -f docker-compose-local.yml -f docker-compose-curve.yml --profile curve --profile curve-observability down -v" }
+      }
+    },
+    "data_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "allowed_data", "workspace_scope_key", "credentials", "network_egress"],
+      "properties": {
+        "classification": { "const": "INTERNAL_SYNTHETIC_ONLY" },
+        "allowed_data": { "const": "TELEMETRY_MANIFEST_ALLOWLIST_ONLY" },
+        "workspace_scope_key": { "const": "EPHEMERAL_UNTRACKED_LOCAL_ENV" },
+        "credentials": { "const": "NONE_FOR_OTLP" },
+        "network_egress": { "const": "NO_EXTERNAL_TELEMETRY_DESTINATION" }
+      }
+    },
+    "implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["compose_overlay", "configuration_root", "proof_command", "disablement", "migration"],
+      "properties": {
+        "compose_overlay": { "const": "docker-compose-curve.yml" },
+        "configuration_root": { "const": "deployments/curve-observability" },
+        "proof_command": { "const": "node scripts/curve-observability-proof.mjs" },
+        "disablement": { "const": "CURVE_TELEMETRY_MODE=DISABLED_AND_PROFILE_OMITTED" },
+        "migration": { "const": "NONE" }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "promotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["criterion", "next_environment", "staging_authority"],
+      "properties": {
+        "criterion": { "const": "LOCAL_ACCEPTANCE_COMPLETE" },
+        "next_environment": { "const": "STAGING" },
+        "staging_authority": { "const": "SEPARATE_MATERIAL_DECISION_REQUIRED" }
+      }
+    }
+  },
+  "$defs": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "source"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^[a-z0-9./-]+:[A-Za-z0-9._-]+@sha256:[0-9a-f]{64}$"
+        },
+        "source": { "type": "string", "format": "uri", "pattern": "^https://" }
+      }
+    }
+  }
+}

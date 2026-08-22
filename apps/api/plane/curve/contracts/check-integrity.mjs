@@ -7,9 +7,11 @@ const m003ContextPath = new URL("apps/api/plane/curve/contracts/m0-03-context.js
 const m0s3ContextPath = new URL("apps/api/plane/curve/contracts/m0-s3-context.json", repositoryRoot);
 const m0s4ContextPath = new URL("apps/api/plane/curve/contracts/m0-s4-context.json", repositoryRoot);
 const m0s5ContextPath = new URL("apps/api/plane/curve/contracts/m0-s5-context.json", repositoryRoot);
+const m0s5bContextPath = new URL("apps/api/plane/curve/contracts/m0-s5b-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
 const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
+const semanticFixtureDirectory = new URL("apps/api/plane/curve/contracts/schemas/semantic-fixtures/", repositoryRoot);
 const policyDirectory = new URL("apps/api/plane/curve/contracts/policy/", repositoryRoot);
 const observabilityDirectory = new URL("apps/api/plane/curve/contracts/observability/", repositoryRoot);
 
@@ -104,6 +106,24 @@ const expectedM0S5VendoredFiles = {
     "3d3b67fa2939b93517f061d852f4562087db87728b66893dd05823b44881fa73",
   "contracts/schemas/telemetry-manifest.schema.json":
     "b25c1d758fa995370a01996b811770bdbd335374bda7ea88a790359d4c126942",
+};
+
+const expectedM0S5BContext = {
+  curveRevision: "43480ca8463d0b40d436145aeb19fbbc8c2be472",
+  approvedContractHead: "5a3ab82d7b960c862ea83c6ebf89e086be19b758",
+  planeBaseRevision: "39920769daf78fce29a10c7f4e4bb8779671b004",
+  contextDigest: "sha256:36933053249f2159d2b768e3ff62c3e114a587a5fa650df9b262b4f7d9b28d3b",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+};
+
+const expectedM0S5BVendoredFiles = {
+  "contracts/observability/obs-bind-001-local-v1.json":
+    "873f6336786727ed62add025332b5c53abc68acc65da3a5c9ea93c922960adb4",
+  "contracts/schemas/observability-binding.schema.json":
+    "0dccea5ef9c8897fa5c4d66d3e9c586cf63531943ee423e474d071dad76c4d85",
+  "contracts/schemas/semantic-fixtures/observability-binding-external-delivery.invalid.json":
+    "2e36bac87a2fd40c885d7af78abe54ffacf308a34e4630ab42ce531fa06058ca",
 };
 
 const fail = (message) => {
@@ -377,6 +397,84 @@ await Promise.all(
 
 console.log(
   `Curve M0-S5 context integrity passed: ${m0s5Context.paths.length} files at ${expectedM0S5Context.curveRevision}`
+);
+
+const m0s5bContext = JSON.parse(await readFile(m0s5bContextPath, "utf8"));
+if (m0s5bContext.schema_version !== "curve-context-pack/v1" || m0s5bContext.task_id !== "M0-S5B") {
+  fail("unexpected M0-S5B context identity");
+}
+if (
+  m0s5bContext.curve_revision !== expectedM0S5BContext.curveRevision ||
+  m0s5bContext.approved_contract_head !== expectedM0S5BContext.approvedContractHead ||
+  m0s5bContext.plane_base_revision !== expectedM0S5BContext.planeBaseRevision ||
+  m0s5bContext.context_digest !== expectedM0S5BContext.contextDigest
+) {
+  fail("unexpected M0-S5B revision or context digest");
+}
+if (
+  m0s5bContext.human_owner !== expectedM0S5BContext.owner ||
+  m0s5bContext.human_reviewer !== expectedM0S5BContext.reviewer ||
+  m0s5bContext.data_classification !== "INTERNAL" ||
+  m0s5bContext.execution_scope !== "LOCAL_ONLY"
+) {
+  fail("unexpected M0-S5B ownership, classification, or execution scope");
+}
+if (
+  m0s5bContext.approval_evidence?.curve_pr !== "https://github.com/faocampo/curve/pull/24" ||
+  m0s5bContext.approval_evidence?.approved_head !== expectedM0S5BContext.approvedContractHead ||
+  m0s5bContext.approval_evidence?.squash_commit !== expectedM0S5BContext.curveRevision
+) {
+  fail("unexpected M0-S5B approval evidence");
+}
+if (!Array.isArray(m0s5bContext.files) || !Array.isArray(m0s5bContext.paths)) {
+  fail("M0-S5B context paths and per-file digests are required");
+}
+if (JSON.stringify(m0s5bContext.paths) !== JSON.stringify([...m0s5bContext.paths].toSorted())) {
+  fail("M0-S5B context paths are not sorted");
+}
+if (JSON.stringify(m0s5bContext.files.map(({ path }) => path)) !== JSON.stringify(m0s5bContext.paths)) {
+  fail("M0-S5B context files and paths differ");
+}
+if (new Set(m0s5bContext.paths).size !== m0s5bContext.paths.length) {
+  fail("M0-S5B context paths are not unique");
+}
+for (const requiredPath of [
+  "contracts/observability/obs-bind-001-local-v1.json",
+  "contracts/schemas/observability-binding.schema.json",
+  "contracts/schemas/semantic-fixtures/observability-binding-external-delivery.invalid.json",
+  "docs/technical/m0-s5a-implementation-evidence.md",
+  "docs/technical/obs-bind-001-local-observability-binding.md",
+]) {
+  if (!m0s5bContext.paths.includes(requiredPath)) {
+    fail(`M0-S5B context omits ${requiredPath}`);
+  }
+}
+for (const file of m0s5bContext.files) {
+  if (!/^sha256:[0-9a-f]{64}$/.test(file.sha256)) {
+    fail(`M0-S5B context digest is invalid for ${file.path}`);
+  }
+}
+const recordedM0S5BDigests = new Map(m0s5bContext.files.map(({ path, sha256: digest }) => [path, digest]));
+await Promise.all(
+  Object.entries(expectedM0S5BVendoredFiles).map(async ([sourcePath, expectedDigest]) => {
+    const fileName = sourcePath.split("/").at(-1);
+    const directory = sourcePath.includes("/observability/")
+      ? observabilityDirectory
+      : sourcePath.includes("/semantic-fixtures/")
+        ? semanticFixtureDirectory
+        : schemaDirectory;
+    const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+    if (observedDigest !== expectedDigest) {
+      fail(`${sourcePath} digest ${observedDigest} does not match M0-S5B source ${expectedDigest}`);
+    }
+    if (recordedM0S5BDigests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+      fail(`${sourcePath} is not byte-bound by the M0-S5B context manifest`);
+    }
+  })
+);
+
+console.log(
+  `Curve M0-S5B context integrity passed: ${m0s5bContext.paths.length} files at ${expectedM0S5BContext.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));

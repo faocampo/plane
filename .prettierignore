@@ -9,3 +9,5 @@ out/
 pnpm-lock.yaml
 storybook-static/
 apps/api/plane/curve/contracts/schemas/*.schema.json
+apps/api/plane/curve/contracts/observability/*.json
+apps/api/plane/curve/contracts/schemas/semantic-fixtures/*.json

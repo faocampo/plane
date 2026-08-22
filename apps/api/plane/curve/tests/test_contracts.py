@@ -48,6 +48,7 @@ SCHEMA_DIGESTS = {
     "operation-event-v2.schema.json": "3d3b67fa2939b93517f061d852f4562087db87728b66893dd05823b44881fa73",
     "operation-summary.schema.json": "3a237b4f66a90b92545446989da0678b0e82f0f19aa2a9a4bf159740dfa80bb1",
     "operation.schema.json": "887c0d1e9b667f61db66834efdcafc72f581e71641a66e0bfa4006661bbb9aff",
+    "observability-binding.schema.json": "0dccea5ef9c8897fa5c4d66d3e9c586cf63531943ee423e474d071dad76c4d85",
     "outbox-event.schema.json": "fd5db47b56f359eb7333e06c0c7ec1f9f90b00a6b4b07f791f10d0177cc79711",
     "policy-decision.schema.json": "5faa121136c59420da7fb1582985c3d445b6486e1e52a77c8d6ff853634f4bd8",
     "policy-evaluation.schema.json": "75622a18bbbdaa69795beee16254106f12aab2aa150e1619f237d3bf67d724f8",
@@ -148,6 +149,24 @@ def test_telemetry_manifest_matches_the_pinned_schema(schema_contracts):
     manifest = json.loads((contract_directory / "observability" / "m0-s5-telemetry-v1.json").read_text())
 
     schema_contracts["telemetry-manifest.schema.json"].validate(manifest)
+
+
+def test_local_observability_binding_rejects_external_alert_delivery(schema_contracts):
+    contract_directory = Path(__file__).parents[1] / "contracts"
+    binding = json.loads((contract_directory / "observability" / "obs-bind-001-local-v1.json").read_text())
+    invalid = json.loads(
+        (
+            contract_directory
+            / "schemas"
+            / "semantic-fixtures"
+            / "observability-binding-external-delivery.invalid.json"
+        ).read_text()
+    )
+    validator = schema_contracts["observability-binding.schema.json"]
+
+    validator.validate(binding)
+    with pytest.raises(ValidationError):
+        validator.validate(invalid)
 
 
 @pytest.mark.parametrize(

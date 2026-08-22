@@ -14,6 +14,9 @@ services:
       CURVE_TELEMETRY_MODE: ${CURVE_TELEMETRY_MODE:-DISABLED}
       CURVE_TELEMETRY_SCOPE_HMAC_KEY: ${CURVE_TELEMETRY_SCOPE_HMAC_KEY:-}
       CURVE_TELEMETRY_SCOPE_KEY_ID: ${CURVE_TELEMETRY_SCOPE_KEY_ID:-}
+      CURVE_OTEL_EXPORTER_OTLP_ENDPOINT: ${CURVE_OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      CURVE_OTEL_EXPORTER_OTLP_PROTOCOL: ${CURVE_OTEL_EXPORTER_OTLP_PROTOCOL:-}
+      CURVE_OTEL_EXPORTER_OTLP_INSECURE: ${CURVE_OTEL_EXPORTER_OTLP_INSECURE:-}
       CURVE_POLICY_RECORDER_ACTOR_ID: curve-api-local
       CURVE_FOUNDATION_PROBE_ENABLED: "1"
 
@@ -111,6 +114,9 @@ services:
       CURVE_TELEMETRY_MODE: ${CURVE_TELEMETRY_MODE:-DISABLED}
       CURVE_TELEMETRY_SCOPE_HMAC_KEY: ${CURVE_TELEMETRY_SCOPE_HMAC_KEY:-}
       CURVE_TELEMETRY_SCOPE_KEY_ID: ${CURVE_TELEMETRY_SCOPE_KEY_ID:-}
+      CURVE_OTEL_EXPORTER_OTLP_ENDPOINT: ${CURVE_OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      CURVE_OTEL_EXPORTER_OTLP_PROTOCOL: ${CURVE_OTEL_EXPORTER_OTLP_PROTOCOL:-}
+      CURVE_OTEL_EXPORTER_OTLP_INSECURE: ${CURVE_OTEL_EXPORTER_OTLP_INSECURE:-}
       TEMPORAL_ADDRESS: temporal:7233
       TEMPORAL_NAMESPACE: curve-local
       TEMPORAL_TASK_QUEUE: curve-control-plane-v1
@@ -141,5 +147,97 @@ services:
     cpus: 2.0
     mem_limit: 8g
 
+  otel-collector:
+    image: docker.io/otel/opentelemetry-collector-contrib:0.159.0@sha256:1f2c54a30e713fac6b3ae77a1ec84010c2007e29ced8ec666214fc2f6739c1cc
+    profiles:
+      - curve-observability
+    restart: unless-stopped
+    command:
+      - --config=/etc/otelcol-contrib/config.yaml
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m
+    volumes:
+      - ${CURVE_SOURCE_ROOT:-.}/deployments/curve-observability/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    networks:
+      - dev_env
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:13133:13133"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 512m
+
+  prometheus:
+    image: docker.io/prom/prometheus:v3.10.0@sha256:4a61322ac1103a0e3aea2a61ef1718422a48fa046441f299d71e660a3bc71ae9
+    profiles:
+      - curve-observability
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=24h
+      - --web.listen-address=0.0.0.0:9090
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m
+    volumes:
+      - ${CURVE_SOURCE_ROOT:-.}/deployments/curve-observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ${CURVE_SOURCE_ROOT:-.}/apps/api/plane/curve/observability/prometheus/curve-m0-alerts.yaml:/etc/prometheus/rules/curve-m0-alerts.yaml:ro
+      - ${CURVE_SOURCE_ROOT:-.}/deployments/curve-observability/curve-path-alerts.yaml:/etc/prometheus/rules/curve-path-alerts.yaml:ro
+      - ${CURVE_SOURCE_ROOT:-.}/deployments/curve-observability/prometheus-alert-tests.yaml:/etc/prometheus/tests/prometheus-alert-tests.yaml:ro
+      - curve_prometheus_data:/prometheus
+    depends_on:
+      - otel-collector
+    networks:
+      - dev_env
+    ports:
+      - "127.0.0.1:9091:9090"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 512m
+
+  grafana:
+    image: docker.io/grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
+    profiles:
+      - curve-observability
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PLUGINS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - ${CURVE_SOURCE_ROOT:-.}/deployments/curve-observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ${CURVE_SOURCE_ROOT:-.}/deployments/curve-observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ${CURVE_SOURCE_ROOT:-.}/apps/api/plane/curve/observability/grafana/curve-m0-dashboard.json:/etc/grafana/dashboards/curve-m0-dashboard.json:ro
+      - curve_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - dev_env
+    ports:
+      - "127.0.0.1:${CURVE_GRAFANA_HOST_PORT:-3001}:3000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 512m
+
 volumes:
   curve_temporal_data:
+  curve_prometheus_data:
+  curve_grafana_data:

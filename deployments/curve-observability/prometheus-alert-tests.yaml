@@ -1,0 +1,97 @@
+rule_files:
+  - /etc/prometheus/rules/curve-m0-alerts.yaml
+  - /etc/prometheus/rules/curve-path-alerts.yaml
+
+evaluation_interval: 30s
+
+tests:
+  - name: curve application alerts reach firing state
+    interval: 30s
+    input_series:
+      - series: 'curve_audit_append_total{curve_result="FAILED"}'
+        values: '0+1x20'
+      - series: 'curve_outbox_oldest_age_seconds{curve_component="OUTBOX_RELAY"}'
+        values: '60x21'
+      - series: 'curve_worker_heartbeat_age_seconds{curve_component="TEMPORAL_WORKER"}'
+        values: '60x21'
+      - series: 'curve_operation_completed_total{curve_result="FAILED"}'
+        values: '0+1x20'
+      - series: 'curve_operation_completed_total{curve_result="SUCCEEDED"}'
+        values: '0+9x20'
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: CURVE_AUDIT_APPEND_FAILURE
+        exp_alerts:
+          - exp_labels:
+              severity: CRITICAL
+            exp_annotations:
+              summary: A Curve audit append failed; protected mutations remain fail-closed.
+      - eval_time: 6m
+        alertname: CURVE_OUTBOX_STUCK
+        exp_alerts:
+          - exp_labels:
+              severity: WARNING
+            exp_annotations:
+              summary: The oldest deliverable Curve outbox item has exceeded the local M0 age threshold.
+      - eval_time: 6m
+        alertname: CURVE_WORKER_HEARTBEAT_STALE
+        exp_alerts:
+          - exp_labels:
+              severity: CRITICAL
+            exp_annotations:
+              summary: The trusted local Curve worker heartbeat is stale.
+      - eval_time: 6m
+        alertname: CURVE_OPERATION_FAILURE_RATIO
+        exp_alerts:
+          - exp_labels:
+              severity: WARNING
+            exp_annotations:
+              summary: The local Curve operation failure ratio exceeds five percent.
+
+  - name: curve telemetry path alerts distinguish the exporter endpoint
+    interval: 30s
+    input_series:
+      - series: 'up{job="otel-collector-self",instance="otel-collector:8888"}'
+        values: '1x5'
+      - series: 'up{job="curve-otel-metrics",instance="otel-collector:8889"}'
+        values: '0x5'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: CURVE_OTEL_COLLECTOR_DOWN
+        exp_alerts: []
+      - eval_time: 1m
+        alertname: CURVE_OTEL_EXPORT_PATH_DOWN
+        exp_alerts:
+          - exp_labels:
+              instance: otel-collector:8889
+              job: curve-otel-metrics
+              severity: CRITICAL
+            exp_annotations:
+              summary: The local Curve Collector-to-Prometheus metrics export path is unavailable.
+
+  - name: complete collector outage fires both path alerts
+    interval: 30s
+    input_series:
+      - series: 'up{job="otel-collector-self",instance="otel-collector:8888"}'
+        values: '0x5'
+      - series: 'up{job="curve-otel-metrics",instance="otel-collector:8889"}'
+        values: '0x5'
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: CURVE_OTEL_COLLECTOR_DOWN
+        exp_alerts:
+          - exp_labels:
+              instance: otel-collector:8888
+              job: otel-collector-self
+              severity: CRITICAL
+            exp_annotations:
+              summary: The local Curve OpenTelemetry Collector self-metrics endpoint is unavailable.
+      - eval_time: 1m
+        alertname: CURVE_OTEL_EXPORT_PATH_DOWN
+        exp_alerts:
+          - exp_labels:
+              instance: otel-collector:8889
+              job: curve-otel-metrics
+              severity: CRITICAL
+            exp_annotations:
+              summary: The local Curve Collector-to-Prometheus metrics export path is unavailable.

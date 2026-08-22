@@ -1,0 +1,31 @@
+{
+  "groups": [
+    {
+      "name": "curve-m0-telemetry-path",
+      "rules": [
+        {
+          "alert": "CURVE_OTEL_COLLECTOR_DOWN",
+          "annotations": {
+            "summary": "The local Curve OpenTelemetry Collector self-metrics endpoint is unavailable."
+          },
+          "expr": "up{job=\"otel-collector-self\"} == 0",
+          "for": "30s",
+          "labels": {
+            "severity": "CRITICAL"
+          }
+        },
+        {
+          "alert": "CURVE_OTEL_EXPORT_PATH_DOWN",
+          "annotations": {
+            "summary": "The local Curve Collector-to-Prometheus metrics export path is unavailable."
+          },
+          "expr": "up{job=\"curve-otel-metrics\"} == 0",
+          "for": "30s",
+          "labels": {
+            "severity": "CRITICAL"
+          }
+        }
+      ]
+    }
+  ]
+}
