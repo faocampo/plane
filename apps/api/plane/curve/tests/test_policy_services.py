@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 from django.test import override_settings
+from django.utils import timezone
 
 from plane.curve.models import (
     AuditEvent,
@@ -215,6 +216,39 @@ def test_recorder_identity_is_trusted_configuration_only():
         "actor_type": "SERVICE",
         "actor_id": "curve-api-test",
     }
+
+
+@override_settings(
+    CURVE_ENABLED=True,
+    CURVE_ENABLED_WORKSPACE_SLUGS=frozenset({"alpha"}),
+    CURVE_ENVIRONMENT="LOCAL",
+    CURVE_POLICY_RECORDER_ACTOR_ID="curve-api-test",
+)
+def test_recording_time_does_not_precede_evaluation_when_clock_moves_back(monkeypatch):
+    user = _user("clock-step@example.com")
+    workspace = _workspace("Alpha", "alpha", user)
+    evaluated_at = timezone.now()
+    clock_reads = {"count": 0}
+
+    def stepped_clock():
+        clock_reads["count"] += 1
+        if clock_reads["count"] == 1:
+            return evaluated_at
+        return evaluated_at - timezone.timedelta(seconds=1)
+
+    monkeypatch.setattr(policy_services.timezone, "now", stepped_clock)
+
+    authorize_query(
+        request=_request(user),
+        action="CURVE.SHELL.VIEW",
+        workspace_slug="alpha",
+        resource_type="WORKSPACE",
+    )
+
+    decision = PolicyDecision.objects.get(workspace_id=workspace.id)
+    assert clock_reads["count"] >= 2
+    assert decision.evaluated_at == evaluated_at
+    assert decision.recorded_at == evaluated_at
 
 
 @override_settings(
