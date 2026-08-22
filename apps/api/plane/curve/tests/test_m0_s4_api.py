@@ -27,6 +27,7 @@ pytestmark = [pytest.mark.contract, pytest.mark.django_db(transaction=True)]
 
 @pytest.fixture(autouse=True)
 def _curve_settings(settings):
+    settings.ROOT_URLCONF = "plane.curve.tests.urls"
     settings.DEBUG = True
     settings.CURVE_ENABLED = True
     settings.CURVE_ENABLED_WORKSPACE_SLUGS = frozenset({"alpha", "beta"})

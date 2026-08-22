@@ -1,0 +1,411 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/telemetry-manifest.schema.json",
+  "title": "Curve M0 telemetry manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_key",
+    "manifest_version",
+    "default_mode",
+    "allowed_modes",
+    "configuration",
+    "export",
+    "collection",
+    "propagation",
+    "workspace_scope",
+    "instrumentation",
+    "correlation",
+    "attribute_policy",
+    "metric_attributes",
+    "metrics",
+    "spans",
+    "logs",
+    "dashboard",
+    "alerts"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "manifest_key": { "const": "CURVE_M0_TELEMETRY" },
+    "manifest_version": { "const": 1 },
+    "default_mode": { "const": "DISABLED" },
+    "allowed_modes": {
+      "const": ["DISABLED", "IN_MEMORY_TEST", "OTLP"]
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode_env",
+        "endpoint_env",
+        "protocol_env",
+        "headers_env",
+        "insecure_env",
+        "certificate_env",
+        "client_certificate_env",
+        "client_key_env",
+        "workspace_scope_key_env",
+        "workspace_scope_key_id_env",
+        "allowed_protocols",
+        "endpoint_schemes",
+        "endpoint_userinfo_allowed",
+        "endpoint_query_allowed",
+        "endpoint_fragment_allowed",
+        "grpc_endpoint_path_mode",
+        "http_signal_path_mode",
+        "headers_format",
+        "insecure_boolean_values",
+        "tls_file_path_mode",
+        "tls_client_pair_mode",
+        "tls_maximum_file_bytes",
+        "system_trust_store_allowed",
+        "compression",
+        "workspace_scope_key_input_encoding",
+        "workspace_scope_key_id_pattern",
+        "explicit_endpoint_required",
+        "external_default_endpoint_allowed",
+        "insecure_allowed_environment"
+      ],
+      "properties": {
+        "mode_env": { "const": "CURVE_TELEMETRY_MODE" },
+        "endpoint_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_ENDPOINT" },
+        "protocol_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_PROTOCOL" },
+        "headers_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_HEADERS" },
+        "insecure_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_INSECURE" },
+        "certificate_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_CERTIFICATE" },
+        "client_certificate_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE" },
+        "client_key_env": { "const": "CURVE_OTEL_EXPORTER_OTLP_CLIENT_KEY" },
+        "workspace_scope_key_env": { "const": "CURVE_TELEMETRY_SCOPE_HMAC_KEY" },
+        "workspace_scope_key_id_env": { "const": "CURVE_TELEMETRY_SCOPE_KEY_ID" },
+        "allowed_protocols": { "const": ["grpc", "http/protobuf"] },
+        "endpoint_schemes": { "const": ["http", "https"] },
+        "endpoint_userinfo_allowed": { "const": false },
+        "endpoint_query_allowed": { "const": false },
+        "endpoint_fragment_allowed": { "const": false },
+        "grpc_endpoint_path_mode": { "const": "ROOT_ONLY" },
+        "http_signal_path_mode": { "const": "APPEND_STANDARD_PATHS" },
+        "headers_format": { "const": "URL_ENCODED_COMMA_SEPARATED_KEY_VALUE" },
+        "insecure_boolean_values": { "const": ["true", "false"] },
+        "tls_file_path_mode": { "const": "ABSOLUTE_READ_ONLY" },
+        "tls_client_pair_mode": { "const": "BOTH_OR_NEITHER" },
+        "tls_maximum_file_bytes": { "const": 1048576 },
+        "system_trust_store_allowed": { "const": true },
+        "compression": { "const": "NONE" },
+        "workspace_scope_key_input_encoding": { "const": "BASE64URL_NO_PADDING" },
+        "workspace_scope_key_id_pattern": { "const": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$" },
+        "explicit_endpoint_required": { "const": true },
+        "external_default_endpoint_allowed": { "const": false },
+        "insecure_allowed_environment": { "const": "LOCAL" }
+      }
+    },
+    "export": {
+      "const": {
+        "otlp_signals": ["TRACES", "METRICS"],
+        "structured_log_delivery": "STDOUT_JSON",
+        "otlp_log_export_allowed": false,
+        "local_only_metrics": ["curve.telemetry.export.failure"],
+        "remote_path_failure_detection": "OBS_BIND_001_PLATFORM_SIGNAL",
+        "exporter_timeout_millis": 10000,
+        "span_batch": {
+          "max_queue_size": 2048,
+          "schedule_delay_millis": 5000,
+          "max_export_batch_size": 512,
+          "export_timeout_millis": 10000
+        },
+        "metric_reader": {
+          "export_interval_millis": 60000,
+          "export_timeout_millis": 10000
+        },
+        "shutdown_timeout_millis": 10000
+      }
+    },
+    "collection": {
+      "const": {
+        "gauge_implementation": "OBSERVABLE_GAUGE",
+        "database_query_timeout_millis": 1000,
+        "callback_failure_behavior": "OMIT_OBSERVATION_AND_LOG_BOUNDED",
+        "heartbeat_update_interval_millis": 500,
+        "heartbeat_absence_alert_required": true
+      }
+    },
+    "propagation": {
+      "const": {
+        "inbound_headers": ["traceparent"],
+        "outbound_headers": ["traceparent"],
+        "temporal_header": "_curve_traceparent_v1",
+        "tracestate_allowed": false,
+        "baggage_allowed": false,
+        "invalid_traceparent_behavior": "START_NEW_TRACE"
+      }
+    },
+    "workspace_scope": {
+      "const": {
+        "minimum_key_bytes": 32,
+        "maximum_key_bytes": 64,
+        "digest_encoding": "BASE64URL_NO_PADDING",
+        "rotation_behavior": "RESTART_WITH_NEW_KEY_ID",
+        "raw_workspace_id_export_allowed": false
+      }
+    },
+    "instrumentation": {
+      "const": {
+        "scope": "CURVE_ONLY_MANUAL",
+        "global_django_instrumentation_allowed": false,
+        "global_provider_registration_allowed": false,
+        "generic_otel_configuration_override_allowed": false,
+        "otel_sdk_disabled_fail_closed": true,
+        "api_initialization": "LAZY_PROCESS_LOCAL",
+        "worker_initialization": "EXPLICIT_BEFORE_TEMPORAL_CONNECT",
+        "workflow_exporter_io_allowed": false,
+        "resource_construction": "STATIC_CURVE_RESOURCE_ONLY",
+        "resource_attributes_by_component": {
+          "API": {
+            "service.name": "curve-api",
+            "service.namespace": "curve",
+            "deployment.environment.name": "local"
+          },
+          "TEMPORAL_WORKER": {
+            "service.name": "curve-temporal-worker",
+            "service.namespace": "curve",
+            "deployment.environment.name": "local"
+          }
+        },
+        "sampler": "PARENT_BASED_ALWAYS_ON",
+        "shutdown_on_exit": false,
+        "span_limits": {
+          "max_attributes": 16,
+          "max_span_attributes": 16,
+          "max_events": 0,
+          "max_event_attributes": 0,
+          "max_links": 0,
+          "max_link_attributes": 0,
+          "max_attribute_length": 128,
+          "max_span_attribute_length": 128
+        },
+        "automatic_exception_recording_allowed": false,
+        "metric_exemplar_filter": "ALWAYS_OFF",
+        "metric_temporality": "CUMULATIVE",
+        "metric_default_view": "DROP_UNDECLARED",
+        "histogram_boundaries_source": "MANIFEST_EXPLICIT_VIEW",
+        "bootstrap_components": ["API", "TEMPORAL_WORKER"]
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_field",
+        "trace_headers",
+        "workspace_scope_algorithm",
+        "workspace_scope_domain",
+        "metric_identifiers_allowed",
+        "audit_bridge_fields"
+      ],
+      "properties": {
+        "application_field": { "const": "correlation_id" },
+        "trace_headers": { "const": ["traceparent"] },
+        "workspace_scope_algorithm": { "const": "HMAC-SHA256" },
+        "workspace_scope_domain": { "const": "curve-workspace-scope:v1" },
+        "metric_identifiers_allowed": { "const": false },
+        "audit_bridge_fields": {
+          "const": ["workspace_id", "correlation_id", "target_ref", "policy_decision_ref"]
+        }
+      }
+    },
+    "attribute_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trace_allowlist",
+        "log_allowlist",
+        "forbidden_name_patterns",
+        "forbidden_value_classes",
+        "free_form_runtime_strings_allowed",
+        "maximum_string_value_bytes",
+        "maximum_collection_items"
+      ],
+      "properties": {
+        "trace_allowlist": { "$ref": "#/$defs/uniqueNames" },
+        "log_allowlist": { "$ref": "#/$defs/uniqueNames" },
+        "forbidden_name_patterns": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        },
+        "forbidden_value_classes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableName" }
+        },
+        "free_form_runtime_strings_allowed": { "const": false },
+        "maximum_string_value_bytes": { "const": 128 },
+        "maximum_collection_items": { "const": 16 }
+      }
+    },
+    "metric_attributes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "allowed_values"],
+        "properties": {
+          "name": { "$ref": "#/$defs/dottedName" },
+          "allowed_values": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/stableName" }
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/metric" }
+    },
+    "spans": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/span" }
+    },
+    "logs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_mode",
+        "maximum_serialized_bytes",
+        "common_required_fields",
+        "workspace_required_fields",
+        "workspace_scoped_event_codes",
+        "event_codes"
+      ],
+      "properties": {
+        "message_mode": { "const": "STATIC_EVENT_CODE_TEMPLATE" },
+        "maximum_serialized_bytes": { "const": 2048 },
+        "common_required_fields": { "$ref": "#/$defs/uniqueNames" },
+        "workspace_required_fields": { "$ref": "#/$defs/uniqueNames" },
+        "workspace_scoped_event_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableName" }
+        },
+        "event_codes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/stableName" }
+        }
+      }
+    },
+    "dashboard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation_path", "datasource_variable", "metric_translation_strategy", "panels"],
+      "properties": {
+        "implementation_path": { "$ref": "#/$defs/repositoryPath" },
+        "datasource_variable": { "const": "DS_PROMETHEUS" },
+        "metric_translation_strategy": { "const": "UnderscoreEscapingWithSuffixes" },
+        "panels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "query"],
+            "properties": {
+              "id": { "type": "integer", "minimum": 1 },
+              "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+              "query": { "type": "string", "minLength": 1, "maxLength": 2000 }
+            }
+          }
+        }
+      }
+    },
+    "alerts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["implementation_path", "rules"],
+      "properties": {
+        "implementation_path": { "$ref": "#/$defs/repositoryPath" },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "severity", "expression", "for", "summary"],
+            "properties": {
+              "id": { "$ref": "#/$defs/stableName" },
+              "severity": { "type": "string", "enum": ["INFO", "WARNING", "CRITICAL"] },
+              "expression": { "type": "string", "minLength": 1, "maxLength": 2000 },
+              "for": { "type": "string", "pattern": "^[1-9][0-9]*[smh]$" },
+              "summary": { "type": "string", "minLength": 1, "maxLength": 500 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stableName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,127}$"
+    },
+    "dottedName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.]{0,127}$"
+    },
+    "envName": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,127}$"
+    },
+    "repositoryPath": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+$",
+      "maxLength": 1000
+    },
+    "uniqueNames": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/dottedName" }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "instrument", "unit", "description", "allowed_attributes"],
+      "properties": {
+        "name": { "$ref": "#/$defs/dottedName" },
+        "instrument": {
+          "type": "string",
+          "enum": ["COUNTER", "UP_DOWN_COUNTER", "HISTOGRAM", "GAUGE"]
+        },
+        "unit": { "type": "string", "enum": ["1", "s", "By"] },
+        "description": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "allowed_attributes": { "$ref": "#/$defs/uniqueNames" },
+        "boundaries": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "allowed_attributes"],
+      "properties": {
+        "name": { "$ref": "#/$defs/dottedName" },
+        "kind": { "type": "string", "enum": ["SERVER", "INTERNAL", "PRODUCER", "CONSUMER"] },
+        "allowed_attributes": { "$ref": "#/$defs/uniqueNames" }
+      }
+    }
+  }
+}

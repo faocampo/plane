@@ -13,6 +13,11 @@ from django.db import IntegrityError, connection, transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from plane.curve.observability.propagation import (
+    OPERATION_EVENT_V1_SCHEMA,
+    OPERATION_EVENT_V2_SCHEMA,
+    valid_traceparent,
+)
 from plane.curve.models import (
     AuditEvent,
     AuditOutcome,
@@ -28,9 +33,6 @@ from plane.curve.models import (
     OutboxEvent,
     OutboxState,
 )
-
-
-OPERATION_EVENT_SCHEMA = "https://curve.x3m.internal/contracts/schemas/operation-event-v1.schema.json"
 
 
 class CurveKernelError(Exception):
@@ -409,27 +411,35 @@ def _append_audit_event(
         .values_list("sequence", flat=True)
         .first()
     )
-    return AuditEvent.objects.create(
-        workspace_id=workspace_id,
-        sequence=(previous or 0) + 1,
-        action=action,
-        target_type=target_type,
-        target_id=target_id,
-        target_ref=target_ref,
-        outcome=outcome,
-        actor=actor,
-        effective_principal=effective_principal,
-        policy_decision_ref=policy_decision_ref,
-        before_digest=before_digest,
-        after_digest=after_digest,
-        classification=DataClassification.INTERNAL,
-        correlation_id=correlation_id,
-        causation_id=causation_id,
-        idempotency_key_digest=key_digest,
-    )
+    from plane.curve.observability.instrumentation import observe_audit_append
+
+    try:
+        event = AuditEvent.objects.create(
+            workspace_id=workspace_id,
+            sequence=(previous or 0) + 1,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            target_ref=target_ref,
+            outcome=outcome,
+            actor=actor,
+            effective_principal=effective_principal,
+            policy_decision_ref=policy_decision_ref,
+            before_digest=before_digest,
+            after_digest=after_digest,
+            classification=DataClassification.INTERNAL,
+            correlation_id=correlation_id,
+            causation_id=causation_id,
+            idempotency_key_digest=key_digest,
+        )
+    except Exception:
+        observe_audit_append(result="FAILED")
+        raise
+    transaction.on_commit(lambda: observe_audit_append(result="SUCCEEDED"))
+    return event
 
 
-def _operation_event_payload(operation: Operation) -> dict:
+def _operation_event_payload(operation: Operation, *, traceparent: str | None = None) -> dict:
     payload = {
         "workspace_id": str(operation.workspace_id),
         "operation_id": str(operation.id),
@@ -440,6 +450,8 @@ def _operation_event_payload(operation: Operation) -> dict:
         payload["progress"] = operation.progress_percent
     if operation.error is not None:
         payload["error"] = operation.error
+    if valid_traceparent(traceparent):
+        payload["traceparent"] = traceparent
     return payload
 
 
@@ -452,7 +464,9 @@ def _append_operation_event(
     causation_id: str | None,
     key_digest: str | None,
     destination: str,
+    traceparent: str | None = None,
 ) -> DomainEvent:
+    instrumented = valid_traceparent(traceparent)
     event = DomainEvent.objects.create(
         workspace_id=operation.workspace_id,
         event_type="curve.operation.state_changed",
@@ -466,8 +480,8 @@ def _append_operation_event(
         causation_id=causation_id,
         idempotency_key_digest=key_digest,
         classification=DataClassification.INTERNAL,
-        payload_schema=OPERATION_EVENT_SCHEMA,
-        payload=_operation_event_payload(operation),
+        payload_schema=OPERATION_EVENT_V2_SCHEMA if instrumented else OPERATION_EVENT_V1_SCHEMA,
+        payload=_operation_event_payload(operation, traceparent=traceparent),
     )
     OutboxEvent.objects.create(
         workspace_id=operation.workspace_id,
@@ -532,6 +546,7 @@ def _create_operation_authorized(
     causation_id: str | None = None,
     destination: str = "CURVE_LOCAL",
     idempotency_ttl: timedelta = timedelta(days=1),
+    traceparent: str | None = None,
 ) -> OperationCommandResult:
     from plane.curve.policy_services import (
         assert_active_mutation_receipt,
@@ -672,6 +687,7 @@ def _create_operation_authorized(
                 causation_id=causation_id,
                 key_digest=key_digest,
                 destination=destination,
+                traceparent=traceparent,
             )
             response_status = 202
             response_resource_ref = operation_resource_ref(operation)
@@ -743,6 +759,7 @@ def _request_operation_cancellation_authorized(
     causation_id: str | None = None,
     destination: str = "CURVE_TEMPORAL_OPERATION_V1",
     idempotency_ttl: timedelta = timedelta(days=1),
+    traceparent: str | None = None,
 ) -> OperationCommandResult:
     """Request cancellation atomically through the human policy boundary."""
 
@@ -904,6 +921,7 @@ def _request_operation_cancellation_authorized(
                 causation_id=causation_id,
                 key_digest=key_digest,
                 destination=destination,
+                traceparent=traceparent,
             )
             response_status = 202
             response_resource_ref = operation_resource_ref(operation)
@@ -978,6 +996,7 @@ def _transition_operation_authorized(
     error: dict | None = None,
     destination: str = "CURVE_LOCAL",
     workflow_id: str | None = None,
+    traceparent: str | None = None,
 ) -> Operation:
     from plane.curve.policy_services import (
         assert_active_mutation_receipt,
@@ -1082,6 +1101,7 @@ def _transition_operation_authorized(
                 causation_id=causation_id,
                 key_digest=None,
                 destination=destination,
+                traceparent=traceparent,
             )
             _append_audit_event(
                 workspace_id=workspace_id,
@@ -1102,6 +1122,14 @@ def _transition_operation_authorized(
         raise InvalidOperationTransition
     if result is None:
         raise RuntimeError("operation transition completed without a result")
+    if result.status in {
+        OperationStatus.SUCCEEDED,
+        OperationStatus.FAILED,
+        OperationStatus.CANCELLED,
+    }:
+        from plane.curve.observability.instrumentation import observe_operation_terminal
+
+        observe_operation_terminal(component="TEMPORAL_WORKER", operation=result)
     return result
 
 

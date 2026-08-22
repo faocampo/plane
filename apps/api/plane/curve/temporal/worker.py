@@ -25,6 +25,9 @@ from temporalio.client import Client  # noqa: E402
 from temporalio.worker import Worker  # noqa: E402
 
 from plane.curve.config import validate_curve_policy_configuration  # noqa: E402
+from plane.curve.observability.runtime import get_telemetry_runtime  # noqa: E402
+from plane.curve.observability.gauges import register_worker_gauges  # noqa: E402
+from plane.curve.observability.temporal import CurveTemporalInterceptor  # noqa: E402
 from plane.curve.temporal.activities import (  # noqa: E402
     mark_operation_cancelled,
     mark_operation_running,
@@ -43,49 +46,63 @@ async def run_worker() -> None:
     namespace = os.environ["TEMPORAL_NAMESPACE"]
     task_queue = os.environ["TEMPORAL_TASK_QUEUE"]
     identity = os.environ["TEMPORAL_WORKER_IDENTITY"]
-    client = await Client.connect(address, namespace=namespace)
-    stop_event = asyncio.Event()
-    loop = asyncio.get_running_loop()
-    for signal_name in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(signal_name, stop_event.set)
+    telemetry_runtime = get_telemetry_runtime(component="TEMPORAL_WORKER")
+    register_worker_gauges(telemetry_runtime)
+    try:
+        client = await Client.connect(
+            address,
+            namespace=namespace,
+            interceptors=[CurveTemporalInterceptor(telemetry_runtime)],
+        )
+        stop_event = asyncio.Event()
+        loop = asyncio.get_running_loop()
+        for signal_name in (signal.SIGINT, signal.SIGTERM):
+            loop.add_signal_handler(signal_name, stop_event.set)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="curve-activity") as executor:
-        worker = Worker(
-            client,
-            task_queue=task_queue,
-            workflows=[CurveOperationWorkflowV1],
-            activities=[
-                mark_operation_running,
-                mark_operation_succeeded,
-                mark_operation_cancelled,
-            ],
-            activity_executor=executor,
-            identity=identity,
-            max_concurrent_activities=8,
-            max_concurrent_workflow_tasks=16,
-        )
-        worker_task = asyncio.create_task(worker.run(), name="curve-temporal-worker")
-        relay_task = asyncio.create_task(
-            run_relay_loop(client=client, worker_id=identity, stop_event=stop_event),
-            name="curve-temporal-relay",
-        )
-        stop_task = asyncio.create_task(stop_event.wait(), name="curve-temporal-stop")
-        completed, _ = await asyncio.wait(
-            {worker_task, relay_task, stop_task},
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        unexpected = completed - {stop_task}
-        stop_event.set()
-        relay_task.cancel()
-        await worker.shutdown()
-        results = await asyncio.gather(worker_task, relay_task, return_exceptions=True)
-        stop_task.cancel()
-        await asyncio.gather(stop_task, return_exceptions=True)
-        if unexpected:
-            for result in results:
-                if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
-                    raise result
-            raise RuntimeError("Curve Temporal worker task exited unexpectedly")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="curve-activity") as executor:
+            worker = Worker(
+                client,
+                task_queue=task_queue,
+                workflows=[CurveOperationWorkflowV1],
+                activities=[
+                    mark_operation_running,
+                    mark_operation_succeeded,
+                    mark_operation_cancelled,
+                ],
+                activity_executor=executor,
+                identity=identity,
+                max_concurrent_activities=8,
+                max_concurrent_workflow_tasks=16,
+            )
+            worker_task = asyncio.create_task(worker.run(), name="curve-temporal-worker")
+            relay_task = asyncio.create_task(
+                run_relay_loop(
+                    client=client,
+                    worker_id=identity,
+                    stop_event=stop_event,
+                    telemetry_runtime=telemetry_runtime,
+                ),
+                name="curve-temporal-relay",
+            )
+            stop_task = asyncio.create_task(stop_event.wait(), name="curve-temporal-stop")
+            completed, _ = await asyncio.wait(
+                {worker_task, relay_task, stop_task},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            unexpected = completed - {stop_task}
+            stop_event.set()
+            relay_task.cancel()
+            await worker.shutdown()
+            results = await asyncio.gather(worker_task, relay_task, return_exceptions=True)
+            stop_task.cancel()
+            await asyncio.gather(stop_task, return_exceptions=True)
+            if unexpected:
+                for result in results:
+                    if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
+                        raise result
+                raise RuntimeError("Curve Temporal worker task exited unexpectedly")
+    finally:
+        telemetry_runtime.shutdown()
 
 
 def main() -> None:

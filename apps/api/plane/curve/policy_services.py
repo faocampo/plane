@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from contextlib import ExitStack
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime
@@ -25,6 +26,11 @@ from plane.curve.models import (
     Operation,
     PolicyDecision,
 )
+from plane.curve.observability.instrumentation import (
+    observe_curve_span,
+    observe_operation_started,
+)
+from plane.curve.observability.propagation import current_traceparent
 from plane.curve.policy_evaluator import evaluate_core_policy
 from plane.curve.policy_manifest import CORE_POLICY_MANIFEST_DIGEST
 from plane.curve.policy_types import PolicyEffect, PolicyEvaluationResult
@@ -558,38 +564,71 @@ def _assert_one_mutation_audit(decision_id: uuid.UUID):
 def execute_authorized_mutation(
     *,
     context_builder: Callable[[], dict],
-    mutation_callback: Callable[[AuthorizedPolicyReceipt], object],
+    mutation_callback: Callable[[AuthorizedPolicyReceipt, object | None], object],
     no_effect_exceptions: tuple[type[Exception], ...] = (),
+    observation_factory: Callable[[AuthorizedPolicyReceipt], object] | None = None,
+    after_commit: Callable[[object, object], None] | None = None,
 ):
     """Evaluate, persist, mutate, and audit in one policy-owned transaction."""
 
     pending_error = None
     mutation_result = None
-    with transaction.atomic():
-        context = context_builder()
-        result = evaluate_core_policy(context)
-        decision = _record_policy_decision(context=context, result=result)
-        if result.effect is not PolicyEffect.ALLOW:
-            _append_policy_audit(context=context, result=result, decision=decision)
-            pending_error = CurvePolicyDenied(
-                reason_codes=result.reason_codes,
-                decision_id=decision.id,
-            )
-        else:
-            receipt = _new_authorized_receipt(
-                decision=decision,
-                result=result,
-                context=context,
-            )
-            token = _ACTIVE_MUTATION_RECEIPT.set(receipt)
-            try:
-                mutation_result = mutation_callback(receipt)
-            except no_effect_exceptions as error:
-                pending_error = error
-            finally:
-                _ACTIVE_MUTATION_RECEIPT.reset(token)
-            _assert_one_mutation_audit(decision.id)
+    denied_telemetry = None
+    observation = None
+    with ExitStack() as observation_stack:
+        try:
+            with transaction.atomic():
+                context = context_builder()
+                result = evaluate_core_policy(context)
+                decision = _record_policy_decision(context=context, result=result)
+                if result.effect is not PolicyEffect.ALLOW:
+                    _append_policy_audit(context=context, result=result, decision=decision)
+                    pending_error = CurvePolicyDenied(
+                        reason_codes=result.reason_codes,
+                        decision_id=decision.id,
+                    )
+                    denied_telemetry = (
+                        context["workspace_id"],
+                        {
+                            "CURVE.FOUNDATION_PROBE.START": "CREATE_FOUNDATION_PROBE",
+                            "CURVE.OPERATION.CANCEL": "CANCEL_OPERATION",
+                            "CURVE.OPERATION.TRANSITION": "TRANSITION_OPERATION",
+                        }.get(context["action"], "CURVE_COMMAND"),
+                    )
+                else:
+                    receipt = _new_authorized_receipt(
+                        decision=decision,
+                        result=result,
+                        context=context,
+                    )
+                    if observation_factory is not None:
+                        observation = observation_stack.enter_context(observation_factory(receipt))
+                    token = _ACTIVE_MUTATION_RECEIPT.set(receipt)
+                    try:
+                        mutation_result = mutation_callback(receipt, observation)
+                    except no_effect_exceptions as error:
+                        pending_error = error
+                    finally:
+                        _ACTIVE_MUTATION_RECEIPT.reset(token)
+                    _assert_one_mutation_audit(decision.id)
+        except Exception:
+            if observation is not None:
+                observation.set_attributes({"curve.error.code": "CURVE_INVALID_COMMAND", "curve.result": "FAILED"})
+            raise
 
+        if pending_error is None and observation is not None and after_commit is not None:
+            try:
+                after_commit(mutation_result, observation)
+            except Exception:
+                pass
+
+    if denied_telemetry is not None:
+        from plane.curve.observability.instrumentation import observe_command_denied
+
+        observe_command_denied(
+            workspace_id=denied_telemetry[0],
+            command_type=denied_telemetry[1],
+        )
     if pending_error is not None:
         raise pending_error
     return mutation_result
@@ -623,27 +662,69 @@ def start_foundation_probe(
             correlation_id=correlation_id,
         )
 
-    def mutation_callback(receipt):
+    def observation_factory(receipt):
+        return observe_curve_span(
+            component="API",
+            span_name="curve.http.command",
+            workspace_id=receipt.workspace_id,
+            parent_traceparent=getattr(request, "headers", {}).get("traceparent"),
+            attributes={
+                "curve.command.type": command_type,
+                "curve.component": "API",
+                "curve.error.code": "NONE",
+                "curve.operation.type": "FOUNDATION_PROBE",
+                "curve.result": "SUCCEEDED",
+            },
+        )
+
+    def mutation_callback(receipt, observation):
         from plane.curve.models import OperationType
         from plane.curve.services import _create_operation_authorized
 
         actor = _human_actor(request.user)
         target = dict(receipt.resource_ref)
-        return _create_operation_authorized(
-            authorization_receipt=receipt,
-            workspace_id=receipt.workspace_id,
-            principal_scope=f"{actor['actor_type']}:{actor['actor_id']}",
-            command_scope=f"{command_type}:{receipt.workspace_id}",
-            raw_idempotency_key=raw_idempotency_key,
-            canonical_request=canonical_request,
-            operation_type=OperationType.FOUNDATION_PROBE,
-            command_type=command_type,
-            target=target,
-            actor=actor,
-            effective_principal=dict(actor),
-            correlation_id=correlation_id,
-            causation_id=causation_id,
-            destination=destination,
+        try:
+            return _create_operation_authorized(
+                authorization_receipt=receipt,
+                workspace_id=receipt.workspace_id,
+                principal_scope=f"{actor['actor_type']}:{actor['actor_id']}",
+                command_scope=f"{command_type}:{receipt.workspace_id}",
+                raw_idempotency_key=raw_idempotency_key,
+                canonical_request=canonical_request,
+                operation_type=OperationType.FOUNDATION_PROBE,
+                command_type=command_type,
+                target=target,
+                actor=actor,
+                effective_principal=dict(actor),
+                correlation_id=correlation_id,
+                causation_id=causation_id,
+                destination=destination,
+                traceparent=observation.traceparent(),
+            )
+        except Exception:
+            observation.set_attributes({"curve.error.code": "CURVE_INVALID_COMMAND", "curve.result": "FAILED"})
+            raise
+
+    def after_commit(result, observation):
+        telemetry_result = "REPLAYED" if result.replayed else "SUCCEEDED"
+        observation.set_attributes(
+            {
+                "curve.operation.id": str(result.operation.id),
+                "curve.result": telemetry_result,
+            }
+        )
+        observe_operation_started(component="API", operation=result.operation, replayed=result.replayed)
+        observation.log(
+            event_code="CURVE_COMMAND_ACCEPTED",
+            level="INFO",
+            workspace_id=result.operation.workspace_id,
+            attributes={
+                "curve.command.type": command_type,
+                "curve.operation.id": str(result.operation.id),
+                "curve.operation.type": result.operation.operation_type,
+                "curve.replayed": result.replayed,
+                "curve.result": telemetry_result,
+            },
         )
 
     from plane.curve.services import CommandAlreadyInProgress, IdempotencyConflict
@@ -652,6 +733,8 @@ def start_foundation_probe(
         context_builder=context_builder,
         mutation_callback=mutation_callback,
         no_effect_exceptions=(IdempotencyConflict, CommandAlreadyInProgress),
+        observation_factory=observation_factory,
+        after_commit=after_commit,
     )
 
 
@@ -683,24 +766,61 @@ def request_operation_cancellation(
             correlation_id=correlation_id,
         )
 
-    def mutation_callback(receipt):
+    def observation_factory(receipt):
+        return observe_curve_span(
+            component="API",
+            span_name="curve.http.command",
+            workspace_id=receipt.workspace_id,
+            parent_traceparent=getattr(request, "headers", {}).get("traceparent"),
+            attributes={
+                "curve.command.type": "CANCEL_OPERATION",
+                "curve.component": "API",
+                "curve.error.code": "NONE",
+                "curve.operation.id": str(operation_id),
+                "curve.operation.type": "FOUNDATION_PROBE",
+                "curve.result": "SUCCEEDED",
+            },
+        )
+
+    def mutation_callback(receipt, observation):
         from plane.curve.services import _request_operation_cancellation_authorized
 
         actor = _human_actor(request.user)
-        return _request_operation_cancellation_authorized(
-            authorization_receipt=receipt,
-            workspace_id=receipt.workspace_id,
-            operation_id=operation_id,
-            expected_version=expected_version,
-            principal_scope=f"{actor['actor_type']}:{actor['actor_id']}",
-            command_scope=f"CANCEL_OPERATION:{operation_id}",
-            raw_idempotency_key=raw_idempotency_key,
-            canonical_request=canonical_request,
-            actor=actor,
-            effective_principal=dict(actor),
-            correlation_id=correlation_id,
-            causation_id=f"cancel:{operation_id}",
-            destination=destination,
+        try:
+            return _request_operation_cancellation_authorized(
+                authorization_receipt=receipt,
+                workspace_id=receipt.workspace_id,
+                operation_id=operation_id,
+                expected_version=expected_version,
+                principal_scope=f"{actor['actor_type']}:{actor['actor_id']}",
+                command_scope=f"CANCEL_OPERATION:{operation_id}",
+                raw_idempotency_key=raw_idempotency_key,
+                canonical_request=canonical_request,
+                actor=actor,
+                effective_principal=dict(actor),
+                correlation_id=correlation_id,
+                causation_id=f"cancel:{operation_id}",
+                destination=destination,
+                traceparent=observation.traceparent(),
+            )
+        except Exception:
+            observation.set_attributes({"curve.error.code": "CURVE_INVALID_COMMAND", "curve.result": "FAILED"})
+            raise
+
+    def after_commit(result, observation):
+        telemetry_result = "REPLAYED" if result.replayed else "SUCCEEDED"
+        observation.set_attributes({"curve.result": telemetry_result})
+        observation.log(
+            event_code="CURVE_COMMAND_ACCEPTED",
+            level="INFO",
+            workspace_id=result.operation.workspace_id,
+            attributes={
+                "curve.command.type": "CANCEL_OPERATION",
+                "curve.operation.id": str(result.operation.id),
+                "curve.operation.type": result.operation.operation_type,
+                "curve.replayed": result.replayed,
+                "curve.result": telemetry_result,
+            },
         )
 
     from plane.curve.services import (
@@ -719,6 +839,8 @@ def request_operation_cancellation(
             OptimisticConcurrencyError,
             InvalidOperationTransition,
         ),
+        observation_factory=observation_factory,
+        after_commit=after_commit,
     )
 
 
@@ -736,6 +858,7 @@ def transition_operation_with_service_authorization(
     error: dict | None = None,
     destination: str = "CURVE_LOCAL",
     workflow_id: str | None = None,
+    traceparent: str | None = None,
 ):
     """Apply a worker transition through a trusted service-authorization boundary."""
 
@@ -797,7 +920,7 @@ def transition_operation_with_service_authorization(
             "correlation_id": correlation_id,
         }
 
-    def mutation_callback(receipt):
+    def mutation_callback(receipt, observation):
         from plane.curve.services import _transition_operation_authorized
 
         return _transition_operation_authorized(
@@ -814,6 +937,7 @@ def transition_operation_with_service_authorization(
             error=error,
             destination=destination,
             workflow_id=workflow_id,
+            traceparent=traceparent or current_traceparent(),
         )
 
     from plane.curve.services import (
