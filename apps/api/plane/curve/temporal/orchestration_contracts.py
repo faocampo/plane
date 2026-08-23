@@ -20,6 +20,9 @@ MAX_QUESTIONS_PER_ATTEMPT = 32
 MAX_INTEGER = 2_147_483_647
 
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+TEMPORAL_RUN_ID_PATTERN = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+)
 DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 OPAQUE_REFERENCE_PATTERN = re.compile(r"^[a-z][a-z0-9._:/-]{0,127}$")
 
@@ -106,6 +109,18 @@ class OrchestrationValidationError(ValueError):
 
 def require_uuid(value: str, field_name: str) -> None:
     if not isinstance(value, str) or UUID_PATTERN.fullmatch(value) is None:
+        raise OrchestrationValidationError(ValidationErrorCode.INVALID_IDENTIFIER, field_name)
+    try:
+        if str(uuid.UUID(value)) != value:
+            raise ValueError
+    except (ValueError, TypeError, AttributeError) as error:
+        raise OrchestrationValidationError(ValidationErrorCode.INVALID_IDENTIFIER, field_name) from error
+
+
+def require_temporal_run_id(value: str, field_name: str) -> None:
+    """Accept canonical Temporal run IDs, including server-generated UUIDv7 values."""
+
+    if not isinstance(value, str) or TEMPORAL_RUN_ID_PATTERN.fullmatch(value) is None:
         raise OrchestrationValidationError(ValidationErrorCode.INVALID_IDENTIFIER, field_name)
     try:
         if str(uuid.UUID(value)) != value:
@@ -369,7 +384,7 @@ def validate_parent_initialization(value: ParentWorkflowInputV1, *, continued_ru
         ):
             raise OrchestrationValidationError(ValidationErrorCode.INVALID_VERSION, "preloaded_parent_state")
         return
-    require_uuid(continued_run_id, "continued_run_id")
+    require_temporal_run_id(continued_run_id, "continued_run_id")
     if value.phase != ParentPhase.RUNNING or value.continue_as_new_count < 1:
         raise OrchestrationValidationError(ValidationErrorCode.INVALID_VERSION, "continued_parent_state")
 

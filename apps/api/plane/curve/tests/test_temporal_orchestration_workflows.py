@@ -8,6 +8,8 @@ import uuid
 
 import pytest
 from temporalio.client import Client
+from temporalio.common import WorkflowIDReusePolicy
+from temporalio.exceptions import WorkflowAlreadyStartedError
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
@@ -19,9 +21,18 @@ from plane.curve.temporal.orchestration_contracts import (
     ChildSignalV1,
     ChildWorkflowInputV1,
     FailureCode,
+    ParentCancelSignalV1,
+    ParentPhase,
+    ParentSignalV1,
+    ParentWorkflowInputV1,
     SignalErrorCode,
+    SliceDescriptorV1,
 )
-from plane.curve.temporal.orchestration_workflows import CurveSliceAttemptWorkflowV1
+from plane.curve.temporal.constants import initiative_workflow_id, slice_attempt_workflow_id
+from plane.curve.temporal.orchestration_workflows import (
+    CurveInitiativeOrchestrationWorkflowV1,
+    CurveSliceAttemptWorkflowV1,
+)
 
 
 pytestmark = pytest.mark.unit
@@ -78,7 +89,7 @@ async def _run_with_child(test_case):
             async with Worker(
                 client,
                 task_queue=task_queue,
-                workflows=[CurveSliceAttemptWorkflowV1],
+                workflows=[CurveInitiativeOrchestrationWorkflowV1, CurveSliceAttemptWorkflowV1],
             ):
                 await test_case(client, task_queue, False)
             return
@@ -88,7 +99,7 @@ async def _run_with_child(test_case):
             async with Worker(
                 environment.client,
                 task_queue=task_queue,
-                workflows=[CurveSliceAttemptWorkflowV1],
+                workflows=[CurveInitiativeOrchestrationWorkflowV1, CurveSliceAttemptWorkflowV1],
             ):
                 await test_case(environment.client, task_queue, True)
     finally:
@@ -96,6 +107,77 @@ async def _run_with_child(test_case):
             os.environ.pop("DJANGO_SETTINGS_MODULE", None)
         else:
             os.environ["DJANGO_SETTINGS_MODULE"] = previous_settings_module
+
+
+def _slice(slice_id, attempt_id, *, dependencies=(), digest=DIGEST_A):
+    return SliceDescriptorV1(
+        slice_id=slice_id,
+        dependency_slice_ids=dependencies,
+        attempt_id=attempt_id,
+        attempt_version=1,
+        attempt_digest=digest,
+    )
+
+
+def _test_plan_generation() -> int:
+    return uuid.uuid4().int % 2_000_000_000 + 1
+
+
+def _parent_input(slices, *, plan_generation=1):
+    return ParentWorkflowInputV1(
+        schema_version="1.0",
+        workspace_id=WORKSPACE_ID,
+        initiative_id=INITIATIVE_ID,
+        plan_generation=plan_generation,
+        plan_digest=DIGEST_A,
+        slices=tuple(slices),
+    )
+
+
+async def _wait_for_parent_state(handle, predicate, *, attempts=200):
+    for _ in range(attempts):
+        state = await handle.query(CurveInitiativeOrchestrationWorkflowV1.state)
+        if predicate(state):
+            return state
+        await asyncio.sleep(0.01)
+    raise AssertionError("parent state did not reach the expected condition")
+
+
+async def _complete_synthetic_child(client, descriptor, *, plan_generation=1):
+    child_id = slice_attempt_workflow_id(
+        workspace_id=WORKSPACE_ID,
+        initiative_id=INITIATIVE_ID,
+        plan_generation=plan_generation,
+        slice_id=descriptor.slice_id,
+        attempt_id=descriptor.attempt_id,
+    )
+    child = client.get_workflow_handle(child_id)
+    await child.signal(
+        CurveSliceAttemptWorkflowV1.report_started,
+        ChildSignalV1(
+            **_signal(
+                command_id=f"command:start:{descriptor.slice_id}",
+                expected_state_version=1,
+                plan_generation=plan_generation,
+                slice_id=descriptor.slice_id,
+                attempt_id=descriptor.attempt_id,
+            )
+        ),
+    )
+    await child.signal(
+        CurveSliceAttemptWorkflowV1.complete_attempt,
+        ChildCompleteSignalV1(
+            **_signal(
+                command_id=f"command:complete:{descriptor.slice_id}",
+                expected_state_version=2,
+                plan_generation=plan_generation,
+                slice_id=descriptor.slice_id,
+                attempt_id=descriptor.attempt_id,
+                outcome=ChildPhase.SUCCEEDED,
+                failure_code=None,
+            )
+        ),
+    )
 
 
 def test_m0_s6a_at_04_and_05_child_question_answer_idempotency_and_completion():
@@ -272,5 +354,191 @@ def test_m0_s6a_child_temporal_cancellation_returns_safe_terminal_result():
         result = await handle.result()
         assert result.phase == ChildPhase.CANCELLED
         assert result.failure_code is None
+
+    asyncio.run(_run_with_child(scenario))
+
+
+def test_m0_s6a_at_01_and_03_parent_runs_sorted_waves_and_rejects_duplicate_start():
+    async def scenario(client, task_queue, _time_skipping):
+        plan_generation = _test_plan_generation()
+        root_a = _slice(SLICE_ID, ATTEMPT_ID)
+        root_b = _slice(
+            "00000000-0000-4000-8000-000000000102",
+            "00000000-0000-4000-8000-000000000202",
+            digest=DIGEST_B,
+        )
+        dependent = _slice(
+            "00000000-0000-4000-8000-000000000103",
+            "00000000-0000-4000-8000-000000000203",
+            dependencies=(root_b.slice_id, root_a.slice_id),
+        )
+        parent_input = _parent_input((dependent, root_b, root_a), plan_generation=plan_generation)
+        parent_id = initiative_workflow_id(
+            workspace_id=WORKSPACE_ID,
+            initiative_id=INITIATIVE_ID,
+            plan_generation=plan_generation,
+        )
+        handle = await client.start_workflow(
+            CurveInitiativeOrchestrationWorkflowV1.run,
+            parent_input,
+            id=parent_id,
+            task_queue=task_queue,
+            id_reuse_policy=WorkflowIDReusePolicy.REJECT_DUPLICATE,
+        )
+        with pytest.raises(WorkflowAlreadyStartedError):
+            await client.start_workflow(
+                CurveInitiativeOrchestrationWorkflowV1.run,
+                parent_input,
+                id=handle.id,
+                task_queue=task_queue,
+                id_reuse_policy=WorkflowIDReusePolicy.REJECT_DUPLICATE,
+            )
+
+        first_wave = await _wait_for_parent_state(
+            handle,
+            lambda state: state.active_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id))),
+        )
+        assert first_wave.next_wave_index == 0
+        await _complete_synthetic_child(client, root_b, plan_generation=plan_generation)
+        await _complete_synthetic_child(client, root_a, plan_generation=plan_generation)
+
+        second_wave = await _wait_for_parent_state(
+            handle,
+            lambda state: state.active_slice_ids == (dependent.slice_id,),
+        )
+        assert second_wave.completed_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id)))
+        await _complete_synthetic_child(client, dependent, plan_generation=plan_generation)
+        result = await handle.result()
+        assert result.phase == ParentPhase.SUCCEEDED
+        assert result.completed_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id, dependent.slice_id)))
+        assert not result.failed_slice_ids
+        assert not result.cancelled_slice_ids
+
+    asyncio.run(_run_with_child(scenario))
+
+
+def test_m0_s6a_at_06_parent_pause_holds_the_wave_barrier_until_resume():
+    async def scenario(client, task_queue, _time_skipping):
+        plan_generation = _test_plan_generation()
+        root = _slice(SLICE_ID, ATTEMPT_ID)
+        dependent = _slice(
+            "00000000-0000-4000-8000-000000000103",
+            "00000000-0000-4000-8000-000000000203",
+            dependencies=(root.slice_id,),
+            digest=DIGEST_B,
+        )
+        handle = await client.start_workflow(
+            CurveInitiativeOrchestrationWorkflowV1.run,
+            _parent_input((root, dependent), plan_generation=plan_generation),
+            id=f"parent-pause-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+        active = await _wait_for_parent_state(handle, lambda state: state.active_slice_ids == (root.slice_id,))
+        await handle.signal(
+            CurveInitiativeOrchestrationWorkflowV1.pause,
+            ParentSignalV1(
+                schema_version="1.0",
+                workspace_id=WORKSPACE_ID,
+                initiative_id=INITIATIVE_ID,
+                plan_generation=plan_generation,
+                command_id="command:parent:pause:1",
+                expected_state_version=active.state_version,
+            ),
+        )
+        await _complete_synthetic_child(client, root, plan_generation=plan_generation)
+        paused = await _wait_for_parent_state(
+            handle,
+            lambda state: state.phase == ParentPhase.PAUSED and not state.active_slice_ids,
+        )
+        assert paused.next_wave_index == 1
+
+        await handle.signal(
+            CurveInitiativeOrchestrationWorkflowV1.resume,
+            ParentSignalV1(
+                schema_version="1.0",
+                workspace_id=WORKSPACE_ID,
+                initiative_id=INITIATIVE_ID,
+                plan_generation=plan_generation,
+                command_id="command:parent:resume:1",
+                expected_state_version=paused.state_version,
+            ),
+        )
+        await _wait_for_parent_state(handle, lambda state: state.active_slice_ids == (dependent.slice_id,))
+        await _complete_synthetic_child(client, dependent, plan_generation=plan_generation)
+        assert (await handle.result()).phase == ParentPhase.SUCCEEDED
+
+    asyncio.run(_run_with_child(scenario))
+
+
+def test_m0_s6a_at_07_parent_cancel_propagates_and_settles_all_children():
+    async def scenario(client, task_queue, _time_skipping):
+        plan_generation = _test_plan_generation()
+        root_a = _slice(SLICE_ID, ATTEMPT_ID)
+        root_b = _slice(
+            "00000000-0000-4000-8000-000000000102",
+            "00000000-0000-4000-8000-000000000202",
+            digest=DIGEST_B,
+        )
+        handle = await client.start_workflow(
+            CurveInitiativeOrchestrationWorkflowV1.run,
+            _parent_input((root_b, root_a), plan_generation=plan_generation),
+            id=f"parent-cancel-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+        active = await _wait_for_parent_state(
+            handle,
+            lambda state: state.active_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id))),
+        )
+        await handle.signal(
+            CurveInitiativeOrchestrationWorkflowV1.request_cancel,
+            ParentCancelSignalV1(
+                schema_version="1.0",
+                workspace_id=WORKSPACE_ID,
+                initiative_id=INITIATIVE_ID,
+                plan_generation=plan_generation,
+                command_id="command:parent:cancel:1",
+                expected_state_version=active.state_version,
+                reason_code="USER_REQUESTED",
+            ),
+        )
+        result = await handle.result()
+        assert result.phase == ParentPhase.CANCELLED
+        assert result.cancelled_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id)))
+        assert not result.failed_slice_ids
+
+    asyncio.run(_run_with_child(scenario))
+
+
+def test_m0_s6a_at_08_parent_continues_as_new_after_ten_settled_waves():
+    async def scenario(client, task_queue, _time_skipping):
+        plan_generation = _test_plan_generation()
+        descriptors = []
+        for index in range(11):
+            slice_id = f"00000000-0000-4000-8000-{100 + index:012d}"
+            attempt_id = f"00000000-0000-4000-8000-{200 + index:012d}"
+            dependencies = () if index == 0 else (descriptors[-1].slice_id,)
+            descriptors.append(_slice(slice_id, attempt_id, dependencies=dependencies))
+
+        parent_id = f"parent-continue-{uuid.uuid4()}"
+        handle = await client.start_workflow(
+            CurveInitiativeOrchestrationWorkflowV1.run,
+            _parent_input(descriptors, plan_generation=plan_generation),
+            id=parent_id,
+            task_queue=task_queue,
+        )
+        for index, descriptor in enumerate(descriptors):
+            current = client.get_workflow_handle(parent_id)
+            state = await _wait_for_parent_state(
+                current,
+                lambda value, slice_id=descriptor.slice_id: value.active_slice_ids == (slice_id,),
+            )
+            if index == 10:
+                assert state.continue_as_new_count == 1
+            await _complete_synthetic_child(client, descriptor, plan_generation=plan_generation)
+
+        result = await handle.result()
+        assert result.phase == ParentPhase.SUCCEEDED
+        assert result.continue_as_new_count == 1
+        assert result.completed_slice_ids == tuple(sorted(item.slice_id for item in descriptors))
 
     asyncio.run(_run_with_child(scenario))

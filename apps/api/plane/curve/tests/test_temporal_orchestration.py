@@ -168,7 +168,7 @@ def test_continued_execution_requires_server_run_id_and_monotonic_counter():
     continued = _parent_input(continue_as_new_count=1, state_version=7)
     validate_parent_initialization(
         continued,
-        continued_run_id="00000000-0000-4000-8000-000000000999",
+        continued_run_id="01a02f7e-ba04-73f4-897a-60ee6b48ba6d",
     )
 
     with pytest.raises(OrchestrationValidationError, match="continued_parent_state"):
