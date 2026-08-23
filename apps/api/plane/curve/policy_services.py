@@ -353,6 +353,12 @@ def _next_policy_sequence(*, workspace_id, resource_type, resource_id) -> int:
     return (previous or 0) + 1
 
 
+def _policy_recording_time(evaluated_at: datetime) -> datetime:
+    """Return a persistence instant that cannot precede policy evaluation."""
+
+    return max(timezone.now(), evaluated_at)
+
+
 def _record_policy_decision(
     *,
     context: dict,
@@ -386,6 +392,7 @@ def _record_policy_decision(
         permitted_projection=list(result.permitted_projection),
         correlation_id=context["correlation_id"],
         evaluated_at=evaluated_at,
+        recorded_at=_policy_recording_time(evaluated_at),
         recorded_by=recorded_by,
     )
 

@@ -408,7 +408,7 @@ class PolicyDecision(ImmutableRecordModel):
     permitted_projection = models.JSONField(default=list, editable=False)
     correlation_id = models.CharField(max_length=255, editable=False)
     evaluated_at = models.DateTimeField(editable=False)
-    recorded_at = models.DateTimeField(auto_now_add=True, editable=False)
+    recorded_at = models.DateTimeField(default=timezone.now, editable=False)
     recorded_by = models.JSONField(editable=False)
 
     class Meta:
