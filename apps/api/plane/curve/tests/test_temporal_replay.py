@@ -7,15 +7,23 @@ from pathlib import Path
 import subprocess
 import sys
 
-FIXTURE = Path(__file__).parent / "fixtures" / "temporal" / "curve-operation-v1.json"
-SENTINEL = "CURVE_PROTECTED_SENTINEL_M0_S3"
+FIXTURE_DIRECTORY = Path(__file__).parent / "fixtures" / "temporal"
+FIXTURES = tuple(sorted(FIXTURE_DIRECTORY.glob("*.json")))
+EXPECTED_FIXTURE_NAMES = {
+    "curve-initiative-continued-v1.json",
+    "curve-initiative-parent-v1.json",
+    "curve-operation-v1.json",
+    "curve-slice-attempt-v1.json",
+}
+SENTINELS = ("CURVE_PROTECTED_SENTINEL_M0_S3", "CURVE_PROTECTED_SENTINEL_M0_S6A")
 
 
-def test_committed_temporal_history_replays_deterministically():
+def test_committed_temporal_histories_replay_deterministically():
+    assert {path.name for path in FIXTURES} == EXPECTED_FIXTURE_NAMES
     environment = os.environ.copy()
     environment["DJANGO_SETTINGS_MODULE"] = "plane.settings.curve_worker"
     result = subprocess.run(
-        [sys.executable, "-m", "plane.curve.temporal.replay", str(FIXTURE)],
+        [sys.executable, "-m", "plane.curve.temporal.replay", *(str(path) for path in FIXTURES)],
         check=False,
         capture_output=True,
         env=environment,
@@ -25,5 +33,9 @@ def test_committed_temporal_history_replays_deterministically():
     assert result.returncode == 0, result.stderr
 
 
-def test_committed_temporal_history_excludes_protected_sentinel():
-    assert SENTINEL not in FIXTURE.read_text()
+def test_committed_temporal_histories_exclude_protected_sentinels():
+    assert FIXTURES
+    for fixture in FIXTURES:
+        fixture_text = fixture.read_text()
+        for sentinel in SENTINELS:
+            assert sentinel not in fixture_text

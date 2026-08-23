@@ -20,9 +20,7 @@ MAX_QUESTIONS_PER_ATTEMPT = 32
 MAX_INTEGER = 2_147_483_647
 
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
-TEMPORAL_RUN_ID_PATTERN = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-)
+TEMPORAL_RUN_ID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
 DIGEST_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 OPAQUE_REFERENCE_PATTERN = re.compile(r"^[a-z][a-z0-9._:/-]{0,127}$")
 

@@ -54,6 +54,7 @@ SCHEMA_DIGESTS = {
     "policy-evaluation.schema.json": "75622a18bbbdaa69795beee16254106f12aab2aa150e1619f237d3bf67d724f8",
     "sse-event.schema.json": "58270829c666d40307c168c7e7852e3b23e5a37548ad85a10948bc9d4d548c80",
     "telemetry-manifest.schema.json": "b25c1d758fa995370a01996b811770bdbd335374bda7ea88a790359d4c126942",
+    "temporal-orchestration.schema.json": "9e5d72eea70d542dad9d15f372f0b90f5e68a0654735c3a7d2cd900df8b7fb47",
 }
 
 

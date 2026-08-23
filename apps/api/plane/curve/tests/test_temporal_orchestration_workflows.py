@@ -94,7 +94,17 @@ async def _run_with_child(test_case):
                 await test_case(client, task_queue, False)
             return
 
-        async with await WorkflowEnvironment.start_time_skipping() as environment:
+        try:
+            environment = await WorkflowEnvironment.start_time_skipping()
+        except RuntimeError as exc:
+            if "Failed starting test server" not in str(exc):
+                raise
+            pytest.skip(
+                "Temporal time-skipping test server is unavailable on this platform; "
+                "set TEMPORAL_TEST_ADDRESS to run against a local Temporal server"
+            )
+
+        async with environment:
             task_queue = f"curve-m0-s6a-child-{uuid.uuid4()}"
             async with Worker(
                 environment.client,
@@ -413,6 +423,14 @@ def test_m0_s6a_at_01_and_03_parent_runs_sorted_waves_and_rejects_duplicate_star
         assert result.completed_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id, dependent.slice_id)))
         assert not result.failed_slice_ids
         assert not result.cancelled_slice_ids
+        with pytest.raises(WorkflowAlreadyStartedError):
+            await client.start_workflow(
+                CurveInitiativeOrchestrationWorkflowV1.run,
+                parent_input,
+                id=handle.id,
+                task_queue=task_queue,
+                id_reuse_policy=WorkflowIDReusePolicy.REJECT_DUPLICATE,
+            )
 
     asyncio.run(_run_with_child(scenario))
 

@@ -11,7 +11,7 @@ from temporalio.client import WorkflowHistory
 from temporalio.worker import Replayer
 
 from plane.curve.observability.temporal import CurveTemporalInterceptor
-from plane.curve.temporal.workflows import CurveOperationWorkflowV1
+from plane.curve.temporal.registry import CURVE_WORKFLOWS_V1
 
 
 async def replay_fixture(path: Path) -> None:
@@ -20,7 +20,7 @@ async def replay_fixture(path: Path) -> None:
         raise ValueError("unsupported Curve Temporal history fixture")
     history = WorkflowHistory.from_json(fixture["workflow_id"], fixture["history"])
     await Replayer(
-        workflows=[CurveOperationWorkflowV1],
+        workflows=CURVE_WORKFLOWS_V1,
         interceptors=[CurveTemporalInterceptor(runtime=None)],
     ).replay_workflow(history)
 
