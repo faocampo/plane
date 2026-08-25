@@ -1,0 +1,361 @@
+{
+  "schema_version": "curve.temporal-orchestration/v1",
+  "contract_key": "CURVE_M0_S6A_DURABLE_ORCHESTRATION",
+  "contract_version": 1,
+  "authority": {
+    "environment": "LOCAL_ONLY",
+    "temporal_python_sdk": "1.31.0",
+    "namespace": "curve-local",
+    "task_queue": "curve-control-plane-v1",
+    "domain_truth": "POSTGRESQL_APPLICATION_SERVICES",
+    "orchestration_truth": "TEMPORAL_HISTORY_CONTROL_STATE_ONLY",
+    "execution_mode": "SYNTHETIC_CONTROL_ONLY",
+    "external_side_effects_allowed": false
+  },
+  "payload_policy": {
+    "allowed_value_types": [
+      "UUID",
+      "POSITIVE_INTEGER",
+      "NON_NEGATIVE_INTEGER",
+      "SHA256_DIGEST",
+      "BOUNDED_ENUM",
+      "OPAQUE_REFERENCE"
+    ],
+    "maximum_slices": 64,
+    "maximum_dependencies_per_slice": 16,
+    "maximum_processed_commands": 256,
+    "maximum_questions_per_attempt": 32,
+    "forbidden_field_fragments": [
+      "body",
+      "content",
+      "credential",
+      "evidence_body",
+      "patch",
+      "prompt",
+      "response",
+      "secret",
+      "source_code",
+      "token",
+      "tool_output"
+    ],
+    "protected_payloads_allowed": false,
+    "free_text_allowed": false,
+    "credentials_allowed": false
+  },
+  "primitive_contracts": {
+    "message_schema_version": "1.0",
+    "uuid_pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+    "positive_integer_minimum": 1,
+    "positive_integer_maximum": 2147483647,
+    "non_negative_integer_minimum": 0,
+    "non_negative_integer_maximum": 2147483647,
+    "sha256_digest_pattern": "^sha256:[0-9a-f]{64}$",
+    "opaque_reference_pattern": "^[a-z][a-z0-9._:/-]{0,127}$",
+    "command_record_fields": ["command_id", "payload_digest", "disposition", "rejection_code"],
+    "state_dependent_null_fields": [
+      "active_question_ref",
+      "active_question_digest",
+      "answer_ref",
+      "answer_digest",
+      "failure_code",
+      "last_rejected_command_id",
+      "last_command_rejection_code"
+    ],
+    "unknown_fields_allowed": false
+  },
+  "initialization": {
+    "workflow_kind": "PARENT",
+    "continued_run_detection_api": "workflow.info().continued_run_id",
+    "external_preloaded_state_allowed": false,
+    "initial_defaults": {
+      "phase": "RUNNING",
+      "state_version": 1,
+      "completed_slice_ids": [],
+      "failed_slice_ids": [],
+      "cancelled_slice_ids": [],
+      "next_wave_index": 0,
+      "processed_commands": [],
+      "continue_as_new_count": 0,
+      "last_rejected_command_id": null,
+      "last_command_rejection_code": null
+    },
+    "continued_run_requirements": [
+      "CONTINUED_RUN_ID_PRESENT",
+      "EXACT_CARRY_FORWARD_FIELDS",
+      "PLAN_IDENTITY_UNCHANGED",
+      "STATE_VERSION_MONOTONIC",
+      "CONTINUE_AS_NEW_COUNT_INCREMENTED_ONCE"
+    ]
+  },
+  "workflow_types": [
+    {
+      "kind": "PARENT",
+      "name": "CurveInitiativeOrchestrationWorkflowV1",
+      "workflow_id_template": "curve:{workspace_id}:initiative:{initiative_id}:plan:{plan_generation}",
+      "input_fields": [
+        "schema_version",
+        "workspace_id",
+        "initiative_id",
+        "plan_generation",
+        "plan_digest",
+        "slices",
+        "phase",
+        "state_version",
+        "completed_slice_ids",
+        "failed_slice_ids",
+        "cancelled_slice_ids",
+        "next_wave_index",
+        "processed_commands",
+        "continue_as_new_count",
+        "last_rejected_command_id",
+        "last_command_rejection_code"
+      ],
+      "state_fields": [
+        "workspace_id",
+        "initiative_id",
+        "plan_generation",
+        "phase",
+        "state_version",
+        "active_slice_ids",
+        "completed_slice_ids",
+        "failed_slice_ids",
+        "cancelled_slice_ids",
+        "next_wave_index",
+        "processed_commands",
+        "continue_as_new_count",
+        "cancellation_requested",
+        "failure_code",
+        "last_rejected_command_id",
+        "last_command_rejection_code"
+      ],
+      "output_fields": [
+        "schema_version",
+        "workspace_id",
+        "initiative_id",
+        "plan_generation",
+        "phase",
+        "state_version",
+        "completed_slice_ids",
+        "failed_slice_ids",
+        "cancelled_slice_ids",
+        "continue_as_new_count",
+        "failure_code"
+      ],
+      "phase_values": ["RUNNING", "PAUSED", "CANCEL_REQUESTED", "SUCCEEDED", "FAILED", "CANCELLED"]
+    },
+    {
+      "kind": "CHILD",
+      "name": "CurveSliceAttemptWorkflowV1",
+      "workflow_id_template": "curve:{workspace_id}:initiative:{initiative_id}:plan:{plan_generation}:slice:{slice_id}:attempt:{attempt_id}",
+      "input_fields": [
+        "schema_version",
+        "workspace_id",
+        "initiative_id",
+        "plan_generation",
+        "slice_id",
+        "dependency_slice_ids",
+        "attempt_id",
+        "attempt_version",
+        "attempt_digest"
+      ],
+      "state_fields": [
+        "workspace_id",
+        "initiative_id",
+        "plan_generation",
+        "slice_id",
+        "attempt_id",
+        "attempt_version",
+        "phase",
+        "state_version",
+        "active_question_ref",
+        "active_question_digest",
+        "answer_ref",
+        "answer_digest",
+        "processed_commands",
+        "cancellation_requested",
+        "failure_code",
+        "last_rejected_command_id",
+        "last_command_rejection_code"
+      ],
+      "output_fields": [
+        "schema_version",
+        "workspace_id",
+        "initiative_id",
+        "plan_generation",
+        "slice_id",
+        "attempt_id",
+        "attempt_version",
+        "phase",
+        "state_version",
+        "failure_code"
+      ],
+      "phase_values": [
+        "QUEUED",
+        "RUNNING",
+        "WAITING_FOR_HUMAN",
+        "SUCCEEDED",
+        "FAILED_RETRYABLE",
+        "FAILED_TERMINAL",
+        "CANCELLED"
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "workflow_kind": "PARENT",
+      "name": "pause",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "command_id", "expected_state_version"]
+    },
+    {
+      "workflow_kind": "PARENT",
+      "name": "resume",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "command_id", "expected_state_version"]
+    },
+    {
+      "workflow_kind": "PARENT",
+      "name": "request_cancel",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "command_id", "expected_state_version", "reason_code"]
+    },
+    {
+      "workflow_kind": "CHILD",
+      "name": "report_started",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "slice_id", "attempt_id", "attempt_version", "command_id", "expected_state_version"]
+    },
+    {
+      "workflow_kind": "CHILD",
+      "name": "ask_question",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "slice_id", "attempt_id", "attempt_version", "command_id", "expected_state_version", "question_ref", "question_digest"]
+    },
+    {
+      "workflow_kind": "CHILD",
+      "name": "answer_question",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "slice_id", "attempt_id", "attempt_version", "command_id", "expected_state_version", "question_ref", "answer_ref", "answer_digest"]
+    },
+    {
+      "workflow_kind": "CHILD",
+      "name": "complete_attempt",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "slice_id", "attempt_id", "attempt_version", "command_id", "expected_state_version", "outcome", "failure_code"]
+    }
+  ],
+  "queries": [
+    {
+      "workflow_kind": "PARENT",
+      "name": "state",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "phase", "state_version", "active_slice_ids", "completed_slice_ids", "failed_slice_ids", "cancelled_slice_ids", "next_wave_index", "continue_as_new_count", "cancellation_requested", "failure_code", "last_rejected_command_id", "last_command_rejection_code"]
+    },
+    {
+      "workflow_kind": "CHILD",
+      "name": "state",
+      "fields": ["schema_version", "workspace_id", "initiative_id", "plan_generation", "slice_id", "attempt_id", "attempt_version", "phase", "state_version", "active_question_ref", "active_question_digest", "answer_ref", "answer_digest", "cancellation_requested", "failure_code", "last_rejected_command_id", "last_command_rejection_code"]
+    }
+  ],
+  "command_codes": {
+    "command_dispositions": ["ACCEPTED", "REJECTED"],
+    "cancel_reason_codes": ["USER_REQUESTED", "POLICY_REQUESTED", "SUPERSEDED"],
+    "completion_outcomes": ["SUCCEEDED", "FAILED_RETRYABLE", "FAILED_TERMINAL"],
+    "failure_codes": [
+      "START_TIMEOUT",
+      "ATTEMPT_TIMEOUT",
+      "QUESTION_TIMEOUT",
+      "SYNTHETIC_FAILURE",
+      "CANCEL_TIMEOUT"
+    ],
+    "validation_error_codes": [
+      "INVALID_IDENTIFIER",
+      "INVALID_VERSION",
+      "INVALID_DIGEST",
+      "UNKNOWN_DEPENDENCY",
+      "DUPLICATE_SLICE",
+      "SELF_DEPENDENCY",
+      "CYCLIC_DEPENDENCY",
+      "COLLECTION_LIMIT_EXCEEDED"
+    ],
+    "signal_error_codes": [
+      "COMMAND_CONFLICT",
+      "STALE_STATE_VERSION",
+      "INVALID_TRANSITION",
+      "TARGET_MISMATCH",
+      "COMMAND_LIMIT_EXCEEDED"
+    ]
+  },
+  "scheduling": {
+    "algorithm": "TOPOLOGICAL_WAVES",
+    "tie_breaker": "SLICE_ID_ASCENDING",
+    "dependency_success_state": "SUCCEEDED",
+    "cycle_behavior": "REJECT_BEFORE_CHILD_START",
+    "duplicate_slice_behavior": "REJECT_BEFORE_CHILD_START",
+    "child_start_api": "workflow.start_child_workflow",
+    "workflow_id_reuse_policy": "WorkflowIDReusePolicy.REJECT_DUPLICATE",
+    "duplicate_start_behavior": "WORKFLOW_ALREADY_STARTED_NO_SECOND_EXECUTION",
+    "parent_close_policy": "REQUEST_CANCEL",
+    "child_cancellation_type": "WAIT_CANCELLATION_COMPLETED",
+    "provider_dispatch_allowed": false
+  },
+  "timeouts": {
+    "child_start_signal_seconds": 30,
+    "attempt_terminal_seconds": 7200,
+    "question_answer_seconds": 86400,
+    "parent_cancel_completion_seconds": 120
+  },
+  "cancellation": {
+    "stop_new_child_starts_first": true,
+    "cancel_active_children": true,
+    "wait_for_child_terminal_state": true,
+    "synthetic_cleanup_only": true,
+    "terminal_parent_state": "CANCELLED",
+    "timeout_behavior": "FAIL_PARENT_WITH_CANCEL_TIMEOUT"
+  },
+  "continue_as_new": {
+    "workflow_kind": "PARENT",
+    "sdk_suggestion_api": "workflow.info().is_continue_as_new_suggested()",
+    "completed_wave_threshold": 10,
+    "required_barrier": "BETWEEN_WAVES_WITH_ZERO_ACTIVE_CHILDREN",
+    "wait_for_handlers_api": "workflow.all_handlers_finished()",
+    "carry_forward": [
+      "workspace_id",
+      "initiative_id",
+      "plan_generation",
+      "plan_digest",
+      "slices",
+      "phase",
+      "state_version",
+      "completed_slice_ids",
+      "failed_slice_ids",
+      "cancelled_slice_ids",
+      "next_wave_index",
+      "processed_commands",
+      "continue_as_new_count",
+      "last_rejected_command_id",
+      "last_command_rejection_code"
+    ]
+  },
+  "versioning": {
+    "existing_workflow_unchanged": "CurveOperationWorkflowV1",
+    "required_patch_markers": [
+      "curve-m0-s6a-parent-v1",
+      "curve-m0-s6a-child-v1"
+    ],
+    "worker_registration": "ADDITIVE",
+    "replay_corpus": [
+      "curve-operation-v1.json",
+      "curve-initiative-orchestration-v1.json",
+      "curve-slice-attempt-v1.json",
+      "curve-initiative-orchestration-continued-v1.json"
+    ],
+    "incompatible_change_policy": "NEW_WORKFLOW_TYPE_OR_PATCHED_COMPATIBLE_BRANCH"
+  },
+  "acceptance_tests": [
+    "M0-S6A-AT-01",
+    "M0-S6A-AT-02",
+    "M0-S6A-AT-03",
+    "M0-S6A-AT-04",
+    "M0-S6A-AT-05",
+    "M0-S6A-AT-06",
+    "M0-S6A-AT-07",
+    "M0-S6A-AT-08",
+    "M0-S6A-AT-09",
+    "M0-S6A-AT-10",
+    "M0-S6A-AT-11",
+    "M0-S6A-AT-12"
+  ]
+}

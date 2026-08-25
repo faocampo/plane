@@ -8,12 +8,14 @@ const m0s3ContextPath = new URL("apps/api/plane/curve/contracts/m0-s3-context.js
 const m0s4ContextPath = new URL("apps/api/plane/curve/contracts/m0-s4-context.json", repositoryRoot);
 const m0s5ContextPath = new URL("apps/api/plane/curve/contracts/m0-s5-context.json", repositoryRoot);
 const m0s5bContextPath = new URL("apps/api/plane/curve/contracts/m0-s5b-context.json", repositoryRoot);
+const m0s6aContextPath = new URL("apps/api/plane/curve/contracts/m0-s6a-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
 const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
 const semanticFixtureDirectory = new URL("apps/api/plane/curve/contracts/schemas/semantic-fixtures/", repositoryRoot);
 const policyDirectory = new URL("apps/api/plane/curve/contracts/policy/", repositoryRoot);
 const observabilityDirectory = new URL("apps/api/plane/curve/contracts/observability/", repositoryRoot);
+const temporalDirectory = new URL("apps/api/plane/curve/contracts/temporal/", repositoryRoot);
 
 const expectedContext = {
   curveRevision: "ab2c81a33ede719c02ff0a2a6ab35eabcf304de1",
@@ -124,6 +126,45 @@ const expectedM0S5BVendoredFiles = {
     "0dccea5ef9c8897fa5c4d66d3e9c586cf63531943ee423e474d071dad76c4d85",
   "contracts/schemas/semantic-fixtures/observability-binding-external-delivery.invalid.json":
     "2e36bac87a2fd40c885d7af78abe54ffacf308a34e4630ab42ce531fa06058ca",
+};
+
+const expectedM0S6AContext = {
+  curveRevision: "d97cc053a5d0eac7bc2aa9bebe263a245c95894f",
+  approvedContractHead: "421eae65d89c65a87e2d548cbe7b1e5d4e6236b5",
+  planeBaseRevision: "cb17734280260361cc3c8eccf44170a4bfbcb840",
+  contextDigest: "sha256:fcde6b95800c6bf657afe0cdf10cc28e1ddbb44aa16257833ca84f43714eedde",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+  implementer: "Codex",
+};
+
+const expectedM0S6AFiles = {
+  "contracts/observability/m0-s5-telemetry-v1.json": "8ba95e5e605188e829df03374114eb2ec0d2cbea0218f1d286198cbbb2d34d9b",
+  "contracts/schemas/examples/temporal-orchestration.invalid.json": "c06680da3869ad4f7519e931b0c5132b95f28ea6f29d1c9372514b8253eb293d",
+  "contracts/schemas/examples/test-strategy-matrix.invalid.json": "5187e0ba131d3f3b83472e60c2f09d8507395d2b88ec51f91cedd26c3c60ace1",
+  "contracts/schemas/telemetry-manifest.schema.json": "b25c1d758fa995370a01996b811770bdbd335374bda7ea88a790359d4c126942",
+  "contracts/schemas/temporal-orchestration.schema.json": "9e5d72eea70d542dad9d15f372f0b90f5e68a0654735c3a7d2cd900df8b7fb47",
+  "contracts/schemas/test-strategy-matrix.schema.json": "64fb3ce685c0d05ea5c5821b36843a76552361f0ad482397aa5d3bdadc5e7d16",
+  "contracts/temporal/m0-orchestration-v1.json": "278b0845e7bf04200903d4cc110931e88b272df9ffb8da91eebf1984109a1374",
+  "contracts/temporal/m0-workflow-contract.md": "8322debe600ff7f6f50e1e9da775879a353a1317b9b803ac4f65b413f1a7790e",
+  "contracts/testing/ac-test-matrix-v1.json": "bad1a5a710ca16b3de399e1b0ff4b265d0c8ce64c203521f20e0d3f5ab2d3e3a",
+  "docs/curve-ai-native-sdlc-prd.md": "3c37f73a97c903c7e4dd626e13e90be879bac1edd5de518660a63c0e9d6cfc6d",
+  "docs/technical/adr-003-runtime-topology.md": "1f178fdea1afc68f4a2dab723ad936d54ec44869f9d6bbc8775a87003a3f6df8",
+  "docs/technical/architecture.md": "a44d9aeb1bb2d7a56fd4c1edd21487873b010725194d738c29108b10f7ac81c8",
+  "docs/technical/development-plan.md": "aaee3a2e42307dcd993a25e01df3fede75c2c7a8e01b3a9f3dd6ddbc008b03b5",
+  "docs/technical/m0-s3-implementation-evidence.md": "69a6fed33741b219c208d78183ccba7051e7a4a4cccdcdf01ea16d049c3dcddf",
+  "docs/technical/m0-s5b-implementation-evidence.md": "a42627fbb05519e14da71b7ace307d9a72de7ddc35f040fac78f1cec2b20623a",
+  "docs/technical/m0-s6a-durable-orchestration-task-packet.md": "bf541c73de7fa4943ee93f33b82ceb6ad1013e174b09216ef7e0714bee3e1e5e",
+  "docs/technical/m0-test-strategy.md": "3251aa103ebad931267d57c1a9f1f2f460b0292aa191850ff5986ed69892b28c",
+  "docs/technical/m0-traceability.md": "6ea414862e7759b6b49bd9f88e529532422c1bc210295bcbd39642f7c0e9c848",
+  "docs/technical/security-and-operations.md": "5223c206225efb448007ffba0fb5a127062e62c3e6ed9b6496ce03dadb5fdbdb",
+  "docs/technical/workflows-and-sequences.md": "aad006efde398beab2bdebc82d0ddce4875a715245bc0d808f09eb506bc7a506",
+  "scripts/lib/context-pack.mjs": "2a33f07d6d5a5bc0708faaff82eeeb40d97080cc9972f673900ef45ab5f212e7",
+  "scripts/lib/temporal-orchestration.mjs": "0db93f23c83a28f9415c9cc8bf227cf7c38c890511acab3b9c1b380cf233ec5d",
+  "scripts/lib/test-strategy.mjs": "29758a66137708d5a2ee739d0f7b215d7a882ed4943c7a3b2183b53abff445c1",
+  "scripts/tests/temporal-orchestration.test.mjs": "fdf89c405384494ed1902bce16ad3677b00961577a1358eaa5fefedc6fdd3741",
+  "scripts/tests/test-strategy.test.mjs": "0c3092c801d5e99043b090a28428967a28506670cd7f57b81b0497963fc1ace3",
+  "scripts/validate-contracts.mjs": "d6163b4b238be852bba900d94942640dea73e1ad41b3930b13225d3a7cb554eb",
 };
 
 const fail = (message) => {
@@ -475,6 +516,117 @@ await Promise.all(
 
 console.log(
   `Curve M0-S5B context integrity passed: ${m0s5bContext.paths.length} files at ${expectedM0S5BContext.curveRevision}`
+);
+
+const m0s6aContext = JSON.parse(await readFile(m0s6aContextPath, "utf8"));
+if (m0s6aContext.schema_version !== "curve-context-pack/v1" || m0s6aContext.task_id !== "M0-S6A") {
+  fail("unexpected M0-S6A context identity");
+}
+if (
+  m0s6aContext.curve_revision !== expectedM0S6AContext.curveRevision ||
+  m0s6aContext.approved_contract_head !== expectedM0S6AContext.approvedContractHead ||
+  m0s6aContext.plane_base_revision !== expectedM0S6AContext.planeBaseRevision ||
+  m0s6aContext.context_digest !== expectedM0S6AContext.contextDigest
+) {
+  fail("unexpected M0-S6A revision or context digest");
+}
+if (
+  m0s6aContext.human_owner !== expectedM0S6AContext.owner ||
+  m0s6aContext.human_reviewer !== expectedM0S6AContext.reviewer ||
+  m0s6aContext.implementer !== expectedM0S6AContext.implementer ||
+  m0s6aContext.data_classification !== "INTERNAL" ||
+  m0s6aContext.execution_scope !== "LOCAL_ONLY" ||
+  m0s6aContext.budget_usd !== 25
+) {
+  fail("unexpected M0-S6A ownership, classification, execution scope, or budget");
+}
+if (
+  m0s6aContext.approval_evidence?.curve_pr !== "https://github.com/faocampo/curve/pull/28" ||
+  m0s6aContext.approval_evidence?.approved_head !== expectedM0S6AContext.approvedContractHead ||
+  m0s6aContext.approval_evidence?.squash_commit !== expectedM0S6AContext.curveRevision ||
+  m0s6aContext.dispatch?.branch !== "curve/m0-s6a-durable-orchestration" ||
+  m0s6aContext.dispatch?.authorized_by !== "Federico Ocampo" ||
+  m0s6aContext.dispatch?.runtime !== "LOCAL_ONLY" ||
+  m0s6aContext.dispatch?.merge_authorized !== false ||
+  m0s6aContext.dispatch?.deployment_authorized !== false
+) {
+  fail("unexpected M0-S6A approval or dispatch evidence");
+}
+if (!Array.isArray(m0s6aContext.files) || !Array.isArray(m0s6aContext.paths)) {
+  fail("M0-S6A context paths and per-file digests are required");
+}
+if (JSON.stringify(m0s6aContext.paths) !== JSON.stringify([...m0s6aContext.paths].toSorted())) {
+  fail("M0-S6A context paths are not sorted");
+}
+if (JSON.stringify(m0s6aContext.files.map(({ path }) => path)) !== JSON.stringify(m0s6aContext.paths)) {
+  fail("M0-S6A context files and paths differ");
+}
+if (
+  new Set(m0s6aContext.paths).size !== m0s6aContext.paths.length ||
+  m0s6aContext.paths.length !== Object.keys(expectedM0S6AFiles).length
+) {
+  fail("M0-S6A context path set is not exact and unique");
+}
+const recordedM0S6ADigests = new Map(m0s6aContext.files.map(({ path, sha256: digest }) => [path, digest]));
+for (const [sourcePath, expectedDigest] of Object.entries(expectedM0S6AFiles)) {
+  if (recordedM0S6ADigests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+    fail(`${sourcePath} is not byte-bound by the M0-S6A context manifest`);
+  }
+}
+const expectedM0S6AVendoredFiles = new Map([
+  ["contracts/schemas/temporal-orchestration.schema.json", schemaDirectory],
+  ["contracts/temporal/m0-orchestration-v1.json", temporalDirectory],
+]);
+for (const [sourcePath, directory] of expectedM0S6AVendoredFiles) {
+  const fileName = sourcePath.split("/").at(-1);
+  const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+  if (observedDigest !== expectedM0S6AFiles[sourcePath]) {
+    fail(`${sourcePath} vendored bytes differ from the approved M0-S6A source`);
+  }
+}
+
+const orchestrationManifest = JSON.parse(
+  await readFile(new URL("m0-orchestration-v1.json", temporalDirectory), "utf8")
+);
+if (
+  orchestrationManifest.schema_version !== "curve.temporal-orchestration/v1" ||
+  orchestrationManifest.authority?.environment !== "LOCAL_ONLY" ||
+  orchestrationManifest.authority?.temporal_python_sdk !== "1.31.0" ||
+  orchestrationManifest.authority?.external_side_effects_allowed !== false ||
+  orchestrationManifest.scheduling?.provider_dispatch_allowed !== false
+) {
+  fail("M0-S6A orchestration authority is broadened");
+}
+const expectedWorkflowNames = ["CurveInitiativeOrchestrationWorkflowV1", "CurveSliceAttemptWorkflowV1"];
+if (
+  JSON.stringify(orchestrationManifest.workflow_types?.map(({ name }) => name)) !==
+  JSON.stringify(expectedWorkflowNames)
+) {
+  fail("M0-S6A workflow type set differs from the approved contract");
+}
+const handlerFields = [
+  ...(orchestrationManifest.workflow_types ?? []).flatMap(({ input_fields, state_fields, output_fields }) => [
+    ...input_fields,
+    ...state_fields,
+    ...output_fields,
+  ]),
+  ...(orchestrationManifest.signals ?? []).flatMap(({ fields }) => fields),
+  ...(orchestrationManifest.queries ?? []).flatMap(({ fields }) => fields),
+];
+for (const fragment of orchestrationManifest.payload_policy?.forbidden_field_fragments ?? []) {
+  if (handlerFields.some((field) => field.includes(fragment))) {
+    fail(`M0-S6A handler field contains forbidden fragment ${fragment}`);
+  }
+}
+if (
+  JSON.stringify(orchestrationManifest.acceptance_tests) !==
+  JSON.stringify(Array.from({ length: 12 }, (_, index) => `M0-S6A-AT-${String(index + 1).padStart(2, "0")}`))
+) {
+  fail("M0-S6A acceptance-test set is incomplete or unordered");
+}
+
+console.log(
+  `Curve M0-S6A context integrity passed: ${m0s6aContext.paths.length} files at ${expectedM0S6AContext.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));

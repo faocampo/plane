@@ -47,11 +47,7 @@ def validate_worker_environment(environment=None) -> None:
     forbidden = sorted(
         key
         for key, value in environment.items()
-        if value
-        and (
-            key in FORBIDDEN_EXACT
-            or any(key.startswith(prefix) for prefix in FORBIDDEN_PREFIXES)
-        )
+        if value and (key in FORBIDDEN_EXACT or any(key.startswith(prefix) for prefix in FORBIDDEN_PREFIXES))
     )
     if forbidden:
         raise RuntimeError(f"Curve worker received forbidden environment keys: {','.join(forbidden)}")

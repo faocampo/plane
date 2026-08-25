@@ -55,10 +55,7 @@ class CurveOperationWorkflowV1:
             operation_id=workflow_input.operation_id,
             operation_version=self._last_observed_operation_version,
             correlation_id=workflow_input.correlation_id,
-            command_id=(
-                f"{workflow_info.workflow_id}:{workflow_info.run_id}:"
-                f"{activity_name}:{logical_command}"
-            ),
+            command_id=(f"{workflow_info.workflow_id}:{workflow_info.run_id}:{activity_name}:{logical_command}"),
         )
 
     async def _execute(

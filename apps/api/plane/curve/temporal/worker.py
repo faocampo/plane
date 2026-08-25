@@ -34,7 +34,7 @@ from plane.curve.temporal.activities import (  # noqa: E402
     mark_operation_succeeded,
 )
 from plane.curve.temporal.relay import run_relay_loop  # noqa: E402
-from plane.curve.temporal.workflows import CurveOperationWorkflowV1  # noqa: E402
+from plane.curve.temporal.registry import CURVE_WORKFLOWS_V1  # noqa: E402
 
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ async def run_worker() -> None:
             worker = Worker(
                 client,
                 task_queue=task_queue,
-                workflows=[CurveOperationWorkflowV1],
+                workflows=CURVE_WORKFLOWS_V1,
                 activities=[
                     mark_operation_running,
                     mark_operation_succeeded,

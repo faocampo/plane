@@ -24,8 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     if: |
-      github.event.pull_request.draft == false &&
-      github.event.pull_request.requested_reviewers != null
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.pull_request.draft == false &&
+        github.event.pull_request.requested_reviewers != null
+      )
     steps:
       - uses: actions/checkout@v6
       - name: Set up Python
@@ -34,9 +37,39 @@ jobs:
           python-version: "3.12.x"
           cache: 'pip'
           cache-dependency-path: 'apps/api/requirements.txt'
-      - name: Install Pylint
+      - name: Install Ruff
         run: python -m pip install ruff
       - name: Install API Dependencies
         run: cd apps/api && pip install -r requirements.txt
       - name: Lint apps/api
         run: ruff check --fix apps/api
+
+  test-curve:
+    name: Test Curve
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.pull_request.draft == false &&
+        github.event.pull_request.requested_reviewers != null
+      )
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Prepare disposable Plane test environment
+        run: |
+          cp .env.example .env
+          cp apps/api/.env.example apps/api/.env
+
+      - name: Validate Curve contract integrity
+        run: node apps/api/plane/curve/contracts/check-integrity.mjs
+
+      - name: Run Curve backend tests and migration-drift check
+        run: |
+          docker compose -f docker-compose-test.yml run --rm --build api-tests \
+            sh -c 'pytest plane/curve/tests -q && python manage.py makemigrations --check --dry-run'
+
+      - name: Clean disposable Plane test environment
+        if: always()
+        run: docker compose -f docker-compose-test.yml down -v --remove-orphans
