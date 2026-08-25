@@ -77,6 +77,10 @@ services:
     command: ./bin/docker-entrypoint-api-local.sh
     env_file:
       - ./apps/api/.env
+    environment:
+      # Keep server-side storage traffic on the Docker network while signing
+      # browser uploads for the host-published MinIO endpoint.
+      AWS_S3_PUBLIC_ENDPOINT_URL: ${AWS_S3_PUBLIC_ENDPOINT_URL:-http://localhost:9000}
     depends_on:
       - plane-db
       - plane-redis
