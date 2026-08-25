@@ -42,7 +42,7 @@ jobs:
       - name: Install API Dependencies
         run: cd apps/api && pip install -r requirements.txt
       - name: Lint apps/api
-        run: ruff check apps/api
+        run: ruff check --fix apps/api
 
   test-curve:
     name: Test Curve
