@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "id": "77777777-7777-4777-8777-777777777777",
+  "workspace_id": "11111111-1111-4111-8111-111111111111",
+  "sequence": 1,
+  "action": "CURVE.PROVIDER_CONNECTION.REGISTER",
+  "resource_ref": {
+    "resource_type": "WORKSPACE",
+    "resource_id": "11111111-1111-4111-8111-111111111111",
+    "resource_version": 1
+  },
+  "subject": {
+    "actor_type": "HUMAN",
+    "actor_id": "user-123"
+  },
+  "effective_principal": {
+    "actor_type": "HUMAN",
+    "actor_id": "user-123"
+  },
+  "effect": "ALLOW",
+  "reason_codes": ["POLICY_ALLOWED"],
+  "policy_key": "CURVE_CORE_POLICY",
+  "policy_version": 3,
+  "policy_manifest_digest": "sha256:2895b63392236afa07e6f0572d6ddb1c91aa7f40d37282f250019d2829ed5787",
+  "input_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "normalized_classification": "INTERNAL",
+  "permitted_projection": ["NO_BODY"],
+  "evaluated_at": "2026-08-27T12:00:00Z",
+  "recorded_at": "2026-08-27T12:00:00Z",
+  "recorded_by": {
+    "actor_type": "SERVICE",
+    "actor_id": "curve-api"
+  },
+  "correlation_id": "m0-s9a-policy-v2-correlation"
+}

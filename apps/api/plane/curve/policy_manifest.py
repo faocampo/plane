@@ -12,6 +12,14 @@ from typing import Mapping
 
 CORE_POLICY_MANIFEST_DIGEST = "sha256:e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
 CORE_POLICY_MANIFEST_PATH = Path(__file__).resolve().parent / "contracts" / "policy" / "core-policy-v1.json"
+CORE_POLICY_V2_MANIFEST_DIGEST = "sha256:2895b63392236afa07e6f0572d6ddb1c91aa7f40d37282f250019d2829ed5787"
+CORE_POLICY_V2_MANIFEST_PATH = Path(__file__).resolve().parent / "contracts" / "policy" / "core-policy-v2.json"
+SUPPORTED_CORE_POLICY_MANIFEST_DIGESTS = frozenset(
+    {
+        CORE_POLICY_MANIFEST_DIGEST,
+        CORE_POLICY_V2_MANIFEST_DIGEST,
+    }
+)
 
 
 class PolicyManifestIntegrityError(RuntimeError):
@@ -26,15 +34,20 @@ def _deep_freeze(value):
     return value
 
 
-@lru_cache(maxsize=1)
-def load_core_policy_manifest() -> Mapping[str, object]:
+def _load_manifest(
+    *,
+    manifest_path: Path,
+    manifest_digest: str,
+    schema_version: str,
+    policy_version: int,
+) -> Mapping[str, object]:
     try:
-        manifest_bytes = CORE_POLICY_MANIFEST_PATH.read_bytes()
+        manifest_bytes = manifest_path.read_bytes()
     except OSError as error:
         raise PolicyManifestIntegrityError("core policy manifest is unavailable") from error
 
     digest = f"sha256:{hashlib.sha256(manifest_bytes).hexdigest()}"
-    if digest != CORE_POLICY_MANIFEST_DIGEST:
+    if digest != manifest_digest:
         raise PolicyManifestIntegrityError("core policy manifest digest mismatch")
 
     try:
@@ -43,12 +56,32 @@ def load_core_policy_manifest() -> Mapping[str, object]:
         raise PolicyManifestIntegrityError("core policy manifest is invalid JSON") from error
 
     if (
-        manifest.get("schema_version") != "1.0"
+        manifest.get("schema_version") != schema_version
         or manifest.get("policy_key") != "CURVE_CORE_POLICY"
-        or manifest.get("policy_version") != 1
+        or manifest.get("policy_version") != policy_version
         or manifest.get("default_effect") != "DENY"
     ):
         raise PolicyManifestIntegrityError("core policy manifest identity mismatch")
+
+    if policy_version == 2:
+        expected_role_source = {
+            "role": "PLATFORM_ADMINISTRATOR",
+            "actor_type": "HUMAN",
+            "source": "PLANE_WORKSPACE_MEMBERSHIP",
+            "plane_role": 20,
+            "membership_active": True,
+            "workspace_match": "REQUIRED",
+            "caller_supplied_role": "REJECT",
+            "allowed_actions": [
+                "CURVE.PROVIDER_CONNECTION.REGISTER",
+                "CURVE.PROVIDER_CONNECTION.ADMINISTER",
+            ],
+        }
+        if manifest.get("supersedes") != {
+            "policy_version": 1,
+            "manifest_digest": CORE_POLICY_MANIFEST_DIGEST,
+        } or manifest.get("trusted_role_sources") != [expected_role_source]:
+            raise PolicyManifestIntegrityError("core policy manifest authority mismatch")
 
     actions = manifest.get("actions")
     precedence = manifest.get("deny_precedence")
@@ -65,5 +98,40 @@ def load_core_policy_manifest() -> Mapping[str, object]:
     return _deep_freeze(manifest)
 
 
+@lru_cache(maxsize=1)
+def load_core_policy_manifest() -> Mapping[str, object]:
+    """Load the immutable policy-v1 manifest used by existing Curve actions."""
+
+    return _load_manifest(
+        manifest_path=CORE_POLICY_MANIFEST_PATH,
+        manifest_digest=CORE_POLICY_MANIFEST_DIGEST,
+        schema_version="1.0",
+        policy_version=1,
+    )
+
+
+@lru_cache(maxsize=1)
+def load_core_policy_v2_manifest() -> Mapping[str, object]:
+    """Load the immutable policy-v2 manifest used by provider actions."""
+
+    return _load_manifest(
+        manifest_path=CORE_POLICY_V2_MANIFEST_PATH,
+        manifest_digest=CORE_POLICY_V2_MANIFEST_DIGEST,
+        schema_version="2.0",
+        policy_version=2,
+    )
+
+
+def load_core_policy_manifest_for_digest(policy_manifest_digest: object) -> Mapping[str, object] | None:
+    """Resolve only a supported exact digest without silently changing policy."""
+
+    if policy_manifest_digest == CORE_POLICY_MANIFEST_DIGEST:
+        return load_core_policy_manifest()
+    if policy_manifest_digest == CORE_POLICY_V2_MANIFEST_DIGEST:
+        return load_core_policy_v2_manifest()
+    return None
+
+
 def clear_core_policy_manifest_cache():
     load_core_policy_manifest.cache_clear()
+    load_core_policy_v2_manifest.cache_clear()

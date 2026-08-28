@@ -9,11 +9,14 @@ const m0s4ContextPath = new URL("apps/api/plane/curve/contracts/m0-s4-context.js
 const m0s5ContextPath = new URL("apps/api/plane/curve/contracts/m0-s5-context.json", repositoryRoot);
 const m0s5bContextPath = new URL("apps/api/plane/curve/contracts/m0-s5b-context.json", repositoryRoot);
 const m0s6aContextPath = new URL("apps/api/plane/curve/contracts/m0-s6a-context.json", repositoryRoot);
+const m0s9aContextPath = new URL("apps/api/plane/curve/contracts/m0-s9a-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
 const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
 const semanticFixtureDirectory = new URL("apps/api/plane/curve/contracts/schemas/semantic-fixtures/", repositoryRoot);
+const schemaExampleDirectory = new URL("apps/api/plane/curve/contracts/schemas/examples/", repositoryRoot);
 const policyDirectory = new URL("apps/api/plane/curve/contracts/policy/", repositoryRoot);
+const providerDirectory = new URL("apps/api/plane/curve/contracts/providers/", repositoryRoot);
 const observabilityDirectory = new URL("apps/api/plane/curve/contracts/observability/", repositoryRoot);
 const temporalDirectory = new URL("apps/api/plane/curve/contracts/temporal/", repositoryRoot);
 
@@ -140,11 +143,16 @@ const expectedM0S6AContext = {
 
 const expectedM0S6AFiles = {
   "contracts/observability/m0-s5-telemetry-v1.json": "8ba95e5e605188e829df03374114eb2ec0d2cbea0218f1d286198cbbb2d34d9b",
-  "contracts/schemas/examples/temporal-orchestration.invalid.json": "c06680da3869ad4f7519e931b0c5132b95f28ea6f29d1c9372514b8253eb293d",
-  "contracts/schemas/examples/test-strategy-matrix.invalid.json": "5187e0ba131d3f3b83472e60c2f09d8507395d2b88ec51f91cedd26c3c60ace1",
-  "contracts/schemas/telemetry-manifest.schema.json": "b25c1d758fa995370a01996b811770bdbd335374bda7ea88a790359d4c126942",
-  "contracts/schemas/temporal-orchestration.schema.json": "9e5d72eea70d542dad9d15f372f0b90f5e68a0654735c3a7d2cd900df8b7fb47",
-  "contracts/schemas/test-strategy-matrix.schema.json": "64fb3ce685c0d05ea5c5821b36843a76552361f0ad482397aa5d3bdadc5e7d16",
+  "contracts/schemas/examples/temporal-orchestration.invalid.json":
+    "c06680da3869ad4f7519e931b0c5132b95f28ea6f29d1c9372514b8253eb293d",
+  "contracts/schemas/examples/test-strategy-matrix.invalid.json":
+    "5187e0ba131d3f3b83472e60c2f09d8507395d2b88ec51f91cedd26c3c60ace1",
+  "contracts/schemas/telemetry-manifest.schema.json":
+    "b25c1d758fa995370a01996b811770bdbd335374bda7ea88a790359d4c126942",
+  "contracts/schemas/temporal-orchestration.schema.json":
+    "9e5d72eea70d542dad9d15f372f0b90f5e68a0654735c3a7d2cd900df8b7fb47",
+  "contracts/schemas/test-strategy-matrix.schema.json":
+    "64fb3ce685c0d05ea5c5821b36843a76552361f0ad482397aa5d3bdadc5e7d16",
   "contracts/temporal/m0-orchestration-v1.json": "278b0845e7bf04200903d4cc110931e88b272df9ffb8da91eebf1984109a1374",
   "contracts/temporal/m0-workflow-contract.md": "8322debe600ff7f6f50e1e9da775879a353a1317b9b803ac4f65b413f1a7790e",
   "contracts/testing/ac-test-matrix-v1.json": "bad1a5a710ca16b3de399e1b0ff4b265d0c8ce64c203521f20e0d3f5ab2d3e3a",
@@ -153,8 +161,10 @@ const expectedM0S6AFiles = {
   "docs/technical/architecture.md": "a44d9aeb1bb2d7a56fd4c1edd21487873b010725194d738c29108b10f7ac81c8",
   "docs/technical/development-plan.md": "aaee3a2e42307dcd993a25e01df3fede75c2c7a8e01b3a9f3dd6ddbc008b03b5",
   "docs/technical/m0-s3-implementation-evidence.md": "69a6fed33741b219c208d78183ccba7051e7a4a4cccdcdf01ea16d049c3dcddf",
-  "docs/technical/m0-s5b-implementation-evidence.md": "a42627fbb05519e14da71b7ace307d9a72de7ddc35f040fac78f1cec2b20623a",
-  "docs/technical/m0-s6a-durable-orchestration-task-packet.md": "bf541c73de7fa4943ee93f33b82ceb6ad1013e174b09216ef7e0714bee3e1e5e",
+  "docs/technical/m0-s5b-implementation-evidence.md":
+    "a42627fbb05519e14da71b7ace307d9a72de7ddc35f040fac78f1cec2b20623a",
+  "docs/technical/m0-s6a-durable-orchestration-task-packet.md":
+    "bf541c73de7fa4943ee93f33b82ceb6ad1013e174b09216ef7e0714bee3e1e5e",
   "docs/technical/m0-test-strategy.md": "3251aa103ebad931267d57c1a9f1f2f460b0292aa191850ff5986ed69892b28c",
   "docs/technical/m0-traceability.md": "6ea414862e7759b6b49bd9f88e529532422c1bc210295bcbd39642f7c0e9c848",
   "docs/technical/security-and-operations.md": "5223c206225efb448007ffba0fb5a127062e62c3e6ed9b6496ce03dadb5fdbdb",
@@ -167,11 +177,80 @@ const expectedM0S6AFiles = {
   "scripts/validate-contracts.mjs": "d6163b4b238be852bba900d94942640dea73e1ad41b3930b13225d3a7cb554eb",
 };
 
+const expectedM0S9AContext = {
+  curveRevision: "e6e43ea7fdf99baf79922a4ae506bbcb73e7c4cb",
+  approvedContractHead: "cf1ffb696b30f45e71a6edcaba062f67a3de7b8e",
+  planeBaseRevision: "ad5772c0565c934e64ea90f892be1374819979be",
+  contextDigest: "sha256:9e07550799a6e4d88a6734f9a98e0de59812402d983bc7291396332a6b214cb0",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+  implementer: "Codex",
+};
+
+const expectedM0S9AVendoredFiles = {
+  "contracts/policy/core-policy-v1.json": "e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52",
+  "contracts/policy/core-policy-v2.json": "2895b63392236afa07e6f0572d6ddb1c91aa7f40d37282f250019d2829ed5787",
+  "contracts/providers/m0-s9a-provider-registry-v1.json":
+    "393c33fa5343beb1fe05a445a015333334a27bf491d7850c64dcf0a7f265071a",
+  "contracts/schemas/core-policy-manifest-v2.schema.json":
+    "05e77c1f3db002cfc4d26c743d031c71661cf7106f8ac9c27b14a5aacaff38b9",
+  "contracts/schemas/examples/core-policy-manifest-v2.invalid.json":
+    "ac837ffb9a4372d5461453f7d1030bfd75c5628faab513f2b63e93ce1e51ca8f",
+  "contracts/schemas/examples/core-policy-manifest-v2.valid.json":
+    "1db369e879a099af7ce44822c639e489296ab632144f602c5ea0c4f734a482f3",
+  "contracts/schemas/examples/provider-capability.invalid.json":
+    "4ba9691457bd3f3c4b919e927de34d68929c9045c183dd89dbee174b54a5044f",
+  "contracts/schemas/examples/provider-capability.valid.json":
+    "e402f29c92697837f7a51d364dfd40a247fb9703c459cd30f110a98507e4a3fa",
+  "contracts/schemas/examples/provider-connection-event-v1.invalid.json":
+    "04957aafa9fd614254e1d60483a9ee0bde97cb7a6f8866c88908c48ec1deabc3",
+  "contracts/schemas/examples/provider-connection-event-v1.valid.json":
+    "ff4b883a4f455ad7977ebcb85ebfb0508b5a9d5f7594d60c95ab58e7e18cdc92",
+  "contracts/schemas/examples/provider-connection.invalid.json":
+    "223540eb8a89f59db0dc94d9501ab4094770563a0636dccaf99ab28956f5c2a6",
+  "contracts/schemas/examples/provider-connection.valid.json":
+    "10e5bc9ebb2260b268227e0c08ac5ab4a373c73cc38a8b98642b3b69039535f0",
+  "contracts/schemas/examples/provider-reconciliation-event-v1.invalid.json":
+    "f17f6ac6e19636f9c3235210adddcd7690c42d96f6c236847d94b73d6c11c4ef",
+  "contracts/schemas/examples/provider-reconciliation-event-v1.valid.json":
+    "a5f67491e5e73699ecf83509a3c212dc6f50999b5984207d5cf7000929e4f8f5",
+  "contracts/schemas/examples/provider-registry-manifest.invalid.json":
+    "a1736ce37a59336442aea2f104f4c7b703a2e0b8331c01aa5eae196f3eaab2b6",
+  "contracts/schemas/examples/provider-registry-manifest.valid.json":
+    "e212248879c99b71cb24e91318e9eae4a30080e5a81d7013049135f0fadb0b2a",
+  "contracts/schemas/policy-decision.schema.json": "6463d429124ee71df9ee57885dd332b703f86e35bbf65db161c3327723650799",
+  "contracts/schemas/provider-capability.schema.json":
+    "30d1388ed0367c194d05c88247d18563d2e2813bb80bdbe9a19605d8fd1228e7",
+  "contracts/schemas/provider-connection-event-v1.schema.json":
+    "8270ac5bb8cfb7474bbb3fb31f91be3787412dcea0dc58e1bf9ed427c3a99d43",
+  "contracts/schemas/provider-connection.schema.json":
+    "8485a48282cfe14f95bd4a3e64eb5de4353f6b6d22fab73c985c4763e1a5cdde",
+  "contracts/schemas/provider-reconciliation-event-v1.schema.json":
+    "d2b32ffba961eba6faa4b17d2aa718ac8c98c1ea67ec53cc4cacf54436569147",
+  "contracts/schemas/provider-registry-manifest.schema.json":
+    "df09e3a13953ce37ebd2555ecc53bdd133baf172d575a9ae95609ffcba4b3729",
+  "contracts/schemas/semantic-fixtures/policy-decision-provider-registration-v2.valid.json":
+    "42071ddb1a92c8265221aaa27c8409486c615011016972edb27567a47751597a",
+  "contracts/schemas/semantic-fixtures/policy-decision-provider-registration-v3.invalid.json":
+    "d86efaa2748146665dcf898f841cb9200e2da82a55cebbc89cbccb3afb442be1",
+  "contracts/schemas/semantic-fixtures/provider-connection-active-null.invalid.json":
+    "9207c17586bcd8cef2449bfa98be94aab0b1f19b2b5cfd89807cad8eee4f5239",
+  "contracts/schemas/semantic-fixtures/provider-connection-active.valid.json":
+    "b139b2c2812bcda6804f6643503e3cd048914b6318480c3076639a85495255b9",
+  "contracts/schemas/semantic-fixtures/provider-connection-event-registered.valid.json":
+    "15f073f83937859ad632dfb4c31433cbb093f670ce023fb1f40f97a696a5035f",
+  "contracts/schemas/semantic-fixtures/provider-connection-revoked-next.invalid.json":
+    "9bb7a9cb7690c1a4f952a27c43ba332ae895da8a02a04c0738f1c59f242533b6",
+};
+
 const fail = (message) => {
   throw new Error(`Curve contract integrity check failed: ${message}`);
 };
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
+// Historical manifests keep their approved digest; the current M0-S9A section
+// independently binds the evolved schema bytes.
+const evolvedAfterHistoricalContexts = new Set(["contracts/schemas/policy-decision.schema.json"]);
 
 const context = JSON.parse(await readFile(contextPath, "utf8"));
 if (context.curve_revision !== expectedContext.curveRevision) fail("unexpected Curve revision");
@@ -218,12 +297,13 @@ if (JSON.stringify(m003Context.paths) !== JSON.stringify([...m003Context.paths].
 const recordedM003Digests = new Map(m003Context.files.map(({ path, sha256: digest }) => [path, digest]));
 await Promise.all(
   Object.entries(expectedM003Files).map(async ([sourcePath, expectedDigest]) => {
-    const fileName = sourcePath.split("/").at(-1);
-    const directory = sourcePath.includes("/policy/") ? policyDirectory : schemaDirectory;
-    const bytes = await readFile(new URL(fileName, directory));
-    const observedDigest = sha256(bytes);
-    if (observedDigest !== expectedDigest) {
-      fail(`${fileName} digest ${observedDigest} does not match ${expectedDigest}`);
+    if (!evolvedAfterHistoricalContexts.has(sourcePath)) {
+      const fileName = sourcePath.split("/").at(-1);
+      const directory = sourcePath.includes("/policy/") ? policyDirectory : schemaDirectory;
+      const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+      if (observedDigest !== expectedDigest) {
+        fail(`${fileName} digest ${observedDigest} does not match ${expectedDigest}`);
+      }
     }
     if (recordedM003Digests.get(sourcePath) !== `sha256:${expectedDigest}`) {
       fail(`${sourcePath} is not byte-bound by the M0-03 context manifest`);
@@ -282,11 +362,13 @@ for (const file of m0s3Context.files) {
 const recordedM0S3Digests = new Map(m0s3Context.files.map(({ path, sha256: digest }) => [path, digest]));
 await Promise.all(
   Object.entries(expectedM0S3Files).map(async ([sourcePath, expectedDigest]) => {
-    const fileName = sourcePath.split("/").at(-1);
-    const directory = sourcePath.includes("/policy/") ? policyDirectory : schemaDirectory;
-    const observedDigest = sha256(await readFile(new URL(fileName, directory)));
-    if (observedDigest !== expectedDigest) {
-      fail(`${fileName} digest ${observedDigest} does not match M0-S3 source ${expectedDigest}`);
+    if (!evolvedAfterHistoricalContexts.has(sourcePath)) {
+      const fileName = sourcePath.split("/").at(-1);
+      const directory = sourcePath.includes("/policy/") ? policyDirectory : schemaDirectory;
+      const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+      if (observedDigest !== expectedDigest) {
+        fail(`${fileName} digest ${observedDigest} does not match M0-S3 source ${expectedDigest}`);
+      }
     }
     if (recordedM0S3Digests.get(sourcePath) !== `sha256:${expectedDigest}`) {
       fail(`${sourcePath} is not byte-bound by the M0-S3 context manifest`);
@@ -577,13 +659,15 @@ const expectedM0S6AVendoredFiles = new Map([
   ["contracts/schemas/temporal-orchestration.schema.json", schemaDirectory],
   ["contracts/temporal/m0-orchestration-v1.json", temporalDirectory],
 ]);
-for (const [sourcePath, directory] of expectedM0S6AVendoredFiles) {
-  const fileName = sourcePath.split("/").at(-1);
-  const observedDigest = sha256(await readFile(new URL(fileName, directory)));
-  if (observedDigest !== expectedM0S6AFiles[sourcePath]) {
-    fail(`${sourcePath} vendored bytes differ from the approved M0-S6A source`);
-  }
-}
+await Promise.all(
+  Array.from(expectedM0S6AVendoredFiles, async ([sourcePath, directory]) => {
+    const fileName = sourcePath.split("/").at(-1);
+    const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+    if (observedDigest !== expectedM0S6AFiles[sourcePath]) {
+      fail(`${sourcePath} vendored bytes differ from the approved M0-S6A source`);
+    }
+  })
+);
 
 const orchestrationManifest = JSON.parse(
   await readFile(new URL("m0-orchestration-v1.json", temporalDirectory), "utf8")
@@ -605,11 +689,9 @@ if (
   fail("M0-S6A workflow type set differs from the approved contract");
 }
 const handlerFields = [
-  ...(orchestrationManifest.workflow_types ?? []).flatMap(({ input_fields, state_fields, output_fields }) => [
-    ...input_fields,
-    ...state_fields,
-    ...output_fields,
-  ]),
+  ...(orchestrationManifest.workflow_types ?? []).flatMap(({ input_fields, state_fields, output_fields }) =>
+    input_fields.concat(state_fields, output_fields)
+  ),
   ...(orchestrationManifest.signals ?? []).flatMap(({ fields }) => fields),
   ...(orchestrationManifest.queries ?? []).flatMap(({ fields }) => fields),
 ];
@@ -627,6 +709,123 @@ if (
 
 console.log(
   `Curve M0-S6A context integrity passed: ${m0s6aContext.paths.length} files at ${expectedM0S6AContext.curveRevision}`
+);
+
+const m0s9aContext = JSON.parse(await readFile(m0s9aContextPath, "utf8"));
+if (m0s9aContext.schema_version !== "curve-context-pack/v1" || m0s9aContext.task_id !== "M0-S9A") {
+  fail("unexpected M0-S9A context identity");
+}
+if (
+  m0s9aContext.curve_revision !== expectedM0S9AContext.curveRevision ||
+  m0s9aContext.approved_contract_head !== expectedM0S9AContext.approvedContractHead ||
+  m0s9aContext.plane_base_revision !== expectedM0S9AContext.planeBaseRevision ||
+  m0s9aContext.context_digest !== expectedM0S9AContext.contextDigest
+) {
+  fail("unexpected M0-S9A revision or context digest");
+}
+if (
+  m0s9aContext.human_owner !== expectedM0S9AContext.owner ||
+  m0s9aContext.human_reviewer !== expectedM0S9AContext.reviewer ||
+  m0s9aContext.implementer !== expectedM0S9AContext.implementer ||
+  m0s9aContext.data_classification !== "INTERNAL" ||
+  m0s9aContext.execution_scope !== "LOCAL_ONLY" ||
+  m0s9aContext.budget_usd !== 25
+) {
+  fail("unexpected M0-S9A ownership, classification, execution scope, or budget");
+}
+if (
+  m0s9aContext.approval_evidence?.curve_pr !== "https://github.com/faocampo/curve/pull/37" ||
+  m0s9aContext.approval_evidence?.approved_head !== expectedM0S9AContext.approvedContractHead ||
+  m0s9aContext.approval_evidence?.squash_commit !== expectedM0S9AContext.curveRevision ||
+  m0s9aContext.approval_evidence?.ci !== "https://github.com/faocampo/curve/actions/runs/33197154638" ||
+  m0s9aContext.dispatch?.branch !== "curve/m0-s9a-provider-registry-foundation" ||
+  m0s9aContext.dispatch?.authorized_by !== "Federico Ocampo" ||
+  m0s9aContext.dispatch?.runtime !== "LOCAL_ONLY" ||
+  m0s9aContext.dispatch?.merge_authorized !== false ||
+  m0s9aContext.dispatch?.deployment_authorized !== false
+) {
+  fail("unexpected M0-S9A approval or dispatch evidence");
+}
+if (!Array.isArray(m0s9aContext.files) || !Array.isArray(m0s9aContext.paths)) {
+  fail("M0-S9A context paths and per-file digests are required");
+}
+if (JSON.stringify(m0s9aContext.paths) !== JSON.stringify([...m0s9aContext.paths].toSorted())) {
+  fail("M0-S9A context paths are not sorted");
+}
+if (JSON.stringify(m0s9aContext.files.map(({ path }) => path)) !== JSON.stringify(m0s9aContext.paths)) {
+  fail("M0-S9A context files and paths differ");
+}
+if (new Set(m0s9aContext.paths).size !== m0s9aContext.paths.length) {
+  fail("M0-S9A context paths are not unique");
+}
+for (const file of m0s9aContext.files) {
+  if (!/^sha256:[0-9a-f]{64}$/.test(file.sha256)) {
+    fail(`M0-S9A context digest is invalid for ${file.path}`);
+  }
+}
+
+const recordedM0S9ADigests = new Map(m0s9aContext.files.map(({ path, sha256: digest }) => [path, digest]));
+const m0s9aDirectoryFor = (sourcePath) => {
+  if (sourcePath.includes("/policy/")) return policyDirectory;
+  if (sourcePath.includes("/providers/")) return providerDirectory;
+  if (sourcePath.includes("/examples/")) return schemaExampleDirectory;
+  if (sourcePath.includes("/semantic-fixtures/")) return semanticFixtureDirectory;
+  return schemaDirectory;
+};
+await Promise.all(
+  Object.entries(expectedM0S9AVendoredFiles).map(async ([sourcePath, expectedDigest]) => {
+    if (recordedM0S9ADigests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+      fail(`${sourcePath} is not byte-bound by the M0-S9A context manifest`);
+    }
+    const fileName = sourcePath.split("/").at(-1);
+    const observedDigest = sha256(await readFile(new URL(fileName, m0s9aDirectoryFor(sourcePath))));
+    if (observedDigest !== expectedDigest) {
+      fail(`${sourcePath} vendored bytes differ from the approved M0-S9A source`);
+    }
+  })
+);
+
+const providerRegistryManifest = JSON.parse(
+  await readFile(new URL("m0-s9a-provider-registry-v1.json", providerDirectory), "utf8")
+);
+if (
+  providerRegistryManifest.schema_version !== "curve.provider-registry/v1" ||
+  providerRegistryManifest.package !== "M0-S9A" ||
+  providerRegistryManifest.authority?.environment !== "LOCAL" ||
+  providerRegistryManifest.authority?.external_network !== "DISABLED" ||
+  providerRegistryManifest.authority?.credential_access !== "DISABLED" ||
+  providerRegistryManifest.authority?.temporal_workflow !== "DISABLED" ||
+  providerRegistryManifest.authority?.celery_task !== "DISABLED" ||
+  providerRegistryManifest.authority?.background_loop !== "DISABLED" ||
+  providerRegistryManifest.authority?.external_mutation !== "DISABLED"
+) {
+  fail("M0-S9A provider authority is broadened");
+}
+if (
+  providerRegistryManifest.registration_authorization?.policy_version !== 2 ||
+  providerRegistryManifest.registration_authorization?.trusted_role !== "PLATFORM_ADMINISTRATOR" ||
+  providerRegistryManifest.registration_authorization?.plane_role !== 20 ||
+  providerRegistryManifest.registration_authorization?.caller_supplied_role !== "REJECT" ||
+  providerRegistryManifest.registration_authorization?.target_allowlist !== "REQUIRED" ||
+  providerRegistryManifest.delivery?.destination !== "CURVE_PROVIDER_LOCAL_V1" ||
+  providerRegistryManifest.delivery?.consumer_id !== "curve-provider-local-v1" ||
+  providerRegistryManifest.delivery?.maximum_attempts !== 3 ||
+  providerRegistryManifest.delivery?.exhausted_state !== "DEAD_LETTER" ||
+  providerRegistryManifest.delivery?.next_command_drain_order !== "AFTER_ALLOW_RECEIPT_BEFORE_COMMAND_MUTATION" ||
+  providerRegistryManifest.delivery?.denied_command_delivery_mutation !== "NONE" ||
+  providerRegistryManifest.delivery?.expired_claim_at_maximum_attempts !== "DEAD_LETTER" ||
+  providerRegistryManifest.reconciliation?.same_command_replay !== "RETURN_TERMINAL_OR_RESUME_PENDING" ||
+  providerRegistryManifest.reconciliation?.pending_command_replay !== "RESUME_FROM_DURABLE_PHASE" ||
+  providerRegistryManifest.reconciliation?.stale_result_error_code !== "OPTIMISTIC_CONCURRENCY" ||
+  providerRegistryManifest.persistence?.workspace_reference_guard !== "INSTANCE_AND_QUERYSET" ||
+  providerRegistryManifest.persistence?.bulk_workspace_reference_mutation !== "PROHIBITED" ||
+  providerRegistryManifest.event_payload_contracts?.length !== 2
+) {
+  fail("M0-S9A authorization or local-delivery contract differs from approval");
+}
+
+console.log(
+  `Curve M0-S9A context integrity passed: ${Object.keys(expectedM0S9AVendoredFiles).length} vendored files at ${expectedM0S9AContext.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));

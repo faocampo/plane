@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/provider-connection-event-v1.schema.json",
+  "title": "Curve M0-S9A Provider Connection Event Payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_id",
+    "connection_id",
+    "connection_version",
+    "status"
+  ],
+  "properties": {
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/WorkspaceId"
+    },
+    "connection_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "connection_version": {
+      "$ref": "common.schema.json#/$defs/AggregateVersion"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING_VALIDATION",
+        "ACTIVE",
+        "DEGRADED",
+        "DISABLED",
+        "REVOKED"
+      ]
+    },
+    "configuration_digest": {
+      "$ref": "common.schema.json#/$defs/Digest"
+    },
+    "capability_digest": {
+      "$ref": "common.schema.json#/$defs/Digest"
+    },
+    "capability_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "error": {
+      "$ref": "common.schema.json#/$defs/SafeError"
+    }
+  },
+  "dependentRequired": {
+    "capability_digest": ["capability_version"],
+    "capability_version": ["capability_digest"]
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ACTIVE"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["capability_digest", "capability_version"],
+        "not": {
+          "required": ["error"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "DEGRADED"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["error"]
+      }
+    }
+  ]
+}

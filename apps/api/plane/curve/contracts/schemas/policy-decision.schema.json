@@ -52,7 +52,7 @@
       }
     },
     "policy_key": { "const": "CURVE_CORE_POLICY" },
-    "policy_version": { "const": 1 },
+    "policy_version": { "type": "integer", "enum": [1, 2] },
     "policy_manifest_digest": { "$ref": "common.schema.json#/$defs/Digest" },
     "input_digest": { "$ref": "common.schema.json#/$defs/Digest" },
     "normalized_classification": {

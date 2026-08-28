@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/core-policy-manifest-v2.schema.json",
+  "title": "Curve core policy manifest v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_key",
+    "policy_version",
+    "supersedes",
+    "default_effect",
+    "unknown_classification",
+    "allow_reason_code",
+    "trusted_role_sources",
+    "deny_precedence",
+    "actions"
+  ],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "policy_key": { "const": "CURVE_CORE_POLICY" },
+    "policy_version": { "const": 2 },
+    "supersedes": {
+      "const": {
+        "policy_version": 1,
+        "manifest_digest": "sha256:e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
+      }
+    },
+    "default_effect": { "const": "DENY" },
+    "unknown_classification": { "const": "RESTRICTED" },
+    "allow_reason_code": { "const": "POLICY_ALLOWED" },
+    "trusted_role_sources": {
+      "const": [
+        {
+          "role": "PLATFORM_ADMINISTRATOR",
+          "actor_type": "HUMAN",
+          "source": "PLANE_WORKSPACE_MEMBERSHIP",
+          "plane_role": 20,
+          "membership_active": true,
+          "workspace_match": "REQUIRED",
+          "caller_supplied_role": "REJECT",
+          "allowed_actions": [
+            "CURVE.PROVIDER_CONNECTION.REGISTER",
+            "CURVE.PROVIDER_CONNECTION.ADMINISTER"
+          ]
+        }
+      ]
+    },
+    "deny_precedence": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "core-policy-manifest.schema.json#/$defs/reasonCode"
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "core-policy-manifest.schema.json#/$defs/actionPolicy"
+      }
+    }
+  }
+}

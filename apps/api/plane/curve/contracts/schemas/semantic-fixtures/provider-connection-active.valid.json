@@ -1,0 +1,33 @@
+{
+  "schema_version": "2.0",
+  "id": "13000000-0000-4000-8000-000000000001",
+  "workspace_id": "10000000-0000-4000-8000-000000000002",
+  "aggregate_version": 2,
+  "provider_type": "FAKE_LOCAL",
+  "adapter_key": "curve.fake-local",
+  "adapter_version": "1.0.0",
+  "environment": "LOCAL",
+  "display_name": "Synthetic local provider",
+  "configuration_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "secret_reference": null,
+  "capability_document_ref": {
+    "resource_type": "PROVIDER_CAPABILITY",
+    "resource_id": "13000000-0000-4000-8000-000000000002",
+    "resource_version": 1
+  },
+  "allowed_classifications": ["INTERNAL"],
+  "status": "ACTIVE",
+  "validated_at": "2026-08-22T12:00:01Z",
+  "validation_result_ref": {
+    "resource_type": "OPERATION",
+    "resource_id": "13000000-0000-4000-8000-000000000003",
+    "resource_version": 2
+  },
+  "last_reconciled_at": "2026-08-22T12:00:01Z",
+  "next_reconcile_at": "2026-08-22T12:15:01Z",
+  "last_error": null,
+  "created_at": "2026-08-22T12:00:00Z",
+  "created_by": {"actor_type": "HUMAN", "actor_id": "platform-admin-1"},
+  "updated_at": "2026-08-22T12:00:01Z",
+  "updated_by": {"actor_type": "SERVICE", "actor_id": "provider-registry"}
+}

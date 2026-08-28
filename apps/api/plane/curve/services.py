@@ -547,6 +547,7 @@ def _create_operation_authorized(
     destination: str = "CURVE_LOCAL",
     idempotency_ttl: timedelta = timedelta(days=1),
     traceparent: str | None = None,
+    authorization_action: str = "CURVE.FOUNDATION_PROBE.START",
 ) -> OperationCommandResult:
     from plane.curve.policy_services import (
         assert_active_mutation_receipt,
@@ -555,7 +556,7 @@ def _create_operation_authorized(
 
     assert_active_mutation_receipt(
         authorization_receipt,
-        action="CURVE.FOUNDATION_PROBE.START",
+        action=authorization_action,
         workspace_id=workspace_id,
         resource_ref=target,
     )
@@ -1145,6 +1146,7 @@ def claim_due_outbox(
     lease_duration: timedelta,
     now=None,
     destination: str | None = None,
+    maximum_attempts: int | None = None,
 ) -> list[OutboxEvent]:
     _validate_uuid(workspace_id, "workspace_id")
     _validate_text(worker_id, "worker_id", maximum=255)
@@ -1160,10 +1162,14 @@ def claim_due_outbox(
     _validate_utc_datetime(now, "now")
     if destination is not None:
         _validate_text(destination, "destination", maximum=128, pattern=DESTINATION_PATTERN)
+    if maximum_attempts is not None and (type(maximum_attempts) is not int or maximum_attempts < 1):
+        _invalid("maximum_attempts")
     with transaction.atomic():
         due = OutboxEvent.objects.select_for_update(skip_locked=True).filter(workspace_id=workspace_id)
         if destination is not None:
             due = due.filter(destination=destination)
+        if maximum_attempts is not None:
+            due = due.filter(attempt_count__lt=maximum_attempts)
         due = due.filter(
             Q(state=OutboxState.PENDING) | Q(state=OutboxState.RETRY_SCHEDULED, next_attempt_at__lte=now)
         ).order_by("created_at", "id")[:limit]
@@ -1292,29 +1298,43 @@ def dead_letter_outbox(
 
 
 def recover_expired_outbox_claims(
-    *, workspace_id: uuid.UUID, actor: dict, correlation_id: str, now=None, limit: int = 100
+    *,
+    workspace_id: uuid.UUID,
+    actor: dict,
+    correlation_id: str,
+    now=None,
+    limit: int = 100,
+    destination: str | None = None,
+    maximum_attempts: int | None = None,
 ) -> list[OutboxEvent]:
     _validate_uuid(workspace_id, "workspace_id")
     _validate_actor(actor, "actor", required=True)
     _validate_text(correlation_id, "correlation_id", maximum=255)
     if type(limit) is not int or limit < 1 or limit > 1000:
         _invalid("limit")
+    if destination is not None:
+        _validate_text(destination, "destination", maximum=128, pattern=DESTINATION_PATTERN)
+    if maximum_attempts is not None and (type(maximum_attempts) is not int or maximum_attempts < 1):
+        _invalid("maximum_attempts")
     now = now or timezone.now()
     _validate_utc_datetime(now, "now")
     with transaction.atomic():
-        expired = list(
-            OutboxEvent.objects.select_for_update(skip_locked=True)
-            .filter(
-                workspace_id=workspace_id,
-                state=OutboxState.CLAIMED,
-                claimed_until__lte=now,
-            )
-            .order_by("claimed_until", "id")[:limit]
+        expired_query = OutboxEvent.objects.select_for_update(skip_locked=True).filter(
+            workspace_id=workspace_id,
+            state=OutboxState.CLAIMED,
+            claimed_until__lte=now,
         )
+        if destination is not None:
+            expired_query = expired_query.filter(destination=destination)
+        expired = list(expired_query.order_by("claimed_until", "id")[:limit])
         for item in expired:
-            item.state = OutboxState.RETRY_SCHEDULED
-            item.next_attempt_at = now
-            item.last_error = {"code": "CLAIM_EXPIRED", "retryable": True}
+            exhausted = maximum_attempts is not None and item.attempt_count >= maximum_attempts
+            item.state = OutboxState.DEAD_LETTER if exhausted else OutboxState.RETRY_SCHEDULED
+            item.next_attempt_at = None if exhausted else now
+            item.last_error = {
+                "code": "CLAIM_EXPIRED_MAX_ATTEMPTS" if exhausted else "CLAIM_EXPIRED",
+                "retryable": not exhausted,
+            }
             item.claimed_by = None
             item.claimed_until = None
             item.save(
@@ -1328,7 +1348,7 @@ def recover_expired_outbox_claims(
             )
             _append_audit_event(
                 workspace_id=workspace_id,
-                action="CURVE.OUTBOX.CLAIM_EXPIRED",
+                action="CURVE.OUTBOX.CLAIM_EXPIRED_DEAD_LETTER" if exhausted else "CURVE.OUTBOX.CLAIM_EXPIRED",
                 target_ref={
                     "resource_type": "OUTBOX_EVENT",
                     "resource_id": str(item.id),

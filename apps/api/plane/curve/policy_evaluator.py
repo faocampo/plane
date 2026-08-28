@@ -11,6 +11,7 @@ import uuid
 from plane.curve.policy_manifest import (
     CORE_POLICY_MANIFEST_DIGEST,
     load_core_policy_manifest,
+    load_core_policy_manifest_for_digest,
 )
 from plane.curve.policy_types import (
     DataClassification,
@@ -350,7 +351,14 @@ def _service_denials(context, evaluated_at: datetime) -> list[str]:
 
 
 def evaluate_core_policy(context: Mapping[str, object]) -> PolicyEvaluationResult:
-    manifest = load_core_policy_manifest()
+    requested_manifest_digest = context.get("policy_manifest_digest") if isinstance(context, dict) else None
+    manifest = load_core_policy_manifest_for_digest(requested_manifest_digest)
+    manifest_is_supported = manifest is not None
+    if manifest is None:
+        manifest = load_core_policy_manifest()
+        selected_manifest_digest = CORE_POLICY_MANIFEST_DIGEST
+    else:
+        selected_manifest_digest = requested_manifest_digest
     try:
         digest = _input_digest(context)
     except (TypeError, ValueError):
@@ -368,7 +376,7 @@ def evaluate_core_policy(context: Mapping[str, object]) -> PolicyEvaluationResul
 
     valid_shape = _valid_context_shape(context)
     trusted_time = _utc_instant(evaluated_at)
-    if not valid_shape or context.get("policy_manifest_digest") != CORE_POLICY_MANIFEST_DIGEST or trusted_time is None:
+    if not valid_shape or not manifest_is_supported or trusted_time is None:
         return PolicyEvaluationResult(
             effect=PolicyEffect.DENY,
             reason_codes=("POLICY_CONTEXT_INVALID",),
@@ -378,7 +386,7 @@ def evaluate_core_policy(context: Mapping[str, object]) -> PolicyEvaluationResul
             evaluated_at=str(evaluated_at),
             policy_key=manifest["policy_key"],
             policy_version=manifest["policy_version"],
-            policy_manifest_digest=CORE_POLICY_MANIFEST_DIGEST,
+            policy_manifest_digest=selected_manifest_digest,
         )
 
     if context.get("feature_enabled") is not True:
@@ -463,7 +471,7 @@ def evaluate_core_policy(context: Mapping[str, object]) -> PolicyEvaluationResul
             evaluated_at=str(evaluated_at),
             policy_key=manifest["policy_key"],
             policy_version=manifest["policy_version"],
-            policy_manifest_digest=CORE_POLICY_MANIFEST_DIGEST,
+            policy_manifest_digest=selected_manifest_digest,
         )
 
     return PolicyEvaluationResult(
@@ -475,5 +483,5 @@ def evaluate_core_policy(context: Mapping[str, object]) -> PolicyEvaluationResul
         evaluated_at=str(evaluated_at),
         policy_key=manifest["policy_key"],
         policy_version=manifest["policy_version"],
-        policy_manifest_digest=CORE_POLICY_MANIFEST_DIGEST,
+        policy_manifest_digest=selected_manifest_digest,
     )
