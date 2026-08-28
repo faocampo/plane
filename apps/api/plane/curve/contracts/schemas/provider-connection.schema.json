@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/provider-connection.schema.json",
+  "title": "Curve workspace-scoped provider connection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "aggregate_version",
+    "provider_type",
+    "adapter_key",
+    "adapter_version",
+    "environment",
+    "display_name",
+    "configuration_digest",
+    "allowed_classifications",
+    "status",
+    "created_at",
+    "created_by",
+    "updated_at",
+    "updated_by"
+  ],
+  "properties": {
+    "schema_version": { "const": "2.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "aggregate_version": { "$ref": "common.schema.json#/$defs/AggregateVersion" },
+    "provider_type": {
+      "type": "string",
+      "enum": ["FAKE_LOCAL", "ONYX", "MCP", "ORCA_HUMAN_ASSISTANCE", "MODEL_GATEWAY", "OPENHANDS", "GITHUB", "GITLAB", "QUALITY", "FEATURE_FLAG", "DOCUMENTATION", "MONITORING", "PROTOTYPE"]
+    },
+    "adapter_key": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{0,99}$"},
+    "adapter_version": {"type": "string", "minLength": 1, "maxLength": 100},
+    "environment": {"type": "string", "enum": ["LOCAL", "STAGING", "PRODUCTION"]},
+    "display_name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "external_tenant_ref": { "type": ["string", "null"], "maxLength": 1000 },
+    "configuration_ref": { "$ref": "common.schema.json#/$defs/ObjectRef" },
+    "configuration_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "secret_reference": { "type": ["string", "null"], "maxLength": 1000 },
+    "capability_document_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "allowed_classifications": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/DataClassification" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "status": { "type": "string", "enum": ["PENDING_VALIDATION", "ACTIVE", "DEGRADED", "DISABLED", "REVOKED"] },
+    "validated_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "validation_result_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "last_reconciled_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "next_reconcile_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "last_error": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/SafeError" }, { "type": "null" }]
+    },
+    "created_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "created_by": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "updated_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "updated_by": { "$ref": "common.schema.json#/$defs/ActorRef" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["ACTIVE", "DEGRADED"] } } },
+      "then": {
+        "required": ["capability_document_ref", "validated_at", "validation_result_ref", "last_reconciled_at"],
+        "properties": {
+          "capability_document_ref": {
+            "allOf": [
+              {"$ref": "common.schema.json#/$defs/ResourceRef"},
+              {"required": ["resource_version"], "properties": {"resource_type": {"const": "PROVIDER_CAPABILITY"}}}
+            ]
+          },
+          "validated_at": {"$ref": "common.schema.json#/$defs/Instant"},
+          "validation_result_ref": {
+            "allOf": [
+              {"$ref": "common.schema.json#/$defs/ResourceRef"},
+              {"required": ["resource_version"], "properties": {"resource_type": {"const": "OPERATION"}}}
+            ]
+          },
+          "last_reconciled_at": {"$ref": "common.schema.json#/$defs/Instant"}
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "ACTIVE" } } },
+      "then": {
+        "required": ["next_reconcile_at"],
+        "properties": {"next_reconcile_at": {"$ref": "common.schema.json#/$defs/Instant"}}
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "DEGRADED" } } },
+      "then": {
+        "required": ["last_error"],
+        "properties": {"last_error": {"$ref": "common.schema.json#/$defs/SafeError"}}
+      }
+    },
+    {
+      "if": { "properties": { "status": { "enum": ["DISABLED", "REVOKED"] } } },
+      "then": {"properties": {"next_reconcile_at": {"type": "null"}}}
+    },
+    {
+      "if": { "properties": { "provider_type": { "const": "FAKE_LOCAL" } } },
+      "then": {
+        "properties": {
+          "adapter_key": {"const": "curve.fake-local"},
+          "environment": {"const": "LOCAL"},
+          "secret_reference": {"type": "null"},
+          "allowed_classifications": {"const": ["INTERNAL"]}
+        }
+      }
+    }
+  ]
+}

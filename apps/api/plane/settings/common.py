@@ -134,6 +134,12 @@ CURVE_FOUNDATION_PROBE_ENABLED = os.environ.get("CURVE_FOUNDATION_PROBE_ENABLED"
     "yes",
     "on",
 }
+CURVE_PROVIDER_REGISTRY_ENABLED = os.environ.get("CURVE_PROVIDER_REGISTRY_ENABLED", "0").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 CURVE_SSE_REPLAY_LIMIT = max(1, min(1000, int(os.environ.get("CURVE_SSE_REPLAY_LIMIT", "100"))))
 CURVE_SSE_POLL_INTERVAL_SECONDS = max(
     0.1,

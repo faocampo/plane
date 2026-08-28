@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/provider-reconciliation-event-v1.schema.json",
+  "title": "Curve M0-S9A Provider Reconciliation Event Payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_id",
+    "operation_id",
+    "operation_version",
+    "status"
+  ],
+  "properties": {
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/WorkspaceId"
+    },
+    "operation_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "operation_version": {
+      "$ref": "common.schema.json#/$defs/AggregateVersion"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["SUCCEEDED", "FAILED"]
+    },
+    "error": {
+      "$ref": "common.schema.json#/$defs/SafeError"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "FAILED"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["error"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "SUCCEEDED"
+          }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "not": {
+          "required": ["error"]
+        }
+      }
+    }
+  ]
+}

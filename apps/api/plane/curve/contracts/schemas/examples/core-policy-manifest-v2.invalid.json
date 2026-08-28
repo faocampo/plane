@@ -1,0 +1,42 @@
+{
+  "schema_version": "2.0",
+  "policy_key": "CURVE_CORE_POLICY",
+  "policy_version": 2,
+  "supersedes": {
+    "policy_version": 1,
+    "manifest_digest": "sha256:e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
+  },
+  "default_effect": "DENY",
+  "unknown_classification": "RESTRICTED",
+  "allow_reason_code": "POLICY_ALLOWED",
+  "trusted_role_sources": [
+    {
+      "role": "PLATFORM_ADMINISTRATOR",
+      "actor_type": "HUMAN",
+      "source": "PLANE_WORKSPACE_MEMBERSHIP",
+      "plane_role": 15,
+      "membership_active": true,
+      "workspace_match": "REQUIRED",
+      "caller_supplied_role": "ALLOW",
+      "allowed_actions": ["CURVE.GATE.DECIDE.PRD"]
+    }
+  ],
+  "deny_precedence": ["POLICY_CONTEXT_INVALID"],
+  "actions": [
+    {
+      "action": "CURVE.PROVIDER_CONNECTION.REGISTER",
+      "allowed_resource_types": ["PROVIDER_CONNECTION"],
+      "allowed_actor_types": ["SERVICE"],
+      "allowed_roles": ["TRUSTED_SERVICE"],
+      "allowed_classifications": ["INTERNAL"],
+      "allowed_environments": ["PRODUCTION"],
+      "object_acl": "NOT_APPLICABLE",
+      "owner_satisfies_acl": false,
+      "assignment": "NONE",
+      "separation_of_duty": "NONE",
+      "target_allowlist": "NOT_APPLICABLE",
+      "external_side_effect": false,
+      "permitted_projection": ["NO_BODY"]
+    }
+  ]
+}

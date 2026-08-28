@@ -14,6 +14,8 @@ from plane.curve.models import (
     Operation,
     OutboxEvent,
     PolicyDecision,
+    ProviderCapability,
+    ProviderConnection,
 )
 
 
@@ -236,4 +238,69 @@ def serialize_policy_decision(decision: PolicyDecision) -> dict[str, Any]:
         "recorded_at": decision.recorded_at.isoformat(),
         "recorded_by": decision.recorded_by,
         "correlation_id": decision.correlation_id,
+    }
+
+
+def serialize_provider_connection(connection: ProviderConnection) -> dict[str, Any]:
+    """Project a provider connection through the schema-approved safe fields."""
+
+    capability_document_ref = None
+    if connection.current_capability_id is not None:
+        capability = connection.current_capability
+        capability_document_ref = {
+            "resource_type": "PROVIDER_CAPABILITY",
+            "resource_id": str(capability.id),
+            "resource_version": capability.capability_version,
+        }
+
+    return {
+        "schema_version": connection.schema_version,
+        "id": str(connection.id),
+        "workspace_id": str(connection.workspace_id),
+        "aggregate_version": connection.aggregate_version,
+        "provider_type": connection.provider_type,
+        "adapter_key": connection.adapter_key,
+        "adapter_version": connection.adapter_version,
+        "environment": connection.environment,
+        "display_name": connection.display_name,
+        "configuration_digest": connection.configuration_digest,
+        "allowed_classifications": connection.allowed_classifications,
+        "status": connection.status,
+        "created_at": connection.created_at.isoformat(),
+        "created_by": connection.created_by,
+        "updated_at": connection.updated_at.isoformat(),
+        "updated_by": connection.updated_by,
+        **_optional_values(
+            external_tenant_ref=connection.external_tenant_ref,
+            configuration_ref=connection.configuration_ref,
+            secret_reference=connection.secret_reference,
+            capability_document_ref=capability_document_ref,
+            validated_at=connection.validated_at,
+            validation_result_ref=connection.validation_result_ref,
+            last_reconciled_at=connection.last_reconciled_at,
+            next_reconcile_at=connection.next_reconcile_at,
+            last_error=connection.last_error,
+        ),
+    }
+
+
+def serialize_provider_capability(capability: ProviderCapability) -> dict[str, Any]:
+    """Project an immutable capability observation, retaining explicit expiry null."""
+
+    return {
+        "schema_version": capability.schema_version,
+        "id": str(capability.id),
+        "workspace_id": str(capability.workspace_id),
+        "connection_id": str(capability.connection_id),
+        "connection_version": capability.connection_version,
+        "capability_version": capability.capability_version,
+        "provider_type": capability.provider_type,
+        "adapter_key": capability.adapter_key,
+        "adapter_version": capability.adapter_version,
+        "protocol_versions": capability.protocol_versions,
+        "capabilities": capability.capabilities,
+        "allowed_classifications": capability.allowed_classifications,
+        "observed_at": capability.observed_at.isoformat(),
+        "validated_at": capability.validated_at.isoformat(),
+        "expires_at": capability.expires_at.isoformat() if capability.expires_at is not None else None,
     }

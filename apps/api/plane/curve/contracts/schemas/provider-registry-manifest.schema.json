@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/provider-registry-manifest.schema.json",
+  "title": "Curve M0-S9A local provider-registry manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package",
+    "authority",
+    "provider",
+    "registration_authorization",
+    "connection_states",
+    "transitions",
+    "adapter_contract",
+    "reconciliation",
+    "delivery",
+    "persistence",
+    "event_payload_contracts",
+    "required_events"
+  ],
+  "properties": {
+    "schema_version": {"const": "curve.provider-registry/v1"},
+    "package": {"const": "M0-S9A"},
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "data_classification",
+        "external_network",
+        "credential_access",
+        "callback_ingress",
+        "outgoing_webhooks",
+        "public_administration_api",
+        "scheduler",
+        "temporal_workflow",
+        "celery_task",
+        "background_loop",
+        "external_mutation"
+      ],
+      "properties": {
+        "environment": {"const": "LOCAL"},
+        "data_classification": {"const": "INTERNAL"},
+        "external_network": {"const": "DISABLED"},
+        "credential_access": {"const": "DISABLED"},
+        "callback_ingress": {"const": "DISABLED"},
+        "outgoing_webhooks": {"const": "DISABLED"},
+        "public_administration_api": {"const": "DISABLED"},
+        "scheduler": {"const": "DISABLED"},
+        "temporal_workflow": {"const": "DISABLED"},
+        "celery_task": {"const": "DISABLED"},
+        "background_loop": {"const": "DISABLED"},
+        "external_mutation": {"const": "DISABLED"}
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_type",
+        "adapter_key",
+        "adapter_version",
+        "protocol_versions",
+        "enabled_capability_risks",
+        "allowed_classifications"
+      ],
+      "properties": {
+        "provider_type": {"const": "FAKE_LOCAL"},
+        "adapter_key": {"const": "curve.fake-local"},
+        "adapter_version": {"const": "1.0.0"},
+        "protocol_versions": {"const": ["curve.fake-local/v1"]},
+        "enabled_capability_risks": {"const": ["READ"]},
+        "allowed_classifications": {"const": ["INTERNAL"]}
+      }
+    },
+    "registration_authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_key",
+        "policy_version",
+        "action",
+        "resource_type",
+        "resource_version",
+        "trusted_role",
+        "trusted_role_source",
+        "trusted_role_allowed_actions",
+        "plane_role",
+        "membership_active",
+        "workspace_match",
+        "caller_supplied_role",
+        "target_id",
+        "target_allowlist",
+        "configuration_ref"
+      ],
+      "properties": {
+        "policy_key": {"const": "CURVE_CORE_POLICY"},
+        "policy_version": {"const": 2},
+        "action": {"const": "CURVE.PROVIDER_CONNECTION.REGISTER"},
+        "resource_type": {"const": "WORKSPACE"},
+        "resource_version": {"const": 1},
+        "trusted_role": {"const": "PLATFORM_ADMINISTRATOR"},
+        "trusted_role_source": {"const": "PLANE_WORKSPACE_MEMBERSHIP"},
+        "trusted_role_allowed_actions": {
+          "const": [
+            "CURVE.PROVIDER_CONNECTION.REGISTER",
+            "CURVE.PROVIDER_CONNECTION.ADMINISTER"
+          ]
+        },
+        "plane_role": {"const": 20},
+        "membership_active": {"const": true},
+        "workspace_match": {"const": "REQUIRED"},
+        "caller_supplied_role": {"const": "REJECT"},
+        "target_id": {"const": "curve.fake-local@1.0.0"},
+        "target_allowlist": {"const": "REQUIRED"},
+        "configuration_ref": {
+          "const": {
+            "resource_type": "PROVIDER_REGISTRY_MANIFEST",
+            "resource_id": "M0-S9A",
+            "resource_version": 1
+          }
+        }
+      }
+    },
+    "connection_states": {
+      "const": ["PENDING_VALIDATION", "ACTIVE", "DEGRADED", "DISABLED", "REVOKED"]
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "command", "to"],
+        "properties": {
+          "from": {"enum": ["PENDING_VALIDATION", "ACTIVE", "DEGRADED", "DISABLED"]},
+          "command": {"enum": ["VALIDATION_SUCCEEDED", "VALIDATION_FAILED", "RECONCILIATION_FAILED", "RECONCILIATION_SUCCEEDED", "DISABLE", "ENABLE", "REVOKE"]},
+          "to": {"enum": ["PENDING_VALIDATION", "ACTIVE", "DEGRADED", "DISABLED", "REVOKED"]}
+        }
+      }
+    },
+    "adapter_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["methods", "error_codes", "maximum_attempts", "deadline_seconds", "deadline_scope", "retryable_error_codes", "ambiguous_mutation_rule"],
+      "properties": {
+        "methods": {"const": ["describe_capabilities", "reconcile"]},
+        "error_codes": {"const": ["AUTHENTICATION", "AUTHORIZATION", "POLICY", "NOT_SUPPORTED", "RATE_LIMIT", "TRANSIENT", "AMBIGUOUS_MUTATION", "TERMINAL"]},
+        "maximum_attempts": {"const": 3},
+        "deadline_seconds": {"const": 15},
+        "deadline_scope": {"const": "TOTAL_RECONCILIATION"},
+        "retryable_error_codes": {"const": ["RATE_LIMIT", "TRANSIENT"]},
+        "ambiguous_mutation_rule": {"const": "RECONCILE_BEFORE_RETRY"}
+      }
+    },
+    "reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation_type", "trigger", "same_command_replay", "pending_command_replay", "changed_digest_replay", "workspace_mismatch", "ambiguous_observation", "stale_result_outcomes", "stale_result_error_code", "stale_result_provider_mutation", "stale_connection_operation_settlement", "stale_operation_result", "advisory_interval_seconds"],
+      "properties": {
+        "operation_type": {"const": "PROVIDER_RECONCILIATION"},
+        "trigger": {"const": "EXPLICIT_APPLICATION_SERVICE_CALL"},
+        "same_command_replay": {"const": "RETURN_TERMINAL_OR_RESUME_PENDING"},
+        "pending_command_replay": {"const": "RESUME_FROM_DURABLE_PHASE"},
+        "changed_digest_replay": {"const": "REJECT_CONFLICT"},
+        "workspace_mismatch": {"const": "NOT_FOUND"},
+        "ambiguous_observation": {"const": "RECORD_CONFLICT_WITHOUT_OVERWRITE"},
+        "stale_result_outcomes": {"const": ["SUCCESS", "FAILURE"]},
+        "stale_result_error_code": {"const": "OPTIMISTIC_CONCURRENCY"},
+        "stale_result_provider_mutation": {"const": "NONE"},
+        "stale_connection_operation_settlement": {"const": "FAIL_PENDING_WITH_OPTIMISTIC_CONCURRENCY"},
+        "stale_operation_result": {"const": "OPTIMISTIC_CONCURRENCY_NO_MUTATION"},
+        "advisory_interval_seconds": {"const": 900}
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command_execution", "destination", "consumer_id", "drain_triggers", "inbox_deduplication_key", "maximum_batch", "claim_lease_seconds", "retry_delay_seconds", "maximum_attempts", "exhausted_state", "next_command_drain_order", "denied_command_delivery_mutation", "expired_claim_at_maximum_attempts"],
+      "properties": {
+        "command_execution": {"const": "SYNCHRONOUS"},
+        "destination": {"const": "CURVE_PROVIDER_LOCAL_V1"},
+        "consumer_id": {"const": "curve-provider-local-v1"},
+        "drain_triggers": {"const": ["POST_COMMIT", "NEXT_PROVIDER_COMMAND"]},
+        "inbox_deduplication_key": {"const": ["workspace_id", "consumer_id", "event_id"]},
+        "maximum_batch": {"const": 10},
+        "claim_lease_seconds": {"const": 30},
+        "retry_delay_seconds": {"const": 5},
+        "maximum_attempts": {"const": 3},
+        "exhausted_state": {"const": "DEAD_LETTER"},
+        "next_command_drain_order": {"const": "AFTER_ALLOW_RECEIPT_BEFORE_COMMAND_MUTATION"},
+        "denied_command_delivery_mutation": {"const": "NONE"},
+        "expired_claim_at_maximum_attempts": {"const": "DEAD_LETTER"}
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["connection_table", "capability_table", "capability_history", "workspace_reference_guard", "bulk_workspace_reference_mutation", "connection_uniqueness", "capability_uniqueness"],
+      "properties": {
+        "connection_table": {"const": "curve_provider_connection"},
+        "capability_table": {"const": "curve_provider_capability"},
+        "capability_history": {"const": "APPEND_ONLY"},
+        "workspace_reference_guard": {"const": "INSTANCE_AND_QUERYSET"},
+        "bulk_workspace_reference_mutation": {"const": "PROHIBITED"},
+        "connection_uniqueness": {"const": ["workspace_id", "environment", "adapter_key"]},
+        "capability_uniqueness": {"const": ["workspace_id", "connection_id", "capability_version"]}
+      }
+    },
+    "event_payload_contracts": {
+      "const": [
+        {
+          "aggregate_type": "PROVIDER_CONNECTION",
+          "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-connection-event-v1.schema.json",
+          "event_types": [
+            "curve.provider_connection.registered",
+            "curve.provider_connection.validated",
+            "curve.provider_connection.degraded",
+            "curve.provider_connection.disabled",
+            "curve.provider_connection.enabled",
+            "curve.provider_connection.revoked",
+            "curve.provider_reconciliation.completed",
+            "curve.provider_reconciliation.failed"
+          ]
+        },
+        {
+          "aggregate_type": "OPERATION",
+          "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-reconciliation-event-v1.schema.json",
+          "event_types": [
+            "curve.provider_reconciliation.completed",
+            "curve.provider_reconciliation.failed"
+          ]
+        }
+      ]
+    },
+    "required_events": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^curve\\.(?:provider_connection|provider_reconciliation)\\.[a-z_]+$"}
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "workspace_id": "00000000-0000-4000-8000-000000000001",
+  "operation_id": "00000000-0000-4000-8000-000000000003",
+  "operation_version": 2,
+  "status": "FAILED",
+  "error": {
+    "code": "OPTIMISTIC_CONCURRENCY",
+    "retryable": false
+  }
+}

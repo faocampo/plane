@@ -1,0 +1,19 @@
+{
+  "schema_version": "2.0",
+  "id": "13000000-0000-4000-8000-000000000002",
+  "workspace_id": "10000000-0000-4000-8000-000000000002",
+  "connection_id": "13000000-0000-4000-8000-000000000001",
+  "connection_version": 2,
+  "capability_version": 1,
+  "provider_type": "FAKE_LOCAL",
+  "adapter_key": "curve.fake-local",
+  "adapter_version": "1.0.0",
+  "protocol_versions": ["curve.fake-local/v1"],
+  "capabilities": [
+    {"name": "synthetic.status.read", "risk": "READ", "enabled": true}
+  ],
+  "allowed_classifications": ["INTERNAL"],
+  "observed_at": "2026-08-22T12:00:00Z",
+  "validated_at": "2026-08-22T12:00:01Z",
+  "expires_at": "2026-08-22T12:15:00Z"
+}

@@ -1,0 +1,8 @@
+{
+  "workspace_id": "00000000-0000-4000-8000-000000000001",
+  "connection_id": "00000000-0000-4000-8000-000000000002",
+  "connection_version": 2,
+  "status": "ACTIVE",
+  "capability_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "capability_version": 1
+}

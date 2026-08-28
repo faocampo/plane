@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+import json
 import uuid
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.lookups import Exact, GreaterThan
 from django.utils import timezone
@@ -62,10 +64,86 @@ class WorkspaceScopedModel(models.Model):
         abstract = True
 
 
+class WorkspaceScopedQuerySetMixin:
+    """Workspace-first repository helpers for Curve-owned records."""
+
+    def for_workspace(self, workspace_id):
+        if workspace_id is None:
+            raise ValueError("workspace_id is required")
+        return self.filter(workspace_id=workspace_id)
+
+    def find_by_id(self, *, workspace_id, record_id, for_update=False):
+        queryset = self.for_workspace(workspace_id)
+        if for_update:
+            queryset = queryset.select_for_update()
+        return queryset.filter(id=record_id).first()
+
+
+class ProviderConnectionQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
+    _REFERENCE_FIELDS = frozenset({"workspace_id", "current_capability", "current_capability_id"})
+
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("ProviderConnection bulk creation bypasses workspace reference validation")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        if self._REFERENCE_FIELDS.intersection(fields):
+            raise ImmutableRecordError("ProviderConnection references require locked instance updates")
+        return super().bulk_update(objs, fields, *args, **kwargs)
+
+    def update(self, **kwargs):
+        if self._REFERENCE_FIELDS.intersection(kwargs):
+            raise ImmutableRecordError("ProviderConnection references require locked instance updates")
+        return super().update(**kwargs)
+
+
+class ProviderCapabilityQuerySet(WorkspaceScopedQuerySetMixin, ImmutableQuerySet):
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("ProviderCapability creation requires the workspace-scoped repository")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        raise ImmutableRecordError("ProviderCapability records are append-only")
+
+
 class DataClassification(models.TextChoices):
     INTERNAL = "INTERNAL", "Internal"
     CONFIDENTIAL = "CONFIDENTIAL", "Confidential"
     RESTRICTED = "RESTRICTED", "Restricted"
+
+
+class ProviderType(models.TextChoices):
+    FAKE_LOCAL = "FAKE_LOCAL", "Fake local"
+    ONYX = "ONYX", "Onyx"
+    MCP = "MCP", "MCP"
+    ORCA_HUMAN_ASSISTANCE = "ORCA_HUMAN_ASSISTANCE", "Orca human assistance"
+    MODEL_GATEWAY = "MODEL_GATEWAY", "Model gateway"
+    OPENHANDS = "OPENHANDS", "OpenHands"
+    GITHUB = "GITHUB", "GitHub"
+    GITLAB = "GITLAB", "GitLab"
+    QUALITY = "QUALITY", "Quality"
+    FEATURE_FLAG = "FEATURE_FLAG", "Feature flag"
+    DOCUMENTATION = "DOCUMENTATION", "Documentation"
+    MONITORING = "MONITORING", "Monitoring"
+    PROTOTYPE = "PROTOTYPE", "Prototype"
+
+
+class ProviderEnvironment(models.TextChoices):
+    LOCAL = "LOCAL", "Local"
+    STAGING = "STAGING", "Staging"
+    PRODUCTION = "PRODUCTION", "Production"
+
+
+class ProviderConnectionStatus(models.TextChoices):
+    PENDING_VALIDATION = "PENDING_VALIDATION", "Pending validation"
+    ACTIVE = "ACTIVE", "Active"
+    DEGRADED = "DEGRADED", "Degraded"
+    DISABLED = "DISABLED", "Disabled"
+    REVOKED = "REVOKED", "Revoked"
+
+
+class ProviderCapabilityRisk(models.TextChoices):
+    READ = "READ", "Read"
+    WORKFLOW_WRITE = "WORKFLOW_WRITE", "Workflow write"
+    EXTERNAL_MUTATION = "EXTERNAL_MUTATION", "External mutation"
 
 
 class OperationType(models.TextChoices):
@@ -137,6 +215,312 @@ class Operation(WorkspaceScopedModel):
                 name="curve_op_version_positive_ck",
             ),
         ]
+
+
+class ProviderConnection(WorkspaceScopedModel):
+    """Mutable workspace-scoped configuration for one provider adapter."""
+
+    objects = models.Manager.from_queryset(ProviderConnectionQuerySet)()
+
+    schema_version = models.CharField(max_length=20, default="2.0", editable=False)
+    provider_type = models.CharField(max_length=32, choices=ProviderType.choices)
+    adapter_key = models.CharField(max_length=100)
+    adapter_version = models.CharField(max_length=100)
+    environment = models.CharField(max_length=20, choices=ProviderEnvironment.choices)
+    display_name = models.CharField(max_length=255)
+    external_tenant_ref = models.CharField(max_length=1000, null=True, blank=True)
+    configuration_ref = models.JSONField(null=True, blank=True)
+    configuration_digest = models.CharField(max_length=DIGEST_MAX_LENGTH)
+    secret_reference = models.CharField(max_length=1000, null=True, blank=True)
+    current_capability = models.ForeignKey(
+        "ProviderCapability",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="current_for_connections",
+    )
+    allowed_classifications = models.JSONField(default=list)
+    status = models.CharField(
+        max_length=32,
+        choices=ProviderConnectionStatus.choices,
+        default=ProviderConnectionStatus.PENDING_VALIDATION,
+    )
+    validated_at = models.DateTimeField(null=True, blank=True)
+    validation_result_ref = models.JSONField(null=True, blank=True)
+    last_reconciled_at = models.DateTimeField(null=True, blank=True)
+    next_reconcile_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        db_table = "curve_provider_connection"
+        indexes = [
+            models.Index(
+                fields=["workspace_id", "status", "next_reconcile_at"],
+                name="curve_pconn_ws_state_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace_id", "environment", "adapter_key"],
+                name="curve_pconn_ws_env_adapter_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(aggregate_version__gte=1),
+                name="curve_pconn_version_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(schema_version="2.0"),
+                name="curve_pconn_schema_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(configuration_digest__regex=r"^sha256:[0-9a-f]{64}$"),
+                name="curve_pconn_digest_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status__in=ProviderConnectionStatus.values),
+                name="curve_pconn_status_ck",
+            ),
+            models.CheckConstraint(
+                condition=Exact(
+                    models.Func(models.F("allowed_classifications"), function="jsonb_typeof"),
+                    models.Value("array"),
+                ),
+                name="curve_pconn_class_type_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(provider_type=ProviderType.FAKE_LOCAL)
+                    & models.Q(adapter_key="curve.fake-local")
+                    & models.Q(environment=ProviderEnvironment.LOCAL)
+                    & models.Q(external_tenant_ref__isnull=True)
+                    & models.Q(configuration_ref__isnull=True)
+                    & models.Q(secret_reference__isnull=True)
+                    & models.Q(allowed_classifications=[DataClassification.INTERNAL])
+                ),
+                name="curve_pconn_fake_local_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(
+                        status__in=[
+                            ProviderConnectionStatus.ACTIVE,
+                            ProviderConnectionStatus.DEGRADED,
+                        ]
+                    )
+                    | models.Q(
+                        current_capability__isnull=False,
+                        validated_at__isnull=False,
+                        validation_result_ref__isnull=False,
+                        last_reconciled_at__isnull=False,
+                    )
+                ),
+                name="curve_pconn_live_refs_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(status=ProviderConnectionStatus.ACTIVE) | models.Q(next_reconcile_at__isnull=False)
+                ),
+                name="curve_pconn_active_next_ck",
+            ),
+            models.CheckConstraint(
+                condition=(~models.Q(status=ProviderConnectionStatus.DEGRADED) | models.Q(last_error__isnull=False)),
+                name="curve_pconn_degraded_err_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(
+                        status__in=[
+                            ProviderConnectionStatus.DISABLED,
+                            ProviderConnectionStatus.REVOKED,
+                        ]
+                    )
+                    | models.Q(next_reconcile_at__isnull=True)
+                ),
+                name="curve_pconn_stopped_next_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(validation_result_ref__isnull=True)
+                    | Exact(
+                        models.Func(models.F("validation_result_ref"), function="jsonb_typeof"),
+                        models.Value("object"),
+                    )
+                ),
+                name="curve_pconn_result_type_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(last_error__isnull=True)
+                    | Exact(
+                        models.Func(models.F("last_error"), function="jsonb_typeof"),
+                        models.Value("object"),
+                    )
+                ),
+                name="curve_pconn_error_type_ck",
+            ),
+        ]
+
+    def _validate_current_capability_scope(self):
+        if self.current_capability_id is None:
+            return
+        capability = self.current_capability
+        if capability.workspace_id != self.workspace_id or capability.connection_id != self.id:
+            raise ValidationError("current capability must belong to this workspace-scoped connection")
+        if (
+            capability.provider_type != self.provider_type
+            or capability.adapter_key != self.adapter_key
+            or capability.adapter_version != self.adapter_version
+        ):
+            raise ValidationError("current capability must match the connection adapter coordinates")
+
+    def save(self, *args, **kwargs):
+        self._validate_current_capability_scope()
+        return super().save(*args, **kwargs)
+
+
+class ProviderCapability(ImmutableRecordModel):
+    """Append-only workspace-scoped provider capability observation."""
+
+    objects = models.Manager.from_queryset(ProviderCapabilityQuerySet)()
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=20, default="2.0", editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    connection = models.ForeignKey(
+        ProviderConnection,
+        on_delete=models.PROTECT,
+        related_name="capability_history",
+    )
+    connection_version = models.PositiveBigIntegerField(editable=False)
+    capability_version = models.PositiveBigIntegerField(editable=False)
+    provider_type = models.CharField(max_length=32, choices=ProviderType.choices, editable=False)
+    adapter_key = models.CharField(max_length=100, editable=False)
+    adapter_version = models.CharField(max_length=100, editable=False)
+    protocol_versions = models.JSONField(editable=False)
+    capabilities = models.JSONField(editable=False)
+    allowed_classifications = models.JSONField(editable=False)
+    observed_at = models.DateTimeField(editable=False)
+    validated_at = models.DateTimeField(editable=False)
+    expires_at = models.DateTimeField(null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+
+    class Meta:
+        db_table = "curve_provider_capability"
+        indexes = [
+            models.Index(
+                fields=["workspace_id", "-validated_at"],
+                name="curve_pcap_ws_valid_idx",
+            ),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace_id", "connection", "capability_version"],
+                name="curve_pcap_ws_conn_version_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(connection_version__gte=1),
+                name="curve_pcap_conn_version_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(capability_version__gte=1),
+                name="curve_pcap_version_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(schema_version="2.0"),
+                name="curve_pcap_schema_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(provider_type=ProviderType.FAKE_LOCAL)
+                    & models.Q(adapter_key="curve.fake-local")
+                    & models.Q(protocol_versions=["curve.fake-local/v1"])
+                    & models.Q(allowed_classifications=[DataClassification.INTERNAL])
+                ),
+                name="curve_pcap_fake_local_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Exact(
+                        models.Func(models.F("protocol_versions"), function="jsonb_typeof"),
+                        models.Value("array"),
+                    )
+                    & GreaterThan(
+                        models.Func(
+                            models.F("protocol_versions"),
+                            function="jsonb_array_length",
+                            output_field=models.IntegerField(),
+                        ),
+                        models.Value(0),
+                    )
+                ),
+                name="curve_pcap_protocols_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    Exact(
+                        models.Func(models.F("capabilities"), function="jsonb_typeof"),
+                        models.Value("array"),
+                    )
+                    & GreaterThan(
+                        models.Func(
+                            models.F("capabilities"),
+                            function="jsonb_array_length",
+                            output_field=models.IntegerField(),
+                        ),
+                        models.Value(0),
+                    )
+                ),
+                name="curve_pcap_capabilities_ck",
+            ),
+            models.CheckConstraint(
+                condition=Exact(
+                    models.Func(models.F("allowed_classifications"), function="jsonb_typeof"),
+                    models.Value("array"),
+                ),
+                name="curve_pcap_class_type_ck",
+            ),
+        ]
+
+    def _validate_connection_scope(self):
+        if self.connection_id is None:
+            raise ValidationError("connection is required")
+        connection = self.connection
+        if connection.workspace_id != self.workspace_id:
+            raise ValidationError("capability must belong to the connection workspace")
+        if (
+            connection.provider_type != self.provider_type
+            or connection.adapter_key != self.adapter_key
+            or connection.adapter_version != self.adapter_version
+        ):
+            raise ValidationError("capability must match the connection adapter coordinates")
+        if not set(self.allowed_classifications).issubset(set(connection.allowed_classifications)):
+            raise ValidationError("capability classification exceeds the connection ceiling")
+
+    def _validate_fake_capabilities(self):
+        if not isinstance(self.capabilities, list) or not self.capabilities:
+            raise ValidationError("capabilities must be a non-empty array")
+        normalized = set()
+        for capability in self.capabilities:
+            if not isinstance(capability, dict):
+                raise ValidationError("each capability must be an object")
+            if not {"name", "risk", "enabled"}.issubset(capability):
+                raise ValidationError("capability fields name, risk, and enabled are required")
+            if set(capability) - {"name", "risk", "enabled", "schema_uri"}:
+                raise ValidationError("capability contains an unknown field")
+            if capability["risk"] != ProviderCapabilityRisk.READ:
+                raise ValidationError("the local fake permits READ capabilities only")
+            if not isinstance(capability["enabled"], bool):
+                raise ValidationError("capability enabled must be boolean")
+            encoded = json.dumps(capability, sort_keys=True, separators=(",", ":"))
+            if encoded in normalized:
+                raise ValidationError("capabilities must be unique")
+            normalized.add(encoded)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:
+            self._validate_connection_scope()
+            self._validate_fake_capabilities()
+        return super().save(*args, **kwargs)
 
 
 class DomainEvent(ImmutableRecordModel):
@@ -482,7 +866,7 @@ class PolicyDecision(ImmutableRecordModel):
                 name="curve_policy_schema_ck",
             ),
             models.CheckConstraint(
-                condition=models.Q(policy_key="CURVE_CORE_POLICY", policy_version=1),
+                condition=models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2]),
                 name="curve_policy_identity_ck",
             ),
             models.CheckConstraint(

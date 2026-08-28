@@ -18,6 +18,16 @@ def is_curve_enabled_for_workspace(workspace_slug: str) -> bool:
     return bool(settings.CURVE_ENABLED and workspace_slug and workspace_slug in settings.CURVE_ENABLED_WORKSPACE_SLUGS)
 
 
+def is_curve_provider_registry_enabled_for_workspace(workspace_slug: str) -> bool:
+    """Return the fail-closed local provider-registry enablement decision."""
+
+    return bool(
+        is_curve_enabled_for_workspace(workspace_slug)
+        and getattr(settings, "CURVE_PROVIDER_REGISTRY_ENABLED", False)
+        and getattr(settings, "CURVE_ENVIRONMENT", "") == "LOCAL"
+    )
+
+
 def curve_environment() -> str:
     environment = getattr(settings, "CURVE_ENVIRONMENT", "")
     if environment not in CURVE_ENVIRONMENTS:

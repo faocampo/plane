@@ -32,7 +32,10 @@ from plane.curve.observability.instrumentation import (
 )
 from plane.curve.observability.propagation import current_traceparent
 from plane.curve.policy_evaluator import evaluate_core_policy
-from plane.curve.policy_manifest import CORE_POLICY_MANIFEST_DIGEST
+from plane.curve.policy_manifest import (
+    CORE_POLICY_MANIFEST_DIGEST,
+    CORE_POLICY_V2_MANIFEST_DIGEST,
+)
 from plane.curve.policy_types import PolicyEffect, PolicyEvaluationResult
 from plane.db.models import Workspace, WorkspaceMember
 
@@ -43,6 +46,30 @@ _CORRELATION_ATTRIBUTE = "_curve_policy_correlation_id"
 _ACTIVE_MUTATION_RECEIPT: ContextVar[object | None] = ContextVar("curve_active_mutation_receipt", default=None)
 _RECEIPT_CONSTRUCTOR_TOKEN = object()
 _UNRESOLVED_CONTEXT = object()
+_PROVIDER_REGISTRATION_ACTION = "CURVE.PROVIDER_CONNECTION.REGISTER"
+_PROVIDER_ADMINISTRATION_ACTION = "CURVE.PROVIDER_CONNECTION.ADMINISTER"
+_PROVIDER_TRUSTED_ROLE_ACTIONS = frozenset(
+    {
+        _PROVIDER_REGISTRATION_ACTION,
+        _PROVIDER_ADMINISTRATION_ACTION,
+    }
+)
+_PROVIDER_TARGET_ID = "curve.fake-local@1.0.0"
+_MUTATION_POLICY_BINDINGS = MappingProxyType(
+    {
+        "CURVE.SHELL.VIEW": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.OPERATION.READ": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.OPERATION.CANCEL": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.FOUNDATION_PROBE.START": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.OPERATION.TRANSITION": (1, CORE_POLICY_MANIFEST_DIGEST),
+        _PROVIDER_REGISTRATION_ACTION: (2, CORE_POLICY_V2_MANIFEST_DIGEST),
+        _PROVIDER_ADMINISTRATION_ACTION: (2, CORE_POLICY_V2_MANIFEST_DIGEST),
+        "CURVE.GATE.DECIDE.PRD": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.GATE.DECIDE.PLAN": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.GATE.DECIDE.CODE_READINESS": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.FINDING.DISPOSITION.NON_SECURITY": (1, CORE_POLICY_MANIFEST_DIGEST),
+    }
+)
 
 
 class CurvePolicyDenied(PermissionError):
@@ -123,7 +150,7 @@ def _trusted_environment() -> str:
         return ""
 
 
-def _workspace_membership(*, workspace_id: uuid.UUID, user):
+def _workspace_membership(*, workspace_id: uuid.UUID, user, action: str | None = None):
     if user is None or not getattr(user, "is_authenticated", False):
         return None, []
     membership = (
@@ -137,13 +164,16 @@ def _workspace_membership(*, workspace_id: uuid.UUID, user):
     )
     if membership is None:
         return None, []
+    roles = ["WORKSPACE_MEMBER"]
+    if membership.role == 20 and action in _PROVIDER_TRUSTED_ROLE_ACTIONS:
+        roles.append("PLATFORM_ADMINISTRATOR")
     return (
         {
             "workspace_id": str(workspace_id),
             "active": True,
             "plane_role": _PLANE_ROLE_NAMES.get(membership.role),
         },
-        ["WORKSPACE_MEMBER"],
+        roles,
     )
 
 
@@ -207,6 +237,40 @@ def _operation_resource(*, workspace: Workspace, resource_id):
     }
 
 
+def _provider_connection_resource(*, workspace: Workspace, resource_id, for_update: bool = False):
+    from plane.curve.models import ProviderConnection
+
+    try:
+        connection_id = uuid.UUID(str(resource_id))
+    except (TypeError, ValueError) as error:
+        raise CurvePolicyResourceNotFound from error
+    connection = ProviderConnection.objects.find_by_id(
+        workspace_id=workspace.id,
+        record_id=connection_id,
+        for_update=for_update,
+    )
+    if connection is None:
+        return {
+            "workspace_id": str(workspace.id),
+            "ref": {
+                "resource_type": "PROVIDER_CONNECTION",
+                "resource_id": str(connection_id),
+            },
+            "exists": False,
+            "owner": None,
+        }
+    return {
+        "workspace_id": str(workspace.id),
+        "ref": {
+            "resource_type": "PROVIDER_CONNECTION",
+            "resource_id": str(connection.id),
+            "resource_version": connection.aggregate_version,
+        },
+        "exists": True,
+        "owner": None,
+    }
+
+
 def _resolve_resource(*, workspace: Workspace, resource_type: str, resource_id):
     if resource_type == "WORKSPACE":
         if resource_id is not None and str(resource_id) != str(workspace.id):
@@ -214,6 +278,8 @@ def _resolve_resource(*, workspace: Workspace, resource_type: str, resource_id):
         return _workspace_resource(workspace)
     if resource_type == "OPERATION":
         return _operation_resource(workspace=workspace, resource_id=resource_id)
+    if resource_type == "PROVIDER_CONNECTION":
+        return _provider_connection_resource(workspace=workspace, resource_id=resource_id)
     requested_id = resource_id or workspace.id
     return {
         "workspace_id": str(workspace.id),
@@ -334,6 +400,104 @@ def _build_query_context(
         "policy_manifest_digest": CORE_POLICY_MANIFEST_DIGEST,
         "correlation_id": correlation_id,
     }
+
+
+def _trusted_provider_target_context(*, workspace_id: uuid.UUID) -> dict[str, object]:
+    return {
+        "workspace_id": str(workspace_id),
+        "configuration_ref": {
+            "resource_type": "PROVIDER_REGISTRY_MANIFEST",
+            "resource_id": "M0-S9A",
+            "resource_version": 1,
+        },
+        "target_type": "PROVIDER",
+        "target_id": _PROVIDER_TARGET_ID,
+        "allowed_targets": [_PROVIDER_TARGET_ID],
+    }
+
+
+def _build_provider_context(
+    *,
+    request,
+    workspace: Workspace,
+    action: str,
+    resource: dict,
+    correlation_id: str,
+) -> dict[str, object]:
+    membership, roles = _workspace_membership(
+        workspace_id=workspace.id,
+        user=request.user,
+        action=action,
+    )
+    subject = _human_actor(request.user)
+    return {
+        "schema_version": "1.0",
+        "workspace_id": str(workspace.id),
+        "subject": subject,
+        "effective_principal": dict(subject),
+        "membership": membership,
+        "roles": roles,
+        "action": action,
+        "resource": resource,
+        "classification": DataClassification.INTERNAL,
+        "environment": _trusted_environment(),
+        "feature_enabled": is_curve_enabled_for_workspace(workspace.slug),
+        "object_acl": None,
+        "assignment_context": None,
+        "target_context": _trusted_provider_target_context(workspace_id=workspace.id),
+        "service_authorization": None,
+        "evaluated_at": timezone.now().isoformat().replace("+00:00", "Z"),
+        "policy_manifest_digest": CORE_POLICY_V2_MANIFEST_DIGEST,
+        "correlation_id": correlation_id,
+    }
+
+
+def build_provider_registration_context(
+    *,
+    request,
+    workspace_slug: str,
+    correlation_id: str,
+) -> dict[str, object]:
+    """Build the trusted policy-v2 context for local provider registration."""
+
+    try:
+        workspace = Workspace.objects.select_for_update().only("id", "slug", "owner_id").get(slug=workspace_slug)
+    except Workspace.DoesNotExist as error:
+        raise CurvePolicyResourceNotFound from error
+    return _build_provider_context(
+        request=request,
+        workspace=workspace,
+        action=_PROVIDER_REGISTRATION_ACTION,
+        resource=_workspace_resource(workspace),
+        correlation_id=correlation_id,
+    )
+
+
+def build_provider_administration_context(
+    *,
+    request,
+    workspace_slug: str,
+    connection_id,
+    correlation_id: str,
+) -> dict[str, object]:
+    """Build the trusted policy-v2 context for a workspace-scoped connection."""
+
+    try:
+        workspace = Workspace.objects.only("id", "slug", "owner_id").get(slug=workspace_slug)
+    except Workspace.DoesNotExist as error:
+        raise CurvePolicyResourceNotFound from error
+    resource = _provider_connection_resource(
+        workspace=workspace,
+        resource_id=connection_id,
+        for_update=True,
+    )
+    return _build_provider_context(
+        request=request,
+        workspace=workspace,
+        action=_PROVIDER_ADMINISTRATION_ACTION,
+        resource=resource,
+        correlation_id=correlation_id,
+    )
 
 
 def _next_policy_sequence(*, workspace_id, resource_type, resource_id) -> int:
@@ -535,16 +699,17 @@ def assert_active_mutation_receipt(
     workspace_id: uuid.UUID,
     resource_ref: dict,
 ):
+    expected_policy_binding = _MUTATION_POLICY_BINDINGS.get(action)
     if (
-        not isinstance(receipt, AuthorizedPolicyReceipt)
+        expected_policy_binding is None
+        or not isinstance(receipt, AuthorizedPolicyReceipt)
         or receipt._constructor_token is not _RECEIPT_CONSTRUCTOR_TOKEN
         or _ACTIVE_MUTATION_RECEIPT.get() is not receipt
         or receipt.effect is not PolicyEffect.ALLOW
         or receipt.action != action
         or receipt.workspace_id != workspace_id
         or dict(receipt.resource_ref) != resource_ref
-        or receipt.policy_manifest_digest != CORE_POLICY_MANIFEST_DIGEST
-        or receipt.policy_version != 1
+        or (receipt.policy_version, receipt.policy_manifest_digest) != expected_policy_binding
         or not transaction.get_connection().in_atomic_block
     ):
         raise PermissionError("an active Curve mutation authorization receipt is required")

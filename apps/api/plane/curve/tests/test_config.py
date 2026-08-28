@@ -5,7 +5,10 @@
 import pytest
 from django.test import override_settings
 
-from plane.curve.config import is_curve_enabled_for_workspace
+from plane.curve.config import (
+    is_curve_enabled_for_workspace,
+    is_curve_provider_registry_enabled_for_workspace,
+)
 from plane.urls import get_curve_urlpatterns
 
 
@@ -27,6 +30,34 @@ def test_curve_enablement_fails_closed(enabled, allowlist, slug, expected):
         CURVE_ENABLED_WORKSPACE_SLUGS=allowlist,
     ):
         assert is_curve_enabled_for_workspace(slug) is expected
+
+
+@pytest.mark.parametrize(
+    ("curve_enabled", "registry_enabled", "environment", "allowlist", "slug", "expected"),
+    [
+        (False, True, "LOCAL", frozenset({"alpha"}), "alpha", False),
+        (True, False, "LOCAL", frozenset({"alpha"}), "alpha", False),
+        (True, True, "STAGING", frozenset({"alpha"}), "alpha", False),
+        (True, True, "PRODUCTION", frozenset({"alpha"}), "alpha", False),
+        (True, True, "LOCAL", frozenset({"alpha"}), "beta", False),
+        (True, True, "LOCAL", frozenset({"alpha"}), "alpha", True),
+    ],
+)
+def test_provider_registry_enablement_is_local_and_fails_closed(
+    curve_enabled,
+    registry_enabled,
+    environment,
+    allowlist,
+    slug,
+    expected,
+):
+    with override_settings(
+        CURVE_ENABLED=curve_enabled,
+        CURVE_PROVIDER_REGISTRY_ENABLED=registry_enabled,
+        CURVE_ENVIRONMENT=environment,
+        CURVE_ENABLED_WORKSPACE_SLUGS=allowlist,
+    ):
+        assert is_curve_provider_registry_enabled_for_workspace(slug) is expected
 
 
 def test_disabled_curve_contributes_no_root_url_pattern():

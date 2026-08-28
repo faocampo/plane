@@ -1,0 +1,110 @@
+{
+  "schema_version": "curve.provider-registry/v1",
+  "package": "M0-S9A",
+  "authority": {
+    "environment": "LOCAL",
+    "data_classification": "INTERNAL",
+    "external_network": "ENABLED",
+    "credential_access": "DISABLED",
+    "callback_ingress": "DISABLED",
+    "outgoing_webhooks": "DISABLED",
+    "public_administration_api": "DISABLED",
+    "scheduler": "ENABLED",
+    "temporal_workflow": "ENABLED",
+    "celery_task": "ENABLED",
+    "background_loop": "ENABLED",
+    "external_mutation": "DISABLED"
+  },
+  "provider": {
+    "provider_type": "OPENHANDS",
+    "adapter_key": "curve.fake-local",
+    "adapter_version": "1.0.0",
+    "protocol_versions": ["curve.fake-local/v1"],
+    "enabled_capability_risks": ["EXTERNAL_MUTATION"],
+    "allowed_classifications": ["INTERNAL"]
+  },
+  "registration_authorization": {
+    "policy_key": "CURVE_CORE_POLICY",
+    "policy_version": 1,
+    "action": "CURVE.PROVIDER_CONNECTION.ADMINISTER",
+    "resource_type": "PROVIDER_CONNECTION",
+    "resource_version": 0,
+    "trusted_role": "WORKSPACE_MEMBER",
+    "trusted_role_source": "CALLER_INPUT",
+    "trusted_role_allowed_actions": ["CURVE.GATE.DECIDE.PRD"],
+    "plane_role": 15,
+    "membership_active": false,
+    "workspace_match": "OPTIONAL",
+    "caller_supplied_role": "ALLOW",
+    "target_id": "curve.dynamic@latest",
+    "target_allowlist": "NOT_APPLICABLE",
+    "configuration_ref": {
+      "resource_type": "PROVIDER_CONNECTION",
+      "resource_id": "untrusted",
+      "resource_version": 0
+    }
+  },
+  "connection_states": [],
+  "transitions": [],
+  "adapter_contract": {
+    "methods": ["invoke"],
+    "error_codes": [],
+    "maximum_attempts": 4,
+    "deadline_seconds": 60,
+    "deadline_scope": "PER_ATTEMPT",
+    "retryable_error_codes": ["TERMINAL"],
+    "ambiguous_mutation_rule": "RETRY"
+  },
+  "reconciliation": {
+    "operation_type": "PROVIDER_RECONCILIATION",
+    "trigger": "SCHEDULED",
+    "same_command_replay": "REPEAT",
+    "pending_command_replay": "RETURN_WITHOUT_RESUMING",
+    "changed_digest_replay": "ACCEPT",
+    "workspace_mismatch": "RETURN_RESOURCE",
+    "ambiguous_observation": "OVERWRITE",
+    "stale_result_outcomes": ["SUCCESS"],
+    "stale_result_error_code": "PROVIDER_FAILURE",
+    "stale_result_provider_mutation": "APPLY",
+    "stale_connection_operation_settlement": "LEAVE_PENDING",
+    "stale_operation_result": "APPLY_PROVIDER_RESULT",
+    "advisory_interval_seconds": 60
+  },
+  "delivery": {
+    "command_execution": "ASYNCHRONOUS",
+    "destination": "TEMPORAL_RELAY",
+    "consumer_id": "curve-temporal-relay",
+    "drain_triggers": ["SCHEDULED"],
+    "inbox_deduplication_key": ["event_id"],
+    "maximum_batch": 100,
+    "claim_lease_seconds": 300,
+    "retry_delay_seconds": 60,
+    "maximum_attempts": 10,
+    "exhausted_state": "DROP",
+    "next_command_drain_order": "BEFORE_AUTHORIZATION",
+    "denied_command_delivery_mutation": "DRAIN",
+    "expired_claim_at_maximum_attempts": "RETRY"
+  },
+  "persistence": {
+    "connection_table": "curve_provider_connection",
+    "capability_table": "curve_provider_capability",
+    "capability_history": "MUTABLE",
+    "workspace_reference_guard": "INSTANCE_ONLY",
+    "bulk_workspace_reference_mutation": "ALLOWED",
+    "connection_uniqueness": ["adapter_key"],
+    "capability_uniqueness": ["connection_id"]
+  },
+  "event_payload_contracts": [
+    {
+      "aggregate_type": "PROVIDER_CONNECTION",
+      "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-connection-event-v1.schema.json",
+      "event_types": []
+    },
+    {
+      "aggregate_type": "OPERATION",
+      "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-reconciliation-event-v1.schema.json",
+      "event_types": []
+    }
+  ],
+  "required_events": []
+}
