@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "policy_key": "CURVE_PRODUCT_POLICY",
+  "policy_version": 1,
+  "default_effect": "ALLOW",
+  "principal_mapping": {
+    "workspace_administrator": {
+      "source": "CALLER_CLAIM",
+      "role_name": "ADMIN",
+      "role_value": 20,
+      "active_membership_required": false
+    },
+    "product_owner": {
+      "source": "PRODUCT_OWNER",
+      "actor_type": "AGENT",
+      "active_membership_required": false
+    }
+  },
+  "initiative_terminal_states": ["FAILED"],
+  "actions": []
+}

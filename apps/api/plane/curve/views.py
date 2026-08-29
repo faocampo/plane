@@ -30,7 +30,7 @@ from rest_framework.response import Response
 from plane.api.middleware.api_authentication import APIKeyAuthentication
 from plane.api.views.base import BaseAPIView
 from plane.curve.config import CurvePolicyConfigurationError
-from plane.curve.models import DomainEvent, Operation, OperationType
+from plane.curve.models import DomainEvent, Operation, OperationType, Product, ProductState
 from plane.curve.observability.instrumentation import observe_curve_span
 from plane.curve.observability.propagation import event_contract
 from plane.curve.observability.runtime import get_telemetry_runtime
@@ -46,6 +46,25 @@ from plane.curve.policy_services import (
     correlation_id_for_request,
     request_operation_cancellation,
     start_foundation_probe,
+)
+from plane.curve.product_guards import (
+    ProductHasNonTerminalInitiative,
+    ProductInitiativeGuardUnavailable,
+)
+from plane.curve.product_policy import authorize_product_query
+from plane.curve.product_serialization import product_etag, serialize_product
+from plane.curve.product_services import (
+    ProductCommandError,
+    ProductKeyConflict,
+    ProductNoChanges,
+    ProductStateConflict,
+    ProductTargetOwnerInactive,
+    ProductValidationError,
+    archive_product,
+    create_product,
+    reassign_product_owner,
+    restore_product,
+    update_product_metadata,
 )
 from plane.curve.serialization import serialize_sse_event
 from plane.curve.services import (
@@ -63,6 +82,7 @@ from plane.curve.temporal.constants import TEMPORAL_DESTINATION
 
 logger = logging.getLogger(__name__)
 ETAG_PATTERN = re.compile(r'^"curve-operation:([0-9a-f-]{36}):v([1-9][0-9]*)"$')
+PRODUCT_ETAG_PATTERN = re.compile(r'^"curve-product:([0-9a-f-]{36}):v([1-9][0-9]*)"$')
 
 
 class CurveAPIRequestError(ValueError):
@@ -129,6 +149,26 @@ def _expected_operation_version(request, operation_id: uuid.UUID) -> int:
             status_code=status.HTTP_412_PRECONDITION_FAILED,
             code="CURVE_PRECONDITION_FAILED",
             title="The operation version does not match",
+            field="If-Match",
+        )
+    return int(match.group(2))
+
+
+def _expected_product_version(request, product_id: uuid.UUID) -> int:
+    value = request.headers.get("If-Match")
+    if value is None:
+        raise CurveAPIRequestError(
+            status_code=428,
+            code="CURVE_PRECONDITION_REQUIRED",
+            title="If-Match is required for Product changes",
+            field="If-Match",
+        )
+    match = PRODUCT_ETAG_PATTERN.fullmatch(value)
+    if match is None or match.group(1) != str(product_id):
+        raise CurveAPIRequestError(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            code="CURVE_PRECONDITION_FAILED",
+            title="The Product version does not match",
             field="If-Match",
         )
     return int(match.group(2))
@@ -259,6 +299,58 @@ class CurveAPIView(BaseAPIView):
                 title="The operation version does not match",
                 field="If-Match",
             )
+        if isinstance(exc, ProductValidationError):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code=exc.code,
+                title="The Product request is invalid",
+                field=exc.field,
+            )
+        if isinstance(exc, ProductKeyConflict):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Product key is already in use",
+                field="key",
+            )
+        if isinstance(exc, ProductNoChanges):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code=exc.code,
+                title="The Product command contains no changes",
+            )
+        if isinstance(exc, ProductTargetOwnerInactive):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The target owner is not an active workspace member",
+                field="owner_user_id",
+            )
+        if isinstance(exc, (ProductStateConflict, ProductHasNonTerminalInitiative)):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Product lifecycle precondition is not satisfied",
+            )
+        if isinstance(exc, ProductInitiativeGuardUnavailable):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Product archival guard is unavailable",
+            )
+        if isinstance(exc, ProductCommandError):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code=exc.code,
+                title="The Product command was rejected",
+            )
         if isinstance(exc, InvalidOperationTransition):
             return self.problem(
                 self.request,
@@ -320,6 +412,130 @@ class CurveWorkspaceShellEndpoint(CurveAPIView):
     def get(self, request, slug):
         receipt = query_authorization_receipt(request)
         return Response(dict(receipt.projection), status=status.HTTP_200_OK)
+
+
+def _product_response(result_or_product, *, status_code):
+    product = getattr(result_or_product, "product", result_or_product)
+    response = Response(serialize_product(product), status=status_code)
+    response["ETag"] = product_etag(product)
+    return response
+
+
+class CurveProductAPIView(CurveAPIView):
+    authentication_classes = [SessionAuthentication]
+
+
+class CurveProductListEndpoint(CurveProductAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, slug):
+        authorization = authorize_product_query(request=request, workspace_slug=slug)
+        page_size = _page_size(request)
+        state_filter = request.query_params.get("state", ProductState.ACTIVE)
+        if state_filter not in ProductState.values:
+            raise CurveAPIRequestError(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code="CURVE_PRODUCT_STATE_INVALID",
+                title="state must be ACTIVE or ARCHIVED",
+                field="state",
+            )
+        cursor = _decode_page_cursor(request.query_params.get("cursor"))
+        products = Product.objects.filter(
+            workspace_id=authorization.workspace.id,
+            state=state_filter,
+        )
+        if cursor:
+            created_at, product_id = cursor
+            products = products.filter(Q(created_at__lt=created_at) | Q(created_at=created_at, id__lt=product_id))
+        products = list(products.order_by("-created_at", "-id")[: page_size + 1])
+        return Response(
+            {
+                "results": [serialize_product(product) for product in products[:page_size]],
+                "next_cursor": _encode_page_cursor(products[page_size - 1]) if len(products) > page_size else None,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request, slug):
+        result = create_product(
+            request=request,
+            workspace_slug=slug,
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        response = _product_response(result, status_code=status.HTTP_201_CREATED)
+        response["Location"] = f"/api/v1/workspaces/{slug}/curve/products/{result.product.id}/"
+        return response
+
+
+class CurveProductDetailEndpoint(CurveProductAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, slug, product_id):
+        authorization = authorize_product_query(
+            request=request,
+            workspace_slug=slug,
+            product_id=product_id,
+        )
+        return _product_response(authorization.product, status_code=status.HTTP_200_OK)
+
+    def patch(self, request, slug, product_id):
+        result = update_product_metadata(
+            request=request,
+            workspace_slug=slug,
+            product_id=product_id,
+            expected_version=_expected_product_version(request, product_id),
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _product_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveProductOwnerEndpoint(CurveProductAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, product_id):
+        result = reassign_product_owner(
+            request=request,
+            workspace_slug=slug,
+            product_id=product_id,
+            expected_version=_expected_product_version(request, product_id),
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _product_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveProductArchiveEndpoint(CurveProductAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, product_id):
+        if request.data not in ({}, None):
+            raise ProductValidationError
+        result = archive_product(
+            request=request,
+            workspace_slug=slug,
+            product_id=product_id,
+            expected_version=_expected_product_version(request, product_id),
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _product_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveProductRestoreEndpoint(CurveProductAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, product_id):
+        if request.data not in ({}, None):
+            raise ProductValidationError
+        result = restore_product(
+            request=request,
+            workspace_slug=slug,
+            product_id=product_id,
+            expected_version=_expected_product_version(request, product_id),
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _product_response(result, status_code=status.HTTP_200_OK)
 
 
 class CurveOperationListEndpoint(CurveAPIView):

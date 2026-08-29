@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/product-core-decision.schema.json",
+  "title": "M1-00A Product core decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "decision_id", "status", "approved_on", "approved_by", "semantics"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "decision_id": { "const": "M1-00A" },
+    "status": { "const": "APPROVED" },
+    "approved_on": { "type": "string", "format": "date" },
+    "approved_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "github_login", "title"],
+      "properties": {
+        "name": { "const": "Federico Ocampo" },
+        "github_login": { "const": "faocampo" },
+        "title": { "const": "CTO at X3M" }
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "name",
+        "description",
+        "timezone",
+        "ownership",
+        "lifecycle",
+        "authorization",
+        "retirement",
+        "deferred_to_m2"
+      ],
+      "properties": {
+        "key": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pattern", "max_length", "lowercase", "mutable", "workspace_unique"],
+          "properties": {
+            "pattern": { "const": "^[a-z0-9][a-z0-9-]{0,49}$" },
+            "max_length": { "const": 50 },
+            "lowercase": { "const": true },
+            "mutable": { "const": false },
+            "workspace_unique": { "const": true }
+          }
+        },
+        "name": { "$ref": "#/$defs/requiredMutable" },
+        "description": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "mutable"],
+          "properties": {
+            "required": { "const": false },
+            "mutable": { "const": true }
+          }
+        },
+        "timezone": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required", "mutable", "vocabulary", "changes_apply", "rewrites_history"],
+          "properties": {
+            "required": { "const": true },
+            "mutable": { "const": true },
+            "vocabulary": { "const": "IANA_TIME_ZONE" },
+            "changes_apply": { "const": "PROSPECTIVELY" },
+            "rewrites_history": { "const": false }
+          }
+        },
+        "ownership": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["active_owner_count", "actor_type", "initial_owner"],
+          "properties": {
+            "active_owner_count": { "const": 1 },
+            "actor_type": { "const": "HUMAN" },
+            "initial_owner": { "const": "CREATING_USER" }
+          }
+        },
+        "lifecycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "states",
+            "archive_precondition",
+            "archived_historically_readable",
+            "archived_accepts_new_initiatives"
+          ],
+          "properties": {
+            "states": { "const": ["ACTIVE", "ARCHIVED"] },
+            "archive_precondition": { "const": "NO_NON_TERMINAL_INITIATIVE" },
+            "archived_historically_readable": { "const": true },
+            "archived_accepts_new_initiatives": { "const": false }
+          }
+        },
+        "authorization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["create", "archive", "restore", "reassign", "edit_metadata"],
+          "properties": {
+            "create": { "const": ["WORKSPACE_ADMINISTRATOR"] },
+            "archive": { "const": ["WORKSPACE_ADMINISTRATOR"] },
+            "restore": { "const": ["WORKSPACE_ADMINISTRATOR"] },
+            "reassign": { "const": ["WORKSPACE_ADMINISTRATOR"] },
+            "edit_metadata": { "const": ["PRODUCT_OWNER", "WORKSPACE_ADMINISTRATOR"] }
+          }
+        },
+        "retirement": { "const": "REVERSIBLE_ARCHIVAL" },
+        "deferred_to_m2": {
+          "const": ["ROADMAP", "MILESTONE", "FEATURE", "ROADMAP_ITEM", "SCHEDULE", "SNAPSHOT"]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "requiredMutable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "mutable"],
+      "properties": {
+        "required": { "const": true },
+        "mutable": { "const": true }
+      }
+    }
+  }
+}

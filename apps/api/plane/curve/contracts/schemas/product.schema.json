@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/product.schema.json",
+  "title": "Curve Product",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "key",
+    "name",
+    "description",
+    "timezone",
+    "state",
+    "owner",
+    "version",
+    "created_at",
+    "updated_at",
+    "created_by",
+    "updated_by",
+    "archived_at",
+    "archived_by"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,49}$",
+      "maxLength": 50
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "description": { "type": ["string", "null"], "maxLength": 10000 },
+    "timezone": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "state": { "type": "string", "enum": ["ACTIVE", "ARCHIVED"] },
+    "owner": { "$ref": "#/$defs/humanActor" },
+    "version": { "$ref": "common.schema.json#/$defs/AggregateVersion" },
+    "created_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "updated_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "created_by": { "$ref": "#/$defs/humanActor" },
+    "updated_by": { "$ref": "#/$defs/humanActor" },
+    "archived_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "archived_by": {
+      "oneOf": [{ "$ref": "#/$defs/humanActor" }, { "type": "null" }]
+    }
+  },
+  "$defs": {
+    "humanActor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": { "const": "HUMAN" },
+        "actor_id": { "type": "string", "format": "uuid" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "state": { "const": "ACTIVE" } },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "archived_at": { "type": "null" },
+          "archived_by": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "state": { "const": "ARCHIVED" } },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "archived_at": { "$ref": "common.schema.json#/$defs/Instant" },
+          "archived_by": { "$ref": "#/$defs/humanActor" }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/product-update-request.schema.json",
+  "title": "Update Curve Product metadata request",
+  "type": "object",
+  "additionalProperties": false,
+  "minProperties": 1,
+  "properties": {
+    "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "description": { "type": ["string", "null"], "maxLength": 10000 },
+    "timezone": { "type": "string", "minLength": 1, "maxLength": 255 }
+  }
+}

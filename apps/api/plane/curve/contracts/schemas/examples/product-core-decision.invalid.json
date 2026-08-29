@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "M1-00A",
+  "status": "APPROVED",
+  "approved_on": "2026-08-23",
+  "approved_by": {
+    "name": "Federico Ocampo",
+    "github_login": "faocampo",
+    "title": "CTO at X3M"
+  },
+  "semantics": {
+    "key": {
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "max_length": 50,
+      "lowercase": false,
+      "mutable": true,
+      "workspace_unique": false
+    },
+    "name": { "required": true, "mutable": true },
+    "description": { "required": false, "mutable": true },
+    "timezone": {
+      "required": true,
+      "mutable": true,
+      "vocabulary": "OFFSET",
+      "changes_apply": "RETROACTIVELY",
+      "rewrites_history": true
+    },
+    "ownership": {
+      "active_owner_count": 2,
+      "actor_type": "AGENT",
+      "initial_owner": "CALLER_SELECTED"
+    },
+    "lifecycle": {
+      "states": ["ACTIVE", "DELETED"],
+      "archive_precondition": "NONE",
+      "archived_historically_readable": false,
+      "archived_accepts_new_initiatives": true
+    },
+    "authorization": {
+      "create": ["WORKSPACE_MEMBER"],
+      "archive": ["PRODUCT_OWNER"],
+      "restore": ["PRODUCT_OWNER"],
+      "reassign": ["PRODUCT_OWNER"],
+      "edit_metadata": ["AGENT"]
+    },
+    "retirement": "DELETE",
+    "deferred_to_m2": []
+  }
+}

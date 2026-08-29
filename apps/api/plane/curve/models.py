@@ -104,6 +104,19 @@ class ProviderCapabilityQuerySet(WorkspaceScopedQuerySetMixin, ImmutableQuerySet
         raise ImmutableRecordError("ProviderCapability records are append-only")
 
 
+class ProductQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
+    """Workspace-first Product access that forbids policy-bypassing bulk writes."""
+
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("Product creation requires the workspace-scoped command service")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        raise ImmutableRecordError("Product changes require the workspace-scoped command service")
+
+    def update(self, **kwargs):
+        raise ImmutableRecordError("Product changes require the workspace-scoped command service")
+
+
 class DataClassification(models.TextChoices):
     INTERNAL = "INTERNAL", "Internal"
     CONFIDENTIAL = "CONFIDENTIAL", "Confidential"
@@ -215,6 +228,83 @@ class Operation(WorkspaceScopedModel):
                 name="curve_op_version_positive_ck",
             ),
         ]
+
+
+class ProductState(models.TextChoices):
+    ACTIVE = "ACTIVE", "Active"
+    ARCHIVED = "ARCHIVED", "Archived"
+
+
+class Product(models.Model):
+    """Minimum workspace-scoped Product aggregate for Curve M1."""
+
+    objects = models.Manager.from_queryset(ProductQuerySet)()
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    key = models.CharField(max_length=50, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField(null=True, blank=True)
+    timezone = models.CharField(max_length=255)
+    state = models.CharField(max_length=16, choices=ProductState.choices, default=ProductState.ACTIVE)
+    owner_user_id = models.UUIDField()
+    version = models.PositiveBigIntegerField(default=1, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.JSONField(editable=False)
+    updated_by = models.JSONField(editable=False)
+    archived_at = models.DateTimeField(null=True, blank=True, editable=False)
+    archived_by = models.JSONField(null=True, blank=True, editable=False)
+
+    class Meta:
+        db_table = "curve_product"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace_id", "key"],
+                name="curve_product_workspace_key_uniq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(key__regex=r"^[a-z0-9][a-z0-9-]{0,49}$"),
+                name="curve_product_key_format_ck",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(name=""),
+                name="curve_product_name_nonempty_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(state__in=ProductState.values),
+                name="curve_product_state_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(version__gte=1),
+                name="curve_product_version_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        state=ProductState.ACTIVE,
+                        archived_at__isnull=True,
+                        archived_by__isnull=True,
+                    )
+                    | models.Q(
+                        state=ProductState.ARCHIVED,
+                        archived_at__isnull=False,
+                        archived_by__isnull=False,
+                    )
+                ),
+                name="curve_product_archival_fields_ck",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original = type(self).objects.filter(pk=self.pk).values("workspace_id", "key").first()
+            if original is None:
+                raise ImmutableRecordError("Product update target no longer exists")
+            if original["workspace_id"] != self.workspace_id or original["key"] != self.key:
+                raise ImmutableRecordError("Product workspace and key are immutable")
+        return super().save(*args, **kwargs)
 
 
 class ProviderConnection(WorkspaceScopedModel):
@@ -866,7 +956,10 @@ class PolicyDecision(ImmutableRecordModel):
                 name="curve_policy_schema_ck",
             ),
             models.CheckConstraint(
-                condition=models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2]),
+                condition=(
+                    models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
+                    | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
+                ),
                 name="curve_policy_identity_ck",
             ),
             models.CheckConstraint(

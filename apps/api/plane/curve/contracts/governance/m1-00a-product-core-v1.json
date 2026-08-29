@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "decision_id": "M1-00A",
+  "status": "APPROVED",
+  "approved_on": "2026-08-23",
+  "approved_by": {
+    "name": "Federico Ocampo",
+    "github_login": "faocampo",
+    "title": "CTO at X3M"
+  },
+  "semantics": {
+    "key": {
+      "pattern": "^[a-z0-9][a-z0-9-]{0,49}$",
+      "max_length": 50,
+      "lowercase": true,
+      "mutable": false,
+      "workspace_unique": true
+    },
+    "name": {
+      "required": true,
+      "mutable": true
+    },
+    "description": {
+      "required": false,
+      "mutable": true
+    },
+    "timezone": {
+      "required": true,
+      "mutable": true,
+      "vocabulary": "IANA_TIME_ZONE",
+      "changes_apply": "PROSPECTIVELY",
+      "rewrites_history": false
+    },
+    "ownership": {
+      "active_owner_count": 1,
+      "actor_type": "HUMAN",
+      "initial_owner": "CREATING_USER"
+    },
+    "lifecycle": {
+      "states": ["ACTIVE", "ARCHIVED"],
+      "archive_precondition": "NO_NON_TERMINAL_INITIATIVE",
+      "archived_historically_readable": true,
+      "archived_accepts_new_initiatives": false
+    },
+    "authorization": {
+      "create": ["WORKSPACE_ADMINISTRATOR"],
+      "archive": ["WORKSPACE_ADMINISTRATOR"],
+      "restore": ["WORKSPACE_ADMINISTRATOR"],
+      "reassign": ["WORKSPACE_ADMINISTRATOR"],
+      "edit_metadata": ["PRODUCT_OWNER", "WORKSPACE_ADMINISTRATOR"]
+    },
+    "retirement": "REVERSIBLE_ARCHIVAL",
+    "deferred_to_m2": ["ROADMAP", "MILESTONE", "FEATURE", "ROADMAP_ITEM", "SCHEDULE", "SNAPSHOT"]
+  }
+}

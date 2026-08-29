@@ -10,6 +10,11 @@ from plane.curve.views import (
     CurveOperationCancelEndpoint,
     CurveOperationDetailEndpoint,
     CurveOperationListEndpoint,
+    CurveProductArchiveEndpoint,
+    CurveProductDetailEndpoint,
+    CurveProductListEndpoint,
+    CurveProductOwnerEndpoint,
+    CurveProductRestoreEndpoint,
     CurveWorkspaceShellEndpoint,
 )
 
@@ -34,6 +39,31 @@ urlpatterns = [
         "workspaces/<str:slug>/curve/operations/<uuid:resource_id>/cancel/",
         CurveOperationCancelEndpoint.as_view(),
         name="curve-operation-cancel",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/",
+        CurveProductListEndpoint.as_view(),
+        name="curve-product-list",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/",
+        CurveProductDetailEndpoint.as_view(),
+        name="curve-product-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/owner/",
+        CurveProductOwnerEndpoint.as_view(),
+        name="curve-product-owner",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/archive/",
+        CurveProductArchiveEndpoint.as_view(),
+        name="curve-product-archive",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/restore/",
+        CurveProductRestoreEndpoint.as_view(),
+        name="curve-product-restore",
     ),
     path(
         "workspaces/<str:slug>/curve/events/",

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/product-create-request.schema.json",
+  "title": "Create Curve Product request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["key", "name", "timezone"],
+  "properties": {
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,49}$",
+      "maxLength": 50
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "description": { "type": ["string", "null"], "maxLength": 10000 },
+    "timezone": { "type": "string", "minLength": 1, "maxLength": 255 }
+  }
+}
