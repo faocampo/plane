@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "policy_key": "CURVE_INITIATIVE_POLICY",
+  "policy_version": 1,
+  "default_effect": "DENY",
+  "initial_profile": "LOCAL_MANUAL_FIRST_V1",
+  "workflow_version_id": "82000000-0000-4000-8000-000000000001",
+  "enabled_modes": ["STANDALONE"],
+  "principal_mapping": {
+    "workspace_administrator": {
+      "source": "PLANE_WORKSPACE_MEMBERSHIP",
+      "role_name": "ADMIN",
+      "role_value": 20,
+      "active_membership_required": true
+    },
+    "initiative_creator": {
+      "source": "INITIATIVE_CREATOR",
+      "actor_type": "HUMAN",
+      "active_membership_required": true
+    },
+    "configured_approver": {
+      "source": "ACTIVE_GATE_ASSIGNMENT",
+      "actor_type": "HUMAN",
+      "active_membership_required": true
+    }
+  },
+  "actions": [
+    {
+      "action": "CURVE.INITIATIVE.CREATE",
+      "authorities": ["ACTIVE_WORKSPACE_MEMBER"],
+      "allowed_states": [],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["ACTIVE_PRODUCT", "THREE_ACTIVE_HUMAN_APPROVERS", "RISK_SEPARATION_VALID", "WORKSPACE_KEYWORD_UNIQUE"]
+    },
+    {
+      "action": "CURVE.INITIATIVE.READ",
+      "authorities": ["ACTIVE_WORKSPACE_MEMBER"],
+      "allowed_states": ["DRAFT", "ALIGNING", "PAUSED", "CANCELLED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["OBJECT_ACCESS_ALLOWED"]
+    },
+    {
+      "action": "CURVE.INITIATIVE.UPDATE_DRAFT",
+      "authorities": ["INITIATIVE_CREATOR", "WORKSPACE_ADMINISTRATOR"],
+      "allowed_states": ["DRAFT"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "NO_EXTERNAL_RESOURCE", "RISK_SEPARATION_VALID"]
+    },
+    {
+      "action": "CURVE.INITIATIVE.ACCEPT_REFINEMENT",
+      "authorities": ["INITIATIVE_CREATOR"],
+      "allowed_states": ["DRAFT"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "ACTIVE_PRODUCT", "THREE_ACTIVE_HUMAN_APPROVERS", "RISK_SEPARATION_VALID"]
+    },
+    {
+      "action": "CURVE.INITIATIVE.PAUSE",
+      "authorities": ["INITIATIVE_CREATOR", "CONFIGURED_APPROVER", "WORKSPACE_ADMINISTRATOR"],
+      "allowed_states": ["DRAFT", "ALIGNING"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "REASON_REQUIRED"]
+    },
+    {
+      "action": "CURVE.INITIATIVE.RESUME",
+      "authorities": ["INITIATIVE_CREATOR", "CONFIGURED_APPROVER", "WORKSPACE_ADMINISTRATOR"],
+      "allowed_states": ["PAUSED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "REASON_REQUIRED", "RESUME_TARGET_REAUTHORIZED"]
+    },
+    {
+      "action": "CURVE.INITIATIVE.CANCEL",
+      "authorities": ["INITIATIVE_CREATOR", "CONFIGURED_APPROVER", "WORKSPACE_ADMINISTRATOR"],
+      "allowed_states": ["DRAFT", "ALIGNING", "PAUSED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "REASON_REQUIRED"]
+    }
+  ]
+}

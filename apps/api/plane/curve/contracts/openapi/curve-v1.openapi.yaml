@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Curve API
-  version: 1.0.0
+  version: 1.1.0
   license:
     name: GNU Affero General Public License v3.0 only
     identifier: AGPL-3.0-only
@@ -326,6 +326,239 @@ paths:
           $ref: '#/components/responses/Problem'
         '428':
           $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/initiatives:
+    get:
+      operationId: listCurveInitiatives
+      summary: List Initiatives visible to the current workspace member
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/InitiativeState'
+        - $ref: '#/components/parameters/InitiativeProductId'
+      responses:
+        '200':
+          description: Initiative page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InitiativePage'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+    post:
+      operationId: createCurveInitiative
+      summary: Create a draft Initiative with three human gate assignments
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/initiative-create-request.schema.json'
+      responses:
+        '201':
+          description: Initiative created or replayed idempotently
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/initiative.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/initiatives/{initiative_id}:
+    get:
+      operationId: getCurveInitiative
+      summary: Read one Initiative
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/InitiativeId'
+      responses:
+        '200':
+          description: Current Initiative state
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/initiative.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+    patch:
+      operationId: updateCurveInitiativeDraft
+      summary: Update permitted draft Initiative fields
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/InitiativeId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/initiative-update-request.schema.json'
+      responses:
+        '200':
+          description: Draft Initiative updated or replayed idempotently
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/initiative.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/initiatives/{initiative_id}/accept-refinement:
+    post:
+      operationId: acceptCurveInitiativeRefinement
+      summary: Pin the manual-first workflow and begin alignment
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/InitiativeId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          $ref: '#/components/responses/InitiativeMutation'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/initiatives/{initiative_id}/pause:
+    post:
+      operationId: pauseCurveInitiative
+      summary: Pause a draft or aligning Initiative
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/InitiativeId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/InitiativeTransition'
+      responses:
+        '200':
+          $ref: '#/components/responses/InitiativeMutation'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/initiatives/{initiative_id}/resume:
+    post:
+      operationId: resumeCurveInitiative
+      summary: Resume a paused Initiative to its reauthorized prior state
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/InitiativeId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/InitiativeTransition'
+      responses:
+        '200':
+          $ref: '#/components/responses/InitiativeMutation'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/initiatives/{initiative_id}/cancel:
+    post:
+      operationId: cancelCurveInitiative
+      summary: Cancel a non-terminal Initiative
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/InitiativeId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        $ref: '#/components/requestBodies/InitiativeTransition'
+      responses:
+        '200':
+          $ref: '#/components/responses/InitiativeMutation'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
   /workspaces/{workspace_slug}/curve/events:
     get:
       operationId: streamCurveEvents
@@ -435,6 +668,13 @@ components:
       schema:
         type: string
         format: uuid
+    InitiativeId:
+      name: initiative_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -485,6 +725,24 @@ components:
         enum:
           - ACTIVE
           - ARCHIVED
+    InitiativeState:
+      name: state
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - DRAFT
+          - ALIGNING
+          - PAUSED
+          - CANCELLED
+    InitiativeProductId:
+      name: product_id
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uuid
   schemas:
     OperationPage:
       type: object
@@ -514,7 +772,38 @@ components:
           type:
             - string
             - 'null'
+    InitiativePage:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '../schemas/initiative.schema.json'
+        next_cursor:
+          type:
+            - string
+            - 'null'
+  requestBodies:
+    InitiativeTransition:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/initiative-transition-request.schema.json'
   responses:
+    InitiativeMutation:
+      description: Initiative mutated or replayed idempotently
+      headers:
+        ETag:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/initiative.schema.json'
     Problem:
       description: Curve Problem Details response
       content:

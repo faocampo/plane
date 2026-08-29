@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/initiative-event-v1.schema.json",
+  "title": "Curve Initiative event payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workspace_id",
+    "initiative_id",
+    "initiative_version",
+    "event_type",
+    "actor",
+    "occurred_at",
+    "previous_state",
+    "current_state"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "initiative_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "initiative_version": { "$ref": "common.schema.json#/$defs/AggregateVersion" },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "INITIATIVE_CREATED",
+        "INITIATIVE_DRAFT_UPDATED",
+        "INITIATIVE_REFINEMENT_ACCEPTED",
+        "INITIATIVE_PAUSED",
+        "INITIATIVE_RESUMED",
+        "INITIATIVE_CANCELLED"
+      ]
+    },
+    "actor": { "$ref": "product.schema.json#/$defs/humanActor" },
+    "occurred_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "previous_state": { "type": ["string", "null"], "enum": ["DRAFT", "ALIGNING", "PAUSED", null] },
+    "current_state": { "type": "string", "enum": ["DRAFT", "ALIGNING", "PAUSED", "CANCELLED"] },
+    "changed_fields": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["keyword", "title", "description", "risk_tier", "state"] }
+    },
+    "workflow_version_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "reason": { "type": "string", "minLength": 1, "maxLength": 2000 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "event_type": { "const": "INITIATIVE_CREATED" } }, "required": ["event_type"] },
+      "then": { "properties": { "previous_state": { "type": "null" }, "current_state": { "const": "DRAFT" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "INITIATIVE_DRAFT_UPDATED" } }, "required": ["event_type"] },
+      "then": { "required": ["changed_fields"], "properties": { "previous_state": { "const": "DRAFT" }, "current_state": { "const": "DRAFT" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "INITIATIVE_REFINEMENT_ACCEPTED" } }, "required": ["event_type"] },
+      "then": { "required": ["workflow_version_id"], "properties": { "previous_state": { "const": "DRAFT" }, "current_state": { "const": "ALIGNING" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "INITIATIVE_PAUSED" } }, "required": ["event_type"] },
+      "then": { "required": ["reason"], "properties": { "current_state": { "const": "PAUSED" } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "INITIATIVE_RESUMED" } }, "required": ["event_type"] },
+      "then": { "required": ["reason"], "properties": { "previous_state": { "const": "PAUSED" }, "current_state": { "enum": ["DRAFT", "ALIGNING"] } } }
+    },
+    {
+      "if": { "properties": { "event_type": { "const": "INITIATIVE_CANCELLED" } }, "required": ["event_type"] },
+      "then": { "required": ["reason"], "properties": { "current_state": { "const": "CANCELLED" } } }
+    }
+  ]
+}

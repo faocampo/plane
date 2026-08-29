@@ -5,7 +5,7 @@
 from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 
-from plane.curve.models import Product, ProductState
+from plane.curve.models import Initiative, Product, ProductState
 
 
 TERMINAL_INITIATIVE_STATES = frozenset({"READY_FOR_REPOSITORY_REVIEW", "CANCELLED"})
@@ -27,12 +27,13 @@ class ProductGuardResourceNotFound(LookupError):
     code = "PRODUCT_NOT_FOUND"
 
 
-def _no_initiative_guard(*, workspace_id, product_id) -> tuple[str, ...]:
-    del workspace_id, product_id
-    return ()
+def _database_initiative_guard(*, workspace_id, product_id) -> tuple[str, ...]:
+    return tuple(
+        Initiative.objects.for_workspace(workspace_id).filter(product_id=product_id).values_list("state", flat=True)
+    )
 
 
-_initiative_state_guard: Callable[..., Iterable[str]] | None = _no_initiative_guard
+_initiative_state_guard: Callable[..., Iterable[str]] | None = _database_initiative_guard
 
 
 @contextmanager

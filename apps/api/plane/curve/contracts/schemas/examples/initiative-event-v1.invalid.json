@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "workspace_id": "10000000-0000-4000-8000-000000000001",
+  "initiative_id": "80000000-0000-4000-8000-000000000001",
+  "initiative_version": 2,
+  "event_type": "INITIATIVE_REFINEMENT_ACCEPTED",
+  "actor": { "actor_type": "HUMAN", "actor_id": "30000000-0000-4000-8000-000000000001" },
+  "occurred_at": "2026-08-29T14:05:00Z",
+  "previous_state": "DRAFT",
+  "current_state": "ALIGNING"
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "id": "80000000-0000-4000-8000-000000000001",
+  "workspace_id": "10000000-0000-4000-8000-000000000001",
+  "product_id": "70000000-0000-4000-8000-000000000001",
+  "mode": "STANDALONE",
+  "roadmap_item_id": null,
+  "keyword": "Loomit-SDK-panel",
+  "title": "Loomit SDK compatibility panel",
+  "description": {
+    "schema_version": "1.0",
+    "format": "MARKDOWN",
+    "body": "Show installed and recommended Loomit SDK versions in App Details."
+  },
+  "risk_tier": "STANDARD",
+  "state": "ALIGNING",
+  "paused_from_state": null,
+  "workflow_version_id": "82000000-0000-4000-8000-000000000001",
+  "creator": {
+    "actor_type": "HUMAN",
+    "actor_id": "30000000-0000-4000-8000-000000000001"
+  },
+  "gate_assignments": [
+    {
+      "id": "81000000-0000-4000-8000-000000000001",
+      "workspace_id": "10000000-0000-4000-8000-000000000001",
+      "initiative_id": "80000000-0000-4000-8000-000000000001",
+      "gate_type": "PRD_APPROVAL",
+      "approver": { "actor_type": "HUMAN", "actor_id": "30000000-0000-4000-8000-000000000002" },
+      "valid_from": "2026-08-29T14:00:00Z",
+      "valid_until": null,
+      "delegation_reason": null
+    },
+    {
+      "id": "81000000-0000-4000-8000-000000000002",
+      "workspace_id": "10000000-0000-4000-8000-000000000001",
+      "initiative_id": "80000000-0000-4000-8000-000000000001",
+      "gate_type": "PLAN_APPROVAL",
+      "approver": { "actor_type": "HUMAN", "actor_id": "30000000-0000-4000-8000-000000000003" },
+      "valid_from": "2026-08-29T14:00:00Z",
+      "valid_until": null,
+      "delegation_reason": null
+    },
+    {
+      "id": "81000000-0000-4000-8000-000000000003",
+      "workspace_id": "10000000-0000-4000-8000-000000000001",
+      "initiative_id": "80000000-0000-4000-8000-000000000001",
+      "gate_type": "CODE_READINESS",
+      "approver": { "actor_type": "HUMAN", "actor_id": "30000000-0000-4000-8000-000000000004" },
+      "valid_from": "2026-08-29T14:00:00Z",
+      "valid_until": null,
+      "delegation_reason": null
+    }
+  ],
+  "first_external_resource_at": null,
+  "version": 2,
+  "created_at": "2026-08-29T14:00:00Z",
+  "updated_at": "2026-08-29T14:05:00Z",
+  "updated_by": {
+    "actor_type": "HUMAN",
+    "actor_id": "30000000-0000-4000-8000-000000000001"
+  }
+}

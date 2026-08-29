@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/initiative-update-request.schema.json",
+  "title": "Update Curve Initiative draft request",
+  "type": "object",
+  "additionalProperties": false,
+  "minProperties": 1,
+  "properties": {
+    "keyword": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,49}$", "maxLength": 50 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "description": { "$ref": "initiative.schema.json#/$defs/richTextDocument" },
+    "risk_tier": { "type": "string", "enum": ["LOW", "STANDARD", "HIGH"] }
+  }
+}
