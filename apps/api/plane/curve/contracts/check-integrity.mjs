@@ -11,6 +11,7 @@ const m0s5bContextPath = new URL("apps/api/plane/curve/contracts/m0-s5b-context.
 const m0s6aContextPath = new URL("apps/api/plane/curve/contracts/m0-s6a-context.json", repositoryRoot);
 const m0s9aContextPath = new URL("apps/api/plane/curve/contracts/m0-s9a-context.json", repositoryRoot);
 const m100aContextPath = new URL("apps/api/plane/curve/contracts/m1-00a-context.json", repositoryRoot);
+const m101aContextPath = new URL("apps/api/plane/curve/contracts/m1-01a-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
 const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
@@ -271,6 +272,55 @@ const expectedM100AVendoredFiles = {
   "contracts/schemas/product-update-request.schema.json":
     "bae963f785e4ed2c56f0ee8c6d4549e414645e9f4b852136d5594e402ee09b8f",
   "contracts/schemas/product.schema.json": "4d65d50a57e51d011bb9d48bf108e7538ed4a9ed421670ac87902a6f16a35e7a",
+};
+
+const expectedM101AContext = {
+  curveRevision: "ebbf22745e7939a633dd667246e7207a57ef526a",
+  approvedContractHead: "9e5bb5042139746338e22dcfd71c5f975adc4ab6",
+  planeBaseRevision: "afdb59388e4ea9b2321d33935000126303fc93b8",
+  contextDigest: "sha256:d2aa09a76f13ac840a846d25db5470e412c58f26828952f559763d506b3ceba8",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+  implementer: "Codex",
+};
+
+const expectedM101AVendoredFiles = {
+  "contracts/openapi/curve-v1.openapi.yaml": "928993ea6fc8847e7547474418b12b523ff60f5180310c3bc07743d4873cb321",
+  "contracts/policy/initiative-policy-v1.json": "df9aa96d5de46232074abcc51fbb268beda0b73b45906c986f106b2d317adf8b",
+  "contracts/schemas/examples/gate-assignment.invalid.json":
+    "a73f9c3fe3a7b69daa8dd124e175355e49f35d55fea2c9723727d3cc9ebfdf20",
+  "contracts/schemas/examples/gate-assignment.valid.json":
+    "865ab7bceaeb3bd803785a90edc80cda430ecd2ebf90edd2dcef51d433941847",
+  "contracts/schemas/examples/initiative-create-request.invalid.json":
+    "d2e445c93ee4355c17ae5cca8649245c952b7eb055225b629104a57b1b2423b1",
+  "contracts/schemas/examples/initiative-create-request.valid.json":
+    "2f918e0acdcd514bef21e245eec61b8f35eb47f942e2e0accd931c3d4d865e6a",
+  "contracts/schemas/examples/initiative-event-v1.invalid.json":
+    "5ec982fa9c87fed28b0bdc47b2d2c40e1a1f1ae3bc5df2d727de70e1fb668681",
+  "contracts/schemas/examples/initiative-event-v1.valid.json":
+    "08e3644f5b237d7353f4fb43aff687b00fab20f860fba915f71ae201cdf51bfb",
+  "contracts/schemas/examples/initiative-transition-request.invalid.json":
+    "b982904a47b33b0f2cc018b5e4bd859426fdb8d04fd8369585e1a78fa3c95a40",
+  "contracts/schemas/examples/initiative-transition-request.valid.json":
+    "8a69409a22d172b7f3f56a39651b6c37fa8963e71840c7328b90bcb1474e6594",
+  "contracts/schemas/examples/initiative-update-request.invalid.json":
+    "27bc31fa021379333dc78ced2a5a68b3006244cbf2abb2e43f63e93172b170fa",
+  "contracts/schemas/examples/initiative-update-request.valid.json":
+    "38f55e12a44bcaa7079fc6e1d6bec8d695723d2891d58eae32b1c976ed90d038",
+  "contracts/schemas/examples/initiative.invalid.json":
+    "d8fd6103d563fb6b4c4711fe3c0a5c936ff4a91d4b65d12ac6f69a1af27bdae6",
+  "contracts/schemas/examples/initiative.valid.json":
+    "8cc2b9a583dd06cf39b4da784e9585243f173fef7d13526c3acd1f2bcb93751e",
+  "contracts/schemas/gate-assignment.schema.json": "f972dada1c24769deb4cd0cfa2f79518b7c75f8e9806c497d98d3c66fa1c15de",
+  "contracts/schemas/initiative-create-request.schema.json":
+    "b5334b2c2841d3e9beaf801c78ee93d5e8946ffc6de960c59873ff447d86e050",
+  "contracts/schemas/initiative-event-v1.schema.json":
+    "b63256af6ccce62ec677ef34c222e99d367b44c173d47ba9b6cf3c6f922c1f9a",
+  "contracts/schemas/initiative-transition-request.schema.json":
+    "dbeb6b639283c90cd1fde539224636a9064d17fea597ca885abe271dfa605229",
+  "contracts/schemas/initiative-update-request.schema.json":
+    "9fee283bb3c6ba359b491b25a9b02b984c94b4ead055e78680660cbe576babf3",
+  "contracts/schemas/initiative.schema.json": "8e00c9904e348e43f44339bb6283da931225f339ed0edc379200689486eb52a7",
 };
 
 const fail = (message) => {
@@ -922,7 +972,7 @@ await Promise.all(
     }
     const fileName = sourcePath.split("/").at(-1);
     const observedDigest = sha256(await readFile(new URL(fileName, m100aDirectoryFor(sourcePath))));
-    if (observedDigest !== expectedDigest) {
+    if (!evolvedAfterHistoricalContexts.has(sourcePath) && observedDigest !== expectedDigest) {
       fail(`${sourcePath} vendored bytes differ from the approved M1-00A source`);
     }
   })
@@ -942,6 +992,86 @@ if (
 
 console.log(
   `Curve M1-00A context integrity passed: ${Object.keys(expectedM100AVendoredFiles).length} vendored files at ${expectedM100AContext.curveRevision}`
+);
+
+const m101aContext = JSON.parse(await readFile(m101aContextPath, "utf8"));
+if (m101aContext.schema_version !== "curve-context-pack/v1" || m101aContext.task_id !== "M1-01A") {
+  fail("unexpected M1-01A context identity");
+}
+if (
+  m101aContext.curve_revision !== expectedM101AContext.curveRevision ||
+  m101aContext.approved_contract_head !== expectedM101AContext.approvedContractHead ||
+  m101aContext.plane_base_revision !== expectedM101AContext.planeBaseRevision ||
+  m101aContext.context_digest !== expectedM101AContext.contextDigest
+) {
+  fail("unexpected M1-01A revision or context digest");
+}
+if (
+  m101aContext.human_owner !== expectedM101AContext.owner ||
+  m101aContext.human_reviewer !== expectedM101AContext.reviewer ||
+  m101aContext.implementer !== expectedM101AContext.implementer ||
+  m101aContext.data_classification !== "INTERNAL" ||
+  m101aContext.execution_scope !== "LOCAL_ONLY" ||
+  m101aContext.budget_usd !== 0 ||
+  m101aContext.dispatch?.branch !== "curve/m1-01a-initiative-core" ||
+  m101aContext.dispatch?.authorized_by !== "Federico Ocampo" ||
+  m101aContext.dispatch?.runtime !== "LOCAL_ONLY" ||
+  m101aContext.dispatch?.merge_authorized !== false ||
+  m101aContext.dispatch?.deployment_authorized !== false
+) {
+  fail("unexpected M1-01A ownership, boundary, budget, or dispatch authority");
+}
+if (!Array.isArray(m101aContext.files) || !Array.isArray(m101aContext.paths)) {
+  fail("M1-01A context paths and per-file digests are required");
+}
+if (m101aContext.paths.length !== 38) fail("M1-01A context must bind exactly 38 source paths");
+if (JSON.stringify(m101aContext.paths) !== JSON.stringify([...m101aContext.paths].toSorted())) {
+  fail("M1-01A context paths are not sorted");
+}
+if (JSON.stringify(m101aContext.files.map(({ path }) => path)) !== JSON.stringify(m101aContext.paths)) {
+  fail("M1-01A context files and paths differ");
+}
+if (new Set(m101aContext.paths).size !== m101aContext.paths.length) {
+  fail("M1-01A context paths are not unique");
+}
+for (const file of m101aContext.files) {
+  if (!/^sha256:[0-9a-f]{64}$/.test(file.sha256)) {
+    fail(`M1-01A context digest is invalid for ${file.path}`);
+  }
+}
+const recordedM101ADigests = new Map(m101aContext.files.map(({ path, sha256: digest }) => [path, digest]));
+const m101aDirectoryFor = (sourcePath) => {
+  if (sourcePath.includes("/openapi/")) return openapiDirectory;
+  if (sourcePath.includes("/policy/")) return policyDirectory;
+  if (sourcePath.includes("/examples/")) return schemaExampleDirectory;
+  return schemaDirectory;
+};
+await Promise.all(
+  Object.entries(expectedM101AVendoredFiles).map(async ([sourcePath, expectedDigest]) => {
+    if (recordedM101ADigests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+      fail(`${sourcePath} is not byte-bound by the M1-01A context manifest`);
+    }
+    const fileName = sourcePath.split("/").at(-1);
+    const observedDigest = sha256(await readFile(new URL(fileName, m101aDirectoryFor(sourcePath))));
+    if (observedDigest !== expectedDigest) {
+      fail(`${sourcePath} vendored bytes differ from the approved M1-01A source`);
+    }
+  })
+);
+
+const initiativePolicy = JSON.parse(await readFile(new URL("initiative-policy-v1.json", policyDirectory), "utf8"));
+if (
+  initiativePolicy.policy_key !== "CURVE_INITIATIVE_POLICY" ||
+  initiativePolicy.policy_version !== 1 ||
+  initiativePolicy.default_effect !== "DENY" ||
+  JSON.stringify(initiativePolicy.enabled_modes) !== JSON.stringify(["STANDALONE"]) ||
+  initiativePolicy.workflow_version_id !== "82000000-0000-4000-8000-000000000001"
+) {
+  fail("M1-01A Initiative policy differs from the approved contract");
+}
+
+console.log(
+  `Curve M1-01A context integrity passed: ${Object.keys(expectedM101AVendoredFiles).length} vendored files at ${expectedM101AContext.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));

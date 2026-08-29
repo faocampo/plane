@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/gate-assignment.schema.json",
+  "title": "Curve Gate Assignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "workspace_id",
+    "initiative_id",
+    "gate_type",
+    "approver",
+    "valid_from",
+    "valid_until",
+    "delegation_reason"
+  ],
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "initiative_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "gate_type": {
+      "type": "string",
+      "enum": ["PRD_APPROVAL", "PLAN_APPROVAL", "CODE_READINESS"]
+    },
+    "approver": { "$ref": "product.schema.json#/$defs/humanActor" },
+    "valid_from": { "$ref": "common.schema.json#/$defs/Instant" },
+    "valid_until": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "delegation_reason": { "type": ["string", "null"], "maxLength": 2000 }
+  }
+}

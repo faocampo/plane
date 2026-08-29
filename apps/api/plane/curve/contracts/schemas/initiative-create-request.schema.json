@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/initiative-create-request.schema.json",
+  "title": "Create Curve Initiative request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product_id", "mode", "keyword", "title", "description", "risk_tier", "gate_assignments"],
+  "properties": {
+    "product_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "mode": { "type": "string", "enum": ["ROADMAP", "STANDALONE"] },
+    "roadmap_item_id": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/OpaqueId" }, { "type": "null" }]
+    },
+    "keyword": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,49}$", "maxLength": 50 },
+    "title": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "description": { "$ref": "initiative.schema.json#/$defs/richTextDocument" },
+    "risk_tier": { "type": "string", "enum": ["LOW", "STANDARD", "HIGH"] },
+    "gate_assignments": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate_type", "approver_user_id"],
+        "properties": {
+          "gate_type": { "type": "string", "enum": ["PRD_APPROVAL", "PLAN_APPROVAL", "CODE_READINESS"] },
+          "approver_user_id": { "type": "string", "format": "uuid" }
+        }
+      }
+    }
+  }
+}

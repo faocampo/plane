@@ -7,6 +7,12 @@ from django.urls import path
 from plane.curve.views import (
     CurveEventStreamEndpoint,
     CurveFoundationProbeEndpoint,
+    CurveInitiativeAcceptRefinementEndpoint,
+    CurveInitiativeCancelEndpoint,
+    CurveInitiativeDetailEndpoint,
+    CurveInitiativeListEndpoint,
+    CurveInitiativePauseEndpoint,
+    CurveInitiativeResumeEndpoint,
     CurveOperationCancelEndpoint,
     CurveOperationDetailEndpoint,
     CurveOperationListEndpoint,
@@ -64,6 +70,36 @@ urlpatterns = [
         "workspaces/<str:slug>/curve/products/<uuid:product_id>/restore/",
         CurveProductRestoreEndpoint.as_view(),
         name="curve-product-restore",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/",
+        CurveInitiativeListEndpoint.as_view(),
+        name="curve-initiative-list",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/",
+        CurveInitiativeDetailEndpoint.as_view(),
+        name="curve-initiative-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/accept-refinement/",
+        CurveInitiativeAcceptRefinementEndpoint.as_view(),
+        name="curve-initiative-accept-refinement",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/pause/",
+        CurveInitiativePauseEndpoint.as_view(),
+        name="curve-initiative-pause",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/resume/",
+        CurveInitiativeResumeEndpoint.as_view(),
+        name="curve-initiative-resume",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/cancel/",
+        CurveInitiativeCancelEndpoint.as_view(),
+        name="curve-initiative-cancel",
     ),
     path(
         "workspaces/<str:slug>/curve/events/",

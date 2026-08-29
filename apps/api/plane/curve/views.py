@@ -30,7 +30,34 @@ from rest_framework.response import Response
 from plane.api.middleware.api_authentication import APIKeyAuthentication
 from plane.api.views.base import BaseAPIView
 from plane.curve.config import CurvePolicyConfigurationError
-from plane.curve.models import DomainEvent, Operation, OperationType, Product, ProductState
+from plane.curve.initiative_policy import authorize_initiative_query
+from plane.curve.initiative_serialization import initiative_etag, serialize_initiative
+from plane.curve.initiative_services import (
+    InitiativeCommandError,
+    InitiativeGateAssignmentInvalid,
+    InitiativeKeywordConflict,
+    InitiativeNoChanges,
+    InitiativeProductInactive,
+    InitiativeProductUnavailable,
+    InitiativeStateConflict,
+    InitiativeValidationError,
+    RoadmapModeNotAvailable,
+    accept_initiative_refinement,
+    cancel_initiative,
+    create_initiative,
+    pause_initiative,
+    resume_initiative,
+    update_initiative_draft,
+)
+from plane.curve.models import (
+    DomainEvent,
+    Initiative,
+    InitiativeState,
+    Operation,
+    OperationType,
+    Product,
+    ProductState,
+)
 from plane.curve.observability.instrumentation import observe_curve_span
 from plane.curve.observability.propagation import event_contract
 from plane.curve.observability.runtime import get_telemetry_runtime
@@ -83,6 +110,7 @@ from plane.curve.temporal.constants import TEMPORAL_DESTINATION
 logger = logging.getLogger(__name__)
 ETAG_PATTERN = re.compile(r'^"curve-operation:([0-9a-f-]{36}):v([1-9][0-9]*)"$')
 PRODUCT_ETAG_PATTERN = re.compile(r'^"curve-product:([0-9a-f-]{36}):v([1-9][0-9]*)"$')
+INITIATIVE_ETAG_PATTERN = re.compile(r'^"curve-initiative:([0-9a-f-]{36}):v([1-9][0-9]*)"$')
 
 
 class CurveAPIRequestError(ValueError):
@@ -169,6 +197,26 @@ def _expected_product_version(request, product_id: uuid.UUID) -> int:
             status_code=status.HTTP_412_PRECONDITION_FAILED,
             code="CURVE_PRECONDITION_FAILED",
             title="The Product version does not match",
+            field="If-Match",
+        )
+    return int(match.group(2))
+
+
+def _expected_initiative_version(request, initiative_id: uuid.UUID) -> int:
+    value = request.headers.get("If-Match")
+    if value is None:
+        raise CurveAPIRequestError(
+            status_code=428,
+            code="CURVE_PRECONDITION_REQUIRED",
+            title="If-Match is required for Initiative changes",
+            field="If-Match",
+        )
+    match = INITIATIVE_ETAG_PATTERN.fullmatch(value)
+    if match is None or match.group(1) != str(initiative_id):
+        raise CurveAPIRequestError(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            code="CURVE_PRECONDITION_FAILED",
+            title="The Initiative version does not match",
             field="If-Match",
         )
     return int(match.group(2))
@@ -306,6 +354,75 @@ class CurveAPIView(BaseAPIView):
                 code=exc.code,
                 title="The Product request is invalid",
                 field=exc.field,
+            )
+        if isinstance(exc, InitiativeValidationError):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code=exc.code,
+                title="The Initiative request is invalid",
+                field=exc.field,
+            )
+        if isinstance(exc, InitiativeProductUnavailable):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_404_NOT_FOUND,
+                code=exc.code,
+                title="The Product is unavailable",
+                field="product_id",
+            )
+        if isinstance(exc, RoadmapModeNotAvailable):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="ROADMAP Initiative mode is not available in this release",
+                field="mode",
+            )
+        if isinstance(exc, InitiativeKeywordConflict):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Initiative keyword is already in use",
+                field="keyword",
+            )
+        if isinstance(exc, InitiativeGateAssignmentInvalid):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Initiative gate assignments do not satisfy policy",
+                field="gate_assignments",
+            )
+        if isinstance(exc, InitiativeProductInactive):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Product is not active",
+                field="product_id",
+            )
+        if isinstance(exc, InitiativeNoChanges):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code=exc.code,
+                title="The Initiative command contains no changes",
+            )
+        if isinstance(exc, InitiativeStateConflict):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_409_CONFLICT,
+                code=exc.code,
+                title="The Initiative lifecycle precondition is not satisfied",
+            )
+        if isinstance(exc, InitiativeCommandError):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code=exc.code,
+                title="The Initiative command was rejected",
             )
         if isinstance(exc, ProductKeyConflict):
             return self.problem(
@@ -536,6 +653,167 @@ class CurveProductRestoreEndpoint(CurveProductAPIView):
             raw_idempotency_key=_required_idempotency_key(request),
         )
         return _product_response(result, status_code=status.HTTP_200_OK)
+
+
+def _initiative_response(result_or_initiative, *, status_code):
+    initiative = getattr(result_or_initiative, "initiative", result_or_initiative)
+    response = Response(serialize_initiative(initiative), status=status_code)
+    response["ETag"] = initiative_etag(initiative)
+    return response
+
+
+class CurveInitiativeAPIView(CurveAPIView):
+    authentication_classes = [SessionAuthentication]
+
+
+class CurveInitiativeListEndpoint(CurveInitiativeAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, slug):
+        authorization = authorize_initiative_query(request=request, workspace_slug=slug)
+        page_size = _page_size(request)
+        state_filter = request.query_params.get("state")
+        if state_filter is not None and state_filter not in {
+            InitiativeState.DRAFT,
+            InitiativeState.ALIGNING,
+            InitiativeState.PAUSED,
+            InitiativeState.CANCELLED,
+        }:
+            raise CurveAPIRequestError(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                code="CURVE_INITIATIVE_STATE_INVALID",
+                title="state is not available in M1-01A",
+                field="state",
+            )
+        product_filter = request.query_params.get("product_id")
+        if product_filter is not None:
+            try:
+                product_filter = uuid.UUID(product_filter)
+            except ValueError as error:
+                raise CurveAPIRequestError(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    code="CURVE_INITIATIVE_PRODUCT_FILTER_INVALID",
+                    title="product_id must be a UUID",
+                    field="product_id",
+                ) from error
+        cursor = _decode_page_cursor(request.query_params.get("cursor"))
+        initiatives = Initiative.objects.filter(workspace_id=authorization.workspace.id).prefetch_related(
+            "gate_assignments"
+        )
+        if state_filter:
+            initiatives = initiatives.filter(state=state_filter)
+        if product_filter:
+            initiatives = initiatives.filter(product_id=product_filter)
+        if cursor:
+            created_at, initiative_id = cursor
+            initiatives = initiatives.filter(
+                Q(created_at__lt=created_at) | Q(created_at=created_at, id__lt=initiative_id)
+            )
+        initiatives = list(initiatives.order_by("-created_at", "-id")[: page_size + 1])
+        return Response(
+            {
+                "results": [serialize_initiative(initiative) for initiative in initiatives[:page_size]],
+                "next_cursor": (
+                    _encode_page_cursor(initiatives[page_size - 1]) if len(initiatives) > page_size else None
+                ),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request, slug):
+        result = create_initiative(
+            request=request,
+            workspace_slug=slug,
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        response = _initiative_response(result, status_code=status.HTTP_201_CREATED)
+        response["Location"] = f"/api/v1/workspaces/{slug}/curve/initiatives/{result.initiative.id}/"
+        return response
+
+
+class CurveInitiativeDetailEndpoint(CurveInitiativeAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, slug, initiative_id):
+        authorization = authorize_initiative_query(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+        )
+        return _initiative_response(authorization.initiative, status_code=status.HTTP_200_OK)
+
+    def patch(self, request, slug, initiative_id):
+        result = update_initiative_draft(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            expected_version=_expected_initiative_version(request, initiative_id),
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _initiative_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveInitiativeAcceptRefinementEndpoint(CurveInitiativeAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, initiative_id):
+        if request.data not in ({}, None):
+            raise InitiativeValidationError
+        result = accept_initiative_refinement(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            expected_version=_expected_initiative_version(request, initiative_id),
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _initiative_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveInitiativePauseEndpoint(CurveInitiativeAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, initiative_id):
+        result = pause_initiative(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            expected_version=_expected_initiative_version(request, initiative_id),
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _initiative_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveInitiativeResumeEndpoint(CurveInitiativeAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, initiative_id):
+        result = resume_initiative(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            expected_version=_expected_initiative_version(request, initiative_id),
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _initiative_response(result, status_code=status.HTTP_200_OK)
+
+
+class CurveInitiativeCancelEndpoint(CurveInitiativeAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, slug, initiative_id):
+        result = cancel_initiative(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            expected_version=_expected_initiative_version(request, initiative_id),
+            payload=request.data,
+            raw_idempotency_key=_required_idempotency_key(request),
+        )
+        return _initiative_response(result, status_code=status.HTTP_200_OK)
 
 
 class CurveOperationListEndpoint(CurveAPIView):

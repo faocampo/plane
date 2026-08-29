@@ -7,6 +7,7 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.functions import Lower
 from django.db.models.lookups import Exact, GreaterThan
 from django.utils import timezone
 
@@ -115,6 +116,30 @@ class ProductQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
 
     def update(self, **kwargs):
         raise ImmutableRecordError("Product changes require the workspace-scoped command service")
+
+
+class InitiativeQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
+    """Workspace-first Initiative access that forbids command bypasses."""
+
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("Initiative creation requires the workspace-scoped command service")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        raise ImmutableRecordError("Initiative changes require the workspace-scoped command service")
+
+    def update(self, **kwargs):
+        raise ImmutableRecordError("Initiative changes require the workspace-scoped command service")
+
+
+class GateAssignmentQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("GateAssignment creation requires the Initiative command service")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        raise ImmutableRecordError("GateAssignment records are immutable in M1-01A")
+
+    def update(self, **kwargs):
+        raise ImmutableRecordError("GateAssignment records are immutable in M1-01A")
 
 
 class DataClassification(models.TextChoices):
@@ -304,6 +329,194 @@ class Product(models.Model):
                 raise ImmutableRecordError("Product update target no longer exists")
             if original["workspace_id"] != self.workspace_id or original["key"] != self.key:
                 raise ImmutableRecordError("Product workspace and key are immutable")
+        return super().save(*args, **kwargs)
+
+
+class InitiativeMode(models.TextChoices):
+    ROADMAP = "ROADMAP", "Roadmap"
+    STANDALONE = "STANDALONE", "Standalone"
+
+
+class InitiativeRiskTier(models.TextChoices):
+    LOW = "LOW", "Low"
+    STANDARD = "STANDARD", "Standard"
+    HIGH = "HIGH", "High"
+
+
+class InitiativeState(models.TextChoices):
+    DRAFT = "DRAFT", "Draft"
+    ALIGNING = "ALIGNING", "Aligning"
+    PRD_REVIEW = "PRD_REVIEW", "PRD review"
+    PLANNING = "PLANNING", "Planning"
+    PLAN_REVIEW = "PLAN_REVIEW", "Plan review"
+    EXECUTING = "EXECUTING", "Executing"
+    CODE_READINESS_REVIEW = "CODE_READINESS_REVIEW", "Code readiness review"
+    READY_FOR_REPOSITORY_REVIEW = "READY_FOR_REPOSITORY_REVIEW", "Ready for repository review"
+    PAUSED = "PAUSED", "Paused"
+    FAILED = "FAILED", "Failed"
+    CANCELLED = "CANCELLED", "Cancelled"
+
+
+class GateType(models.TextChoices):
+    PRD_APPROVAL = "PRD_APPROVAL", "PRD approval"
+    PLAN_APPROVAL = "PLAN_APPROVAL", "Plan approval"
+    CODE_READINESS = "CODE_READINESS", "Code readiness"
+
+
+class Initiative(models.Model):
+    """Local manual-first Initiative aggregate for Curve M1-01A."""
+
+    objects = models.Manager.from_queryset(InitiativeQuerySet)()
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    product_id = models.UUIDField(db_index=True, editable=False)
+    mode = models.CharField(max_length=16, choices=InitiativeMode.choices)
+    roadmap_item_id = models.UUIDField(null=True, blank=True, editable=False)
+    keyword = models.CharField(max_length=50)
+    title = models.CharField(max_length=255)
+    description = models.JSONField()
+    risk_tier = models.CharField(max_length=16, choices=InitiativeRiskTier.choices)
+    state = models.CharField(max_length=40, choices=InitiativeState.choices, default=InitiativeState.DRAFT)
+    paused_from_state = models.CharField(max_length=40, choices=InitiativeState.choices, null=True, blank=True)
+    workflow_version_id = models.UUIDField(null=True, blank=True, editable=False)
+    creator_user_id = models.UUIDField(editable=False)
+    first_external_resource_at = models.DateTimeField(null=True, blank=True, editable=False)
+    version = models.PositiveBigIntegerField(default=1, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    created_by = models.JSONField(editable=False)
+    updated_by = models.JSONField(editable=False)
+
+    class Meta:
+        db_table = "curve_initiative"
+        indexes = [
+            models.Index(fields=["workspace_id", "state", "created_at"], name="curve_init_ws_state_idx"),
+            models.Index(fields=["workspace_id", "product_id", "state"], name="curve_init_ws_product_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                models.F("workspace_id"),
+                Lower("keyword"),
+                name="curve_init_workspace_keyword_uq",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(keyword__regex=r"^[A-Za-z0-9][A-Za-z0-9-]{0,49}$"),
+                name="curve_init_keyword_format_ck",
+            ),
+            models.CheckConstraint(condition=~models.Q(title=""), name="curve_init_title_nonempty_ck"),
+            models.CheckConstraint(
+                condition=models.Q(mode__in=InitiativeMode.values),
+                name="curve_init_mode_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(mode=InitiativeMode.STANDALONE, roadmap_item_id__isnull=True)
+                    | models.Q(mode=InitiativeMode.ROADMAP, roadmap_item_id__isnull=False)
+                ),
+                name="curve_init_roadmap_mode_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(risk_tier__in=InitiativeRiskTier.values),
+                name="curve_init_risk_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(state__in=InitiativeState.values),
+                name="curve_init_state_ck",
+            ),
+            models.CheckConstraint(condition=models.Q(version__gte=1), name="curve_init_version_ck"),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        state=InitiativeState.PAUSED,
+                        paused_from_state__in=[InitiativeState.DRAFT, InitiativeState.ALIGNING],
+                    )
+                    | (~models.Q(state=InitiativeState.PAUSED) & models.Q(paused_from_state__isnull=True))
+                ),
+                name="curve_init_paused_from_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(state=InitiativeState.DRAFT, workflow_version_id__isnull=True)
+                    | models.Q(state=InitiativeState.ALIGNING, workflow_version_id__isnull=False)
+                    | models.Q(
+                        state=InitiativeState.PAUSED,
+                        paused_from_state=InitiativeState.DRAFT,
+                        workflow_version_id__isnull=True,
+                    )
+                    | models.Q(
+                        state=InitiativeState.PAUSED,
+                        paused_from_state=InitiativeState.ALIGNING,
+                        workflow_version_id__isnull=False,
+                    )
+                    | models.Q(state=InitiativeState.CANCELLED)
+                ),
+                name="curve_init_workflow_state_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(first_external_resource_at__isnull=True),
+                name="curve_init_external_resource_ck",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            original = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values(
+                    "workspace_id",
+                    "product_id",
+                    "mode",
+                    "creator_user_id",
+                    "keyword",
+                    "state",
+                    "first_external_resource_at",
+                )
+                .first()
+            )
+            if original is None:
+                raise ImmutableRecordError("Initiative update target no longer exists")
+            immutable = ("workspace_id", "product_id", "mode", "creator_user_id")
+            if any(original[field] != getattr(self, field) for field in immutable):
+                raise ImmutableRecordError("Initiative workspace, Product, mode, and creator are immutable")
+            if original["keyword"] != self.keyword and (
+                original["state"] != InitiativeState.DRAFT or original["first_external_resource_at"] is not None
+            ):
+                raise ImmutableRecordError("Initiative keyword is immutable after draft/external-resource boundary")
+        return super().save(*args, **kwargs)
+
+
+class GateAssignment(models.Model):
+    """Initial human gate assignment; replacement is deferred beyond M1-01A."""
+
+    objects = models.Manager.from_queryset(GateAssignmentQuerySet)()
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    initiative = models.ForeignKey(Initiative, on_delete=models.PROTECT, related_name="gate_assignments")
+    gate_type = models.CharField(max_length=32, choices=GateType.choices)
+    approver_user_id = models.UUIDField()
+    valid_from = models.DateTimeField(default=timezone.now, editable=False)
+    valid_until = models.DateTimeField(null=True, blank=True, editable=False)
+    delegation_reason = models.TextField(null=True, blank=True, editable=False)
+
+    class Meta:
+        db_table = "curve_gate_assignment"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace_id", "initiative", "gate_type"],
+                name="curve_gate_ws_init_type_uq",
+            ),
+            models.CheckConstraint(condition=models.Q(gate_type__in=GateType.values), name="curve_gate_type_ck"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ImmutableRecordError("GateAssignment records are immutable in M1-01A")
+        if self.initiative_id and self.workspace_id != self.initiative.workspace_id:
+            raise ValidationError("GateAssignment and Initiative workspace must match")
         return super().save(*args, **kwargs)
 
 
@@ -959,6 +1172,7 @@ class PolicyDecision(ImmutableRecordModel):
                 condition=(
                     models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
+                    | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
                 ),
                 name="curve_policy_identity_ck",
             ),

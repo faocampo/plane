@@ -1,0 +1,13 @@
+{
+  "id": "81000000-0000-4000-8000-000000000001",
+  "workspace_id": "10000000-0000-4000-8000-000000000001",
+  "initiative_id": "80000000-0000-4000-8000-000000000001",
+  "gate_type": "PRD_APPROVAL",
+  "approver": {
+    "actor_type": "HUMAN",
+    "actor_id": "30000000-0000-4000-8000-000000000002"
+  },
+  "valid_from": "2026-08-29T14:00:00Z",
+  "valid_until": null,
+  "delegation_reason": null
+}
