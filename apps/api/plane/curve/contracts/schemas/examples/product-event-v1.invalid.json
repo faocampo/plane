@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "workspace_id": "20000000-0000-4000-8000-000000000001",
+  "product_id": "10000000-0000-4000-8000-000000000001",
+  "product_version": 2,
+  "event_type": "PRODUCT_OWNER_REASSIGNED",
+  "actor": {
+    "actor_type": "AGENT",
+    "actor_id": "30000000-0000-4000-8000-000000000001"
+  },
+  "occurred_at": "2026-08-23T01:00:00Z",
+  "changed_fields": ["owner"],
+  "current_owner_user_id": "30000000-0000-4000-8000-000000000002"
+}

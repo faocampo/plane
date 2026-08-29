@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0",
+  "policy_key": "CURVE_PRODUCT_POLICY",
+  "policy_version": 1,
+  "default_effect": "DENY",
+  "principal_mapping": {
+    "workspace_administrator": {
+      "source": "PLANE_WORKSPACE_MEMBERSHIP",
+      "role_name": "ADMIN",
+      "role_value": 20,
+      "active_membership_required": true
+    },
+    "product_owner": {
+      "source": "PRODUCT_OWNER",
+      "actor_type": "HUMAN",
+      "active_membership_required": true
+    }
+  },
+  "initiative_terminal_states": ["READY_FOR_REPOSITORY_REVIEW", "CANCELLED"],
+  "actions": [
+    {
+      "action": "CURVE.PRODUCT.CREATE",
+      "authorities": ["WORKSPACE_ADMINISTRATOR"],
+      "allowed_product_states": [],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["WORKSPACE_KEY_UNIQUE", "IANA_TIMEZONE_VALID"]
+    },
+    {
+      "action": "CURVE.PRODUCT.READ",
+      "authorities": ["ACTIVE_WORKSPACE_MEMBER"],
+      "allowed_product_states": ["ACTIVE", "ARCHIVED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": []
+    },
+    {
+      "action": "CURVE.PRODUCT.UPDATE_METADATA",
+      "authorities": ["PRODUCT_OWNER", "WORKSPACE_ADMINISTRATOR"],
+      "allowed_product_states": ["ACTIVE", "ARCHIVED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "IANA_TIMEZONE_VALID"]
+    },
+    {
+      "action": "CURVE.PRODUCT.ARCHIVE",
+      "authorities": ["WORKSPACE_ADMINISTRATOR"],
+      "allowed_product_states": ["ACTIVE"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "NO_NON_TERMINAL_INITIATIVE"]
+    },
+    {
+      "action": "CURVE.PRODUCT.RESTORE",
+      "authorities": ["WORKSPACE_ADMINISTRATOR"],
+      "allowed_product_states": ["ARCHIVED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES"]
+    },
+    {
+      "action": "CURVE.PRODUCT.REASSIGN_OWNER",
+      "authorities": ["WORKSPACE_ADMINISTRATOR"],
+      "allowed_product_states": ["ACTIVE", "ARCHIVED"],
+      "requires_active_human": true,
+      "external_side_effect": false,
+      "preconditions": ["EXPECTED_VERSION_MATCHES", "TARGET_OWNER_ACTIVE_IN_WORKSPACE"]
+    }
+  ]
+}

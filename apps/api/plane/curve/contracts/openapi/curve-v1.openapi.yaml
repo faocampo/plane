@@ -95,6 +95,237 @@ paths:
           $ref: '#/components/responses/Problem'
         '422':
           $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/products:
+    get:
+      operationId: listCurveProducts
+      summary: List Products visible to the current workspace member
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/ProductState'
+      responses:
+        '200':
+          description: Product page, including archived Products when requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+    post:
+      operationId: createCurveProduct
+      summary: Create an active Product owned by the creating workspace administrator
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/product-create-request.schema.json'
+      responses:
+        '201':
+          description: Product created or replayed idempotently
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/product.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/products/{product_id}:
+    get:
+      operationId: getCurveProduct
+      summary: Read one active or archived Product
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Current Product state
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/product.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+    patch:
+      operationId: updateCurveProductMetadata
+      summary: Update Product name, description, or timezone
+      description: >-
+        Product key, owner, and lifecycle are not metadata fields and are
+        rejected in this request. A timezone change applies prospectively.
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/product-update-request.schema.json'
+      responses:
+        '200':
+          description: Product metadata updated or replayed idempotently
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/product.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/products/{product_id}/owner:
+    post:
+      operationId: reassignCurveProductOwner
+      summary: Reassign the one active human Product owner
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/product-reassign-owner-request.schema.json'
+      responses:
+        '200':
+          description: Product owner reassigned or replayed idempotently
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/product.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+        '422':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/products/{product_id}/archive:
+    post:
+      operationId: archiveCurveProduct
+      summary: Archive a Product with no non-terminal Initiative
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Product archived or replayed idempotently
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/product.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
+  /workspaces/{workspace_slug}/curve/products/{product_id}/restore:
+    post:
+      operationId: restoreCurveProduct
+      summary: Restore an archived Product
+      parameters:
+        - $ref: '#/components/parameters/WorkspaceSlug'
+        - $ref: '#/components/parameters/ProductId'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Product restored or replayed idempotently
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/product.schema.json'
+        '401':
+          $ref: '#/components/responses/Problem'
+        '403':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
+        '412':
+          $ref: '#/components/responses/Problem'
+        '428':
+          $ref: '#/components/responses/Problem'
   /workspaces/{workspace_slug}/curve/events:
     get:
       operationId: streamCurveEvents
@@ -197,6 +428,13 @@ components:
       schema:
         type: string
         format: uuid
+    ProductId:
+      name: product_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -237,6 +475,16 @@ components:
           - FOUNDATION_PROBE
           - WORKFLOW_COMMAND
           - PROVIDER_RECONCILIATION
+    ProductState:
+      name: state
+      in: query
+      required: false
+      description: Restrict results before pagination; omit to return active Products.
+      schema:
+        type: string
+        enum:
+          - ACTIVE
+          - ARCHIVED
   schemas:
     OperationPage:
       type: object
@@ -248,6 +496,20 @@ components:
           type: array
           items:
             $ref: '../schemas/operation-summary.schema.json'
+        next_cursor:
+          type:
+            - string
+            - 'null'
+    ProductPage:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '../schemas/product.schema.json'
         next_cursor:
           type:
             - string

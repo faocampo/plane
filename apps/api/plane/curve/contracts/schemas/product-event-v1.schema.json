@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/product-event-v1.schema.json",
+  "title": "Curve Product event payload v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workspace_id",
+    "product_id",
+    "product_version",
+    "event_type",
+    "actor",
+    "occurred_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "product_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "product_version": { "$ref": "common.schema.json#/$defs/AggregateVersion" },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "PRODUCT_CREATED",
+        "PRODUCT_METADATA_UPDATED",
+        "PRODUCT_OWNER_REASSIGNED",
+        "PRODUCT_ARCHIVED",
+        "PRODUCT_RESTORED"
+      ]
+    },
+    "actor": { "$ref": "product.schema.json#/$defs/humanActor" },
+    "occurred_at": { "$ref": "common.schema.json#/$defs/Instant" },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,49}$",
+      "maxLength": 50
+    },
+    "changed_fields": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["name", "description", "timezone", "owner", "state"]
+      }
+    },
+    "previous_timezone": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "current_timezone": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "previous_owner_user_id": { "type": "string", "format": "uuid" },
+    "current_owner_user_id": { "type": "string", "format": "uuid" },
+    "previous_state": { "type": "string", "enum": ["ACTIVE", "ARCHIVED"] },
+    "current_state": { "type": "string", "enum": ["ACTIVE", "ARCHIVED"] }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "event_type": { "const": "PRODUCT_CREATED" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["key", "current_timezone", "current_owner_user_id", "current_state"],
+        "properties": { "current_state": { "const": "ACTIVE" } }
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "PRODUCT_METADATA_UPDATED" } },
+        "required": ["event_type"]
+      },
+      "then": { "required": ["changed_fields"] }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "PRODUCT_OWNER_REASSIGNED" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["changed_fields", "previous_owner_user_id", "current_owner_user_id"],
+        "properties": {
+          "changed_fields": {
+            "const": ["owner"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "PRODUCT_ARCHIVED" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["changed_fields", "previous_state", "current_state"],
+        "properties": {
+          "changed_fields": { "const": ["state"] },
+          "previous_state": { "const": "ACTIVE" },
+          "current_state": { "const": "ARCHIVED" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "PRODUCT_RESTORED" } },
+        "required": ["event_type"]
+      },
+      "then": {
+        "required": ["changed_fields", "previous_state", "current_state"],
+        "properties": {
+          "changed_fields": { "const": ["state"] },
+          "previous_state": { "const": "ARCHIVED" },
+          "current_state": { "const": "ACTIVE" }
+        }
+      }
+    }
+  ]
+}

@@ -10,6 +10,7 @@ const m0s5ContextPath = new URL("apps/api/plane/curve/contracts/m0-s5-context.js
 const m0s5bContextPath = new URL("apps/api/plane/curve/contracts/m0-s5b-context.json", repositoryRoot);
 const m0s6aContextPath = new URL("apps/api/plane/curve/contracts/m0-s6a-context.json", repositoryRoot);
 const m0s9aContextPath = new URL("apps/api/plane/curve/contracts/m0-s9a-context.json", repositoryRoot);
+const m100aContextPath = new URL("apps/api/plane/curve/contracts/m1-00a-context.json", repositoryRoot);
 const temporalSupplyChainPath = new URL("apps/api/plane/curve/contracts/temporal-supply-chain.json", repositoryRoot);
 const openapiDirectory = new URL("apps/api/plane/curve/contracts/openapi/", repositoryRoot);
 const schemaDirectory = new URL("apps/api/plane/curve/contracts/schemas/", repositoryRoot);
@@ -19,6 +20,7 @@ const policyDirectory = new URL("apps/api/plane/curve/contracts/policy/", reposi
 const providerDirectory = new URL("apps/api/plane/curve/contracts/providers/", repositoryRoot);
 const observabilityDirectory = new URL("apps/api/plane/curve/contracts/observability/", repositoryRoot);
 const temporalDirectory = new URL("apps/api/plane/curve/contracts/temporal/", repositoryRoot);
+const governanceDirectory = new URL("apps/api/plane/curve/contracts/governance/", repositoryRoot);
 
 const expectedContext = {
   curveRevision: "ab2c81a33ede719c02ff0a2a6ab35eabcf304de1",
@@ -243,6 +245,34 @@ const expectedM0S9AVendoredFiles = {
     "9bb7a9cb7690c1a4f952a27c43ba332ae895da8a02a04c0738f1c59f242533b6",
 };
 
+const expectedM100AContext = {
+  curveRevision: "46880350e0ca1e57dd08b6fb5a6a6546f37c4473",
+  planeBaseRevision: "af7187d049c6ee6d0c82a5c70b686d4c444e9b63",
+  contextDigest: "sha256:951fd873f4a9179aae58359e595e48e80ba081a9703202f6b9d9eed51b4b3b6f",
+  owner: "Federico Ocampo",
+  reviewer: "Federico Ocampo",
+  implementer: "Codex",
+};
+
+const expectedM100AVendoredFiles = {
+  "contracts/governance/m1-00a-product-core-v1.json":
+    "3727faa52f810bfffdd66e4791ae519c1bf9b48d3d84121e55efb479599df406",
+  "contracts/openapi/curve-v1.openapi.yaml": "393513d02b2c144fab9474466c306c4e7f9df4a51a11a1e0091ad2ce1e4a9d08",
+  "contracts/policy/product-policy-v1.json": "37e93b93cf9a3b6e560f5123fc147353127ba8be8aadba7b6c3dbb7a73fbbd06",
+  "contracts/schemas/product-core-decision.schema.json":
+    "785a1e715546807acc9a7226ce44194c68f317f86fffefd8d627dc5b54a28f81",
+  "contracts/schemas/product-create-request.schema.json":
+    "49acd5acf3607dc55ee867dcca27a8ed40234b0b31bd341a545e2de8389eda3f",
+  "contracts/schemas/product-event-v1.schema.json": "b6203027a0a3063c2f780a3bed0c9c17879ee5e9cd6d6b28425aea15696ebbbb",
+  "contracts/schemas/product-policy-manifest.schema.json":
+    "a46c2fb562d40c846842ce490a1b6f9851cf4ca61001c47bc13b32a055991045",
+  "contracts/schemas/product-reassign-owner-request.schema.json":
+    "1714880b13c060bc672520a0f26692a77b06f52f40c4705916013cd4916bec1a",
+  "contracts/schemas/product-update-request.schema.json":
+    "bae963f785e4ed2c56f0ee8c6d4549e414645e9f4b852136d5594e402ee09b8f",
+  "contracts/schemas/product.schema.json": "4d65d50a57e51d011bb9d48bf108e7538ed4a9ed421670ac87902a6f16a35e7a",
+};
+
 const fail = (message) => {
   throw new Error(`Curve contract integrity check failed: ${message}`);
 };
@@ -250,7 +280,10 @@ const fail = (message) => {
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 // Historical manifests keep their approved digest; the current M0-S9A section
 // independently binds the evolved schema bytes.
-const evolvedAfterHistoricalContexts = new Set(["contracts/schemas/policy-decision.schema.json"]);
+const evolvedAfterHistoricalContexts = new Set([
+  "contracts/openapi/curve-v1.openapi.yaml",
+  "contracts/schemas/policy-decision.schema.json",
+]);
 
 const context = JSON.parse(await readFile(contextPath, "utf8"));
 if (context.curve_revision !== expectedContext.curveRevision) fail("unexpected Curve revision");
@@ -442,9 +475,11 @@ await Promise.all(
       : sourcePath.includes("/policy/")
         ? policyDirectory
         : schemaDirectory;
-    const observedDigest = sha256(await readFile(new URL(fileName, directory)));
-    if (observedDigest !== expectedDigest) {
-      fail(`${sourcePath} digest ${observedDigest} does not match M0-S4 source ${expectedDigest}`);
+    if (!evolvedAfterHistoricalContexts.has(sourcePath)) {
+      const observedDigest = sha256(await readFile(new URL(fileName, directory)));
+      if (observedDigest !== expectedDigest) {
+        fail(`${sourcePath} digest ${observedDigest} does not match M0-S4 source ${expectedDigest}`);
+      }
     }
     if (recordedM0S4Digests.get(sourcePath) !== `sha256:${expectedDigest}`) {
       fail(`${sourcePath} is not byte-bound by the M0-S4 context manifest`);
@@ -826,6 +861,87 @@ if (
 
 console.log(
   `Curve M0-S9A context integrity passed: ${Object.keys(expectedM0S9AVendoredFiles).length} vendored files at ${expectedM0S9AContext.curveRevision}`
+);
+
+const m100aContext = JSON.parse(await readFile(m100aContextPath, "utf8"));
+if (m100aContext.schema_version !== "curve-context-pack/v1" || m100aContext.task_id !== "M1-00A") {
+  fail("unexpected M1-00A context identity");
+}
+if (
+  m100aContext.curve_revision !== expectedM100AContext.curveRevision ||
+  m100aContext.plane_base_revision !== expectedM100AContext.planeBaseRevision ||
+  m100aContext.context_digest !== expectedM100AContext.contextDigest
+) {
+  fail("unexpected M1-00A revision or context digest");
+}
+if (
+  m100aContext.human_owner !== expectedM100AContext.owner ||
+  m100aContext.human_reviewer !== expectedM100AContext.reviewer ||
+  m100aContext.implementer !== expectedM100AContext.implementer ||
+  m100aContext.data_classification !== "INTERNAL" ||
+  m100aContext.execution_scope !== "LOCAL_ONLY" ||
+  m100aContext.budget_usd !== 0 ||
+  m100aContext.dispatch?.branch !== "curve/m1-00a-product-core" ||
+  m100aContext.dispatch?.authorized_by !== "Federico Ocampo" ||
+  m100aContext.dispatch?.runtime !== "LOCAL_ONLY" ||
+  m100aContext.dispatch?.merge_authorized !== false ||
+  m100aContext.dispatch?.deployment_authorized !== false
+) {
+  fail("unexpected M1-00A ownership, boundary, budget, or dispatch authority");
+}
+if (!Array.isArray(m100aContext.files) || !Array.isArray(m100aContext.paths)) {
+  fail("M1-00A context paths and per-file digests are required");
+}
+if (m100aContext.paths.length !== 37) fail("M1-00A context must bind exactly 37 source paths");
+if (JSON.stringify(m100aContext.paths) !== JSON.stringify([...m100aContext.paths].toSorted())) {
+  fail("M1-00A context paths are not sorted");
+}
+if (JSON.stringify(m100aContext.files.map(({ path }) => path)) !== JSON.stringify(m100aContext.paths)) {
+  fail("M1-00A context files and paths differ");
+}
+if (new Set(m100aContext.paths).size !== m100aContext.paths.length) {
+  fail("M1-00A context paths are not unique");
+}
+for (const file of m100aContext.files) {
+  if (!/^sha256:[0-9a-f]{64}$/.test(file.sha256)) {
+    fail(`M1-00A context digest is invalid for ${file.path}`);
+  }
+}
+
+const recordedM100ADigests = new Map(m100aContext.files.map(({ path, sha256: digest }) => [path, digest]));
+const m100aDirectoryFor = (sourcePath) => {
+  if (sourcePath.includes("/governance/")) return governanceDirectory;
+  if (sourcePath.includes("/openapi/")) return openapiDirectory;
+  if (sourcePath.includes("/policy/")) return policyDirectory;
+  return schemaDirectory;
+};
+await Promise.all(
+  Object.entries(expectedM100AVendoredFiles).map(async ([sourcePath, expectedDigest]) => {
+    if (recordedM100ADigests.get(sourcePath) !== `sha256:${expectedDigest}`) {
+      fail(`${sourcePath} is not byte-bound by the M1-00A context manifest`);
+    }
+    const fileName = sourcePath.split("/").at(-1);
+    const observedDigest = sha256(await readFile(new URL(fileName, m100aDirectoryFor(sourcePath))));
+    if (observedDigest !== expectedDigest) {
+      fail(`${sourcePath} vendored bytes differ from the approved M1-00A source`);
+    }
+  })
+);
+
+const productDecision = JSON.parse(await readFile(new URL("m1-00a-product-core-v1.json", governanceDirectory), "utf8"));
+if (
+  productDecision.decision_id !== "M1-00A" ||
+  productDecision.status !== "APPROVED" ||
+  productDecision.semantics?.key?.mutable !== false ||
+  productDecision.semantics?.ownership?.active_owner_count !== 1 ||
+  JSON.stringify(productDecision.semantics?.lifecycle?.states) !== JSON.stringify(["ACTIVE", "ARCHIVED"]) ||
+  productDecision.semantics?.retirement !== "REVERSIBLE_ARCHIVAL"
+) {
+  fail("M1-00A Product semantics differ from the approved decision");
+}
+
+console.log(
+  `Curve M1-00A context integrity passed: ${Object.keys(expectedM100AVendoredFiles).length} vendored files at ${expectedM100AContext.curveRevision}`
 );
 
 const temporalSupplyChain = JSON.parse(await readFile(temporalSupplyChainPath, "utf8"));

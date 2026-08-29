@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.x3m.internal/contracts/schemas/product-policy-manifest.schema.json",
+  "title": "Curve Product policy manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_key",
+    "policy_version",
+    "default_effect",
+    "principal_mapping",
+    "initiative_terminal_states",
+    "actions"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "policy_key": { "const": "CURVE_PRODUCT_POLICY" },
+    "policy_version": { "const": 1 },
+    "default_effect": { "const": "DENY" },
+    "principal_mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workspace_administrator", "product_owner"],
+      "properties": {
+        "workspace_administrator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "role_name", "role_value", "active_membership_required"],
+          "properties": {
+            "source": { "const": "PLANE_WORKSPACE_MEMBERSHIP" },
+            "role_name": { "const": "ADMIN" },
+            "role_value": { "const": 20 },
+            "active_membership_required": { "const": true }
+          }
+        },
+        "product_owner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "actor_type", "active_membership_required"],
+          "properties": {
+            "source": { "const": "PRODUCT_OWNER" },
+            "actor_type": { "const": "HUMAN" },
+            "active_membership_required": { "const": true }
+          }
+        }
+      }
+    },
+    "initiative_terminal_states": {
+      "const": ["READY_FOR_REPOSITORY_REVIEW", "CANCELLED"]
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/action" }
+    }
+  },
+  "$defs": {
+    "authority": {
+      "type": "string",
+      "enum": ["ACTIVE_WORKSPACE_MEMBER", "PRODUCT_OWNER", "WORKSPACE_ADMINISTRATOR"]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "authorities",
+        "allowed_product_states",
+        "requires_active_human",
+        "external_side_effect",
+        "preconditions"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "CURVE.PRODUCT.CREATE",
+            "CURVE.PRODUCT.READ",
+            "CURVE.PRODUCT.UPDATE_METADATA",
+            "CURVE.PRODUCT.ARCHIVE",
+            "CURVE.PRODUCT.RESTORE",
+            "CURVE.PRODUCT.REASSIGN_OWNER"
+          ]
+        },
+        "authorities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/authority" }
+        },
+        "allowed_product_states": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "enum": ["ACTIVE", "ARCHIVED"] }
+        },
+        "requires_active_human": { "const": true },
+        "external_side_effect": { "const": false },
+        "preconditions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "WORKSPACE_KEY_UNIQUE",
+              "IANA_TIMEZONE_VALID",
+              "EXPECTED_VERSION_MATCHES",
+              "NO_NON_TERMINAL_INITIATIVE",
+              "TARGET_OWNER_ACTIVE_IN_WORKSPACE"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
