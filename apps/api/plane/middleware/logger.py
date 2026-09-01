@@ -3,14 +3,13 @@
 # See the LICENSE file for details.
 
 # Python imports
-import hashlib
-import hmac
 import logging
 import time
 
 # Django imports
 from django.conf import settings
 from django.http import HttpRequest
+from django.utils.crypto import salted_hmac
 
 # Third party imports
 from rest_framework.request import Request
@@ -139,10 +138,13 @@ class APITokenLogMiddleware:
             log_data = {
                 # Tokenize the (high-entropy) API key into a stable, non-reversible
                 # identifier so logs can be correlated to a token without ever
-                # persisting the raw key. A keyed HMAC is used rather than a bare
-                # hash so the digest cannot be precomputed from a known key value.
-                "token_identifier": hmac.new(
-                    settings.SECRET_KEY.encode(), api_key.encode(), hashlib.sha256
+                # persisting the raw key. A domain-separated keyed HMAC is used
+                # so the digest cannot be precomputed from a known key value.
+                "token_identifier": salted_hmac(
+                    "plane.api-token-log-identifier",
+                    api_key,
+                    secret=settings.SECRET_KEY,
+                    algorithm="sha3_256",
                 ).hexdigest(),
                 "path": request.path,
                 "method": request.method,

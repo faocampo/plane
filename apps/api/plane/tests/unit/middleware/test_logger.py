@@ -10,8 +10,6 @@ Covers the credential-hygiene guarantees of the external API request logger:
 - sensitive request headers are redacted before being logged
 """
 
-import hashlib
-import hmac
 from unittest.mock import Mock, patch
 
 import pytest
@@ -19,6 +17,7 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
 from django.test import RequestFactory
+from django.utils.crypto import salted_hmac
 
 from plane.middleware.logger import APITokenLogMiddleware
 
@@ -56,8 +55,11 @@ class TestAPITokenLogMiddleware:
     def test_token_identifier_is_hashed_not_plaintext(self, middleware, request_factory):
         log_data = self._captured_log_data(middleware, request_factory)
 
-        expected_hash = hmac.new(
-            settings.SECRET_KEY.encode(), self.API_KEY.encode(), hashlib.sha256
+        expected_hash = salted_hmac(
+            "plane.api-token-log-identifier",
+            self.API_KEY,
+            secret=settings.SECRET_KEY,
+            algorithm="sha3_256",
         ).hexdigest()
         assert log_data["token_identifier"] == expected_hash
         assert self.API_KEY not in log_data["token_identifier"]
