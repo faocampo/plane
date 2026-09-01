@@ -86,7 +86,7 @@ export function Sortable<T>({ data, render, onChange, keyExtractor, containerCla
   }, [data, keyExtractor, onChange]);
 
   const enhancedData = useMemo(() => {
-    const uuid = id ? id : Math.random().toString(36).substring(7);
+    const uuid = id ? id : globalThis.crypto.randomUUID();
     return data.map((item) => ({ ...item, __uuid__: uuid }));
   }, [data, id]);
 
@@ -94,6 +94,8 @@ export function Sortable<T>({ data, render, onChange, keyExtractor, containerCla
     <>
       {data.map((item, index) => (
         <Draggable
+          // keyExtractor is the caller-owned stable identity contract; index is only its compatibility argument.
+          // eslint-disable-next-line react/no-array-index-key
           key={keyExtractor(enhancedData[index], index)}
           data={enhancedData[index]}
           className={containerClassName}
