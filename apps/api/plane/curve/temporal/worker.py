@@ -35,6 +35,7 @@ from plane.curve.temporal.activities import (  # noqa: E402
 )
 from plane.curve.temporal.relay import run_relay_loop  # noqa: E402
 from plane.curve.temporal.registry import CURVE_WORKFLOWS_V1  # noqa: E402
+from plane.curve.temporal.worker_lifecycle import supervise_worker_lifecycle  # noqa: E402
 
 
 logger = logging.getLogger(__name__)
@@ -84,23 +85,12 @@ async def run_worker() -> None:
                 ),
                 name="curve-temporal-relay",
             )
-            stop_task = asyncio.create_task(stop_event.wait(), name="curve-temporal-stop")
-            completed, _ = await asyncio.wait(
-                {worker_task, relay_task, stop_task},
-                return_when=asyncio.FIRST_COMPLETED,
+            await supervise_worker_lifecycle(
+                worker=worker,
+                worker_task=worker_task,
+                relay_task=relay_task,
+                stop_event=stop_event,
             )
-            unexpected = completed - {stop_task}
-            stop_event.set()
-            relay_task.cancel()
-            await worker.shutdown()
-            results = await asyncio.gather(worker_task, relay_task, return_exceptions=True)
-            stop_task.cancel()
-            await asyncio.gather(stop_task, return_exceptions=True)
-            if unexpected:
-                for result in results:
-                    if isinstance(result, BaseException) and not isinstance(result, asyncio.CancelledError):
-                        raise result
-                raise RuntimeError("Curve Temporal worker task exited unexpectedly")
     finally:
         telemetry_runtime.shutdown()
 
