@@ -10,6 +10,7 @@ import { useTranslation } from "@plane/i18n";
 import type { IWorkspaceMemberInvitation } from "@plane/types";
 // components
 import { LogoSpinner } from "@/components/common/logo-spinner";
+import { CURVE_AUTH_COPY } from "@/components/curve/curve-auth-brand";
 import { WorkspaceLogo } from "@/components/workspace/logo";
 // helpers
 import { EAuthModes, EAuthSteps } from "@/helpers/authentication.helper";
@@ -27,30 +28,30 @@ type TAuthHeader = {
 const Titles = {
   [EAuthModes.SIGN_IN]: {
     [EAuthSteps.EMAIL]: {
-      header: "Work in all dimensions.",
-      subHeader: "Welcome back to Plane.",
+      header: CURVE_AUTH_COPY.signIn.heading,
+      subHeader: CURVE_AUTH_COPY.signIn.subheading,
     },
     [EAuthSteps.PASSWORD]: {
-      header: "Work in all dimensions.",
-      subHeader: "Welcome back to Plane.",
+      header: CURVE_AUTH_COPY.signIn.heading,
+      subHeader: CURVE_AUTH_COPY.signIn.subheading,
     },
     [EAuthSteps.UNIQUE_CODE]: {
-      header: "Work in all dimensions.",
-      subHeader: "Welcome back to Plane.",
+      header: CURVE_AUTH_COPY.signIn.heading,
+      subHeader: CURVE_AUTH_COPY.signIn.subheading,
     },
   },
   [EAuthModes.SIGN_UP]: {
     [EAuthSteps.EMAIL]: {
-      header: "Work in all dimensions.",
-      subHeader: "Create your Plane account.",
+      header: CURVE_AUTH_COPY.signUp.heading,
+      subHeader: CURVE_AUTH_COPY.signUp.subheading,
     },
     [EAuthSteps.PASSWORD]: {
-      header: "Work in all dimensions.",
-      subHeader: "Create your Plane account.",
+      header: CURVE_AUTH_COPY.signUp.heading,
+      subHeader: CURVE_AUTH_COPY.signUp.subheading,
     },
     [EAuthSteps.UNIQUE_CODE]: {
-      header: "Work in all dimensions.",
-      subHeader: "Create your Plane account.",
+      header: CURVE_AUTH_COPY.signUp.heading,
+      subHeader: CURVE_AUTH_COPY.signUp.subheading,
     },
   },
 };
@@ -74,11 +75,11 @@ export const AuthHeader = observer(function AuthHeader(props: TAuthHeader) {
   const getHeaderSubHeader = (
     step: EAuthSteps,
     mode: EAuthModes,
-    invitation: IWorkspaceMemberInvitation | undefined,
+    invitationData: IWorkspaceMemberInvitation | undefined,
     email: string | undefined
   ) => {
-    if (invitation && email && invitation.email === email && invitation.workspace) {
-      const workspace = invitation.workspace;
+    if (invitationData && email && invitationData.email === email && invitationData.workspace) {
+      const workspace = invitationData.workspace;
       return {
         header: (
           <div className="relative inline-flex items-center gap-2">
