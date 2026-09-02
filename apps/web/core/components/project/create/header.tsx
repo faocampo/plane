@@ -11,6 +11,7 @@ import { ETabIndices } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { EmojiPicker, EmojiIconPickerTypes, Logo } from "@plane/propel/emoji-icon-picker";
 import { CloseIcon } from "@plane/propel/icons";
+import { getButtonStyling } from "@plane/propel/button";
 // plane types
 import type { IProject } from "@plane/types";
 // plane ui
@@ -57,16 +58,30 @@ function ProjectCreateHeader(props: Props) {
           name="cover_image_url"
           control={control}
           render={({ field: { value, onChange } }) => (
-            <ImagePickerPopover
-              label={t("change_cover")}
-              onChange={(data) => {
-                onChange(data);
-                handleFormOnChange?.();
-              }}
-              control={control}
-              value={value ?? null}
-              tabIndex={getIndex("cover_image")}
-            />
+            <div className="flex items-center gap-2">
+              {value && (
+                <button
+                  type="button"
+                  className={getButtonStyling("secondary", "sm")}
+                  onClick={() => {
+                    onChange(null);
+                    handleFormOnChange?.();
+                  }}
+                >
+                  Remove cover
+                </button>
+              )}
+              <ImagePickerPopover
+                label={t("change_cover")}
+                onChange={(data) => {
+                  onChange(data);
+                  handleFormOnChange?.();
+                }}
+                control={control}
+                value={value ?? null}
+                tabIndex={getIndex("cover_image")}
+              />
+            </div>
           )}
         />
       </div>

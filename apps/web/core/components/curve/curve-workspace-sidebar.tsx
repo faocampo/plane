@@ -123,15 +123,25 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   return (
     <div
       id="curve-workspace-navigation"
-      className="flex h-full w-full animate-fade-in flex-col"
+      className={cn("flex h-full w-full animate-fade-in flex-col", resolvedTheme === "dark" && "bg-[#0B1020]")}
       aria-label="Curve workspace navigation"
     >
-      <div className="flex items-center justify-between gap-3 px-5 pb-3">
-        <img
-          src={resolvedTheme === "dark" ? "/curve/curve-logo-dark-v1.png" : "/curve/curve-logo-light-v1.webp"}
-          alt="Curve"
-          className={cn("h-9 w-auto object-contain object-left", resolvedTheme === "dark" && "max-w-32")}
-        />
+      <div className="flex min-h-14 items-center justify-between gap-3 px-5 pb-3">
+        {resolvedTheme === "dark" ? (
+          <div className="relative h-10 w-[8.25rem] shrink-0 overflow-hidden" aria-label="Curve">
+            <img
+              src="/curve/curve-logo-dark-v1.png"
+              alt=""
+              className="absolute -top-[3.2rem] -left-[2.7rem] h-36 w-auto max-w-none"
+            />
+          </div>
+        ) : (
+          <img
+            src="/curve/curve-logo-light-v1.webp"
+            alt="Curve"
+            className="h-auto w-[8.25rem] shrink-0 object-contain object-left"
+          />
+        )}
         <AppSidebarToggleButton controlsId="curve-workspace-navigation" />
       </div>
       <div className="px-4 pb-3">

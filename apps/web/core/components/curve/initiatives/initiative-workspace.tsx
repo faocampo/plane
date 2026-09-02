@@ -338,6 +338,12 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
   const needsAttentionCount = initiatives.filter(
     ({ risk_tier, state }) => risk_tier === "HIGH" && state !== "CANCELLED"
   ).length;
+  const createUnavailableReason =
+    products.length === 0
+      ? "An active Product is required before an Initiative can be created."
+      : activeMembers.length === 0
+        ? "At least one active workspace member is required before an Initiative can be created."
+        : undefined;
 
   const closeCreate = () => {
     setCreateOpen(false);
@@ -423,15 +429,23 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             begins.
           </p>
         </div>
-        <Button
-          ref={createTriggerRef}
-          size="xl"
-          prependIcon={<Plus />}
-          disabled={products.length === 0 || activeMembers.length === 0}
-          onClick={() => setCreateOpen(true)}
-        >
-          New Initiative
-        </Button>
+        <div className="flex max-w-sm flex-col items-start gap-2 sm:items-end">
+          <Button
+            ref={createTriggerRef}
+            size="xl"
+            prependIcon={<Plus />}
+            disabled={!!createUnavailableReason}
+            aria-describedby={createUnavailableReason ? "curve-initiative-create-requirement" : undefined}
+            onClick={() => setCreateOpen(true)}
+          >
+            New Initiative
+          </Button>
+          {createUnavailableReason && (
+            <p id="curve-initiative-create-requirement" className="text-11 leading-5 text-secondary sm:text-right">
+              {createUnavailableReason}
+            </p>
+          )}
+        </div>
       </header>
 
       <section

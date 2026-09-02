@@ -222,6 +222,16 @@ describe("Curve Initiative shell", () => {
     expect(screen.getByLabelText(/Title/)).toHaveValue("");
   });
 
+  it("explains why Initiative creation is unavailable without an active Product", () => {
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, products: [] });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const createButton = screen.getByRole("button", { name: "New Initiative" });
+    expect(createButton).toBeDisabled();
+    expect(createButton).toHaveAttribute("aria-describedby", "curve-initiative-create-requirement");
+    expect(screen.getByText("An active Product is required before an Initiative can be created.")).toBeInTheDocument();
+  });
+
   it("creates one standalone Draft intent with the three gate assignments and announces success", async () => {
     const createInitiative = vi.fn().mockResolvedValue(true);
     useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
