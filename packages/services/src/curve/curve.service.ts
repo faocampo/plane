@@ -6,9 +6,16 @@
 
 import { API_BASE_URL } from "@plane/constants";
 import type {
+  ICurveInitiativeCreateRequest,
+  ICurveInitiativeListFilters,
+  ICurveInitiativeMutationResult,
+  ICurveInitiativePage,
+  ICurveInitiativeTransitionRequest,
   ICurveOperationMutationResult,
   ICurveOperationPage,
   ICurveOperationSummary,
+  ICurveProductListFilters,
+  ICurveProductPage,
   ICurveWorkspaceShell,
   TCurveOperationType,
 } from "@plane/types";
@@ -108,6 +115,138 @@ export class CurveService extends APIService {
     )
       .then((response) => ({
         operation: response.data as ICurveOperationSummary,
+        etag: response.headers.etag as string,
+      }))
+      .catch((error) => {
+        throw error?.response;
+      });
+  }
+
+  async listProducts(
+    workspaceSlug: string,
+    { state = "ACTIVE", pageSize = 100, cursor }: ICurveProductListFilters = {}
+  ): Promise<ICurveProductPage> {
+    return this.get(`/api/v1/workspaces/${workspaceSlug}/curve/products/`, {
+      params: {
+        state,
+        page_size: pageSize,
+        ...(cursor ? { cursor } : {}),
+      },
+    })
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response;
+      });
+  }
+
+  async listInitiatives(
+    workspaceSlug: string,
+    { state, productId, pageSize = 100, cursor }: ICurveInitiativeListFilters = {}
+  ): Promise<ICurveInitiativePage> {
+    return this.get(`/api/v1/workspaces/${workspaceSlug}/curve/initiatives/`, {
+      params: {
+        page_size: pageSize,
+        ...(cursor ? { cursor } : {}),
+        ...(state ? { state } : {}),
+        ...(productId ? { product_id: productId } : {}),
+      },
+    })
+      .then((response) => response.data)
+      .catch((error) => {
+        throw error?.response;
+      });
+  }
+
+  async retrieveInitiative(workspaceSlug: string, initiativeId: string): Promise<ICurveInitiativeMutationResult> {
+    return this.get(`/api/v1/workspaces/${workspaceSlug}/curve/initiatives/${initiativeId}/`)
+      .then((response) => ({
+        initiative: response.data,
+        etag: response.headers.etag as string,
+      }))
+      .catch((error) => {
+        throw error?.response;
+      });
+  }
+
+  async createInitiative(
+    workspaceSlug: string,
+    payload: ICurveInitiativeCreateRequest,
+    idempotencyKey: string
+  ): Promise<ICurveInitiativeMutationResult> {
+    const csrfToken = await this.requestCSRFToken();
+    return this.post(`/api/v1/workspaces/${workspaceSlug}/curve/initiatives/`, payload, {
+      headers: {
+        "Idempotency-Key": idempotencyKey,
+        "X-CSRFTOKEN": csrfToken,
+      },
+    })
+      .then((response) => ({
+        initiative: response.data,
+        etag: response.headers.etag as string,
+        location: response.headers.location as string | undefined,
+      }))
+      .catch((error) => {
+        throw error?.response;
+      });
+  }
+
+  async acceptInitiativeRefinement(
+    workspaceSlug: string,
+    initiativeId: string,
+    etag: string,
+    idempotencyKey: string
+  ): Promise<ICurveInitiativeMutationResult> {
+    return this.transitionInitiative(workspaceSlug, initiativeId, "accept-refinement", {}, etag, idempotencyKey);
+  }
+
+  async pauseInitiative(
+    workspaceSlug: string,
+    initiativeId: string,
+    payload: ICurveInitiativeTransitionRequest,
+    etag: string,
+    idempotencyKey: string
+  ): Promise<ICurveInitiativeMutationResult> {
+    return this.transitionInitiative(workspaceSlug, initiativeId, "pause", payload, etag, idempotencyKey);
+  }
+
+  async resumeInitiative(
+    workspaceSlug: string,
+    initiativeId: string,
+    payload: ICurveInitiativeTransitionRequest,
+    etag: string,
+    idempotencyKey: string
+  ): Promise<ICurveInitiativeMutationResult> {
+    return this.transitionInitiative(workspaceSlug, initiativeId, "resume", payload, etag, idempotencyKey);
+  }
+
+  async cancelInitiative(
+    workspaceSlug: string,
+    initiativeId: string,
+    payload: ICurveInitiativeTransitionRequest,
+    etag: string,
+    idempotencyKey: string
+  ): Promise<ICurveInitiativeMutationResult> {
+    return this.transitionInitiative(workspaceSlug, initiativeId, "cancel", payload, etag, idempotencyKey);
+  }
+
+  private async transitionInitiative(
+    workspaceSlug: string,
+    initiativeId: string,
+    action: "accept-refinement" | "pause" | "resume" | "cancel",
+    payload: ICurveInitiativeTransitionRequest | Record<string, never>,
+    etag: string,
+    idempotencyKey: string
+  ): Promise<ICurveInitiativeMutationResult> {
+    const csrfToken = await this.requestCSRFToken();
+    return this.post(`/api/v1/workspaces/${workspaceSlug}/curve/initiatives/${initiativeId}/${action}/`, payload, {
+      headers: {
+        "Idempotency-Key": idempotencyKey,
+        "If-Match": etag,
+        "X-CSRFTOKEN": csrfToken,
+      },
+    })
+      .then((response) => ({
+        initiative: response.data,
         etag: response.headers.etag as string,
       }))
       .catch((error) => {

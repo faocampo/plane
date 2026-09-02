@@ -79,3 +79,139 @@ export interface ICurveOperationMutationResult {
   etag: string;
   location?: string;
 }
+
+export type TCurveProductState = "ACTIVE" | "ARCHIVED";
+
+export type TCurveInitiativeMode = "ROADMAP" | "STANDALONE";
+
+export type TCurveInitiativeRiskTier = "LOW" | "STANDARD" | "HIGH";
+
+export type TCurveInitiativeState =
+  | "DRAFT"
+  | "ALIGNING"
+  | "PRD_REVIEW"
+  | "PLANNING"
+  | "PLAN_REVIEW"
+  | "EXECUTING"
+  | "CODE_READINESS_REVIEW"
+  | "READY_FOR_REPOSITORY_REVIEW"
+  | "PAUSED"
+  | "FAILED"
+  | "CANCELLED";
+
+export type TCurveInitiativeListState = Extract<TCurveInitiativeState, "DRAFT" | "ALIGNING" | "PAUSED" | "CANCELLED">;
+
+export type TCurveGateType = "PRD_APPROVAL" | "PLAN_APPROVAL" | "CODE_READINESS";
+
+export interface ICurveHumanActor {
+  actor_type: "HUMAN";
+  actor_id: string;
+}
+
+export interface ICurveRichTextDocument {
+  schema_version: "1.0";
+  format: "MARKDOWN";
+  body: string;
+}
+
+export interface ICurveProduct {
+  schema_version: "1.0";
+  id: string;
+  workspace_id: string;
+  key: string;
+  name: string;
+  description: string | null;
+  timezone: string;
+  state: TCurveProductState;
+  owner: ICurveHumanActor;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  created_by: ICurveHumanActor;
+  updated_by: ICurveHumanActor;
+  archived_at: string | null;
+  archived_by: ICurveHumanActor | null;
+}
+
+export interface ICurveProductPage {
+  results: ICurveProduct[];
+  next_cursor?: string | null;
+}
+
+export interface ICurveProductListFilters {
+  state?: TCurveProductState;
+  pageSize?: number;
+  cursor?: string;
+}
+
+export interface ICurveGateAssignment {
+  id: string;
+  workspace_id: string;
+  initiative_id: string;
+  gate_type: TCurveGateType;
+  approver: ICurveHumanActor;
+  valid_from: string;
+  valid_until: string | null;
+  delegation_reason: string | null;
+}
+
+export interface ICurveInitiative {
+  schema_version: "1.0";
+  id: string;
+  workspace_id: string;
+  product_id: string;
+  mode: TCurveInitiativeMode;
+  roadmap_item_id: string | null;
+  keyword: string;
+  title: string;
+  description: ICurveRichTextDocument;
+  risk_tier: TCurveInitiativeRiskTier;
+  state: TCurveInitiativeState;
+  paused_from_state: Extract<TCurveInitiativeState, "DRAFT" | "ALIGNING"> | null;
+  workflow_version_id: string | null;
+  creator: ICurveHumanActor;
+  gate_assignments: ICurveGateAssignment[];
+  first_external_resource_at: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  updated_by: ICurveHumanActor;
+}
+
+export interface ICurveInitiativePage {
+  results: ICurveInitiative[];
+  next_cursor?: string | null;
+}
+
+export interface ICurveInitiativeListFilters {
+  state?: TCurveInitiativeListState;
+  productId?: string;
+  pageSize?: number;
+  cursor?: string;
+}
+
+export interface ICurveGateAssignmentRequest {
+  gate_type: TCurveGateType;
+  approver_user_id: string;
+}
+
+export interface ICurveInitiativeCreateRequest {
+  product_id: string;
+  mode: TCurveInitiativeMode;
+  roadmap_item_id?: string | null;
+  keyword: string;
+  title: string;
+  description: ICurveRichTextDocument;
+  risk_tier: TCurveInitiativeRiskTier;
+  gate_assignments: ICurveGateAssignmentRequest[];
+}
+
+export interface ICurveInitiativeTransitionRequest {
+  reason: string;
+}
+
+export interface ICurveInitiativeMutationResult {
+  initiative: ICurveInitiative;
+  etag: string;
+  location?: string;
+}

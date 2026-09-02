@@ -8,7 +8,18 @@ import { type ReactNode } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Activity, Blocks, FileCheck2, Gauge, Layers3, Route, Settings, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Activity,
+  Blocks,
+  FileCheck2,
+  Gauge,
+  Layers3,
+  ListTodo,
+  Route,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 
 import {
@@ -104,6 +115,7 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   const { resolvedTheme } = useTheme();
   const { toggleSidebar } = useAppTheme();
   const foundationHref = `/${slug}/curve`;
+  const initiativesHref = `${foundationHref}/initiatives`;
   const closeMobileNavigation = () => {
     if (window.innerWidth < 768) toggleSidebar(true);
   };
@@ -137,7 +149,13 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
       >
         <CurveNavSection label="Product">
           <CurveUpcomingItem label="Overview" icon={<Sparkles className="size-4" />} />
-          <CurveUpcomingItem label="Initiatives" icon={<Sparkles className="size-4" />} />
+          <CurveLink
+            href={initiativesHref}
+            label="Initiatives"
+            icon={<ListTodo className="size-4" />}
+            active={pathname === initiativesHref || pathname.startsWith(`${initiativesHref}/`)}
+            onNavigate={closeMobileNavigation}
+          />
           <CurveUpcomingItem label="Roadmaps" icon={<Route className="size-4" />} />
         </CurveNavSection>
 
@@ -165,7 +183,7 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
             href={foundationHref}
             label="Foundation status"
             icon={<Gauge className="size-4" />}
-            active={pathname === foundationHref || pathname.startsWith(`${foundationHref}/`)}
+            active={pathname === foundationHref}
             onNavigate={closeMobileNavigation}
           />
           <CurveLink
