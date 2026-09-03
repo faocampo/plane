@@ -7,11 +7,12 @@
 import { useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
-import { Inbox, Plus, RefreshCw, Search, TriangleAlert } from "lucide-react";
+import { Inbox, Pencil, Plus, RefreshCw, Search, TriangleAlert } from "lucide-react";
 
 import { Dialog, EDialogWidth } from "@plane/propel/dialog";
 import type {
   ICurveInitiative,
+  ICurveInitiativeDraftUpdateRequest,
   ICurveProduct,
   IWorkspaceMember,
   TCurveGateType,
@@ -43,6 +44,8 @@ const filterClassName =
 
 type TReasonAction = "pause" | "resume" | "cancel";
 type TSummaryFilter = "ACTIVE" | "PAUSED" | "NEEDS_ATTENTION";
+
+const initiativeKeywordPattern = /^[A-Za-z0-9][A-Za-z0-9-]{0,49}$/;
 
 const actionCopy: Record<TReasonAction, { title: string; description: string; button: string }> = {
   pause: {
@@ -152,7 +155,7 @@ function InitiativeDetail({
   etag,
   isMutating,
   onAccept,
-  onUpdateBusinessIntent,
+  onEdit,
   onAction,
 }: {
   initiative: ICurveInitiative;
@@ -161,15 +164,10 @@ function InitiativeDetail({
   etag?: string;
   isMutating: boolean;
   onAccept: () => void;
-  onUpdateBusinessIntent: (intent: TCurveInitiativeBusinessIntent) => Promise<boolean>;
+  onEdit: () => void;
   onAction: (action: TReasonAction) => void;
 }) {
   const canMutate = !!etag && !isMutating;
-  const [draftBusinessIntent, setDraftBusinessIntent] = useState<TCurveInitiativeBusinessIntent | "">(
-    initiative.business_intent ?? ""
-  );
-  const businessIntentChanged = draftBusinessIntent !== (initiative.business_intent ?? "");
-  const selectedBusinessIntent = initiativeBusinessIntentOptions.find(({ value }) => value === draftBusinessIntent);
   const canStartAlignment = canMutate && !!initiative.business_intent;
   return (
     <article aria-labelledby="curve-initiative-detail-title" className="min-w-0">
@@ -190,6 +188,11 @@ function InitiativeDetail({
           <code className="rounded bg-layer-1 px-1.5 py-0.5 text-10">#{initiative.keyword}</code>
         </div>
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
+          {initiative.state === "DRAFT" && !initiative.first_external_resource_at && (
+            <Button size="lg" variant="neutral-primary" prependIcon={<Pencil />} disabled={!canMutate} onClick={onEdit}>
+              Edit Initiative
+            </Button>
+          )}
           {initiative.state === "DRAFT" && (
             <Button size="lg" disabled={!canStartAlignment} loading={isMutating} onClick={onAccept}>
               Start alignment
@@ -274,42 +277,7 @@ function InitiativeDetail({
           <dl className="space-y-5">
             <div>
               <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Business intent</dt>
-              {initiative.state === "DRAFT" ? (
-                <dd className="mt-1 space-y-2">
-                  <select
-                    value={draftBusinessIntent}
-                    onChange={(event) =>
-                      setDraftBusinessIntent(event.target.value as TCurveInitiativeBusinessIntent | "")
-                    }
-                    className={`${filterClassName} w-full`}
-                    aria-label="Business intent"
-                    aria-describedby="curve-initiative-business-intent-detail-help"
-                  >
-                    <option value="">Choose an intent</option>
-                    {initiativeBusinessIntentOptions.map(({ value, label }) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <Button
-                    size="sm"
-                    variant="neutral-primary"
-                    disabled={!canMutate || !draftBusinessIntent || !businessIntentChanged}
-                    loading={isMutating}
-                    onClick={() => void (draftBusinessIntent && onUpdateBusinessIntent(draftBusinessIntent))}
-                  >
-                    Save intent
-                  </Button>
-                  <p id="curve-initiative-business-intent-detail-help" className="text-10 leading-4 text-secondary">
-                    {selectedBusinessIntent?.description ?? "Required before alignment."}
-                  </p>
-                </dd>
-              ) : (
-                <dd className="mt-1 text-11 text-primary">
-                  {initiativeBusinessIntentLabel(initiative.business_intent)}
-                </dd>
-              )}
+              <dd className="mt-1 text-11 text-primary">{initiativeBusinessIntentLabel(initiative.business_intent)}</dd>
             </div>
             <div>
               <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Mode</dt>
@@ -320,10 +288,6 @@ function InitiativeDetail({
               <dd className="mt-1 text-11 text-primary">
                 {memberDisplayName(members.get(initiative.creator.actor_id))}
               </dd>
-            </div>
-            <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Workflow version</dt>
-              <dd className="mt-1 text-11 text-primary">{initiative.workflow_version_id ?? "Not assigned"}</dd>
             </div>
             <div>
               <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Record version</dt>
@@ -344,6 +308,190 @@ function InitiativeDetail({
         </aside>
       </div>
     </article>
+  );
+}
+
+function InitiativeEditDialog({
+  initiative,
+  isSubmitting,
+  onClose,
+  onUpdate,
+}: {
+  initiative: ICurveInitiative;
+  isSubmitting: boolean;
+  onClose: () => void;
+  onUpdate: (payload: ICurveInitiativeDraftUpdateRequest) => Promise<boolean>;
+}) {
+  const [title, setTitle] = useState(initiative.title);
+  const [keyword, setKeyword] = useState(initiative.keyword);
+  const [riskTier, setRiskTier] = useState<TCurveInitiativeRiskTier>(initiative.risk_tier);
+  const [businessIntent, setBusinessIntent] = useState<TCurveInitiativeBusinessIntent | "">(
+    initiative.business_intent ?? ""
+  );
+  const [description, setDescription] = useState(initiative.description.body);
+  const [errors, setErrors] = useState<Partial<Record<"title" | "keyword" | "description", string>>>({});
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  const submit = async () => {
+    const nextErrors: typeof errors = {};
+    if (!title.trim()) nextErrors.title = "Enter a title.";
+    if (!initiativeKeywordPattern.test(keyword.trim())) {
+      nextErrors.keyword = "Use letters, digits, and hyphens only, starting with a letter or digit.";
+    }
+    if (!description.trim()) nextErrors.description = "Describe the problem and intended outcome.";
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      if (nextErrors.title) titleRef.current?.focus();
+      return;
+    }
+
+    const succeeded = await onUpdate({
+      title: title.trim(),
+      keyword: keyword.trim(),
+      risk_tier: riskTier,
+      business_intent: businessIntent || null,
+      description: { schema_version: "1.0", format: "MARKDOWN", body: description.trim() },
+    });
+    if (succeeded) onClose();
+  };
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Panel initialFocus={titleRef} width={EDialogWidth.LG}>
+        <div className="p-5 sm:p-6">
+          <Dialog.Title>Edit Initiative</Dialog.Title>
+          <p className="mt-2 text-12 leading-5 text-secondary">
+            Update the definition while this Initiative remains in Draft.
+          </p>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <label className="block text-12 font-semibold text-primary sm:col-span-2">
+              Title
+              <input
+                ref={titleRef}
+                value={title}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  setErrors((current) => ({ ...current, title: undefined }));
+                }}
+                className={cn(
+                  filterClassName,
+                  "mt-1 w-full",
+                  errors.title && "border-danger-strong focus:border-danger-strong focus:ring-danger-subtle"
+                )}
+                maxLength={255}
+                aria-invalid={!!errors.title}
+                aria-describedby={errors.title ? "curve-initiative-edit-title-error" : undefined}
+              />
+              {errors.title && (
+                <span
+                  id="curve-initiative-edit-title-error"
+                  role="alert"
+                  className="mt-1 block text-12 text-danger-primary"
+                >
+                  {errors.title}
+                </span>
+              )}
+            </label>
+
+            <label className="block text-12 font-semibold text-primary">
+              Keyword
+              <input
+                value={keyword}
+                onChange={(event) => {
+                  setKeyword(event.target.value);
+                  setErrors((current) => ({ ...current, keyword: undefined }));
+                }}
+                className={cn(
+                  filterClassName,
+                  "mt-1 w-full",
+                  errors.keyword && "border-danger-strong focus:border-danger-strong focus:ring-danger-subtle"
+                )}
+                maxLength={50}
+                aria-invalid={!!errors.keyword}
+                aria-describedby="curve-initiative-edit-keyword-help"
+              />
+              <span
+                id="curve-initiative-edit-keyword-help"
+                className={cn(
+                  "font-normal mt-1 block text-11",
+                  errors.keyword ? "text-danger-primary" : "text-secondary"
+                )}
+              >
+                {errors.keyword ?? "Letters, digits, and hyphens; up to 50 characters."}
+              </span>
+            </label>
+
+            <label className="block text-12 font-semibold text-primary">
+              Risk tier
+              <select
+                value={riskTier}
+                onChange={(event) => setRiskTier(event.target.value as TCurveInitiativeRiskTier)}
+                className={`${filterClassName} mt-1 w-full`}
+              >
+                <option value="LOW">Low</option>
+                <option value="STANDARD">Standard</option>
+                <option value="HIGH">High</option>
+              </select>
+            </label>
+
+            <label className="block text-12 font-semibold text-primary sm:col-span-2">
+              Business intent
+              <select
+                value={businessIntent}
+                onChange={(event) => setBusinessIntent(event.target.value as TCurveInitiativeBusinessIntent | "")}
+                className={`${filterClassName} mt-1 w-full`}
+              >
+                <option value="">Not set</option>
+                {initiativeBusinessIntentOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <span className="font-normal mt-1 block text-11 text-secondary">Required before alignment starts.</span>
+            </label>
+
+            <label className="block text-12 font-semibold text-primary sm:col-span-2">
+              Problem and intended outcome
+              <textarea
+                value={description}
+                onChange={(event) => {
+                  setDescription(event.target.value);
+                  setErrors((current) => ({ ...current, description: undefined }));
+                }}
+                className={cn(
+                  filterClassName,
+                  "mt-1 min-h-28 w-full resize-y py-2",
+                  errors.description && "border-danger-strong focus:border-danger-strong focus:ring-danger-subtle"
+                )}
+                maxLength={10000}
+                aria-invalid={!!errors.description}
+                aria-describedby={errors.description ? "curve-initiative-edit-description-error" : undefined}
+              />
+              {errors.description && (
+                <span
+                  id="curve-initiative-edit-description-error"
+                  role="alert"
+                  className="mt-1 block text-12 text-danger-primary"
+                >
+                  {errors.description}
+                </span>
+              )}
+            </label>
+          </div>
+
+          <div className="mt-6 flex justify-end gap-2">
+            <Button size="lg" variant="neutral-primary" disabled={isSubmitting} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button size="lg" loading={isSubmitting} onClick={() => void submit()}>
+              Save changes
+            </Button>
+          </div>
+        </div>
+      </Dialog.Panel>
+    </Dialog>
   );
 }
 
@@ -377,6 +525,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
   const [riskFilter, setRiskFilter] = useState<"ALL" | TCurveInitiativeRiskTier>("ALL");
   const [summaryFilter, setSummaryFilter] = useState<TSummaryFilter>();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [reasonAction, setReasonAction] = useState<TReasonAction>();
   const [reason, setReason] = useState("");
   const [reasonError, setReasonError] = useState(false);
@@ -470,9 +619,9 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
     if (succeeded) setAnnouncement("Initiative refinement accepted. State changed to Aligning.");
   };
 
-  const handleUpdateBusinessIntent = async (businessIntent: TCurveInitiativeBusinessIntent) => {
-    const succeeded = await updateInitiativeDraft({ business_intent: businessIntent });
-    if (succeeded) setAnnouncement("Business intent saved.");
+  const handleUpdateDraft = async (payload: ICurveInitiativeDraftUpdateRequest) => {
+    const succeeded = await updateInitiativeDraft(payload);
+    if (succeeded) setAnnouncement("Initiative changes saved.");
     return succeeded;
   };
 
@@ -561,8 +710,10 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             aria-label={`Filter Initiatives: ${label}`}
             aria-pressed={summaryFilter === id}
           >
-            <p className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">{label}</p>
-            <p className="text-20 leading-6 font-semibold text-primary">{value}</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-20 leading-6 font-semibold text-primary">{value}</p>
+              <p className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">{label}</p>
+            </div>
             <p className="text-10 text-secondary">{detail}</p>
           </button>
         ))}
@@ -719,7 +870,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
               etag={selectedEtag}
               isMutating={isMutating}
               onAccept={() => void handleAcceptRefinement()}
-              onUpdateBusinessIntent={handleUpdateBusinessIntent}
+              onEdit={() => setEditOpen(true)}
               onAction={openReasonAction}
             />
           ) : (
@@ -743,6 +894,16 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
           isSubmitting={isMutating}
           onClose={closeCreate}
           onCreate={handleCreate}
+        />
+      )}
+
+      {editOpen && selectedInitiative?.state === "DRAFT" && !selectedInitiative.first_external_resource_at && (
+        <InitiativeEditDialog
+          key={`${selectedInitiative.id}:${selectedInitiative.version}`}
+          initiative={selectedInitiative}
+          isSubmitting={isMutating}
+          onClose={() => setEditOpen(false)}
+          onUpdate={handleUpdateDraft}
         />
       )}
 

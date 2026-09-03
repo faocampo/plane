@@ -311,12 +311,12 @@ describe("Curve Initiative shell", () => {
 
     expect(screen.getByText("Local · manual-first")).toBeInTheDocument();
     const summary = screen.getByRole("region", { name: "Loaded Initiative portfolio summary" });
-    expect(within(summary).getByText("Active")).toBeInTheDocument();
+    expect(within(summary).getByText("Active").parentElement).toHaveTextContent("2Active");
     expect(within(summary).getByText("Paused")).toBeInTheDocument();
     expect(within(summary).getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Lifecycle activity")).toBeInTheDocument();
     expect(screen.getByText("Creator")).toBeInTheDocument();
-    expect(screen.getByText("Workflow version")).toBeInTheDocument();
+    expect(screen.queryByText("Workflow version")).not.toBeInTheDocument();
     expect(screen.getByText("Record version")).toBeInTheDocument();
     expect(screen.getByText("Prevents overwriting a newer update.")).toBeInTheDocument();
     expect(screen.queryByText(/Shape product intent/)).not.toBeInTheDocument();
@@ -341,7 +341,7 @@ describe("Curve Initiative shell", () => {
     expect(screen.getByLabelText("Loading Initiatives")).toBeInTheDocument();
   });
 
-  it("records business intent on an existing Draft before alignment", async () => {
+  it("edits the complete definition of an existing Draft before alignment", async () => {
     const updateInitiativeDraft = vi.fn().mockResolvedValue(true);
     const draftWithoutIntent = { ...initiatives[1], business_intent: null };
     useCurveInitiativesMock.mockReturnValue({
@@ -354,11 +354,39 @@ describe("Curve Initiative shell", () => {
     render(<InitiativeWorkspace workspaceSlug="x3m" />);
 
     expect(screen.getByRole("button", { name: "Start alignment" })).toBeDisabled();
-    expect(screen.getByText("Choose and save a business intent before starting alignment.")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Business intent"), { target: { value: "CUSTOMER_COMMITMENT" } });
-    fireEvent.click(screen.getByRole("button", { name: "Save intent" }));
+    fireEvent.click(screen.getByRole("button", { name: "Edit Initiative" }));
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Updated rollout confidence" } });
+    fireEvent.change(screen.getByRole("combobox", { name: /Business intent/ }), {
+      target: { value: "CUSTOMER_COMMITMENT" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
-    await waitFor(() => expect(updateInitiativeDraft).toHaveBeenCalledWith({ business_intent: "CUSTOMER_COMMITMENT" }));
+    await waitFor(() =>
+      expect(updateInitiativeDraft).toHaveBeenCalledWith({
+        title: "Updated rollout confidence",
+        keyword: "rollout-confidence",
+        risk_tier: "HIGH",
+        business_intent: "CUSTOMER_COMMITMENT",
+        description: {
+          schema_version: "1.0",
+          format: "MARKDOWN",
+          body: "Outcome for Experiment rollout confidence",
+        },
+      })
+    );
+  });
+
+  it("keeps definition editing within the Draft mutability boundary", () => {
+    const { rerender } = render(<InitiativeWorkspace workspaceSlug="x3m" />);
+    expect(screen.queryByRole("button", { name: "Edit Initiative" })).not.toBeInTheDocument();
+
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      selectedInitiative: initiatives[1],
+      selectedEtag: '"curve-initiative:rollout-confidence:v1"',
+    });
+    rerender(<InitiativeWorkspace key="draft" workspaceSlug="x3m" />);
+    expect(screen.getByRole("button", { name: "Edit Initiative" })).toBeInTheDocument();
   });
 
   it("requires and submits a lifecycle reason", async () => {
