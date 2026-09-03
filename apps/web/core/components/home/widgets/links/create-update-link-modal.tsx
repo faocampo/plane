@@ -14,6 +14,7 @@ import { Button } from "@plane/propel/button";
 import type { TLinkEditableFields } from "@plane/types";
 import { Input, ModalCore } from "@plane/ui";
 import type { TLinkOperations } from "./use-links";
+import { getQuickLinkUrlError, normalizeQuickLinkUrl } from "./url";
 
 export type TLinkOperationsModal = Exclude<TLinkOperations, "remove">;
 
@@ -42,6 +43,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
     handleSubmit,
     control,
     reset,
+    setError,
   } = useForm<TLinkCreateFormFieldOptions>({
     defaultValues,
   });
@@ -52,12 +54,19 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
   };
 
   const handleFormSubmit = async (formData: TLinkCreateFormFieldOptions) => {
-    const parsedUrl = formData.url.startsWith("http") ? formData.url : `http://${formData.url}`;
+    const parsedUrl = normalizeQuickLinkUrl(formData.url);
+    if (!parsedUrl) {
+      setError("url", { message: t("link.modal.url.required"), type: "validate" }, { shouldFocus: true });
+      return;
+    }
+
     try {
       if (!formData || !formData.id) await linkOperations.create({ title: formData.title, url: parsedUrl });
       else await linkOperations.update(formData.id, { title: formData.title, url: parsedUrl });
       onClose();
     } catch (error) {
+      const urlError = getQuickLinkUrlError(error);
+      if (urlError) setError("url", { message: urlError, type: "server" }, { shouldFocus: true });
       console.error("error", error);
     }
   };
@@ -85,6 +94,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                 name="url"
                 rules={{
                   required: t("link.modal.url.required"),
+                  validate: (value) => Boolean(normalizeQuickLinkUrl(value)) || t("link.modal.url.required"),
                 }}
                 render={({ field: { value, onChange, ref } }) => (
                   <Input
@@ -99,7 +109,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                   />
                 )}
               />
-              {errors.url && <span className="text-11 text-danger-primary">{t("link.modal.url.required")}</span>}
+              {errors.url && <span className="text-11 text-danger-primary">{errors.url.message}</span>}
             </div>
             <div>
               <label htmlFor="title" className="mb-2 text-14 font-medium text-secondary">
