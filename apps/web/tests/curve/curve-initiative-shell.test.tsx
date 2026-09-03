@@ -68,7 +68,7 @@ const initiative = (
   state: ICurveInitiative["state"],
   riskTier: ICurveInitiative["risk_tier"]
 ): ICurveInitiative => ({
-  schema_version: "1.0",
+  schema_version: "1.1",
   id,
   workspace_id: "workspace-1",
   product_id: product.id,
@@ -78,6 +78,7 @@ const initiative = (
   title,
   description: { schema_version: "1.0", format: "MARKDOWN", body: `Outcome for ${title}` },
   risk_tier: riskTier,
+  business_intent: "STRATEGIC",
   state,
   paused_from_state: state === "PAUSED" ? "ALIGNING" : null,
   workflow_version_id: null,
@@ -144,6 +145,7 @@ const defaultHookValue = {
   selectInitiative: vi.fn(),
   loadMore: vi.fn(),
   createInitiative: vi.fn().mockResolvedValue(true),
+  updateInitiativeDraft: vi.fn().mockResolvedValue(true),
   acceptRefinement: vi.fn().mockResolvedValue(true),
   pauseInitiative: vi.fn().mockResolvedValue(true),
   resumeInitiative: vi.fn().mockResolvedValue(true),
@@ -163,10 +165,10 @@ describe("Curve Initiative shell", () => {
 
     for (const item of initiatives) expect(screen.getAllByText(item.title).length).toBeGreaterThan(0);
     const filters = screen.getByRole("region", { name: "Initiative filters" });
-    expect(within(filters).getByRole("status")).toHaveTextContent("4 visible loaded Initiatives · more available");
+    expect(within(filters).getByRole("status")).toHaveTextContent("Showing 4 of 4 · more available");
 
     fireEvent.change(screen.getByLabelText("Filter by lifecycle state"), { target: { value: "PAUSED" } });
-    expect(within(filters).getByRole("status")).toHaveTextContent("1 visible loaded Initiative");
+    expect(within(filters).getByRole("status")).toHaveTextContent("Showing 1 of 4");
     expect(screen.getByText("Internal release evidence ledger")).toBeInTheDocument();
     expect(screen.queryByText("Experiment rollout confidence")).not.toBeInTheDocument();
 
@@ -174,6 +176,24 @@ describe("Curve Initiative shell", () => {
       target: { value: "no-match" },
     });
     expect(screen.getByText("No Initiatives match these filters")).toBeInTheDocument();
+  });
+
+  it("uses compact portfolio summaries as accessible filters", () => {
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const activeFilter = screen.getByRole("button", { name: "Filter Initiatives: Active" });
+    fireEvent.click(activeFilter);
+    expect(activeFilter).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByText("Loomit SDK compatibility panel").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Experiment rollout confidence").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Internal release evidence ledger")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
+      "Showing 2 of 4"
+    );
+
+    fireEvent.click(activeFilter);
+    expect(activeFilter).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("Internal release evidence ledger")).toBeInTheDocument();
   });
 
   it("names the Draft transition and explains its consequence", () => {
@@ -275,6 +295,7 @@ describe("Curve Initiative shell", () => {
         title: "New governed Initiative",
         description: { schema_version: "1.0", format: "MARKDOWN", body: "Improve delivery confidence." },
         risk_tier: "STANDARD",
+        business_intent: null,
         gate_assignments: [
           { gate_type: "PRD_APPROVAL", approver_user_id: "user-1" },
           { gate_type: "PLAN_APPROVAL", approver_user_id: "user-2" },
@@ -296,7 +317,9 @@ describe("Curve Initiative shell", () => {
     expect(screen.getByText("Lifecycle activity")).toBeInTheDocument();
     expect(screen.getByText("Creator")).toBeInTheDocument();
     expect(screen.getByText("Workflow version")).toBeInTheDocument();
-    expect(screen.getByText("Optimistic version")).toBeInTheDocument();
+    expect(screen.getByText("Record version")).toBeInTheDocument();
+    expect(screen.getByText("Prevents overwriting a newer update.")).toBeInTheDocument();
+    expect(screen.queryByText(/Shape product intent/)).not.toBeInTheDocument();
 
     useCurveInitiativesMock.mockReturnValue({
       ...defaultHookValue,
@@ -316,6 +339,26 @@ describe("Curve Initiative shell", () => {
     useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, isLoading: true });
     rerender(<InitiativeWorkspace key="loading" workspaceSlug="x3m" />);
     expect(screen.getByLabelText("Loading Initiatives")).toBeInTheDocument();
+  });
+
+  it("records business intent on an existing Draft before alignment", async () => {
+    const updateInitiativeDraft = vi.fn().mockResolvedValue(true);
+    const draftWithoutIntent = { ...initiatives[1], business_intent: null };
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      initiatives: [draftWithoutIntent],
+      selectedInitiative: draftWithoutIntent,
+      selectedEtag: '"curve-initiative:rollout-confidence:v1"',
+      updateInitiativeDraft,
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByRole("button", { name: "Start alignment" })).toBeDisabled();
+    expect(screen.getByText("Choose and save a business intent before starting alignment.")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Business intent"), { target: { value: "CUSTOMER_COMMITMENT" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save intent" }));
+
+    await waitFor(() => expect(updateInitiativeDraft).toHaveBeenCalledWith({ business_intent: "CUSTOMER_COMMITMENT" }));
   });
 
   it("requires and submits a lifecycle reason", async () => {

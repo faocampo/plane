@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   ICurveInitiative,
   ICurveInitiativeCreateRequest,
+  ICurveInitiativeDraftUpdateRequest,
   ICurveProblemDetails,
   ICurveProduct,
   IWorkspaceMember,
@@ -209,6 +210,38 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
     [replaceConfirmedInitiative, workspaceSlug]
   );
 
+  const updateInitiativeDraft = useCallback(
+    async (payload: ICurveInitiativeDraftUpdateRequest) => {
+      if (!workspaceSlug || !selectedId || !selectedEtag || mutationInFlight.current) return false;
+      const generation = requestGeneration.current;
+      mutationInFlight.current = true;
+      setIsMutating(true);
+      setProblem(undefined);
+      try {
+        const result = await curveService.updateInitiativeDraft(
+          workspaceSlug,
+          selectedId,
+          payload,
+          selectedEtag,
+          crypto.randomUUID()
+        );
+        if (generation !== requestGeneration.current) return false;
+        replaceConfirmedInitiative(result.initiative, result.etag);
+        return true;
+      } catch (error) {
+        if (generation !== requestGeneration.current) return false;
+        setProblem(toSafeCurveProblem(error, "The Initiative draft could not be updated"));
+        return false;
+      } finally {
+        if (generation === requestGeneration.current) {
+          mutationInFlight.current = false;
+          setIsMutating(false);
+        }
+      }
+    },
+    [replaceConfirmedInitiative, selectedEtag, selectedId, workspaceSlug]
+  );
+
   const transitionInitiative = useCallback(
     async (transition: TInitiativeTransition, reason?: string) => {
       if (!workspaceSlug || !selectedId || !selectedEtag || mutationInFlight.current) return false;
@@ -279,6 +312,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
     selectInitiative,
     loadMore,
     createInitiative,
+    updateInitiativeDraft,
     acceptRefinement: () => transitionInitiative("accept"),
     pauseInitiative: (reason: string) => transitionInitiative("pause", reason),
     resumeInitiative: (reason: string) => transitionInitiative("resume", reason),

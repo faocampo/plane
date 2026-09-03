@@ -12,11 +12,13 @@ import type {
   ICurveInitiativeCreateRequest,
   ICurveProduct,
   IWorkspaceMember,
+  TCurveInitiativeBusinessIntent,
   TCurveInitiativeRiskTier,
 } from "@plane/types";
 import { Button } from "@plane/ui";
 import { cn } from "@plane/utils";
 import { memberDisplayName } from "./initiative-ui";
+import { initiativeBusinessIntentOptions } from "./initiative-ui";
 
 type TFormField =
   | "title"
@@ -60,6 +62,7 @@ export function InitiativeCreateDrawer({
   const [keyword, setKeyword] = useState("");
   const [description, setDescription] = useState("");
   const [riskTier, setRiskTier] = useState<TCurveInitiativeRiskTier>("STANDARD");
+  const [businessIntent, setBusinessIntent] = useState<TCurveInitiativeBusinessIntent | "">("");
   const [approverIds, setApproverIds] = useState(initialApprovers);
   const [errors, setErrors] = useState<TFormErrors>({});
   const [submissionFailed, setSubmissionFailed] = useState(false);
@@ -131,6 +134,7 @@ export function InitiativeCreateDrawer({
         body: description.trim(),
       },
       risk_tier: riskTier,
+      business_intent: businessIntent || null,
       gate_assignments: [
         { gate_type: "PRD_APPROVAL", approver_user_id: approverIds[0] ?? "" },
         { gate_type: "PLAN_APPROVAL", approver_user_id: approverIds[1] ?? "" },
@@ -159,6 +163,7 @@ export function InitiativeCreateDrawer({
     { label: "Code Approver", key: "codeApprover" },
   ];
   const errorCount = Object.keys(errors).filter((field) => !!errors[field as TFormField]).length;
+  const selectedBusinessIntent = initiativeBusinessIntentOptions.find(({ value }) => value === businessIntent);
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
@@ -310,6 +315,29 @@ export function InitiativeCreateDrawer({
                   <option value="STANDALONE">Standalone</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="curve-initiative-business-intent" className={fieldLabelClassName}>
+                Business intent
+              </label>
+              <select
+                id="curve-initiative-business-intent"
+                value={businessIntent}
+                onChange={(event) => setBusinessIntent(event.target.value as TCurveInitiativeBusinessIntent | "")}
+                className={inputClassName}
+                aria-describedby="curve-initiative-business-intent-help"
+              >
+                <option value="">Decide during Draft</option>
+                {initiativeBusinessIntentOptions.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <p id="curve-initiative-business-intent-help" className="mt-1 text-11 leading-5 text-secondary">
+                {selectedBusinessIntent?.description ?? "Choose during Draft; an intent is required before alignment."}
+              </p>
             </div>
 
             <div>

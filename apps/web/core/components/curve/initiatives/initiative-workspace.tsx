@@ -15,6 +15,7 @@ import type {
   ICurveProduct,
   IWorkspaceMember,
   TCurveGateType,
+  TCurveInitiativeBusinessIntent,
   TCurveInitiativeListState,
   TCurveInitiativeRiskTier,
 } from "@plane/types";
@@ -22,7 +23,14 @@ import { Button } from "@plane/ui";
 import { calculateTimeAgo, cn } from "@plane/utils";
 import { useCurveInitiatives } from "@/hooks/use-curve-initiatives";
 import { InitiativeCreateDrawer } from "./initiative-create-drawer";
-import { InitiativeAvatar, InitiativeRiskBadge, InitiativeStateBadge, memberDisplayName } from "./initiative-ui";
+import {
+  InitiativeAvatar,
+  InitiativeRiskBadge,
+  InitiativeStateBadge,
+  initiativeBusinessIntentLabel,
+  initiativeBusinessIntentOptions,
+  memberDisplayName,
+} from "./initiative-ui";
 
 const gateLabels: Record<TCurveGateType, string> = {
   PRD_APPROVAL: "Product Approver",
@@ -34,6 +42,7 @@ const filterClassName =
   "min-h-10 rounded-md border border-subtle bg-surface-1 px-3 text-12 text-primary outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-subtle";
 
 type TReasonAction = "pause" | "resume" | "cancel";
+type TSummaryFilter = "ACTIVE" | "PAUSED" | "NEEDS_ATTENTION";
 
 const actionCopy: Record<TReasonAction, { title: string; description: string; button: string }> = {
   pause: {
@@ -122,6 +131,7 @@ function InitiativeRow({
           <p className="font-mono truncate text-10 text-tertiary">#{initiative.keyword}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <InitiativeRiskBadge risk={initiative.risk_tier} />
+            <span className="text-10 text-tertiary">{initiativeBusinessIntentLabel(initiative.business_intent)}</span>
             <span className="text-10 text-tertiary">Updated {calculateTimeAgo(initiative.updated_at)}</span>
           </div>
         </div>
@@ -142,6 +152,7 @@ function InitiativeDetail({
   etag,
   isMutating,
   onAccept,
+  onUpdateBusinessIntent,
   onAction,
 }: {
   initiative: ICurveInitiative;
@@ -150,9 +161,16 @@ function InitiativeDetail({
   etag?: string;
   isMutating: boolean;
   onAccept: () => void;
+  onUpdateBusinessIntent: (intent: TCurveInitiativeBusinessIntent) => Promise<boolean>;
   onAction: (action: TReasonAction) => void;
 }) {
   const canMutate = !!etag && !isMutating;
+  const [draftBusinessIntent, setDraftBusinessIntent] = useState<TCurveInitiativeBusinessIntent | "">(
+    initiative.business_intent ?? ""
+  );
+  const businessIntentChanged = draftBusinessIntent !== (initiative.business_intent ?? "");
+  const selectedBusinessIntent = initiativeBusinessIntentOptions.find(({ value }) => value === draftBusinessIntent);
+  const canStartAlignment = canMutate && !!initiative.business_intent;
   return (
     <article aria-labelledby="curve-initiative-detail-title" className="min-w-0">
       <header className="border-b border-subtle px-5 py-5 sm:px-6">
@@ -173,7 +191,7 @@ function InitiativeDetail({
         </div>
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
           {initiative.state === "DRAFT" && (
-            <Button size="lg" disabled={!canMutate} loading={isMutating} onClick={onAccept}>
+            <Button size="lg" disabled={!canStartAlignment} loading={isMutating} onClick={onAccept}>
               Start alignment
             </Button>
           )}
@@ -198,8 +216,9 @@ function InitiativeDetail({
         </div>
         {initiative.state === "DRAFT" && (
           <p className="mt-2 max-w-2xl text-11 text-secondary">
-            Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver
-            assignments.
+            {initiative.business_intent
+              ? "Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver assignments."
+              : "Choose and save a business intent before starting alignment."}
           </p>
         )}
       </header>
@@ -254,6 +273,45 @@ function InitiativeDetail({
         >
           <dl className="space-y-5">
             <div>
+              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Business intent</dt>
+              {initiative.state === "DRAFT" ? (
+                <dd className="mt-1 space-y-2">
+                  <select
+                    value={draftBusinessIntent}
+                    onChange={(event) =>
+                      setDraftBusinessIntent(event.target.value as TCurveInitiativeBusinessIntent | "")
+                    }
+                    className={`${filterClassName} w-full`}
+                    aria-label="Business intent"
+                    aria-describedby="curve-initiative-business-intent-detail-help"
+                  >
+                    <option value="">Choose an intent</option>
+                    {initiativeBusinessIntentOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    size="sm"
+                    variant="neutral-primary"
+                    disabled={!canMutate || !draftBusinessIntent || !businessIntentChanged}
+                    loading={isMutating}
+                    onClick={() => void (draftBusinessIntent && onUpdateBusinessIntent(draftBusinessIntent))}
+                  >
+                    Save intent
+                  </Button>
+                  <p id="curve-initiative-business-intent-detail-help" className="text-10 leading-4 text-secondary">
+                    {selectedBusinessIntent?.description ?? "Required before alignment."}
+                  </p>
+                </dd>
+              ) : (
+                <dd className="mt-1 text-11 text-primary">
+                  {initiativeBusinessIntentLabel(initiative.business_intent)}
+                </dd>
+              )}
+            </div>
+            <div>
               <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Mode</dt>
               <dd className="mt-1 text-11 text-primary">Standalone</dd>
             </div>
@@ -268,8 +326,9 @@ function InitiativeDetail({
               <dd className="mt-1 text-11 text-primary">{initiative.workflow_version_id ?? "Not assigned"}</dd>
             </div>
             <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Optimistic version</dt>
+              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Record version</dt>
               <dd className="mt-1 text-11 text-primary">v{initiative.version}</dd>
+              <dd className="mt-1 text-10 leading-4 text-secondary">Prevents overwriting a newer update.</dd>
             </div>
             <div>
               <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Updated</dt>
@@ -305,6 +364,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
     selectInitiative,
     loadMore,
     createInitiative,
+    updateInitiativeDraft,
     acceptRefinement,
     pauseInitiative,
     resumeInitiative,
@@ -315,6 +375,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState<"ALL" | TCurveInitiativeListState>("ALL");
   const [riskFilter, setRiskFilter] = useState<"ALL" | TCurveInitiativeRiskTier>("ALL");
+  const [summaryFilter, setSummaryFilter] = useState<TSummaryFilter>();
   const [createOpen, setCreateOpen] = useState(false);
   const [reasonAction, setReasonAction] = useState<TReasonAction>();
   const [reason, setReason] = useState("");
@@ -330,19 +391,32 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
     const product = productMap.get(initiative.product_id);
     const matchesSearch =
       !normalizedSearch ||
-      [initiative.title, initiative.keyword, initiative.description.body, product?.name]
+      [
+        initiative.title,
+        initiative.keyword,
+        initiative.description.body,
+        product?.name,
+        initiativeBusinessIntentLabel(initiative.business_intent),
+      ]
         .filter(Boolean)
         .some((value) => value?.toLowerCase().includes(normalizedSearch));
     const matchesState = stateFilter === "ALL" || initiative.state === stateFilter;
     const matchesRisk = riskFilter === "ALL" || initiative.risk_tier === riskFilter;
-    return matchesSearch && matchesState && matchesRisk;
+    const matchesSummary =
+      !summaryFilter ||
+      (summaryFilter === "ACTIVE" && ["DRAFT", "ALIGNING"].includes(initiative.state)) ||
+      (summaryFilter === "PAUSED" && initiative.state === "PAUSED") ||
+      (summaryFilter === "NEEDS_ATTENTION" &&
+        initiative.risk_tier === "HIGH" &&
+        ["DRAFT", "ALIGNING"].includes(initiative.state));
+    return matchesSearch && matchesState && matchesRisk && matchesSummary;
   });
   const visibleSelected = visibleInitiatives.find(({ id }) => id === selectedInitiative?.id);
-  const filtered = !!normalizedSearch || stateFilter !== "ALL" || riskFilter !== "ALL";
+  const filtered = !!normalizedSearch || stateFilter !== "ALL" || riskFilter !== "ALL" || !!summaryFilter;
   const activeCount = initiatives.filter(({ state }) => state === "DRAFT" || state === "ALIGNING").length;
   const pausedCount = initiatives.filter(({ state }) => state === "PAUSED").length;
   const needsAttentionCount = initiatives.filter(
-    ({ risk_tier, state }) => risk_tier === "HIGH" && state !== "CANCELLED"
+    ({ risk_tier, state }) => risk_tier === "HIGH" && ["DRAFT", "ALIGNING"].includes(state)
   ).length;
   const createUnavailableReason =
     products.length === 0
@@ -396,6 +470,18 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
     if (succeeded) setAnnouncement("Initiative refinement accepted. State changed to Aligning.");
   };
 
+  const handleUpdateBusinessIntent = async (businessIntent: TCurveInitiativeBusinessIntent) => {
+    const succeeded = await updateInitiativeDraft({ business_intent: businessIntent });
+    if (succeeded) setAnnouncement("Business intent saved.");
+    return succeeded;
+  };
+
+  const toggleSummaryFilter = (filter: TSummaryFilter) => {
+    setSummaryFilter((current) => (current === filter ? undefined : filter));
+    setStateFilter("ALL");
+    setRiskFilter("ALL");
+  };
+
   if (isLoading) return <InitiativeLoading />;
 
   if (isPermissionLimited) {
@@ -430,10 +516,6 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             </span>
           </div>
           <h1 className="mt-1 text-32 leading-tight font-semibold tracking-[-0.025em] text-primary">Initiatives</h1>
-          <p className="mt-2 max-w-2xl text-13 leading-6 text-secondary">
-            Shape product intent, assign mandatory human gates, and keep readiness visible before planning or execution
-            begins.
-          </p>
         </div>
         <div className="flex max-w-sm flex-col items-start gap-2 sm:items-end">
           <Button
@@ -455,22 +537,34 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
       </header>
 
       <section
-        className="mt-6 grid overflow-hidden rounded-xl border border-subtle bg-layer-1 shadow-raised-100 sm:grid-cols-3"
+        className="mt-4 grid overflow-hidden rounded-xl border border-subtle bg-layer-1 shadow-raised-100 sm:grid-cols-3"
         aria-label="Loaded Initiative portfolio summary"
       >
         {[
-          { label: "Active", value: activeCount, detail: "Draft or aligning" },
-          { label: "Paused", value: pausedCount, detail: "Explicitly recoverable" },
-          { label: "Needs attention", value: needsAttentionCount, detail: "High-risk active work" },
-        ].map(({ label, value, detail }) => (
-          <div
+          { id: "ACTIVE" as const, label: "Active", value: activeCount, detail: "Draft or aligning" },
+          { id: "PAUSED" as const, label: "Paused", value: pausedCount, detail: "Explicitly recoverable" },
+          {
+            id: "NEEDS_ATTENTION" as const,
+            label: "Needs attention",
+            value: needsAttentionCount,
+            detail: "High-risk active work",
+          },
+        ].map(({ id, label, value, detail }) => (
+          <button
+            type="button"
             key={label}
-            className="border-b border-subtle px-4 py-4 last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0"
+            onClick={() => toggleSummaryFilter(id)}
+            className={cn(
+              "border-b border-subtle px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-layer-2 focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none focus-visible:ring-inset sm:border-r sm:border-b-0 sm:last:border-r-0",
+              summaryFilter === id && "bg-accent-subtle"
+            )}
+            aria-label={`Filter Initiatives: ${label}`}
+            aria-pressed={summaryFilter === id}
           >
             <p className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">{label}</p>
-            <p className="mt-1 text-24 font-semibold text-primary">{value}</p>
-            <p className="mt-1 text-10 text-secondary">{detail}</p>
-          </div>
+            <p className="text-20 leading-6 font-semibold text-primary">{value}</p>
+            <p className="text-10 text-secondary">{detail}</p>
+          </button>
         ))}
       </section>
 
@@ -537,7 +631,10 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             <span className="sr-only">Filter by lifecycle state</span>
             <select
               value={stateFilter}
-              onChange={(event) => setStateFilter(event.target.value as typeof stateFilter)}
+              onChange={(event) => {
+                setStateFilter(event.target.value as typeof stateFilter);
+                setSummaryFilter(undefined);
+              }}
               className={`${filterClassName} w-full`}
             >
               <option value="ALL">All states</option>
@@ -551,7 +648,10 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             <span className="sr-only">Filter by risk tier</span>
             <select
               value={riskFilter}
-              onChange={(event) => setRiskFilter(event.target.value as typeof riskFilter)}
+              onChange={(event) => {
+                setRiskFilter(event.target.value as typeof riskFilter);
+                setSummaryFilter(undefined);
+              }}
               className={`${filterClassName} w-full`}
             >
               <option value="ALL">All risk tiers</option>
@@ -561,7 +661,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             </select>
           </label>
           <p className="self-center text-right text-11 text-tertiary" role="status">
-            {visibleInitiatives.length} visible loaded {visibleInitiatives.length === 1 ? "Initiative" : "Initiatives"}
+            Showing {visibleInitiatives.length} of {initiatives.length}
             {nextCursor ? " · more available" : ""}
           </p>
         </div>
@@ -612,12 +712,14 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
         <section className="min-w-0" aria-label="Selected Initiative">
           {visibleSelected ? (
             <InitiativeDetail
+              key={visibleSelected.id}
               initiative={visibleSelected}
               product={productMap.get(visibleSelected.product_id)}
               members={memberMap}
               etag={selectedEtag}
               isMutating={isMutating}
               onAccept={() => void handleAcceptRefinement()}
+              onUpdateBusinessIntent={handleUpdateBusinessIntent}
               onAction={openReasonAction}
             />
           ) : (

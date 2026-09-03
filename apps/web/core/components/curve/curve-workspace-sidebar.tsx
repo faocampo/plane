@@ -20,8 +20,8 @@ import { cn } from "@plane/utils";
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
 import { AppSidebarToggleButton } from "@/components/sidebar/sidebar-toggle-button";
 import { SidebarItemBase } from "@/components/workspace/sidebar/sidebar-item";
+import { WorkspaceMenuRoot } from "@/components/workspace/sidebar/workspace-menu-root";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
-import { CurveSourceLink } from "./curve-source-link";
 
 const CURVE_SIDEBAR_SKELETON_ROWS = [
   "product-overview",
@@ -180,9 +180,8 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
         </CurveNavSection>
       </ScrollArea>
 
-      <div className="border-t border-subtle px-5 py-3">
-        <p className="mb-1 text-10 text-placeholder">Plane provides Curve&apos;s work-management foundation.</p>
-        <CurveSourceLink />
+      <div className="border-t border-subtle px-3 py-3">
+        <WorkspaceMenuRoot variant="curve-sidebar" />
       </div>
     </div>
   );

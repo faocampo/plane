@@ -4,7 +4,12 @@
  * See the LICENSE file for details.
  */
 
-import type { IWorkspaceMember, TCurveInitiativeRiskTier, TCurveInitiativeState } from "@plane/types";
+import type {
+  IWorkspaceMember,
+  TCurveInitiativeBusinessIntent,
+  TCurveInitiativeRiskTier,
+  TCurveInitiativeState,
+} from "@plane/types";
 import { cn } from "@plane/utils";
 
 export const initiativeStateLabel: Record<TCurveInitiativeState, string> = {
@@ -20,6 +25,36 @@ export const initiativeStateLabel: Record<TCurveInitiativeState, string> = {
   FAILED: "Failed",
   CANCELLED: "Cancelled",
 };
+
+export const initiativeBusinessIntentOptions: Array<{
+  value: TCurveInitiativeBusinessIntent;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "STRATEGIC",
+    label: "Strategic",
+    description: "Company or Product objective, differentiation, growth, or a new market.",
+  },
+  {
+    value: "CUSTOMER_COMMITMENT",
+    label: "Customer commitment",
+    description: "A material customer promise, commercial outcome, retention risk, or strategic-customer need.",
+  },
+  {
+    value: "BUSINESS_IMPROVEMENT",
+    label: "Business improvement",
+    description: "BAU, reliability, efficiency, maintenance, or capabilities that enable future Initiatives.",
+  },
+  {
+    value: "MANDATORY",
+    label: "Mandatory",
+    description: "Regulation, security, legal obligation, or platform end-of-life work.",
+  },
+];
+
+export const initiativeBusinessIntentLabel = (intent: TCurveInitiativeBusinessIntent | null | undefined) =>
+  initiativeBusinessIntentOptions.find(({ value }) => value === intent)?.label ?? "Not set";
 
 export const memberDisplayName = (member?: IWorkspaceMember | null) => {
   if (!member?.member) return "Unknown member";

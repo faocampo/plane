@@ -86,6 +86,8 @@ export type TCurveInitiativeMode = "ROADMAP" | "STANDALONE";
 
 export type TCurveInitiativeRiskTier = "LOW" | "STANDARD" | "HIGH";
 
+export type TCurveInitiativeBusinessIntent = "STRATEGIC" | "CUSTOMER_COMMITMENT" | "BUSINESS_IMPROVEMENT" | "MANDATORY";
+
 export type TCurveInitiativeState =
   | "DRAFT"
   | "ALIGNING"
@@ -156,7 +158,7 @@ export interface ICurveGateAssignment {
 }
 
 export interface ICurveInitiative {
-  schema_version: "1.0";
+  schema_version: "1.0" | "1.1";
   id: string;
   workspace_id: string;
   product_id: string;
@@ -166,6 +168,7 @@ export interface ICurveInitiative {
   title: string;
   description: ICurveRichTextDocument;
   risk_tier: TCurveInitiativeRiskTier;
+  business_intent?: TCurveInitiativeBusinessIntent | null;
   state: TCurveInitiativeState;
   paused_from_state: Extract<TCurveInitiativeState, "DRAFT" | "ALIGNING"> | null;
   workflow_version_id: string | null;
@@ -203,7 +206,16 @@ export interface ICurveInitiativeCreateRequest {
   title: string;
   description: ICurveRichTextDocument;
   risk_tier: TCurveInitiativeRiskTier;
+  business_intent?: TCurveInitiativeBusinessIntent | null;
   gate_assignments: ICurveGateAssignmentRequest[];
+}
+
+export interface ICurveInitiativeDraftUpdateRequest {
+  keyword?: string;
+  title?: string;
+  description?: ICurveRichTextDocument;
+  risk_tier?: TCurveInitiativeRiskTier;
+  business_intent?: TCurveInitiativeBusinessIntent | null;
 }
 
 export interface ICurveInitiativeTransitionRequest {

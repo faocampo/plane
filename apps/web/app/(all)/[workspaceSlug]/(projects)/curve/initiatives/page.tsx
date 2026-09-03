@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { InitiativeWorkspace } from "@/components/curve/initiatives/initiative-workspace";
+import { CurveInitiativesHeader } from "@/components/curve/curve-initiatives-header";
 import { PageHead } from "@/components/core/page-title";
 import { useCurveWorkspaceShell } from "@/hooks/use-curve-workspace-shell";
 import type { Route } from "./+types/page";
@@ -27,6 +28,7 @@ export default function CurveInitiativesPage({ params }: Route.ComponentProps) {
   return (
     <>
       <PageHead title="Initiatives · Curve" />
+      <CurveInitiativesHeader />
       <div className="size-full overflow-y-auto bg-surface-1">
         <InitiativeWorkspace workspaceSlug={workspaceSlug ?? shell?.workspace_slug ?? ""} />
       </div>

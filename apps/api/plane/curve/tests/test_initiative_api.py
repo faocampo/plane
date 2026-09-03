@@ -20,6 +20,7 @@ from plane.curve.models import (
     GateType,
     IdempotencyRecord,
     Initiative,
+    InitiativeBusinessIntent,
     OutboxEvent,
     PolicyDecision,
     Product,
@@ -96,7 +97,15 @@ def _gate_payload(*approvers):
     ]
 
 
-def _payload(product, approvers, *, keyword="Loomit-SDK-panel", risk="STANDARD", mode="STANDALONE"):
+def _payload(
+    product,
+    approvers,
+    *,
+    keyword="Loomit-SDK-panel",
+    risk="STANDARD",
+    mode="STANDALONE",
+    business_intent=InitiativeBusinessIntent.STRATEGIC,
+):
     return {
         "product_id": str(product.id),
         "mode": mode,
@@ -108,6 +117,7 @@ def _payload(product, approvers, *, keyword="Loomit-SDK-panel", risk="STANDARD",
             "body": "Synthetic INTERNAL Initiative description.",
         },
         "risk_tier": risk,
+        "business_intent": business_intent,
         "gate_assignments": _gate_payload(*approvers),
     }
 
@@ -167,7 +177,7 @@ def test_create_is_atomic_contract_valid_and_idempotently_replayed(initiative_sc
     assert created["Location"].endswith(f"{created.json()['id']}/")
     assert created.json()["workspace_id"] == str(workspace.id)
     assert created.json()["creator"] == _actor(creator)
-    initiative_schema_contracts["initiative.schema.json"].validate(created.json())
+    initiative_schema_contracts["initiative-v1.1.schema.json"].validate(created.json())
     assert Initiative.objects.filter(workspace_id=workspace.id).count() == 1
     assert GateAssignment.objects.filter(workspace_id=workspace.id).count() == 3
     assert DomainEvent.objects.filter(workspace_id=workspace.id, aggregate_type="INITIATIVE").count() == 1
@@ -277,14 +287,22 @@ def test_draft_update_preserves_mutability_boundary_concurrency_and_replay():
 
     updated = client.patch(
         url,
-        {"keyword": "Loomit-SDK-v2", "title": "Updated SDK compatibility"},
+        {
+            "keyword": "Loomit-SDK-v2",
+            "title": "Updated SDK compatibility",
+            "business_intent": InitiativeBusinessIntent.CUSTOMER_COMMITMENT,
+        },
         format="json",
         HTTP_IF_MATCH=f'"curve-initiative:{initiative_id}:v1"',
         HTTP_IDEMPOTENCY_KEY="update-metadata-key-0001",
     )
     replay = client.patch(
         url,
-        {"keyword": "Loomit-SDK-v2", "title": "Updated SDK compatibility"},
+        {
+            "keyword": "Loomit-SDK-v2",
+            "title": "Updated SDK compatibility",
+            "business_intent": InitiativeBusinessIntent.CUSTOMER_COMMITMENT,
+        },
         format="json",
         HTTP_IF_MATCH=f'"curve-initiative:{initiative_id}:v1"',
         HTTP_IDEMPOTENCY_KEY="update-metadata-key-0001",
@@ -307,12 +325,37 @@ def test_draft_update_preserves_mutability_boundary_concurrency_and_replay():
     assert updated.status_code == replay.status_code == 200
     assert updated.json()["version"] == replay.json()["version"] == 2
     assert updated.json()["keyword"] == "Loomit-SDK-v2"
+    assert updated.json()["business_intent"] == InitiativeBusinessIntent.CUSTOMER_COMMITMENT
     assert stale.status_code == 412
     assert forbidden.status_code == 422
     sequences = (
         DomainEvent.objects.filter(aggregate_id=initiative_id).order_by("sequence").values_list("sequence", flat=True)
     )
     assert list(sequences) == [1, 2]
+
+
+def test_draft_may_defer_business_intent_but_alignment_requires_it():
+    creator = _user("intent-creator@example.com")
+    workspace = _workspace(slug="alpha", owner=creator, role=15)
+    approvers = (
+        creator,
+        _add_member(workspace, email="intent-plan@example.com"),
+        _add_member(workspace, email="intent-code@example.com"),
+    )
+    product = _product(workspace, creator)
+    client = _client(creator)
+    created = _create(
+        client,
+        _payload(product, approvers, keyword="intent-later", business_intent=None),
+        idem="intent-create-key-00001",
+    )
+    initiative = Initiative.objects.get(id=created.json()["id"])
+    rejected = _mutate(client, initiative, "accept-refinement/", {}, idem="intent-align-key-000001")
+
+    assert created.status_code == 201
+    assert created.json()["business_intent"] is None
+    assert rejected.status_code == 422
+    assert rejected.json()["errors"][0]["field"] == "business_intent"
 
 
 def test_lifecycle_pins_workflow_and_supports_authorized_pause_resume_cancel():

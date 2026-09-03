@@ -10,7 +10,7 @@ import type { ICurveInitiative, ICurveInitiativeCreateRequest } from "@plane/typ
 import { CurveService } from "@plane/services";
 
 const initiative: ICurveInitiative = {
-  schema_version: "1.0",
+  schema_version: "1.1",
   id: "initiative-1",
   workspace_id: "workspace-1",
   product_id: "product-1",
@@ -20,6 +20,7 @@ const initiative: ICurveInitiative = {
   title: "Loomit SDK compatibility panel",
   description: { schema_version: "1.0", format: "MARKDOWN", body: "Show compatibility state." },
   risk_tier: "STANDARD",
+  business_intent: "STRATEGIC",
   state: "DRAFT",
   paused_from_state: null,
   workflow_version_id: null,
@@ -40,6 +41,7 @@ const createPayload: ICurveInitiativeCreateRequest = {
   title: "Loomit SDK compatibility panel",
   description: { schema_version: "1.0", format: "MARKDOWN", body: "Show compatibility state." },
   risk_tier: "STANDARD",
+  business_intent: "STRATEGIC",
   gate_assignments: [
     { gate_type: "PRD_APPROVAL", approver_user_id: "user-1" },
     { gate_type: "PLAN_APPROVAL", approver_user_id: "user-2" },
@@ -88,7 +90,7 @@ describe("Curve Initiative service", () => {
   it("returns the commit-bound Initiative representation and ETag", async () => {
     vi.spyOn(service, "get").mockResolvedValue({
       data: initiative,
-      headers: { etag: '"curve-initiative:initiative-1:v1"' },
+      headers: { etag: 'W/"curve-initiative:initiative-1:v1"' },
     } as never);
 
     await expect(service.retrieveInitiative("x3m", initiative.id)).resolves.toEqual({
@@ -125,6 +127,34 @@ describe("Curve Initiative service", () => {
         "X-CSRFTOKEN": "csrf-token",
       },
     });
+  });
+
+  it("updates Draft business intent with optimistic concurrency", async () => {
+    vi.spyOn(service, "get").mockResolvedValue({ data: { csrf_token: "csrf-token" } } as never);
+    const patch = vi.spyOn(service, "patch").mockResolvedValue({
+      data: { ...initiative, business_intent: "CUSTOMER_COMMITMENT", version: 2 },
+      headers: { etag: '"curve-initiative:initiative-1:v2"' },
+    } as never);
+
+    await service.updateInitiativeDraft(
+      "x3m",
+      initiative.id,
+      { business_intent: "CUSTOMER_COMMITMENT" },
+      'W/"v1"',
+      "command-update"
+    );
+
+    expect(patch).toHaveBeenCalledWith(
+      `/api/v1/workspaces/x3m/curve/initiatives/${initiative.id}/`,
+      { business_intent: "CUSTOMER_COMMITMENT" },
+      {
+        headers: {
+          "Idempotency-Key": "command-update",
+          "If-Match": '"v1"',
+          "X-CSRFTOKEN": "csrf-token",
+        },
+      }
+    );
   });
 
   it.each([
