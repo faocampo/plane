@@ -156,6 +156,7 @@ const defaultHookValue = {
 
 describe("Curve Initiative shell", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/");
     useCurveInitiativesMock.mockReset();
     useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue });
   });
@@ -194,6 +195,29 @@ describe("Curve Initiative shell", () => {
     fireEvent.click(activeFilter);
     expect(activeFilter).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByText("Internal release evidence ledger")).toBeInTheDocument();
+  });
+
+  it("initializes lifecycle filters from Home navigation parameters", () => {
+    window.history.replaceState({}, "", "/x3m/curve/initiatives/?state=ALIGNING");
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByLabelText("Filter by lifecycle state")).toHaveValue("ALIGNING");
+    expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
+      "Showing 1 of 4"
+    );
+  });
+
+  it("initializes summary filters from Home attention parameters", () => {
+    window.history.replaceState({}, "", "/x3m/curve/initiatives/?summary=NEEDS_ATTENTION");
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByRole("button", { name: "Filter Initiatives: Needs attention" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
+      "Showing 1 of 4"
+    );
   });
 
   it("names the Draft transition and explains its consequence", () => {
@@ -319,6 +343,10 @@ describe("Curve Initiative shell", () => {
     expect(screen.queryByText("Workflow version")).not.toBeInTheDocument();
     expect(screen.getByText("Record version")).toBeInTheDocument();
     expect(screen.getByText("Prevents overwriting a newer update.")).toBeInTheDocument();
+    expect(screen.getByText("Next: PRD review")).toBeInTheDocument();
+    expect(screen.getByText(/Complete the Idea Brief and PRD/)).toBeInTheDocument();
+    expect(screen.getByText("Delivery projects")).toBeInTheDocument();
+    expect(screen.getByText("No linked work yet")).toBeInTheDocument();
     expect(screen.queryByText(/Shape product intent/)).not.toBeInTheDocument();
 
     useCurveInitiativesMock.mockReturnValue({

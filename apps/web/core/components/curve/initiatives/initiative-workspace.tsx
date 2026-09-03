@@ -45,6 +45,18 @@ const filterClassName =
 type TReasonAction = "pause" | "resume" | "cancel";
 type TSummaryFilter = "ACTIVE" | "PAUSED" | "NEEDS_ATTENTION";
 
+function initialInitiativeFilter<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  const value = new URLSearchParams(window.location.search).get(key);
+  return value && allowed.includes(value as T) ? (value as T) : fallback;
+}
+
+function initialSummaryFilter(): TSummaryFilter | undefined {
+  if (typeof window === "undefined") return undefined;
+  const value = new URLSearchParams(window.location.search).get("summary");
+  return value && ["ACTIVE", "PAUSED", "NEEDS_ATTENTION"].includes(value) ? (value as TSummaryFilter) : undefined;
+}
+
 const initiativeKeywordPattern = /^[A-Za-z0-9][A-Za-z0-9-]{0,49}$/;
 
 const actionCopy: Record<TReasonAction, { title: string; description: string; button: string }> = {
@@ -224,6 +236,18 @@ function InitiativeDetail({
               : "Choose and save a business intent before starting alignment."}
           </p>
         )}
+        {initiative.state === "ALIGNING" && (
+          <div className="mt-3 flex flex-col justify-between gap-2 rounded-lg bg-layer-1 px-3 py-3 sm:flex-row sm:items-center">
+            <div>
+              <p className="text-11 font-semibold text-primary">Next: PRD review</p>
+              <p className="mt-0.5 max-w-2xl text-10 leading-5 text-secondary">
+                Complete the Idea Brief and PRD, resolve or classify blockers, then submit an immutable version for
+                review.
+              </p>
+            </div>
+            <span className="shrink-0 text-10 font-medium text-tertiary">Submission workspace planned</span>
+          </div>
+        )}
       </header>
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_16rem]">
@@ -302,6 +326,13 @@ function InitiativeDetail({
               <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">External resource</dt>
               <dd className="mt-1 text-11 text-primary">
                 {initiative.first_external_resource_at ? "Linked" : "None linked"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Delivery projects</dt>
+              <dd className="mt-1 text-11 text-primary">No linked work yet</dd>
+              <dd className="mt-1 text-10 leading-4 text-secondary">
+                Projects appear here through their linked roadmap work items.
               </dd>
             </div>
           </dl>
@@ -521,9 +552,11 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
     refresh,
   } = useCurveInitiatives(workspaceSlug);
   const [search, setSearch] = useState("");
-  const [stateFilter, setStateFilter] = useState<"ALL" | TCurveInitiativeListState>("ALL");
+  const [stateFilter, setStateFilter] = useState<"ALL" | TCurveInitiativeListState>(() =>
+    initialInitiativeFilter("state", ["ALL", "DRAFT", "ALIGNING", "PAUSED", "CANCELLED"] as const, "ALL")
+  );
   const [riskFilter, setRiskFilter] = useState<"ALL" | TCurveInitiativeRiskTier>("ALL");
-  const [summaryFilter, setSummaryFilter] = useState<TSummaryFilter>();
+  const [summaryFilter, setSummaryFilter] = useState<TSummaryFilter | undefined>(initialSummaryFilter);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [reasonAction, setReasonAction] = useState<TReasonAction>();
