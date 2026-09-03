@@ -644,13 +644,21 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
                   setReason(event.target.value);
                   setReasonError(false);
                 }}
-                className={`${filterClassName} mt-1 min-h-24 w-full resize-y py-2`}
+                className={cn(
+                  filterClassName,
+                  "mt-1 min-h-24 w-full resize-y py-2",
+                  reasonError && "border-danger-strong focus:border-danger-strong focus:ring-danger-subtle"
+                )}
                 maxLength={2000}
                 aria-invalid={reasonError}
                 aria-describedby={reasonError ? "curve-initiative-action-reason-error" : undefined}
               />
               {reasonError && (
-                <p id="curve-initiative-action-reason-error" role="alert" className="mt-1 text-11 text-danger-primary">
+                <p
+                  id="curve-initiative-action-reason-error"
+                  role="alert"
+                  className="mt-1 text-12 font-medium text-danger-primary"
+                >
                   Enter a reason.
                 </p>
               )}

@@ -15,6 +15,7 @@ import type {
   TCurveInitiativeRiskTier,
 } from "@plane/types";
 import { Button } from "@plane/ui";
+import { cn } from "@plane/utils";
 import { memberDisplayName } from "./initiative-ui";
 
 type TFormField =
@@ -32,6 +33,9 @@ const inputClassName =
   "mt-1 min-h-10 w-full rounded-md border border-subtle bg-surface-1 px-3 py-2 text-13 text-primary outline-none transition focus:border-accent-primary focus:ring-2 focus:ring-accent-subtle disabled:cursor-not-allowed disabled:bg-layer-1 disabled:text-tertiary";
 
 const fieldLabelClassName = "text-12 font-semibold text-primary";
+const errorTextClassName = "mt-1 text-12 font-medium text-danger-primary";
+const fieldClassName = (hasError: boolean) =>
+  cn(inputClassName, hasError && "border-danger-strong focus:border-danger-strong focus:ring-danger-subtle");
 
 const defaultApproverIds = (members: IWorkspaceMember[]) => [0, 1, 2].map((index) => members[index]?.member.id ?? "");
 
@@ -207,13 +211,13 @@ export function InitiativeCreateDrawer({
                   setTitle(event.target.value);
                   setErrors((current) => ({ ...current, title: undefined }));
                 }}
-                className={inputClassName}
+                className={fieldClassName(!!errors.title)}
                 maxLength={255}
                 aria-invalid={!!errors.title}
                 aria-describedby={errors.title ? "curve-initiative-title-error" : undefined}
               />
               {errors.title && (
-                <p id="curve-initiative-title-error" className="mt-1 text-11 text-danger-primary">
+                <p id="curve-initiative-title-error" className={errorTextClassName}>
                   {errors.title}
                 </p>
               )}
@@ -232,7 +236,7 @@ export function InitiativeCreateDrawer({
                     setProductId(event.target.value);
                     setErrors((current) => ({ ...current, product: undefined }));
                   }}
-                  className={inputClassName}
+                  className={fieldClassName(!!errors.product)}
                   aria-invalid={!!errors.product}
                   aria-describedby={errors.product ? "curve-initiative-product-error" : undefined}
                 >
@@ -244,7 +248,7 @@ export function InitiativeCreateDrawer({
                   ))}
                 </select>
                 {errors.product && (
-                  <p id="curve-initiative-product-error" className="mt-1 text-11 text-danger-primary">
+                  <p id="curve-initiative-product-error" className={errorTextClassName}>
                     {errors.product}
                   </p>
                 )}
@@ -261,13 +265,13 @@ export function InitiativeCreateDrawer({
                     setKeyword(event.target.value);
                     setErrors((current) => ({ ...current, keyword: undefined }));
                   }}
-                  className={inputClassName}
+                  className={fieldClassName(!!errors.keyword)}
                   maxLength={50}
                   aria-invalid={!!errors.keyword}
                   aria-describedby={errors.keyword ? "curve-initiative-keyword-error" : undefined}
                 />
                 {errors.keyword && (
-                  <p id="curve-initiative-keyword-error" className="mt-1 text-11 text-danger-primary">
+                  <p id="curve-initiative-keyword-error" className={errorTextClassName}>
                     {errors.keyword}
                   </p>
                 )}
@@ -320,13 +324,13 @@ export function InitiativeCreateDrawer({
                   setDescription(event.target.value);
                   setErrors((current) => ({ ...current, description: undefined }));
                 }}
-                className={`${inputClassName} min-h-32 resize-y`}
+                className={`${fieldClassName(!!errors.description)} min-h-32 resize-y`}
                 maxLength={20000}
                 aria-invalid={!!errors.description}
                 aria-describedby={errors.description ? "curve-initiative-description-error" : undefined}
               />
               {errors.description && (
-                <p id="curve-initiative-description-error" className="mt-1 text-11 text-danger-primary">
+                <p id="curve-initiative-description-error" className={errorTextClassName}>
                   {errors.description}
                 </p>
               )}
@@ -345,7 +349,7 @@ export function InitiativeCreateDrawer({
                       id={`curve-initiative-${key}`}
                       value={approverIds[index] ?? ""}
                       onChange={(event) => setApprover(index, event.target.value)}
-                      className={inputClassName}
+                      className={fieldClassName(!!errors[key])}
                       aria-invalid={!!errors[key]}
                       aria-describedby={errors[key] ? `curve-initiative-${key}-error` : undefined}
                     >
@@ -357,7 +361,7 @@ export function InitiativeCreateDrawer({
                       ))}
                     </select>
                     {errors[key] && (
-                      <p id={`curve-initiative-${key}-error`} className="mt-1 text-11 text-danger-primary">
+                      <p id={`curve-initiative-${key}-error`} className={errorTextClassName}>
                         {errors[key]}
                       </p>
                     )}

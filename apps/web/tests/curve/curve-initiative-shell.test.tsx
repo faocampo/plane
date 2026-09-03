@@ -208,6 +208,12 @@ describe("Curve Initiative shell", () => {
 
     expect(createInitiative).not.toHaveBeenCalled();
     expect(screen.getAllByText("Choose three distinct active humans for Standard or High risk.")).toHaveLength(3);
+    expect(screen.getByLabelText("Product Approver")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Product Approver")).toHaveClass("border-danger-strong");
+    expect(screen.getAllByText("Choose three distinct active humans for Standard or High risk.")[0]).toHaveClass(
+      "text-12",
+      "font-medium"
+    );
     await waitFor(() => expect(screen.getByLabelText("Product Approver")).toHaveFocus());
   });
 
@@ -306,6 +312,8 @@ describe("Curve Initiative shell", () => {
     fireEvent.click(within(detail).getByRole("button", { name: "Pause" }));
     fireEvent.click(screen.getByRole("button", { name: "Pause Initiative" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a reason.");
+    expect(screen.getByRole("alert")).toHaveClass("text-12", "font-medium");
+    expect(screen.getByLabelText("Reason")).toHaveClass("border-danger-strong");
     expect(pauseInitiative).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Awaiting backend contract" } });
