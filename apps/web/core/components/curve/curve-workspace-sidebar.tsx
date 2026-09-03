@@ -8,18 +8,7 @@ import { type ReactNode } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import {
-  Activity,
-  Blocks,
-  FileCheck2,
-  Gauge,
-  Layers3,
-  ListTodo,
-  Route,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-} from "lucide-react";
+import { Activity, Blocks, FileCheck2, Gauge, Layers3, ListTodo, Route, ShieldCheck, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import {
@@ -31,7 +20,6 @@ import { cn } from "@plane/utils";
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
 import { AppSidebarToggleButton } from "@/components/sidebar/sidebar-toggle-button";
 import { SidebarItemBase } from "@/components/workspace/sidebar/sidebar-item";
-import { WorkspaceMenuRoot } from "@/components/workspace/sidebar/workspace-menu-root";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { CurveSourceLink } from "./curve-source-link";
 
@@ -43,7 +31,6 @@ const CURVE_SIDEBAR_SKELETON_ROWS = [
   "work-projects",
   "work-views",
   "platform-foundation",
-  "platform-settings",
 ];
 
 function CurveNavSection({ label, badge, children }: { label: string; badge?: string; children: ReactNode }) {
@@ -144,12 +131,6 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
         )}
         <AppSidebarToggleButton controlsId="curve-workspace-navigation" />
       </div>
-      <div className="px-4 pb-3">
-        <div className="rounded-md border border-subtle bg-layer-1 p-1">
-          <WorkspaceMenuRoot variant="top-navigation" />
-        </div>
-      </div>
-
       <ScrollArea
         orientation="vertical"
         scrollType="hover"
@@ -194,13 +175,6 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
             label="Foundation status"
             icon={<Gauge className="size-4" />}
             active={pathname === foundationHref}
-            onNavigate={closeMobileNavigation}
-          />
-          <CurveLink
-            href={`/${slug}/settings`}
-            label="Settings"
-            icon={<Settings className="size-4" />}
-            active={pathname.startsWith(`/${slug}/settings`)}
             onNavigate={closeMobileNavigation}
           />
         </CurveNavSection>

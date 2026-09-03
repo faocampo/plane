@@ -176,6 +176,21 @@ describe("Curve Initiative shell", () => {
     expect(screen.getByText("No Initiatives match these filters")).toBeInTheDocument();
   });
 
+  it("names the Draft transition and explains its consequence", () => {
+    const acceptRefinement = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      selectedInitiative: initiatives[1],
+      selectedEtag: '"curve-initiative:rollout-confidence:v1"',
+      acceptRefinement,
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByText(/moves this Initiative from Draft to Aligning/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start alignment" }));
+    expect(acceptRefinement).toHaveBeenCalledOnce();
+  });
+
   it("uses one explicit pagination control and retains unique server order", () => {
     const loadMore = vi.fn();
     useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, loadMore });
@@ -331,7 +346,7 @@ describe("Curve Initiative shell", () => {
       ...defaultHookValue,
       problem: {
         type: "https://curve.x3m.internal/problems/precondition-failed",
-        title: "The Initiative changed",
+        title: "A newer Initiative version is available",
         status: 412,
         correlation_id: "corr-safe",
       },
@@ -340,9 +355,13 @@ describe("Curve Initiative shell", () => {
     });
     render(<InitiativeWorkspace workspaceSlug="x3m" />);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("The last confirmed workspace state remains visible");
-    expect(screen.getByRole("alert")).toHaveTextContent("Reference corr-safe");
-    fireEvent.click(screen.getByRole("button", { name: "Reload current state" }));
+    const refreshNotice = screen.getByRole("status", { name: "Initiative refresh notice" });
+    expect(refreshNotice).toHaveTextContent("A newer Initiative version is available");
+    expect(refreshNotice).toHaveTextContent(
+      "Refresh to load the latest confirmed details. Your current view has not changed."
+    );
+    expect(refreshNotice).not.toHaveTextContent("corr-safe");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Initiative" }));
     expect(refreshSelected).toHaveBeenCalledOnce();
 
     expect(
@@ -352,7 +371,7 @@ describe("Curve Initiative shell", () => {
       )
     ).toEqual({
       type: "https://curve.x3m.internal/problems/request-failed",
-      title: "The Initiative changed",
+      title: "A newer Initiative version is available",
       status: 412,
       correlation_id: "corr-safe",
     });

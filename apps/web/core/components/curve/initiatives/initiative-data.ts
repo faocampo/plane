@@ -32,7 +32,11 @@ export const toSafeCurveProblem = (error: unknown, fallbackTitle: string): ICurv
       typeof response?.data?.type === "string"
         ? response.data.type
         : "https://curve.x3m.internal/problems/request-failed",
-    title: permissionLimited ? "Initiatives are unavailable" : conflict ? "The Initiative changed" : fallbackTitle,
+    title: permissionLimited
+      ? "Initiatives are unavailable"
+      : conflict
+        ? "A newer Initiative version is available"
+        : fallbackTitle,
     status,
     ...(typeof response?.data?.correlation_id === "string" ? { correlation_id: response.data.correlation_id } : {}),
   };

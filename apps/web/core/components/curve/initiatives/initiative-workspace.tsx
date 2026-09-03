@@ -174,7 +174,7 @@ function InitiativeDetail({
         <div className="mt-4 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
           {initiative.state === "DRAFT" && (
             <Button size="lg" disabled={!canMutate} loading={isMutating} onClick={onAccept}>
-              Accept refinement
+              Start alignment
             </Button>
           )}
           {(initiative.state === "DRAFT" || initiative.state === "ALIGNING") && (
@@ -196,6 +196,12 @@ function InitiativeDetail({
             <span className="self-center text-11 text-tertiary">Loading current version…</span>
           )}
         </div>
+        {initiative.state === "DRAFT" && (
+          <p className="mt-2 max-w-2xl text-11 text-secondary">
+            Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver
+            assignments.
+          </p>
+        )}
       </header>
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_16rem]">
@@ -470,17 +476,32 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
 
       {problem && (
         <div
-          role="alert"
-          className="mt-5 flex flex-col justify-between gap-3 rounded-lg border border-danger-subtle bg-danger-subtle p-4 sm:flex-row sm:items-center"
+          role={isConflict ? "status" : "alert"}
+          aria-label={isConflict ? "Initiative refresh notice" : undefined}
+          className={cn(
+            "mt-5 flex flex-col justify-between gap-3 rounded-lg border p-4 sm:flex-row sm:items-center",
+            isConflict ? "border-warning-subtle bg-warning-subtle" : "border-danger-subtle bg-danger-subtle"
+          )}
         >
           <div className="flex items-start gap-3">
-            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-danger-primary" aria-hidden="true" />
+            <TriangleAlert
+              className={cn("mt-0.5 size-4 shrink-0", isConflict ? "text-warning-primary" : "text-danger-primary")}
+              aria-hidden="true"
+            />
             <div>
-              <p className="text-13 font-semibold text-danger-primary">{problem.title}</p>
-              <p className="mt-1 text-11 text-danger-secondary">
-                The last confirmed workspace state remains visible.
-                {problem.correlation_id ? ` Reference ${problem.correlation_id}.` : ""}
+              <p className={cn("text-13 font-semibold", isConflict ? "text-warning-primary" : "text-danger-primary")}>
+                {problem.title}
               </p>
+              {isConflict ? (
+                <p className="mt-1 text-11 text-warning-primary">
+                  Refresh to load the latest confirmed details. Your current view has not changed.
+                </p>
+              ) : (
+                <p className="mt-1 text-11 text-danger-secondary">
+                  The last confirmed workspace state remains visible.
+                  {problem.correlation_id ? ` Reference ${problem.correlation_id}.` : ""}
+                </p>
+              )}
             </div>
           </div>
           <Button
@@ -489,7 +510,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             prependIcon={<RefreshCw />}
             onClick={() => void (isConflict ? refreshSelected() : refresh())}
           >
-            {isConflict ? "Reload current state" : "Try again"}
+            {isConflict ? "Refresh Initiative" : "Try again"}
           </Button>
         </div>
       )}
