@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type {
   ICurveInitiative,
@@ -27,10 +27,31 @@ const CURVE_PAGE_SIZE = 100;
 
 type TInitiativeTransition = "accept" | "pause" | "resume" | "cancel";
 
+type TPendingMutationIntent = {
+  fingerprint: string;
+  idempotencyKey: string;
+};
+
+const canonicalizeMutationValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(canonicalizeMutationValue);
+  if (!value || typeof value !== "object") return value;
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, entryValue]) => entryValue !== undefined)
+      // oxlint-disable-next-line unicorn/no-array-sort -- the configured TypeScript target does not include Array.toSorted.
+      .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+      .map(([key, entryValue]) => [key, canonicalizeMutationValue(entryValue)])
+  );
+};
+
+const mutationFingerprint = (intent: Record<string, unknown>) => JSON.stringify(canonicalizeMutationValue(intent));
+
 export const useCurveInitiatives = (workspaceSlug?: string) => {
   const { workspace: workspaceMemberStore } = useMember();
   const requestGeneration = useRef(0);
   const mutationInFlight = useRef(false);
+  const pendingMutationIntent = useRef<TPendingMutationIntent>();
   const [products, setProducts] = useState<ICurveProduct[]>([]);
   const [initiatives, setInitiatives] = useState<ICurveInitiative[]>([]);
   const [nextCursor, setNextCursor] = useState<string>();
@@ -43,22 +64,35 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
   const [isMutating, setIsMutating] = useState(false);
   const [isPermissionLimited, setIsPermissionLimited] = useState(false);
 
-  const activeMembers = useMemo(() => {
-    if (!workspaceSlug) return [];
-    return workspaceMemberStore
-      .getWorkspaceMemberIds(workspaceSlug)
-      .map((memberId) => workspaceMemberStore.getWorkspaceMemberDetails(memberId))
-      .filter(
-        (member): member is IWorkspaceMember =>
-          !!member && member.is_active !== false && !!member.member && member.member.is_bot !== true
-      );
-  }, [workspaceMemberStore, workspaceSlug]);
+  const activeMembers = workspaceSlug
+    ? workspaceMemberStore
+        .getWorkspaceMemberIds(workspaceSlug)
+        .map((memberId) => workspaceMemberStore.getWorkspaceMemberDetails(memberId))
+        .filter(
+          (member): member is IWorkspaceMember =>
+            !!member && member.is_active !== false && !!member.member && member.member.is_bot !== true
+        )
+    : [];
 
   const replaceConfirmedInitiative = useCallback((initiative: ICurveInitiative, etag: string) => {
     setInitiatives((current) => mergeCurveInitiatives(current, [initiative]));
     setSelectedId(initiative.id);
     setSelectedResource(initiative);
     setSelectedEtag(etag);
+  }, []);
+
+  const idempotencyKeyFor = useCallback((fingerprint: string) => {
+    if (pendingMutationIntent.current?.fingerprint === fingerprint) {
+      return pendingMutationIntent.current.idempotencyKey;
+    }
+
+    const idempotencyKey = crypto.randomUUID();
+    pendingMutationIntent.current = { fingerprint, idempotencyKey };
+    return idempotencyKey;
+  }, []);
+
+  const confirmMutationIntent = useCallback((fingerprint: string) => {
+    if (pendingMutationIntent.current?.fingerprint === fingerprint) pendingMutationIntent.current = undefined;
   }, []);
 
   const loadActiveProducts = useCallback(async (slug: string, generation: number) => {
@@ -102,6 +136,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
     setSelectedResource(undefined);
     setSelectedEtag(undefined);
     mutationInFlight.current = false;
+    pendingMutationIntent.current = undefined;
     setIsMutating(false);
 
     try {
@@ -190,9 +225,11 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
       mutationInFlight.current = true;
       setIsMutating(true);
       setProblem(undefined);
+      const fingerprint = mutationFingerprint({ kind: "create", workspaceSlug, payload });
       try {
-        const result = await curveService.createInitiative(workspaceSlug, payload, crypto.randomUUID());
+        const result = await curveService.createInitiative(workspaceSlug, payload, idempotencyKeyFor(fingerprint));
         if (generation !== requestGeneration.current) return false;
+        confirmMutationIntent(fingerprint);
         setInitiatives((current) => [result.initiative, ...current.filter(({ id }) => id !== result.initiative.id)]);
         replaceConfirmedInitiative(result.initiative, result.etag);
         return true;
@@ -207,7 +244,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
         }
       }
     },
-    [replaceConfirmedInitiative, workspaceSlug]
+    [confirmMutationIntent, idempotencyKeyFor, replaceConfirmedInitiative, workspaceSlug]
   );
 
   const updateInitiativeDraft = useCallback(
@@ -217,15 +254,23 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
       mutationInFlight.current = true;
       setIsMutating(true);
       setProblem(undefined);
+      const fingerprint = mutationFingerprint({
+        kind: "update-draft",
+        workspaceSlug,
+        initiativeId: selectedId,
+        etag: selectedEtag,
+        payload,
+      });
       try {
         const result = await curveService.updateInitiativeDraft(
           workspaceSlug,
           selectedId,
           payload,
           selectedEtag,
-          crypto.randomUUID()
+          idempotencyKeyFor(fingerprint)
         );
         if (generation !== requestGeneration.current) return false;
+        confirmMutationIntent(fingerprint);
         replaceConfirmedInitiative(result.initiative, result.etag);
         return true;
       } catch (error) {
@@ -239,7 +284,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
         }
       }
     },
-    [replaceConfirmedInitiative, selectedEtag, selectedId, workspaceSlug]
+    [confirmMutationIntent, idempotencyKeyFor, replaceConfirmedInitiative, selectedEtag, selectedId, workspaceSlug]
   );
 
   const transitionInitiative = useCallback(
@@ -249,8 +294,16 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
       mutationInFlight.current = true;
       setIsMutating(true);
       setProblem(undefined);
+      const fingerprint = mutationFingerprint({
+        kind: "transition",
+        workspaceSlug,
+        initiativeId: selectedId,
+        etag: selectedEtag,
+        transition,
+        reason: reason ?? "",
+      });
       try {
-        const idempotencyKey = crypto.randomUUID();
+        const idempotencyKey = idempotencyKeyFor(fingerprint);
         const result =
           transition === "accept"
             ? await curveService.acceptInitiativeRefinement(workspaceSlug, selectedId, selectedEtag, idempotencyKey)
@@ -278,6 +331,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
                     idempotencyKey
                   );
         if (generation !== requestGeneration.current) return false;
+        confirmMutationIntent(fingerprint);
         replaceConfirmedInitiative(result.initiative, result.etag);
         return true;
       } catch (error) {
@@ -291,7 +345,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
         }
       }
     },
-    [replaceConfirmedInitiative, selectedEtag, selectedId, workspaceSlug]
+    [confirmMutationIntent, idempotencyKeyFor, replaceConfirmedInitiative, selectedEtag, selectedId, workspaceSlug]
   );
 
   const selectedInitiative = selectedResource ?? initiatives.find((initiative) => initiative.id === selectedId);

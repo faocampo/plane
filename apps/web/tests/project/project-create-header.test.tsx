@@ -21,10 +21,14 @@ vi.mock("@/components/common/cover-image", () => ({
   CoverImage: ({ src }: { src?: string | null }) => <div data-testid="cover-image">{src ?? "none"}</div>,
 }));
 vi.mock("@/components/core/image-picker-popover", () => ({
-  ImagePickerPopover: ({ label }: { label: string }) => <button type="button">{label}</button>,
+  ImagePickerPopover: ({ label, onChange }: { label: string; onChange: (value: string) => void }) => (
+    <button type="button" onClick={() => onChange("/uploads/new-cover.webp")}>
+      {label}
+    </button>
+  ),
 }));
 
-function HeaderHarness() {
+function HeaderHarness({ handleFormOnChange }: { handleFormOnChange?: () => void }) {
   const methods = useForm<IProject>({
     defaultValues: {
       cover_image_url: "/static/project-cover.webp",
@@ -33,7 +37,7 @@ function HeaderHarness() {
   });
   return (
     <FormProvider {...methods}>
-      <ProjectCreateHeader handleClose={vi.fn()} />
+      <ProjectCreateHeader handleClose={vi.fn()} handleFormOnChange={handleFormOnChange} />
     </FormProvider>
   );
 }
@@ -48,5 +52,16 @@ describe("Project create header", () => {
     expect(screen.getByTestId("cover-image")).toHaveTextContent("none");
     expect(screen.queryByRole("button", { name: "Remove cover" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "change_cover" })).toBeInTheDocument();
+  });
+
+  it("stores a selected cover in the project form and marks the form as changed", () => {
+    const handleFormOnChange = vi.fn();
+    render(<HeaderHarness handleFormOnChange={handleFormOnChange} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "change_cover" }));
+
+    expect(screen.getByTestId("cover-image")).toHaveTextContent("/uploads/new-cover.webp");
+    expect(handleFormOnChange).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Remove cover" })).toBeInTheDocument();
   });
 });

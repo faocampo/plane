@@ -330,6 +330,73 @@ describe("Curve Initiative shell", () => {
     expect(screen.getByText("Initiative created in Draft state.")).toBeInTheDocument();
   });
 
+  it("keeps the governed keyword alphabet and submits the selected business intent", async () => {
+    const createInitiative = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    const businessIntent = screen.getByRole("combobox", { name: "Business intent" });
+    expect(
+      within(businessIntent)
+        .getAllByRole("option")
+        .map(({ textContent }) => textContent)
+    ).toEqual(["Decide during Draft", "Strategic", "Customer commitment", "Business improvement", "Mandatory"]);
+    fireEvent.change(businessIntent, { target: { value: "BUSINESS_IMPROVEMENT" } });
+    expect(
+      screen.getByText("BAU, reliability, efficiency, maintenance, or capabilities that enable future Initiatives.")
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "Improve delivery foundations" } });
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "delivery_foundations" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Problem and intended outcome/ }), {
+      target: { value: "Reduce repeated delivery work." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+
+    expect(createInitiative).not.toHaveBeenCalled();
+    expect(screen.getByText("Use 1–50 letters, numbers, or hyphens, starting with a letter or number.")).toHaveClass(
+      "text-12",
+      "font-medium"
+    );
+    await waitFor(() => expect(screen.getByLabelText(/Keyword/)).toHaveFocus());
+
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "delivery-foundations" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+    await waitFor(() =>
+      expect(createInitiative).toHaveBeenCalledWith(
+        expect.objectContaining({
+          keyword: "delivery-foundations",
+          business_intent: "BUSINESS_IMPROVEMENT",
+        })
+      )
+    );
+  });
+
+  it("keeps creation input available after a rejected request", async () => {
+    const createInitiative = vi.fn().mockResolvedValue(false);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "Recoverable submission" } });
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "recoverable-submission" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Problem and intended outcome/ }), {
+      target: { value: "Keep the user's work after a network failure." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+
+    expect(await screen.findByText(/The Initiative could not be created\. Your input remains available/)).toHaveClass(
+      "text-12",
+      "text-danger-primary"
+    );
+    expect(screen.getByLabelText(/Title/)).toHaveValue("Recoverable submission");
+    expect(screen.getByLabelText(/Keyword/)).toHaveValue("recoverable-submission");
+    expect(screen.getByRole("textbox", { name: /Problem and intended outcome/ })).toHaveValue(
+      "Keep the user's work after a network failure."
+    );
+  });
+
   it("renders the approved portfolio context, metadata, and recovery states", () => {
     const { rerender } = render(<InitiativeWorkspace workspaceSlug="x3m" />);
 
@@ -437,6 +504,52 @@ describe("Curve Initiative shell", () => {
     fireEvent.click(within(detail).getByRole("button", { name: "Cancel" }));
     expect(screen.getByText(/Cancel “Loomit SDK compatibility panel”/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Keep current state" }));
+  });
+
+  it.each([
+    ["Resume", "Resume Initiative", "Dependency restored", "resumeInitiative", "Initiative resumed.", initiatives[2]],
+    [
+      "Cancel",
+      "Cancel Initiative",
+      "Outcome no longer required",
+      "cancelInitiative",
+      "Initiative cancelled.",
+      initiatives[0],
+    ],
+  ] as const)(
+    "submits the %s lifecycle action and announces the committed state",
+    async (openLabel, submitLabel, reason, mutationName, announcement, selected) => {
+      const mutation = vi.fn().mockResolvedValue(true);
+      useCurveInitiativesMock.mockReturnValue({
+        ...defaultHookValue,
+        initiatives: [selected],
+        selectedInitiative: selected,
+        [mutationName]: mutation,
+      });
+      render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+      const detail = screen.getByRole("region", { name: "Selected Initiative" });
+      fireEvent.click(within(detail).getByRole("button", { name: openLabel }));
+      fireEvent.change(screen.getByLabelText("Reason"), { target: { value: reason } });
+      fireEvent.click(screen.getByRole("button", { name: submitLabel }));
+
+      await waitFor(() => expect(mutation).toHaveBeenCalledWith(reason));
+      expect(screen.getAllByRole("status").some((status) => status.textContent === announcement)).toBe(true);
+    }
+  );
+
+  it("makes a cancelled Initiative terminal in the visible action set", () => {
+    const cancelled = initiatives[3];
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      initiatives: [cancelled],
+      selectedInitiative: cancelled,
+      selectedEtag: '"curve-initiative:campaign-cleanup:v1"',
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const actions = screen.getByLabelText("Initiative lifecycle actions");
+    expect(within(actions).queryAllByRole("button")).toHaveLength(0);
   });
 
   it("preserves safe conflict evidence and exposes deliberate refresh", () => {

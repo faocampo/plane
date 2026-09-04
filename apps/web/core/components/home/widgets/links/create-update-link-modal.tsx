@@ -16,7 +16,7 @@ import { Input, ModalCore } from "@plane/ui";
 import type { TLinkOperations } from "./use-links";
 import { normalizeQuickLinkUrl } from "./url";
 
-export type TLinkOperationsModal = Exclude<TLinkOperations, "remove">;
+export type TLinkOperationsModal = Omit<TLinkOperations, "remove">;
 
 export type TLinkCreateFormFieldOptions = TLinkEditableFields & {
   id?: string;
