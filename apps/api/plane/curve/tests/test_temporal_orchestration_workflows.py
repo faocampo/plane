@@ -5,13 +5,14 @@
 import asyncio
 import os
 import uuid
+from types import SimpleNamespace
 
 import pytest
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy
 from temporalio.exceptions import WorkflowAlreadyStartedError
 from temporalio.testing import WorkflowEnvironment
-from temporalio.worker import Worker
+from temporalio.worker import Replayer, Worker
 
 from plane.curve.temporal.orchestration_contracts import (
     ChildAnswerSignalV1,
@@ -28,7 +29,11 @@ from plane.curve.temporal.orchestration_contracts import (
     SignalErrorCode,
     SliceDescriptorV1,
 )
-from plane.curve.temporal.constants import initiative_workflow_id, slice_attempt_workflow_id
+from plane.curve.temporal.constants import (
+    PARENT_CHILD_CANCEL_ONCE_PATCH_ID,
+    initiative_workflow_id,
+    slice_attempt_workflow_id,
+)
 from plane.curve.temporal.orchestration_workflows import (
     CurveInitiativeOrchestrationWorkflowV1,
     CurveSliceAttemptWorkflowV1,
@@ -79,6 +84,7 @@ async def _run_with_child(test_case):
     previous_settings_module = os.environ.get("DJANGO_SETTINGS_MODULE")
     os.environ["DJANGO_SETTINGS_MODULE"] = "plane.settings.curve_worker"
     external_address = os.environ.get("TEMPORAL_TEST_ADDRESS")
+    existing_test_server = os.environ.get("TEMPORAL_TEST_SERVER_PATH")
     try:
         if external_address:
             client = await Client.connect(
@@ -91,17 +97,20 @@ async def _run_with_child(test_case):
                 task_queue=task_queue,
                 workflows=[CurveInitiativeOrchestrationWorkflowV1, CurveSliceAttemptWorkflowV1],
             ):
-                await test_case(client, task_queue, False)
+                await asyncio.wait_for(test_case(client, task_queue, False), timeout=60)
             return
 
         try:
-            environment = await WorkflowEnvironment.start_time_skipping()
+            environment = await WorkflowEnvironment.start_time_skipping(
+                test_server_existing_path=existing_test_server,
+            )
         except RuntimeError as exc:
-            if "Failed starting test server" not in str(exc):
+            if existing_test_server or "Failed starting test server" not in str(exc):
                 raise
             pytest.skip(
-                "Temporal time-skipping test server is unavailable on this platform; "
-                "set TEMPORAL_TEST_ADDRESS to run against a local Temporal server"
+                "Temporal time-skipping test server could not be started; "
+                "set TEMPORAL_TEST_SERVER_PATH to a verified local test-server binary, "
+                "or TEMPORAL_TEST_ADDRESS for tests that do not require time skipping"
             )
 
         async with environment:
@@ -111,12 +120,27 @@ async def _run_with_child(test_case):
                 task_queue=task_queue,
                 workflows=[CurveInitiativeOrchestrationWorkflowV1, CurveSliceAttemptWorkflowV1],
             ):
-                await test_case(environment.client, task_queue, True)
+                await asyncio.wait_for(test_case(environment.client, task_queue, True), timeout=60)
     finally:
         if previous_settings_module is None:
             os.environ.pop("DJANGO_SETTINGS_MODULE", None)
         else:
             os.environ["DJANGO_SETTINGS_MODULE"] = previous_settings_module
+
+
+def test_explicit_test_server_failure_is_reported_and_restores_settings(monkeypatch):
+    monkeypatch.delenv("TEMPORAL_TEST_ADDRESS", raising=False)
+    monkeypatch.setenv("TEMPORAL_TEST_SERVER_PATH", "/test-tools/temporal-test-server")
+    previous_settings_module = os.environ.get("DJANGO_SETTINGS_MODULE")
+
+    async def unavailable(**kwargs):
+        assert kwargs == {"test_server_existing_path": "/test-tools/temporal-test-server"}
+        raise RuntimeError("Failed starting test server: synthetic startup failure")
+
+    monkeypatch.setattr(WorkflowEnvironment, "start_time_skipping", unavailable)
+    with pytest.raises(RuntimeError, match="synthetic startup failure"):
+        asyncio.run(_run_with_child(None))
+    assert os.environ.get("DJANGO_SETTINGS_MODULE") == previous_settings_module
 
 
 def _slice(slice_id, attempt_id, *, dependencies=(), digest=DIGEST_A):
@@ -488,6 +512,27 @@ def test_m0_s6a_at_06_parent_pause_holds_the_wave_barrier_until_resume():
     asyncio.run(_run_with_child(scenario))
 
 
+@pytest.mark.parametrize("cancel_once, expected_calls", [(True, 1), (False, 2)])
+def test_parent_child_cancellation_preserves_legacy_branch_and_deduplicates_new_runs(
+    monkeypatch, cancel_once, expected_calls
+):
+    calls = []
+    parent = CurveInitiativeOrchestrationWorkflowV1(_parent_input((_slice(SLICE_ID, ATTEMPT_ID),)))
+    parent._active_handles = {
+        "b": SimpleNamespace(cancel=lambda: calls.append("b")),
+        "a": SimpleNamespace(cancel=lambda: calls.append("a")),
+    }
+
+    def patched(marker):
+        assert marker == PARENT_CHILD_CANCEL_ONCE_PATCH_ID
+        return cancel_once
+
+    monkeypatch.setattr("plane.curve.temporal.orchestration_workflows.workflow.patched", patched)
+    parent._cancel_active_children()
+    parent._cancel_active_children()
+    assert calls == ["a", "b"] * expected_calls
+
+
 def test_m0_s6a_at_07_parent_cancel_propagates_and_settles_all_children():
     async def scenario(client, task_queue, _time_skipping):
         plan_generation = _test_plan_generation()
@@ -523,6 +568,9 @@ def test_m0_s6a_at_07_parent_cancel_propagates_and_settles_all_children():
         assert result.phase == ParentPhase.CANCELLED
         assert result.cancelled_slice_ids == tuple(sorted((root_a.slice_id, root_b.slice_id)))
         assert not result.failed_slice_ids
+        await Replayer(
+            workflows=[CurveInitiativeOrchestrationWorkflowV1, CurveSliceAttemptWorkflowV1],
+        ).replay_workflow(await handle.fetch_history())
 
     asyncio.run(_run_with_child(scenario))
 

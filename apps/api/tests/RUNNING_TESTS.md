@@ -75,6 +75,32 @@ Test-time env overrides live in the compose file itself (`POSTGRES_HOST=test-db`
 
 ## Troubleshooting
 
+### Curve Temporal workflow tests
+
+The [orchestration tests](../plane/curve/tests/test_temporal_orchestration_workflows.py)
+(real-worker signals, lifecycle transitions, and timeout cases) normally let the
+installed Temporal SDK start its time-skipping test server. Offline containers
+can instead set `TEMPORAL_TEST_SERVER_PATH` to a verified executable mounted
+read-only inside the container. A configured executable that fails to start
+fails the test rather than reporting a skip.
+
+Acquire the binary from the official [Temporal Java SDK releases](https://github.com/temporalio/sdk-java/releases)
+(platform-specific time-skipping test-server artifacts), and verify the exact
+release asset checksum before execution. Use a disposable internal test network
+and synthetic data. This binary is a test dependency only.
+
+The mounted file must be executable and compatible with the container's loader.
+For Linux GNU-libc binaries, an Alpine test image may need a compatibility layer
+in a disposable test-only image. Keep that layer separate from application
+dependency files and deployment images.
+
+Leave `TEMPORAL_TEST_ADDRESS` unset when testing timeouts. Setting that variable
+selects an external development server and takes precedence over the executable
+path; its three time-skipping-dependent timeout cases are skipped explicitly.
+`TEMPORAL_TEST_NAMESPACE` selects the external server namespace.
+
+### General setup
+
 - **`./apps/api/.env: no such file or directory`** — run `./setup.sh` from the repo root.
 - **Port already in use** — none of the test services publish host ports; if you see this it's coming from a different compose stack. Stop the local stack (`docker compose -f docker-compose-local.yml down`).
 - **Stale image after dependency changes** — rebuild explicitly: `docker compose -f docker-compose-test.yml build --no-cache api-tests`.
