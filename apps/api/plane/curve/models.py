@@ -396,6 +396,8 @@ class Initiative(models.Model):
     workflow_version_id = models.UUIDField(null=True, blank=True, editable=False)
     creator_user_id = models.UUIDField(editable=False)
     first_external_resource_at = models.DateTimeField(null=True, blank=True, editable=False)
+    current_prd_checkpoint_id = models.UUIDField(null=True, blank=True, editable=False)
+    controlling_prd_decision_id = models.UUIDField(null=True, blank=True, editable=False)
     version = models.PositiveBigIntegerField(default=1, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
@@ -451,7 +453,12 @@ class Initiative(models.Model):
                 condition=(
                     models.Q(
                         state=InitiativeState.PAUSED,
-                        paused_from_state__in=[InitiativeState.DRAFT, InitiativeState.ALIGNING],
+                        paused_from_state__in=[
+                            InitiativeState.DRAFT,
+                            InitiativeState.ALIGNING,
+                            InitiativeState.PRD_REVIEW,
+                            InitiativeState.PLANNING,
+                        ],
                     )
                     | (~models.Q(state=InitiativeState.PAUSED) & models.Q(paused_from_state__isnull=True))
                 ),
@@ -460,7 +467,10 @@ class Initiative(models.Model):
             models.CheckConstraint(
                 condition=(
                     models.Q(state=InitiativeState.DRAFT, workflow_version_id__isnull=True)
-                    | models.Q(state=InitiativeState.ALIGNING, workflow_version_id__isnull=False)
+                    | models.Q(
+                        state__in=[InitiativeState.ALIGNING, InitiativeState.PRD_REVIEW, InitiativeState.PLANNING],
+                        workflow_version_id__isnull=False,
+                    )
                     | models.Q(
                         state=InitiativeState.PAUSED,
                         paused_from_state=InitiativeState.DRAFT,
@@ -468,7 +478,11 @@ class Initiative(models.Model):
                     )
                     | models.Q(
                         state=InitiativeState.PAUSED,
-                        paused_from_state=InitiativeState.ALIGNING,
+                        paused_from_state__in=[
+                            InitiativeState.ALIGNING,
+                            InitiativeState.PRD_REVIEW,
+                            InitiativeState.PLANNING,
+                        ],
                         workflow_version_id__isnull=False,
                     )
                     | models.Q(state=InitiativeState.CANCELLED)

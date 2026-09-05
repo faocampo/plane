@@ -21,8 +21,8 @@ common, gate-assignment and Product schemas. The
 
 This backend implementation adds four PRD/evidence metadata tables, one external
 DocumentCheckpoint table, one review-decision table and internal transaction
-helpers. API routes, provider transport, protected-body storage and lifecycle
-transitions remain subsequent work. Synthetic tests use fabricated object
+helpers. API routes, provider transport, protected-body storage and authenticated
+lifecycle commands remain subsequent work. Synthetic tests use fabricated object
 references; references and digests alone do not prove that stored bytes exist.
 Policy values, identities and deployment configuration are excluded from source.
 
@@ -93,11 +93,12 @@ keys, insertion guards and immutable history) adds database-backed protections:
 
 The [capture repository](prd_checkpoint_repository.py) (atomic native-record and
 checkpoint append) locks Initiative, binding and Artifact in that order. It
-requires the expected Initiative version, Aligning state, intended Initiative
-scope and exact previous checkpoint before appending the snapshot/version,
+requires the expected Initiative version, Aligning or PRD Review state, intended
+Initiative scope and exact previous checkpoint before appending the snapshot/version,
 advancing the Artifact pointer and recording the checkpoint. Outer command
 failure rolls all of these changes back. These checks fence stale, paused and
-cancelled submissions at this metadata boundary.
+cancelled submissions at this metadata boundary. PRD Review also permits an
+authorized successor submission, which replaces the pending review subject.
 
 Access/completeness evaluation and retention/envelope IDs remain opaque historical
 references here. Current same-workspace authority, current provider/evidence
@@ -126,6 +127,30 @@ without whitespace or Unicode normalization. Authorized reads must verify the
 same bytes before reconstructing a rationale-bearing response. Missing or
 altered bytes produce fixed errors. These conversion helpers perform no storage
 access and establish no permission grant.
+
+## Transactional PRD lifecycle
+
+The [lifecycle repository](prd_lifecycle_repository.py) (internal submission and
+decision transaction helpers) records the exact current checkpoint and controlling
+decision on the Initiative. Submission enters PRD Review; approval enters Planning;
+changes requested and rejection return to Aligning. Each change increments the
+Initiative version once. A successor clears the controlling decision pointer while
+preserving the immutable earlier checkpoint and decision.
+
+The [lifecycle migration](migrations/0013_initiative_prd_lifecycle.py) (same-scope
+pointer foreign keys and database state guards) requires a submitted checkpoint
+for PRD Review and an approval of that exact checkpoint for Planning. Direct
+writes cannot remove the submitted history, bypass a review outcome, select a
+foreign subject or change a lifecycle pointer without advancing the version.
+Pause/resume and cancellation retain their checkpoint and decision. A preserving
+migration is required to reverse after lifecycle use.
+
+These helpers require an outer command transaction. Their own savepoint makes
+the native version, checkpoint, controlling decision and Initiative changes
+atomic. The consuming authenticated command must independently establish current
+authority and commit its idempotency record, result, audit and outbox in that same
+outer transaction. Calling a metadata helper is never authorization to approve.
+No provider or storage call occurs under these domain locks.
 
 ## Remaining runtime integration
 
@@ -161,9 +186,10 @@ Provider work stays outside the final database transaction.
 
 Stored access/provenance metadata is historical evidence, never a reusable
 permission grant. Excerpt derivation and current envelope validity must be
-verified at capture and review. Exact-checkpoint human decisions and the Planning
-transition remain subsequent implementation work. Live storage/provider
-activation remains subject to its existing approval and infrastructure evidence.
+verified at capture and review. Authenticated exact-checkpoint command handlers,
+Operation completion and the Planning UI remain subsequent integration work.
+Live storage/provider activation remains subject to its existing approval and
+infrastructure evidence.
 
 ## Tests and rollback
 
@@ -181,6 +207,7 @@ pytest plane/curve/tests/test_prd_metadata_models.py --create-db
 pytest plane/curve/tests/test_prd_checkpoint_models.py
 pytest plane/curve/tests/test_prd_review_validation.py
 pytest plane/curve/tests/test_prd_review_models.py plane/curve/tests/test_prd_review_rationale.py
+pytest plane/curve/tests/test_prd_lifecycle_repository.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
