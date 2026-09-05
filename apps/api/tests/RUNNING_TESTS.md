@@ -51,6 +51,24 @@ docker compose -f docker-compose-test.yml run --rm api-tests \
 
 The available markers (`unit`, `contract`, `smoke`, `slow`) are declared in `apps/api/pytest.ini`.
 
+### Database migrations and reused test databases
+
+The test defaults apply real migrations. Curve's composite workspace foreign
+keys and identity/version triggers are installed by SQL migration operations;
+`--nomigrations` omits these controls and cannot validate runtime integrity.
+Both direct pytest execution and the test runner use `--migrations`.
+
+If an existing test database was created with the previous model-only defaults,
+add `--create-db` once to rebuild that disposable test database:
+
+```bash
+docker compose -f docker-compose-test.yml run --rm api-tests \
+  pytest plane/curve/tests --create-db
+```
+
+Use this option only against the isolated test stack. Subsequent runs can reuse
+its migrated database until the next teardown.
+
 ### Teardown
 
 ```bash
