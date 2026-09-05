@@ -152,6 +152,35 @@ authority and commit its idempotency record, result, audit and outbox in that sa
 outer transaction. Calling a metadata helper is never authorization to approve.
 No provider or storage call occurs under these domain locks.
 
+## Current PRD command authorization
+
+The [PRD policy](https://github.com/faocampo/curve/blob/6049d229e13e0384d0d3e4c88229720da5f296c1/docs/technical/prd-command-policy.md)
+(four action-specific authorization rules) is copied byte-for-byte into
+[the candidate manifest](prd_candidate_policy/prd-policy-v1.json) (digest-pinned
+policy contents). Existing core and Initiative policy bytes remain unchanged.
+Submission requires an active human creator or explicit contributor grant.
+Approval, changes requested and rejection require the active assigned Product
+Approver plus current action-specific object access. All three human gates must
+be active; Standard and High risk require distinct people.
+
+The [context builder](prd_policy_context.py) (current database-derived actor,
+membership, risk and assignments) ignores caller-supplied role and ACL claims.
+Its trusted local ACL resolver receives the exact action and versioned Initiative.
+Unavailable or malformed authority fails closed, including creator submission.
+Acceptance and final commit use row locking within the policy-owned transaction;
+provider and protected-body reads remain outside those locks.
+
+The existing Operation kernel accepts scoped PRD policy receipts and reauthorizes
+replay against current membership. This internal integration creates no HTTP
+command route and does not validate a complete external PRD command. State,
+displayed subject, source/evidence access, readiness, protected bytes and final
+commit fencing remain required in the consuming handler. The explicit PRD
+enablement setting defaults to disabled.
+
+The [policy migration](migrations/0014_prd_policy_identity.py) (exact PRD policy
+identity constraint and retained-decision rollback protection) accepts only the
+pinned version and digest. Retained decisions require a preserving migration.
+
 ## Remaining runtime integration
 
 The [review validator](prd_review_validation.py) (pure exact-subject and gate
@@ -208,6 +237,7 @@ pytest plane/curve/tests/test_prd_checkpoint_models.py
 pytest plane/curve/tests/test_prd_review_validation.py
 pytest plane/curve/tests/test_prd_review_models.py plane/curve/tests/test_prd_review_rationale.py
 pytest plane/curve/tests/test_prd_lifecycle_repository.py
+pytest plane/curve/tests/test_prd_policy.py plane/curve/tests/test_prd_policy_context.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```

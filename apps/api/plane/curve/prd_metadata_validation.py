@@ -24,6 +24,7 @@ SCHEMA_PINS = {
 SCHEMA_BASE = "https://curve.example.invalid/contracts/schemas/"
 MAX_SAFE_INTEGER = 9007199254740991
 EXISTING_SCHEMA_PINS = {
+    "policy-evaluation.schema.json": "826610d5af15c28b265aa5882b50c23cf94874158a739473c4ac9937219374c7",
     "common.schema.json": "54b32643ee06d5458934c033a890b639d6c8f8a75346743ba8ef054320bfc3de",
     "gate-assignment.schema.json": "5b614728e2666698e188eaf325f47f000befa056cc514bd743e12e4807070e97",
     "product.schema.json": "ec4c08fe6c3ac71201ec80f7a5554f9c2161436a32687c5547c50735b1626a47",
@@ -110,6 +111,10 @@ def validate_gate_record(value):
 
 def validate_review_decision_record(value):
     _validate_reference("prd-review-decision-record-v1.schema.json", value)
+
+
+def validate_prd_object_acl(value):
+    _validate_reference("policy-evaluation.schema.json#/$defs/objectAcl", value)
 
 
 def _validate_reference(reference, value):

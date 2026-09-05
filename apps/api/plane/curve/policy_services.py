@@ -34,6 +34,7 @@ from plane.curve.observability.propagation import current_traceparent
 from plane.curve.policy_evaluator import evaluate_core_policy
 from plane.curve.policy_manifest import (
     CORE_POLICY_MANIFEST_DIGEST,
+    PRD_POLICY_MANIFEST_DIGEST,
     CORE_POLICY_V2_MANIFEST_DIGEST,
 )
 from plane.curve.policy_types import PolicyEffect, PolicyEvaluationResult
@@ -68,6 +69,10 @@ _MUTATION_POLICY_BINDINGS = MappingProxyType(
         "CURVE.GATE.DECIDE.PLAN": (1, CORE_POLICY_MANIFEST_DIGEST),
         "CURVE.GATE.DECIDE.CODE_READINESS": (1, CORE_POLICY_MANIFEST_DIGEST),
         "CURVE.FINDING.DISPOSITION.NON_SECURITY": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.SUBMIT": (1, PRD_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.APPROVE": (1, PRD_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.REQUEST_CHANGES": (1, PRD_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.REJECT": (1, PRD_POLICY_MANIFEST_DIGEST),
     }
 )
 
