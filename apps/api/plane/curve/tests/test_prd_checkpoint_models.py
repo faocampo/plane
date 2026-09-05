@@ -469,6 +469,9 @@ def test_checkpoint_migration_reverses_only_when_empty_and_preserves_native_reco
     finally:
         MigrationExecutor(connection).migrate(latest)
     checkpoint.save()
-    with pytest.raises(DatabaseError, match="preservation migration"):
-        MigrationExecutor(connection).migrate([previous])
+    try:
+        with pytest.raises(DatabaseError, match="preservation migration"):
+            MigrationExecutor(connection).migrate([previous])
+    finally:
+        MigrationExecutor(connection).migrate(latest)
     assert DocumentCheckpoint.objects.filter(id=checkpoint.id).exists()

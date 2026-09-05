@@ -10,15 +10,18 @@ submission. The following contract documents are publicly available:
 - [Curve integration contract](https://github.com/faocampo/curve/blob/3b5861401f327a01234d7c27b56e4a6d5384b945/docs/technical/integration-contracts.md)
   (external authoring, current authorization and lifecycle authority).
 
-The three files in `prd_candidate_schemas` (closed artifact/evidence metadata,
-external checkpoint/review and AccessEnvelope schemas) are byte-pinned copies of
-the public Curve revision above. The validator separately verifies the existing
+The artifact/evidence, external checkpoint/review and AccessEnvelope files in
+`prd_candidate_schemas` (closed metadata contracts) are byte-pinned copies of
+the public Curve revision above. A fourth candidate schema is pinned to
+[Curve review-decision records](https://github.com/faocampo/curve/blob/938b1db9bf597bdca8f671cbab67c66ddd0230b8/docs/technical/prd-review-decision-records.md)
+(protected rationale and immutable exact-subject metadata).
+The validator separately verifies the existing
 common, gate-assignment and Product schemas. The
 109-file public consumer edition and its execution/capability gates are unchanged.
 
 This backend implementation adds four PRD/evidence metadata tables, one external
-DocumentCheckpoint table and internal transaction helpers. API routes, provider
-transport, protected-body storage and lifecycle
+DocumentCheckpoint table, one review-decision table and internal transaction
+helpers. API routes, provider transport, protected-body storage and lifecycle
 transitions remain subsequent work. Synthetic tests use fabricated object
 references; references and digests alone do not prove that stored bytes exist.
 Policy values, identities and deployment configuration are excluded from source.
@@ -32,6 +35,7 @@ Policy values, identities and deployment configuration are excluded from source.
 | EvidenceItem version | Immutable exact source version and historical access/provenance metadata |
 | EvidenceSnapshot | Immutable ordered membership bound to one ArtifactVersion |
 | DocumentCheckpoint | Immutable external capture, exact native version/snapshot, provider version and predecessor |
+| PRD ReviewDecision | One immutable terminal outcome per checkpoint, exact human assignment and protected rationale reference |
 
 An explicit empty snapshot represents a PRD with no material evidence. Nonempty
 snapshots bind evidence identity/version, source version, content/envelope digests,
@@ -103,6 +107,26 @@ not advance the Initiative state or write its submitted-checkpoint pointer,
 review decision, command result or audit/outbox. Those writes must join the same
 outer command transaction before the live workflow is enabled.
 
+## Review-decision persistence
+
+The [decision model](prd_review_models.py) (immutable exact-checkpoint review
+metadata) supports approval, changes requested and rejection. Its database
+guards bind the same-workspace Initiative, Product Approver, current checkpoint,
+native version, evidence snapshot, source version, risk and decision chronology.
+All three assignments must be valid; Standard and High risk require distinct
+humans. Competing terminal outcomes have one winner. A successor submission
+permits a new decision while retaining the preceding decision and assignment
+history. Runtime membership and live source/evidence permissions still require
+independent authorization at the command boundary.
+
+The [rationale conversion](prd_review_rationale.py) (strict original UTF-8 byte
+verification) retains only an object ID, digest, size, media type, AccessEnvelope
+and retention-policy version in decision metadata. It verifies original bytes
+without whitespace or Unicode normalization. Authorized reads must verify the
+same bytes before reconstructing a rationale-bearing response. Missing or
+altered bytes produce fixed errors. These conversion helpers perform no storage
+access and establish no permission grant.
+
 ## Remaining runtime integration
 
 The [review validator](prd_review_validation.py) (pure exact-subject and gate
@@ -156,6 +180,7 @@ external capture dependency.
 pytest plane/curve/tests/test_prd_metadata_models.py --create-db
 pytest plane/curve/tests/test_prd_checkpoint_models.py
 pytest plane/curve/tests/test_prd_review_validation.py
+pytest plane/curve/tests/test_prd_review_models.py plane/curve/tests/test_prd_review_rationale.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
