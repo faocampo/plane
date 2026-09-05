@@ -16,8 +16,9 @@ the public Curve revision above. The validator separately verifies the existing
 common, gate-assignment and Product schemas. The
 109-file public consumer edition and its execution/capability gates are unchanged.
 
-This backend increment adds four metadata tables and an internal transaction
-helper. API routes, provider transport, protected-body storage and lifecycle
+This backend implementation adds four PRD/evidence metadata tables, one external
+DocumentCheckpoint table and internal transaction helpers. API routes, provider
+transport, protected-body storage and lifecycle
 transitions remain subsequent work. Synthetic tests use fabricated object
 references; references and digests alone do not prove that stored bytes exist.
 Policy values, identities and deployment configuration are excluded from source.
@@ -30,6 +31,7 @@ Policy values, identities and deployment configuration are excluded from source.
 | PRD ArtifactVersion | Immutable submitted version, predecessor/number, object reference, author, body schema and policy/evidence references |
 | EvidenceItem version | Immutable exact source version and historical access/provenance metadata |
 | EvidenceSnapshot | Immutable ordered membership bound to one ArtifactVersion |
+| DocumentCheckpoint | Immutable external capture, exact native version/snapshot, provider version and predecessor |
 
 An explicit empty snapshot represents a PRD with no material evidence. Nonempty
 snapshots bind evidence identity/version, source version, content/envelope digests,
@@ -64,6 +66,43 @@ back all metadata. Cryptographic digest reproduction is performed by validated
 ingestion. Schema-management privileges are outside these row-level guarantees
 and must be excluded from runtime application roles.
 
+## External checkpoint persistence
+
+The [checkpoint model](prd_checkpoint_models.py) (closed, append-only source
+capture metadata) retains typed object-reference fields rather than document
+bytes. It binds one native ArtifactVersion and its EvidenceSnapshot, provider
+connection/file/version, historical capture container, normalization schema,
+author and access/completeness/retention reference IDs.
+
+The [checkpoint migration](migrations/0011_document_checkpoint.py) (tenant foreign
+keys, insertion guards and immutable history) adds database-backed protections:
+
+- Same-workspace Initiative, binding, provider, version, snapshot and predecessor
+  references, including same-Initiative binding checks.
+- One checkpoint per native ArtifactVersion and consecutive checkpoint numbers
+  per binding. The binding lock serializes successor selection; artifact and
+  checkpoint predecessor identities must agree.
+- Exact object ID/digest/length, author, normalization and policy-reference
+  equality with the native version; creation requires its current Artifact pointer.
+- Capture chronology checks and immutable updates/deletes, including raw writes.
+  Runtime roles must lack schema-management, trigger-disabling and TRUNCATE powers.
+
+The [capture repository](prd_checkpoint_repository.py) (atomic native-record and
+checkpoint append) locks Initiative, binding and Artifact in that order. It
+requires the expected Initiative version, Aligning state, intended Initiative
+scope and exact previous checkpoint before appending the snapshot/version,
+advancing the Artifact pointer and recording the checkpoint. Outer command
+failure rolls all of these changes back. These checks fence stale, paused and
+cancelled submissions at this metadata boundary.
+
+Access/completeness evaluation and retention/envelope IDs remain opaque historical
+references here. Current same-workspace authority, current provider/evidence
+access, complete-document validation and protected byte integrity must be proven
+by the consuming command. This metadata helper grants no authorization and does
+not advance the Initiative state or write its submitted-checkpoint pointer,
+review decision, command result or audit/outbox. Those writes must join the same
+outer command transaction before the live workflow is enabled.
+
 ## Remaining runtime integration
 
 The [review validator](prd_review_validation.py) (pure exact-subject and gate
@@ -92,7 +131,7 @@ returning rationale requires its separate protected retention/access handling.
 The authenticated submission command must check current actor, workspace/object,
 source/evidence access, capability, readiness, body integrity and applicable
 storage/policy authority before using this helper. It must recheck the Initiative
-version and cancellation fence, bind the DocumentCheckpoint, and commit its
+version and cancellation fence, invoke the capture append, and commit its
 idempotency result, audit/outbox and PRD Review transition in the same transaction.
 Provider work stays outside the final database transaction.
 
@@ -108,8 +147,14 @@ activation remains subject to its existing approval and infrastructure evidence.
 successor history, incomplete writes, injection, tenant substitution, concurrent
 submissions and reversible migrations) use real PostgreSQL with SQL guards.
 
+[Checkpoint tests](tests/test_prd_checkpoint_models.py) (exact round trips,
+cross-tenant/cross-Initiative substitution, raw-write immutability, successor
+races, cancellation, outer rollback and migration preservation) cover the
+external capture dependency.
+
 ```sh
 pytest plane/curve/tests/test_prd_metadata_models.py --create-db
+pytest plane/curve/tests/test_prd_checkpoint_models.py
 pytest plane/curve/tests/test_prd_review_validation.py
 pytest
 python manage.py makemigrations --check --dry-run

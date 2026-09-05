@@ -803,6 +803,30 @@ class ExternalDocumentBinding(models.Model):
             ],
         ]
 
+    def as_record(self):
+        from .prd_metadata_validation import instant
+
+        return {
+            "schema_version": self.schema_version,
+            "id": str(self.id),
+            "workspace_id": str(self.workspace_id),
+            "initiative_id": str(self.initiative_id),
+            "artifact_kind": self.artifact_kind,
+            "provider_connection_id": str(self.provider_connection_id),
+            "provider_file_id": self.provider_file_id,
+            "provider_container_id": self.provider_container_id,
+            "canonical_url": self.canonical_url,
+            "current_provider_version": self.current_provider_version,
+            "current_revision_id": self.current_revision_id,
+            "current_modified_at": instant(self.current_modified_at),
+            "synchronization_status": self.synchronization_status,
+            "access_status": self.access_status,
+            "last_reconciled_at": instant(self.last_reconciled_at) if self.last_reconciled_at else None,
+            "version": self.version,
+            "created_by": dict(self.created_by),
+            "created_at": instant(self.created_at),
+        }
+
     def save(self, *args, **kwargs):
         # Scope before loading referenced metadata. The DB repeats these checks
         # with composite FKs, so concurrent parent changes cannot cross tenants.
@@ -1376,3 +1400,4 @@ from .prd_models import (  # noqa: E402,F401
     PrdEvidenceItemVersion,
     PrdEvidenceSnapshot,
 )
+from .prd_checkpoint_models import DocumentCheckpoint  # noqa: E402,F401

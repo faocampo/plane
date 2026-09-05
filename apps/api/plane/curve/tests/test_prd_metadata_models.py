@@ -369,7 +369,7 @@ def test_two_successor_submissions_have_one_transaction_winner():
 
 @pytest.mark.django_db(transaction=True)
 def test_prd_migration_reverses_only_when_empty_and_preserves_parent_rows():
-    current = ("curve", "0010_prd_artifact_evidence")
+    current = MigrationExecutor(connection).loader.graph.leaf_nodes()
     previous = ("curve", "0009_external_document_binding")
     initiative = Initiative.objects.create(**initiative_values(uuid.uuid4()))
     try:
@@ -377,10 +377,13 @@ def test_prd_migration_reverses_only_when_empty_and_preserves_parent_rows():
         assert "curve_prd_artifact" not in connection.introspection.table_names()
         assert Initiative.objects.filter(pk=initiative.id).exists()
     finally:
-        MigrationExecutor(connection).migrate([current])
+        MigrationExecutor(connection).migrate(current)
     artifact_fixture()
-    with pytest.raises(DatabaseError, match="preservation migration"):
-        MigrationExecutor(connection).migrate([previous])
+    try:
+        with pytest.raises(DatabaseError, match="preservation migration"):
+            MigrationExecutor(connection).migrate([previous])
+    finally:
+        MigrationExecutor(connection).migrate(current)
     assert PrdArtifact.objects.count() == 1
 
 
