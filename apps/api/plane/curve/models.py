@@ -526,6 +526,7 @@ class GateAssignment(models.Model):
     class Meta:
         db_table = "curve_gate_assignment"
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "initiative", "id"], name="curve_gate_scope_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "initiative", "gate_type"],
                 name="curve_gate_ws_init_type_uq",
@@ -1401,3 +1402,4 @@ from .prd_models import (  # noqa: E402,F401
     PrdEvidenceSnapshot,
 )
 from .prd_checkpoint_models import DocumentCheckpoint  # noqa: E402,F401
+from .prd_review_models import PrdReviewDecision  # noqa: E402,F401

@@ -16,6 +16,7 @@ from referencing import Registry, Resource
 
 
 SCHEMA_PINS = {
+    "prd-review-decision-record-v1.schema.json": "2943f9f9eb3ed142533378deec224493be90d80da4fb26747d9b25508115e4bb",
     "external-prd-v1.schema.json": "f1bdd4ce2d037327b83d352c09e5373882f2b71475605e7fbb93f891ea012eb5",
     "access-envelope.schema.json": "eb6c978390675fc3042803ab4633052f7da49fc7a49305f9bf7ff8c284081dd1",
     "prd-artifact-records-v1.schema.json": "0e6047491c12d5833518e3a32be435ece5765836eb99ace8e82c933ad2411bcf",
@@ -105,6 +106,10 @@ def validate_external_record(kind, value):
 
 def validate_gate_record(value):
     _validate_reference("gate-assignment.schema.json", value)
+
+
+def validate_review_decision_record(value):
+    _validate_reference("prd-review-decision-record-v1.schema.json", value)
 
 
 def _validate_reference(reference, value):
