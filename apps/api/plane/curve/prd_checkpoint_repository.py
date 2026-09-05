@@ -36,7 +36,10 @@ def append_document_checkpoint_metadata(
         type(expected_initiative_version) is int and initiative.version == expected_initiative_version,
         "CHECKPOINT_INITIATIVE_VERSION_CONFLICT",
     )
-    require_metadata(initiative.state == InitiativeState.ALIGNING, "CHECKPOINT_INITIATIVE_STATE_CONFLICT")
+    require_metadata(
+        initiative.state in {InitiativeState.ALIGNING, InitiativeState.PRD_REVIEW},
+        "CHECKPOINT_INITIATIVE_STATE_CONFLICT",
+    )
     require_metadata(
         checkpoint.workspace_id == version.workspace_id == snapshot.workspace_id == initiative.workspace_id
         and checkpoint.initiative_id == version.initiative_id == snapshot.initiative_id == initiative.id
