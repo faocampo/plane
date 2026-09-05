@@ -1,12 +1,12 @@
 {
-  "$schema": "https://curve.x3m.internal/contracts/schemas/observability-binding.schema.json",
+  "$schema": "https://curve.example.invalid/contracts/schemas/observability-binding.schema.json",
   "schema_version": "curve.observability-binding/v1",
   "binding_id": "OBS-BIND-001",
   "decision": {
     "status": "DECIDED_LOCAL_ONLY",
     "scope": "LOCAL",
     "selected_on": "2026-08-22",
-    "decision_owner": "Federico Ocampo",
+    "decision_owner": "Designated reviewer",
     "environment_owner": "DEVELOPER_RUNNING_LOCAL_STACK",
     "platform_operations_approval": "NOT_REQUIRED_FOR_LOCAL_PROOF"
   },

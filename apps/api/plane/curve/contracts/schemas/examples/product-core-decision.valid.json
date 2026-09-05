@@ -4,9 +4,9 @@
   "status": "APPROVED",
   "approved_on": "2026-08-23",
   "approved_by": {
-    "name": "Federico Ocampo",
-    "github_login": "faocampo",
-    "title": "CTO at X3M"
+    "name": "Designated reviewer",
+    "github_login": "example-reviewer",
+    "title": "Designated technical owner"
   },
   "semantics": {
     "key": {

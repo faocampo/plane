@@ -74,7 +74,7 @@ describe("useCurveFoundation", () => {
           resolveCreate = resolve;
         })
     );
-    const { result, unmount } = renderHook(() => useCurveFoundation("x3m", "workspace-1"));
+    const { result, unmount } = renderHook(() => useCurveFoundation("example-workspace", "workspace-1"));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => {
@@ -99,12 +99,12 @@ describe("useCurveFoundation", () => {
     mockedCurveService.cancelOperation.mockRejectedValue({
       status: 412,
       data: {
-        type: "https://curve.x3m.internal/problems/precondition-failed",
+        type: "https://curve.example.invalid/problems/precondition-failed",
         title: "The Operation changed",
         detail: "private diagnostic",
       },
     });
-    const { result, unmount } = renderHook(() => useCurveFoundation("x3m", "workspace-1"));
+    const { result, unmount } = renderHook(() => useCurveFoundation("example-workspace", "workspace-1"));
     await waitFor(() => expect(result.current.operation).toEqual(runningOperation));
 
     await act(async () => {
@@ -113,7 +113,7 @@ describe("useCurveFoundation", () => {
 
     expect(mockedCurveService.retrieveOperation).toHaveBeenCalledTimes(2);
     expect(result.current.problem).toEqual({
-      type: "https://curve.x3m.internal/problems/precondition-failed",
+      type: "https://curve.example.invalid/problems/precondition-failed",
       title: "The Operation changed",
       status: 412,
     });
@@ -126,11 +126,16 @@ describe("useCurveFoundation", () => {
       operation: runningOperation,
       etag: '"curve-operation:operation-1:v3"',
     });
-    const { result, unmount } = renderHook(() => useCurveFoundation("x3m", "workspace-1"));
+    const { result, unmount } = renderHook(() => useCurveFoundation("example-workspace", "workspace-1"));
 
     await waitFor(() => expect(result.current.operation).toEqual(runningOperation));
 
-    expect(mockedCurveService.listOperations).toHaveBeenCalledWith("x3m", 1, undefined, "FOUNDATION_PROBE");
+    expect(mockedCurveService.listOperations).toHaveBeenCalledWith(
+      "example-workspace",
+      1,
+      undefined,
+      "FOUNDATION_PROBE"
+    );
     unmount();
   });
 
@@ -141,7 +146,7 @@ describe("useCurveFoundation", () => {
       operation_type: "WORKFLOW_COMMAND",
     };
     mockedCurveService.listOperations.mockResolvedValue({ results: [workflowOperation] });
-    const { result, unmount } = renderHook(() => useCurveFoundation("x3m", "workspace-1"));
+    const { result, unmount } = renderHook(() => useCurveFoundation("example-workspace", "workspace-1"));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {

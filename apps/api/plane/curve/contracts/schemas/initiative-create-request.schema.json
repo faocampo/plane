@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/initiative-create-request.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/initiative-create-request.schema.json",
   "title": "Create Curve Initiative request",
   "type": "object",
   "additionalProperties": false,

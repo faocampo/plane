@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/initiative-update-request-v1.1.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/initiative-update-request-v1.1.schema.json",
   "title": "Update Curve Initiative v1.1 draft request",
   "type": "object",
   "additionalProperties": false,

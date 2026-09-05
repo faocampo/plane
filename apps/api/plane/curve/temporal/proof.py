@@ -184,7 +184,7 @@ async def run_proof() -> dict:
         client=client,
         workspace_id=cancelled.workspace_id,
         operation_id=cancelled.id,
-        actor_ref="developer:federico",
+        actor_ref="developer:reviewer-alpha",
         reason_code="TEST_REQUESTED",
         command_id=f"cancel:{cancelled.id}",
         correlation_id=cancelled.correlation_id,

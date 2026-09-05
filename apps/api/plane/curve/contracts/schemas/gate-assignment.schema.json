@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/gate-assignment.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/gate-assignment.schema.json",
   "title": "Curve Gate Assignment",
   "type": "object",
   "additionalProperties": false,

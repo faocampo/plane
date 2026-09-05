@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/observability-binding.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/observability-binding.schema.json",
   "title": "Curve local observability binding",
   "type": "object",
   "additionalProperties": false,
@@ -23,7 +23,7 @@
   ],
   "properties": {
     "$schema": {
-      "const": "https://curve.x3m.internal/contracts/schemas/observability-binding.schema.json"
+      "const": "https://curve.example.invalid/contracts/schemas/observability-binding.schema.json"
     },
     "schema_version": { "const": "curve.observability-binding/v1" },
     "binding_id": { "const": "OBS-BIND-001" },
@@ -35,7 +35,7 @@
         "status": { "const": "DECIDED_LOCAL_ONLY" },
         "scope": { "const": "LOCAL" },
         "selected_on": { "type": "string", "format": "date" },
-        "decision_owner": { "const": "Federico Ocampo" },
+        "decision_owner": { "const": "Designated reviewer" },
         "environment_owner": { "const": "DEVELOPER_RUNNING_LOCAL_STACK" },
         "platform_operations_approval": { "const": "NOT_REQUIRED_FOR_LOCAL_PROOF" }
       }

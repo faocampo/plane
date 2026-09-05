@@ -101,7 +101,7 @@ def _payload(
     product,
     approvers,
     *,
-    keyword="Loomit-SDK-panel",
+    keyword="Example-capability",
     risk="STANDARD",
     mode="STANDALONE",
     business_intent=InitiativeBusinessIntent.STRATEGIC,
@@ -110,7 +110,7 @@ def _payload(
         "product_id": str(product.id),
         "mode": mode,
         "keyword": keyword,
-        "title": "Loomit SDK compatibility",
+        "title": "Example capability overview",
         "description": {
             "schema_version": "1.0",
             "format": "MARKDOWN",
@@ -288,7 +288,7 @@ def test_draft_update_preserves_mutability_boundary_concurrency_and_replay():
     updated = client.patch(
         url,
         {
-            "keyword": "Loomit-SDK-v2",
+            "keyword": "Example-capability-v2",
             "title": "Updated SDK compatibility",
             "business_intent": InitiativeBusinessIntent.CUSTOMER_COMMITMENT,
         },
@@ -299,7 +299,7 @@ def test_draft_update_preserves_mutability_boundary_concurrency_and_replay():
     replay = client.patch(
         url,
         {
-            "keyword": "Loomit-SDK-v2",
+            "keyword": "Example-capability-v2",
             "title": "Updated SDK compatibility",
             "business_intent": InitiativeBusinessIntent.CUSTOMER_COMMITMENT,
         },
@@ -324,7 +324,7 @@ def test_draft_update_preserves_mutability_boundary_concurrency_and_replay():
 
     assert updated.status_code == replay.status_code == 200
     assert updated.json()["version"] == replay.json()["version"] == 2
-    assert updated.json()["keyword"] == "Loomit-SDK-v2"
+    assert updated.json()["keyword"] == "Example-capability-v2"
     assert updated.json()["business_intent"] == InitiativeBusinessIntent.CUSTOMER_COMMITMENT
     assert stale.status_code == 412
     assert forbidden.status_code == 422

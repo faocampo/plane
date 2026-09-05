@@ -87,8 +87,8 @@ const createPayload: ICurveInitiativeCreateRequest = {
   product_id: "product-1",
   mode: "STANDALONE",
   roadmap_item_id: null,
-  keyword: "sdk-compatibility",
-  title: "Loomit SDK compatibility panel",
+  keyword: "capability-overview",
+  title: "Example capability overview",
   description: { schema_version: "1.0", format: "MARKDOWN", body: "Show compatibility state." },
   risk_tier: "STANDARD",
   business_intent: "STRATEGIC",
@@ -142,23 +142,23 @@ describe("useCurveInitiatives", () => {
     mockedCurveService.listInitiatives.mockResolvedValue({ results: [draft], next_cursor: "initiative-page-2" });
     mockedCurveService.retrieveInitiative.mockResolvedValue({ initiative: draft, etag: '"initiative-v1"' });
 
-    const { result, unmount } = renderHook(() => useCurveInitiatives("x3m"));
+    const { result, unmount } = renderHook(() => useCurveInitiatives("example-workspace"));
 
     await waitFor(() => expect(result.current.selectedEtag).toBe('"initiative-v1"'));
     expect(result.current.products.map(({ id }) => id)).toEqual(["product-1", "product-2"]);
     expect(result.current.nextCursor).toBe("initiative-page-2");
     expect(result.current.activeMembers.map(({ member: user }) => user.id)).toEqual(["human-1"]);
-    expect(mockedCurveService.listProducts).toHaveBeenNthCalledWith(1, "x3m", {
+    expect(mockedCurveService.listProducts).toHaveBeenNthCalledWith(1, "example-workspace", {
       state: "ACTIVE",
       pageSize: 100,
       cursor: undefined,
     });
-    expect(mockedCurveService.listProducts).toHaveBeenNthCalledWith(2, "x3m", {
+    expect(mockedCurveService.listProducts).toHaveBeenNthCalledWith(2, "example-workspace", {
       state: "ACTIVE",
       pageSize: 100,
       cursor: "product-page-2",
     });
-    expect(workspaceMemberStore.fetchWorkspaceMembers).toHaveBeenCalledWith("x3m");
+    expect(workspaceMemberStore.fetchWorkspaceMembers).toHaveBeenCalledWith("example-workspace");
     unmount();
   });
 
@@ -170,7 +170,7 @@ describe("useCurveInitiatives", () => {
       .mockResolvedValueOnce({ results: [original], next_cursor: "initiative-page-2" })
       .mockResolvedValueOnce({ results: [updated, second] });
     mockedCurveService.retrieveInitiative.mockResolvedValue({ initiative: original, etag: '"initiative-v1"' });
-    const { result, unmount } = renderHook(() => useCurveInitiatives("x3m"));
+    const { result, unmount } = renderHook(() => useCurveInitiatives("example-workspace"));
     await waitFor(() => expect(result.current.nextCursor).toBe("initiative-page-2"));
 
     await act(async () => {
@@ -196,7 +196,7 @@ describe("useCurveInitiatives", () => {
       initiative: id === created.id ? created : initiative(id),
       etag: id === created.id ? '"created-v1"' : '"initiative-v1"',
     }));
-    const { result, unmount } = renderHook(() => useCurveInitiatives("x3m"));
+    const { result, unmount } = renderHook(() => useCurveInitiatives("example-workspace"));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => {
@@ -216,7 +216,7 @@ describe("useCurveInitiatives", () => {
 
   it("reuses an idempotency key for the same failed intent and rotates it when the intent changes", async () => {
     mockedCurveService.createInitiative.mockRejectedValue({ status: 503 });
-    const { result, unmount } = renderHook(() => useCurveInitiatives("x3m"));
+    const { result, unmount } = renderHook(() => useCurveInitiatives("example-workspace"));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
@@ -241,7 +241,7 @@ describe("useCurveInitiatives", () => {
       status: 412,
       data: { title: "private internal diagnostic", correlation_id: "curve-correlation-1" },
     });
-    const { result, unmount } = renderHook(() => useCurveInitiatives("x3m"));
+    const { result, unmount } = renderHook(() => useCurveInitiatives("example-workspace"));
     await waitFor(() => expect(result.current.selectedEtag).toBe('"initiative-v1"'));
 
     await act(async () => {
@@ -251,7 +251,7 @@ describe("useCurveInitiatives", () => {
     expect(result.current.selectedInitiative).toEqual(draft);
     expect(result.current.isConflict).toBe(true);
     expect(result.current.problem).toEqual({
-      type: "https://curve.x3m.internal/problems/request-failed",
+      type: "https://curve.example.invalid/problems/request-failed",
       title: "A newer Initiative version is available",
       status: 412,
       correlation_id: "curve-correlation-1",
@@ -272,7 +272,7 @@ describe("useCurveInitiatives", () => {
       mockedCurveService.listInitiatives.mockResolvedValue({ results: [draft] });
       mockedCurveService.retrieveInitiative.mockResolvedValue({ initiative: draft, etag: '"initiative-v1"' });
       mockedCurveService[serviceMethod].mockResolvedValue({ initiative: transitioned, etag: '"initiative-v2"' });
-      const { result, unmount } = renderHook(() => useCurveInitiatives("x3m"));
+      const { result, unmount } = renderHook(() => useCurveInitiatives("example-workspace"));
       await waitFor(() => expect(result.current.selectedEtag).toBe('"initiative-v1"'));
 
       await act(async () => {
@@ -283,7 +283,7 @@ describe("useCurveInitiatives", () => {
       expect(result.current.selectedInitiative).toEqual(transitioned);
       expect(result.current.selectedEtag).toBe('"initiative-v2"');
       const call = mockedCurveService[serviceMethod].mock.calls[0];
-      expect(call[0]).toBe("x3m");
+      expect(call[0]).toBe("example-workspace");
       expect(call[1]).toBe("initiative-1");
       expect(call.at(-2)).toBe('"initiative-v1"');
       expect(call.at(-1)).toEqual(expect.any(String));

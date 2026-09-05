@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/initiative-event-v1.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/initiative-event-v1.schema.json",
   "title": "Curve Initiative event payload v1",
   "type": "object",
   "additionalProperties": false,

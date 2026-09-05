@@ -11,8 +11,8 @@ import { CurveWorkspaceSidebar } from "@/components/curve/curve-workspace-sideba
 import { TopNavigationRoot } from "@/components/navigation/top-navigation-root";
 
 vi.mock("next/navigation", () => ({
-  useParams: () => ({ workspaceSlug: "x3m" }),
-  usePathname: () => "/x3m/curve/initiatives/",
+  useParams: () => ({ workspaceSlug: "example-workspace" }),
+  usePathname: () => "/example-workspace/curve/initiatives/",
 }));
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
@@ -46,7 +46,7 @@ vi.mock("@/components/workspace/sidebar/sidebar-item", () => ({
 vi.mock("@/components/workspace/sidebar/workspace-menu-root", () => ({
   WorkspaceMenuRoot: ({ variant }: { variant: string }) => (
     <button type="button" data-testid="workspace-selector" data-variant={variant}>
-      X3M workspace
+      Example Organization workspace
     </button>
   ),
 }));

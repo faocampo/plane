@@ -16,8 +16,8 @@ const initiative: ICurveInitiative = {
   product_id: "product-1",
   mode: "STANDALONE",
   roadmap_item_id: null,
-  keyword: "sdk-compatibility",
-  title: "Loomit SDK compatibility panel",
+  keyword: "capability-overview",
+  title: "Example capability overview",
   description: { schema_version: "1.0", format: "MARKDOWN", body: "Show compatibility state." },
   risk_tier: "STANDARD",
   business_intent: "STRATEGIC",
@@ -37,8 +37,8 @@ const createPayload: ICurveInitiativeCreateRequest = {
   product_id: "product-1",
   mode: "STANDALONE",
   roadmap_item_id: null,
-  keyword: "sdk-compatibility",
-  title: "Loomit SDK compatibility panel",
+  keyword: "capability-overview",
+  title: "Example capability overview",
   description: { schema_version: "1.0", format: "MARKDOWN", body: "Show compatibility state." },
   risk_tier: "STANDARD",
   business_intent: "STRATEGIC",
@@ -62,22 +62,22 @@ describe("Curve Initiative service", () => {
     get.mockResolvedValueOnce({ data: { results: [], next_cursor: "product-next" } } as never);
     get.mockResolvedValueOnce({ data: { results: [initiative], next_cursor: "initiative-next" } } as never);
 
-    await expect(service.listProducts("x3m", { cursor: "product-cursor" })).resolves.toEqual({
+    await expect(service.listProducts("example-workspace", { cursor: "product-cursor" })).resolves.toEqual({
       results: [],
       next_cursor: "product-next",
     });
     await expect(
-      service.listInitiatives("x3m", {
+      service.listInitiatives("example-workspace", {
         state: "DRAFT",
         productId: "product-1",
         cursor: "initiative-cursor",
       })
     ).resolves.toEqual({ results: [initiative], next_cursor: "initiative-next" });
 
-    expect(get).toHaveBeenNthCalledWith(1, "/api/v1/workspaces/x3m/curve/products/", {
+    expect(get).toHaveBeenNthCalledWith(1, "/api/v1/workspaces/example-workspace/curve/products/", {
       params: { state: "ACTIVE", page_size: 100, cursor: "product-cursor" },
     });
-    expect(get).toHaveBeenNthCalledWith(2, "/api/v1/workspaces/x3m/curve/initiatives/", {
+    expect(get).toHaveBeenNthCalledWith(2, "/api/v1/workspaces/example-workspace/curve/initiatives/", {
       params: {
         page_size: 100,
         cursor: "initiative-cursor",
@@ -93,7 +93,7 @@ describe("Curve Initiative service", () => {
       headers: { etag: 'W/"curve-initiative:initiative-1:v1"' },
     } as never);
 
-    await expect(service.retrieveInitiative("x3m", initiative.id)).resolves.toEqual({
+    await expect(service.retrieveInitiative("example-workspace", initiative.id)).resolves.toEqual({
       initiative,
       etag: '"curve-initiative:initiative-1:v1"',
     });
@@ -103,7 +103,7 @@ describe("Curve Initiative service", () => {
     const response = { status: 403, data: { detail: "private server diagnostic" } };
     vi.spyOn(service, "get").mockRejectedValue({ response });
 
-    await expect(service.listInitiatives("x3m")).rejects.toEqual(response);
+    await expect(service.listInitiatives("example-workspace")).rejects.toEqual(response);
   });
 
   it("creates an Initiative with CSRF and one caller-provided idempotency key", async () => {
@@ -112,16 +112,16 @@ describe("Curve Initiative service", () => {
       data: initiative,
       headers: {
         etag: '"curve-initiative:initiative-1:v1"',
-        location: "/api/v1/workspaces/x3m/curve/initiatives/initiative-1/",
+        location: "/api/v1/workspaces/example-workspace/curve/initiatives/initiative-1/",
       },
     } as never);
 
-    await expect(service.createInitiative("x3m", createPayload, "command-1")).resolves.toEqual({
+    await expect(service.createInitiative("example-workspace", createPayload, "command-1")).resolves.toEqual({
       initiative,
       etag: '"curve-initiative:initiative-1:v1"',
-      location: "/api/v1/workspaces/x3m/curve/initiatives/initiative-1/",
+      location: "/api/v1/workspaces/example-workspace/curve/initiatives/initiative-1/",
     });
-    expect(post).toHaveBeenCalledWith("/api/v1/workspaces/x3m/curve/initiatives/", createPayload, {
+    expect(post).toHaveBeenCalledWith("/api/v1/workspaces/example-workspace/curve/initiatives/", createPayload, {
       headers: {
         "Idempotency-Key": "command-1",
         "X-CSRFTOKEN": "csrf-token",
@@ -137,7 +137,7 @@ describe("Curve Initiative service", () => {
     } as never);
 
     await service.updateInitiativeDraft(
-      "x3m",
+      "example-workspace",
       initiative.id,
       { business_intent: "CUSTOMER_COMMITMENT" },
       'W/"v1"',
@@ -145,7 +145,7 @@ describe("Curve Initiative service", () => {
     );
 
     expect(patch).toHaveBeenCalledWith(
-      `/api/v1/workspaces/x3m/curve/initiatives/${initiative.id}/`,
+      `/api/v1/workspaces/example-workspace/curve/initiatives/${initiative.id}/`,
       { business_intent: "CUSTOMER_COMMITMENT" },
       {
         headers: {
@@ -170,17 +170,21 @@ describe("Curve Initiative service", () => {
     } as never);
 
     if (method === "acceptInitiativeRefinement") {
-      await service.acceptInitiativeRefinement("x3m", initiative.id, '"v1"', "command-2");
+      await service.acceptInitiativeRefinement("example-workspace", initiative.id, '"v1"', "command-2");
     } else {
-      await service[method]("x3m", initiative.id, payload, '"v1"', "command-2");
+      await service[method]("example-workspace", initiative.id, payload, '"v1"', "command-2");
     }
 
-    expect(post).toHaveBeenCalledWith(`/api/v1/workspaces/x3m/curve/initiatives/${initiative.id}/${action}/`, payload, {
-      headers: {
-        "Idempotency-Key": "command-2",
-        "If-Match": '"v1"',
-        "X-CSRFTOKEN": "csrf-token",
-      },
-    });
+    expect(post).toHaveBeenCalledWith(
+      `/api/v1/workspaces/example-workspace/curve/initiatives/${initiative.id}/${action}/`,
+      payload,
+      {
+        headers: {
+          "Idempotency-Key": "command-2",
+          "If-Match": '"v1"',
+          "X-CSRFTOKEN": "csrf-token",
+        },
+      }
+    );
   });
 });
