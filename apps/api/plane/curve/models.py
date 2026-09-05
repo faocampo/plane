@@ -343,6 +343,13 @@ class InitiativeRiskTier(models.TextChoices):
     HIGH = "HIGH", "High"
 
 
+class InitiativeBusinessIntent(models.TextChoices):
+    STRATEGIC = "STRATEGIC", "Strategic"
+    CUSTOMER_COMMITMENT = "CUSTOMER_COMMITMENT", "Customer commitment"
+    BUSINESS_IMPROVEMENT = "BUSINESS_IMPROVEMENT", "Business improvement"
+    MANDATORY = "MANDATORY", "Mandatory"
+
+
 class InitiativeState(models.TextChoices):
     DRAFT = "DRAFT", "Draft"
     ALIGNING = "ALIGNING", "Aligning"
@@ -369,7 +376,7 @@ class Initiative(models.Model):
     objects = models.Manager.from_queryset(InitiativeQuerySet)()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    schema_version = models.CharField(max_length=20, default="1.1", editable=False)
     workspace_id = models.UUIDField(db_index=True, editable=False)
     product_id = models.UUIDField(db_index=True, editable=False)
     mode = models.CharField(max_length=16, choices=InitiativeMode.choices)
@@ -378,6 +385,12 @@ class Initiative(models.Model):
     title = models.CharField(max_length=255)
     description = models.JSONField()
     risk_tier = models.CharField(max_length=16, choices=InitiativeRiskTier.choices)
+    business_intent = models.CharField(
+        max_length=32,
+        choices=InitiativeBusinessIntent.choices,
+        null=True,
+        blank=True,
+    )
     state = models.CharField(max_length=40, choices=InitiativeState.choices, default=InitiativeState.DRAFT)
     paused_from_state = models.CharField(max_length=40, choices=InitiativeState.choices, null=True, blank=True)
     workflow_version_id = models.UUIDField(null=True, blank=True, editable=False)
@@ -420,6 +433,13 @@ class Initiative(models.Model):
             models.CheckConstraint(
                 condition=models.Q(risk_tier__in=InitiativeRiskTier.values),
                 name="curve_init_risk_ck",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(business_intent__isnull=True)
+                    | models.Q(business_intent__in=InitiativeBusinessIntent.values)
+                ),
+                name="curve_init_business_intent_ck",
             ),
             models.CheckConstraint(
                 condition=models.Q(state__in=InitiativeState.values),

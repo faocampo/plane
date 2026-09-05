@@ -15,10 +15,15 @@ import { CustomMenu } from "@plane/ui";
 import { ProductUpdatesModal } from "@/components/global";
 import { AppSidebarItem } from "@/components/sidebar/sidebar-item";
 import { PlaneVersionNumber } from "@/components/global/version-number";
+import { CurveSourceLink } from "@/components/curve/curve-source-link";
 // hooks
 import { usePowerK } from "@/hooks/store/use-power-k";
 
-export const HelpMenuRoot = observer(function HelpMenuRoot() {
+export const HelpMenuRoot = observer(function HelpMenuRoot({
+  showCurveAttribution = false,
+}: {
+  showCurveAttribution?: boolean;
+}) {
   // store hooks
   const { t } = useTranslation();
   const { toggleShortcutsListModal } = usePowerK();
@@ -86,6 +91,22 @@ export const HelpMenuRoot = observer(function HelpMenuRoot() {
         <div className="mt-1 border-t border-subtle px-1 pt-2 text-11 text-secondary">
           <PlaneVersionNumber />
         </div>
+        {showCurveAttribution && (
+          <div className="mt-1 space-y-2 border-t border-subtle px-1 pt-2 text-11 text-secondary">
+            <p>Plane powers Curve&apos;s work-management capabilities.</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <a
+                href="https://github.com/makeplane/plane"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-link-primary underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none"
+              >
+                Plane source (AGPL)
+              </a>
+              <CurveSourceLink compact />
+            </div>
+          </div>
+        )}
       </CustomMenu>
     </>
   );

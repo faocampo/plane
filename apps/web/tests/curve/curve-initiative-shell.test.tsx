@@ -1,0 +1,591 @@
+/**
+ * Copyright (c) 2023-present Plane Software, Inc. and contributors
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * See the LICENSE file for details.
+ */
+
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { ICurveInitiative, ICurveProduct, IWorkspaceMember } from "@plane/types";
+import { mergeCurveInitiatives, toSafeCurveProblem } from "@/components/curve/initiatives/initiative-data";
+import { InitiativeWorkspace } from "@/components/curve/initiatives/initiative-workspace";
+
+const { useCurveInitiativesMock } = vi.hoisted(() => ({
+  useCurveInitiativesMock: vi.fn(),
+}));
+
+vi.mock("@/hooks/use-curve-initiatives", () => {
+  return { useCurveInitiatives: useCurveInitiativesMock };
+});
+
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
+const product: ICurveProduct = {
+  schema_version: "1.0",
+  id: "product-1",
+  workspace_id: "workspace-1",
+  key: "loomit",
+  name: "Loomit",
+  description: null,
+  timezone: "America/Argentina/Buenos_Aires",
+  state: "ACTIVE",
+  owner: { actor_type: "HUMAN", actor_id: "user-1" },
+  version: 1,
+  created_at: "2026-09-01T12:00:00Z",
+  updated_at: "2026-09-01T12:00:00Z",
+  created_by: { actor_type: "HUMAN", actor_id: "user-1" },
+  updated_by: { actor_type: "HUMAN", actor_id: "user-1" },
+  archived_at: null,
+  archived_by: null,
+};
+
+const member = (id: string, displayName: string): IWorkspaceMember => ({
+  id: `membership-${id}`,
+  member: {
+    id,
+    avatar_url: "",
+    display_name: displayName,
+    first_name: displayName.split(" ")[0] ?? displayName,
+    last_name: displayName.split(" ").slice(1).join(" "),
+    is_bot: false,
+  },
+  role: 20,
+  is_active: true,
+});
+
+const members = [member("user-1", "Federico Ocampo"), member("user-2", "Paula Ortega"), member("user-3", "Diego Vega")];
+
+const initiative = (
+  id: string,
+  title: string,
+  state: ICurveInitiative["state"],
+  riskTier: ICurveInitiative["risk_tier"]
+): ICurveInitiative => ({
+  schema_version: "1.1",
+  id,
+  workspace_id: "workspace-1",
+  product_id: product.id,
+  mode: "STANDALONE",
+  roadmap_item_id: null,
+  keyword: id,
+  title,
+  description: { schema_version: "1.0", format: "MARKDOWN", body: `Outcome for ${title}` },
+  risk_tier: riskTier,
+  business_intent: "STRATEGIC",
+  state,
+  paused_from_state: state === "PAUSED" ? "ALIGNING" : null,
+  workflow_version_id: null,
+  creator: { actor_type: "HUMAN", actor_id: "user-1" },
+  gate_assignments: [
+    {
+      id: `${id}-gate-1`,
+      workspace_id: "workspace-1",
+      initiative_id: id,
+      gate_type: "PRD_APPROVAL",
+      approver: { actor_type: "HUMAN", actor_id: "user-1" },
+      valid_from: "2026-09-01T12:00:00Z",
+      valid_until: null,
+      delegation_reason: null,
+    },
+    {
+      id: `${id}-gate-2`,
+      workspace_id: "workspace-1",
+      initiative_id: id,
+      gate_type: "PLAN_APPROVAL",
+      approver: { actor_type: "HUMAN", actor_id: "user-2" },
+      valid_from: "2026-09-01T12:00:00Z",
+      valid_until: null,
+      delegation_reason: null,
+    },
+    {
+      id: `${id}-gate-3`,
+      workspace_id: "workspace-1",
+      initiative_id: id,
+      gate_type: "CODE_READINESS",
+      approver: { actor_type: "HUMAN", actor_id: "user-3" },
+      valid_from: "2026-09-01T12:00:00Z",
+      valid_until: null,
+      delegation_reason: null,
+    },
+  ],
+  first_external_resource_at: null,
+  version: 1,
+  created_at: "2026-09-01T12:00:00Z",
+  updated_at: "2026-09-01T12:00:00Z",
+  updated_by: { actor_type: "HUMAN", actor_id: "user-1" },
+});
+
+const initiatives = [
+  initiative("sdk-compatibility", "Loomit SDK compatibility panel", "ALIGNING", "STANDARD"),
+  initiative("rollout-confidence", "Experiment rollout confidence", "DRAFT", "HIGH"),
+  initiative("evidence-ledger", "Internal release evidence ledger", "PAUSED", "STANDARD"),
+  initiative("campaign-cleanup", "Legacy campaign rules cleanup", "CANCELLED", "LOW"),
+];
+
+const defaultHookValue = {
+  products: [product],
+  initiatives,
+  nextCursor: "next-page",
+  selectedInitiative: initiatives[0],
+  selectedEtag: '"curve-initiative:sdk-compatibility:v1"',
+  activeMembers: members,
+  problem: undefined,
+  isLoading: false,
+  isLoadingMore: false,
+  isMutating: false,
+  isPermissionLimited: false,
+  isConflict: false,
+  selectInitiative: vi.fn(),
+  loadMore: vi.fn(),
+  createInitiative: vi.fn().mockResolvedValue(true),
+  updateInitiativeDraft: vi.fn().mockResolvedValue(true),
+  acceptRefinement: vi.fn().mockResolvedValue(true),
+  pauseInitiative: vi.fn().mockResolvedValue(true),
+  resumeInitiative: vi.fn().mockResolvedValue(true),
+  cancelInitiative: vi.fn().mockResolvedValue(true),
+  refreshSelected: vi.fn(),
+  refresh: vi.fn(),
+};
+
+describe("Curve Initiative shell", () => {
+  beforeEach(() => {
+    window.history.replaceState({}, "", "/");
+    useCurveInitiativesMock.mockReset();
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue });
+  });
+
+  it("keeps every loaded Initiative in the list and filters without changing server state", () => {
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    for (const item of initiatives) expect(screen.getAllByText(item.title).length).toBeGreaterThan(0);
+    const filters = screen.getByRole("region", { name: "Initiative filters" });
+    expect(within(filters).getByRole("status")).toHaveTextContent("Showing 4 of 4 · more available");
+
+    fireEvent.change(screen.getByLabelText("Filter by lifecycle state"), { target: { value: "PAUSED" } });
+    expect(within(filters).getByRole("status")).toHaveTextContent("Showing 1 of 4");
+    expect(screen.getByText("Internal release evidence ledger")).toBeInTheDocument();
+    expect(screen.queryByText("Experiment rollout confidence")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("Search title, keyword, Product, or description"), {
+      target: { value: "no-match" },
+    });
+    expect(screen.getByText("No Initiatives match these filters")).toBeInTheDocument();
+  });
+
+  it("uses compact portfolio summaries as accessible filters", () => {
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const activeFilter = screen.getByRole("button", { name: "Filter Initiatives: Active" });
+    fireEvent.click(activeFilter);
+    expect(activeFilter).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getAllByText("Loomit SDK compatibility panel").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Experiment rollout confidence").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Internal release evidence ledger")).not.toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
+      "Showing 2 of 4"
+    );
+
+    fireEvent.click(activeFilter);
+    expect(activeFilter).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByText("Internal release evidence ledger")).toBeInTheDocument();
+  });
+
+  it("initializes lifecycle filters from Home navigation parameters", () => {
+    window.history.replaceState({}, "", "/x3m/curve/initiatives/?state=ALIGNING");
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByLabelText("Filter by lifecycle state")).toHaveValue("ALIGNING");
+    expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
+      "Showing 1 of 4"
+    );
+  });
+
+  it("initializes summary filters from Home attention parameters", () => {
+    window.history.replaceState({}, "", "/x3m/curve/initiatives/?summary=NEEDS_ATTENTION");
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByRole("button", { name: "Filter Initiatives: Needs attention" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
+      "Showing 1 of 4"
+    );
+  });
+
+  it("names the Draft transition and explains its consequence", () => {
+    const acceptRefinement = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      selectedInitiative: initiatives[1],
+      selectedEtag: '"curve-initiative:rollout-confidence:v1"',
+      acceptRefinement,
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByText(/moves this Initiative from Draft to Aligning/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Start alignment" }));
+    expect(acceptRefinement).toHaveBeenCalledOnce();
+  });
+
+  it("uses one explicit pagination control and retains unique server order", () => {
+    const loadMore = vi.fn();
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, loadMore });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Load more" }));
+    expect(loadMore).toHaveBeenCalledOnce();
+
+    const updated = { ...initiatives[0], title: "Updated SDK compatibility panel", version: 2 };
+    expect(mergeCurveInitiatives(initiatives.slice(0, 2), [updated, initiatives[2]])).toEqual([
+      updated,
+      initiatives[1],
+      initiatives[2],
+    ]);
+  });
+
+  it("requires three distinct humans for Standard risk before creating", async () => {
+    const createInitiative = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "New governed Initiative" } });
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "new-initiative" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Problem and intended outcome/ }), {
+      target: { value: "Improve delivery confidence." },
+    });
+    fireEvent.change(screen.getByLabelText("Technical Approver"), { target: { value: "user-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+
+    expect(createInitiative).not.toHaveBeenCalled();
+    expect(screen.getAllByText("Choose three distinct active humans for Standard or High risk.")).toHaveLength(3);
+    expect(screen.getByLabelText("Product Approver")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Product Approver")).toHaveClass("border-danger-strong");
+    expect(screen.getAllByText("Choose three distinct active humans for Standard or High risk.")[0]).toHaveClass(
+      "text-12",
+      "font-medium"
+    );
+    await waitFor(() => expect(screen.getByLabelText("Product Approver")).toHaveFocus());
+  });
+
+  it("resets the creation form after closing and reopening it", () => {
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "Temporary title" } });
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+
+    expect(screen.getByLabelText(/Title/)).toHaveValue("");
+  });
+
+  it("explains why Initiative creation is unavailable without an active Product", () => {
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, products: [] });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const createButton = screen.getByRole("button", { name: "New Initiative" });
+    expect(createButton).toBeDisabled();
+    expect(createButton).toHaveAttribute("aria-describedby", "curve-initiative-create-requirement");
+    expect(screen.getByText("An active Product is required before an Initiative can be created.")).toBeInTheDocument();
+  });
+
+  it("creates one standalone Draft intent with the three gate assignments and announces success", async () => {
+    const createInitiative = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "New governed Initiative" } });
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "new-initiative" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Problem and intended outcome/ }), {
+      target: { value: "Improve delivery confidence." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+
+    await waitFor(() =>
+      expect(createInitiative).toHaveBeenCalledWith({
+        product_id: product.id,
+        mode: "STANDALONE",
+        roadmap_item_id: null,
+        keyword: "new-initiative",
+        title: "New governed Initiative",
+        description: { schema_version: "1.0", format: "MARKDOWN", body: "Improve delivery confidence." },
+        risk_tier: "STANDARD",
+        business_intent: null,
+        gate_assignments: [
+          { gate_type: "PRD_APPROVAL", approver_user_id: "user-1" },
+          { gate_type: "PLAN_APPROVAL", approver_user_id: "user-2" },
+          { gate_type: "CODE_READINESS", approver_user_id: "user-3" },
+        ],
+      })
+    );
+    expect(screen.getByText("Initiative created in Draft state.")).toBeInTheDocument();
+  });
+
+  it("keeps the governed keyword alphabet and submits the selected business intent", async () => {
+    const createInitiative = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    const businessIntent = screen.getByRole("combobox", { name: "Business intent" });
+    expect(
+      within(businessIntent)
+        .getAllByRole("option")
+        .map(({ textContent }) => textContent)
+    ).toEqual(["Decide during Draft", "Strategic", "Customer commitment", "Business improvement", "Mandatory"]);
+    fireEvent.change(businessIntent, { target: { value: "BUSINESS_IMPROVEMENT" } });
+    expect(
+      screen.getByText("BAU, reliability, efficiency, maintenance, or capabilities that enable future Initiatives.")
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "Improve delivery foundations" } });
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "delivery_foundations" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Problem and intended outcome/ }), {
+      target: { value: "Reduce repeated delivery work." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+
+    expect(createInitiative).not.toHaveBeenCalled();
+    expect(screen.getByText("Use 1–50 letters, numbers, or hyphens, starting with a letter or number.")).toHaveClass(
+      "text-12",
+      "font-medium"
+    );
+    await waitFor(() => expect(screen.getByLabelText(/Keyword/)).toHaveFocus());
+
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "delivery-foundations" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+    await waitFor(() =>
+      expect(createInitiative).toHaveBeenCalledWith(
+        expect.objectContaining({
+          keyword: "delivery-foundations",
+          business_intent: "BUSINESS_IMPROVEMENT",
+        })
+      )
+    );
+  });
+
+  it("keeps creation input available after a rejected request", async () => {
+    const createInitiative = vi.fn().mockResolvedValue(false);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, createInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "New Initiative" }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: "Recoverable submission" } });
+    fireEvent.change(screen.getByLabelText(/Keyword/), { target: { value: "recoverable-submission" } });
+    fireEvent.change(screen.getByRole("textbox", { name: /Problem and intended outcome/ }), {
+      target: { value: "Keep the user's work after a network failure." },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create Initiative" }));
+
+    expect(await screen.findByText(/The Initiative could not be created\. Your input remains available/)).toHaveClass(
+      "text-12",
+      "text-danger-primary"
+    );
+    expect(screen.getByLabelText(/Title/)).toHaveValue("Recoverable submission");
+    expect(screen.getByLabelText(/Keyword/)).toHaveValue("recoverable-submission");
+    expect(screen.getByRole("textbox", { name: /Problem and intended outcome/ })).toHaveValue(
+      "Keep the user's work after a network failure."
+    );
+  });
+
+  it("renders the approved portfolio context, metadata, and recovery states", () => {
+    const { rerender } = render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByText("Local · manual-first")).toBeInTheDocument();
+    const summary = screen.getByRole("region", { name: "Loaded Initiative portfolio summary" });
+    expect(within(summary).getByText("Active").parentElement).toHaveTextContent("2Active");
+    expect(within(summary).getByText("Paused")).toBeInTheDocument();
+    expect(within(summary).getByText("Needs attention")).toBeInTheDocument();
+    expect(screen.getByText("Lifecycle activity")).toBeInTheDocument();
+    expect(screen.getByText("Creator")).toBeInTheDocument();
+    expect(screen.queryByText("Workflow version")).not.toBeInTheDocument();
+    expect(screen.getByText("Record version")).toBeInTheDocument();
+    expect(screen.getByText("Prevents overwriting a newer update.")).toBeInTheDocument();
+    expect(screen.getByText("Next: PRD review")).toBeInTheDocument();
+    expect(screen.getByText(/Complete the Idea Brief and PRD/)).toBeInTheDocument();
+    expect(screen.getByText("Delivery projects")).toBeInTheDocument();
+    expect(screen.getByText("No linked work yet")).toBeInTheDocument();
+    expect(screen.queryByText(/Shape product intent/)).not.toBeInTheDocument();
+
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      initiatives: [],
+      nextCursor: undefined,
+      selectedInitiative: undefined,
+      selectedEtag: undefined,
+    });
+    rerender(<InitiativeWorkspace key="empty" workspaceSlug="x3m" />);
+    expect(screen.getByText("No Initiatives yet")).toBeInTheDocument();
+
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, isPermissionLimited: true });
+    rerender(<InitiativeWorkspace key="permission" workspaceSlug="x3m" />);
+    expect(screen.getByRole("heading", { name: "Initiatives are unavailable" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Return to workspace" })).toHaveAttribute("href", "/x3m");
+
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, isLoading: true });
+    rerender(<InitiativeWorkspace key="loading" workspaceSlug="x3m" />);
+    expect(screen.getByLabelText("Loading Initiatives")).toBeInTheDocument();
+  });
+
+  it("edits the complete definition of an existing Draft before alignment", async () => {
+    const updateInitiativeDraft = vi.fn().mockResolvedValue(true);
+    const draftWithoutIntent = { ...initiatives[1], business_intent: null };
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      initiatives: [draftWithoutIntent],
+      selectedInitiative: draftWithoutIntent,
+      selectedEtag: '"curve-initiative:rollout-confidence:v1"',
+      updateInitiativeDraft,
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    expect(screen.getByRole("button", { name: "Start alignment" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Edit Initiative" }));
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Updated rollout confidence" } });
+    fireEvent.change(screen.getByRole("combobox", { name: /Business intent/ }), {
+      target: { value: "CUSTOMER_COMMITMENT" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() =>
+      expect(updateInitiativeDraft).toHaveBeenCalledWith({
+        title: "Updated rollout confidence",
+        keyword: "rollout-confidence",
+        risk_tier: "HIGH",
+        business_intent: "CUSTOMER_COMMITMENT",
+        description: {
+          schema_version: "1.0",
+          format: "MARKDOWN",
+          body: "Outcome for Experiment rollout confidence",
+        },
+      })
+    );
+  });
+
+  it("keeps definition editing within the Draft mutability boundary", () => {
+    const { rerender } = render(<InitiativeWorkspace workspaceSlug="x3m" />);
+    expect(screen.queryByRole("button", { name: "Edit Initiative" })).not.toBeInTheDocument();
+
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      selectedInitiative: initiatives[1],
+      selectedEtag: '"curve-initiative:rollout-confidence:v1"',
+    });
+    rerender(<InitiativeWorkspace key="draft" workspaceSlug="x3m" />);
+    expect(screen.getByRole("button", { name: "Edit Initiative" })).toBeInTheDocument();
+  });
+
+  it("requires and submits a lifecycle reason", async () => {
+    const pauseInitiative = vi.fn().mockResolvedValue(true);
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, pauseInitiative });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const detail = screen.getByRole("region", { name: "Selected Initiative" });
+    fireEvent.click(within(detail).getByRole("button", { name: "Pause" }));
+    fireEvent.click(screen.getByRole("button", { name: "Pause Initiative" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Enter a reason.");
+    expect(screen.getByRole("alert")).toHaveClass("text-12", "font-medium");
+    expect(screen.getByLabelText("Reason")).toHaveClass("border-danger-strong");
+    expect(pauseInitiative).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Awaiting backend contract" } });
+    fireEvent.click(screen.getByRole("button", { name: "Pause Initiative" }));
+    await waitFor(() => expect(pauseInitiative).toHaveBeenCalledWith("Awaiting backend contract"));
+
+    fireEvent.click(within(detail).getByRole("button", { name: "Cancel" }));
+    expect(screen.getByText(/Cancel “Loomit SDK compatibility panel”/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Keep current state" }));
+  });
+
+  it.each([
+    ["Resume", "Resume Initiative", "Dependency restored", "resumeInitiative", "Initiative resumed.", initiatives[2]],
+    [
+      "Cancel",
+      "Cancel Initiative",
+      "Outcome no longer required",
+      "cancelInitiative",
+      "Initiative cancelled.",
+      initiatives[0],
+    ],
+  ] as const)(
+    "submits the %s lifecycle action and announces the committed state",
+    async (openLabel, submitLabel, reason, mutationName, announcement, selected) => {
+      const mutation = vi.fn().mockResolvedValue(true);
+      useCurveInitiativesMock.mockReturnValue({
+        ...defaultHookValue,
+        initiatives: [selected],
+        selectedInitiative: selected,
+        [mutationName]: mutation,
+      });
+      render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+      const detail = screen.getByRole("region", { name: "Selected Initiative" });
+      fireEvent.click(within(detail).getByRole("button", { name: openLabel }));
+      fireEvent.change(screen.getByLabelText("Reason"), { target: { value: reason } });
+      fireEvent.click(screen.getByRole("button", { name: submitLabel }));
+
+      await waitFor(() => expect(mutation).toHaveBeenCalledWith(reason));
+      expect(screen.getAllByRole("status").some((status) => status.textContent === announcement)).toBe(true);
+    }
+  );
+
+  it("makes a cancelled Initiative terminal in the visible action set", () => {
+    const cancelled = initiatives[3];
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      initiatives: [cancelled],
+      selectedInitiative: cancelled,
+      selectedEtag: '"curve-initiative:campaign-cleanup:v1"',
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const actions = screen.getByLabelText("Initiative lifecycle actions");
+    expect(within(actions).queryAllByRole("button")).toHaveLength(0);
+  });
+
+  it("preserves safe conflict evidence and exposes deliberate refresh", () => {
+    const refreshSelected = vi.fn();
+    useCurveInitiativesMock.mockReturnValue({
+      ...defaultHookValue,
+      problem: {
+        type: "https://curve.x3m.internal/problems/precondition-failed",
+        title: "A newer Initiative version is available",
+        status: 412,
+        correlation_id: "corr-safe",
+      },
+      isConflict: true,
+      refreshSelected,
+    });
+    render(<InitiativeWorkspace workspaceSlug="x3m" />);
+
+    const refreshNotice = screen.getByRole("status", { name: "Initiative refresh notice" });
+    expect(refreshNotice).toHaveTextContent("A newer Initiative version is available");
+    expect(refreshNotice).toHaveTextContent(
+      "Refresh to load the latest confirmed details. Your current view has not changed."
+    );
+    expect(refreshNotice).not.toHaveTextContent("corr-safe");
+    fireEvent.click(screen.getByRole("button", { name: "Refresh Initiative" }));
+    expect(refreshSelected).toHaveBeenCalledOnce();
+
+    expect(
+      toSafeCurveProblem(
+        { status: 412, data: { title: "Private title", detail: "private diagnostic", correlation_id: "corr-safe" } },
+        "Fallback"
+      )
+    ).toEqual({
+      type: "https://curve.x3m.internal/problems/request-failed",
+      title: "A newer Initiative version is available",
+      status: 412,
+      correlation_id: "corr-safe",
+    });
+  });
+});

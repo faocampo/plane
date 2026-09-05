@@ -19,6 +19,7 @@ from plane.curve.models import (
     GateType,
     IdempotencyState,
     Initiative,
+    InitiativeBusinessIntent,
     InitiativeMode,
     InitiativeRiskTier,
     InitiativeState,
@@ -140,6 +141,14 @@ def _validate_description(value):
 def _validate_risk_tier(value):
     if value not in InitiativeRiskTier.values:
         raise InitiativeValidationError(field="risk_tier")
+    return value
+
+
+def _validate_business_intent(value, *, allow_unset=False):
+    if allow_unset and value is None:
+        return None
+    if value not in InitiativeBusinessIntent.values:
+        raise InitiativeValidationError(field="business_intent")
     return value
 
 
@@ -336,6 +345,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
                     "title",
                     "description",
                     "risk_tier",
+                    "business_intent",
                     "gate_assignments",
                 },
                 required={"product_id", "mode", "keyword", "title", "description", "risk_tier", "gate_assignments"},
@@ -349,6 +359,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
             title = _validate_title(payload["title"])
             description = _validate_description(payload["description"])
             risk_tier = _validate_risk_tier(payload["risk_tier"])
+            business_intent = _validate_business_intent(payload.get("business_intent"), allow_unset=True)
             assignments = _normalize_assignments(
                 workspace_id=workspace.id,
                 assignments=payload["gate_assignments"],
@@ -364,6 +375,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
                     "title": title,
                     "description": description,
                     "risk_tier": risk_tier,
+                    "business_intent": business_intent,
                     "gate_assignments": [
                         {"gate_type": gate_type, "approver_user_id": str(approver_id)}
                         for gate_type, approver_id in assignments
@@ -395,6 +407,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
                         title=title,
                         description=description,
                         risk_tier=risk_tier,
+                        business_intent=business_intent,
                         state=InitiativeState.DRAFT,
                         workflow_version_id=None,
                         creator_user_id=uuid.UUID(receipt.actor["actor_id"]),
@@ -439,7 +452,7 @@ def update_initiative_draft(*, request, workspace_slug, initiative_id, expected_
     def callback(receipt, _workspace, initiative):
         with transaction.atomic():
             _validate_expected_version(expected_version)
-            _validate_keys(payload, {"keyword", "title", "description", "risk_tier"})
+            _validate_keys(payload, {"keyword", "title", "description", "risk_tier", "business_intent"})
             if not payload:
                 raise InitiativeValidationError
             if initiative.state != InitiativeState.DRAFT or initiative.first_external_resource_at is not None:
@@ -454,6 +467,8 @@ def update_initiative_draft(*, request, workspace_slug, initiative_id, expected_
             if "risk_tier" in payload:
                 values["risk_tier"] = _validate_risk_tier(payload["risk_tier"])
                 _validate_current_assignments(initiative, risk_tier=values["risk_tier"])
+            if "business_intent" in payload:
+                values["business_intent"] = _validate_business_intent(payload["business_intent"], allow_unset=True)
             canonical_request = canonical_json_bytes(
                 {
                     "command_type": "UPDATE_INITIATIVE_DRAFT",
@@ -487,8 +502,12 @@ def update_initiative_draft(*, request, workspace_slug, initiative_id, expected_
             ):
                 raise InitiativeKeywordConflict
             before = _before_digest(initiative)
+            if "business_intent" in changed and initiative.schema_version != "1.1":
+                initiative.schema_version = "1.1"
+                changed.append("schema_version")
             for field in changed:
-                setattr(initiative, field, values[field])
+                if field in values:
+                    setattr(initiative, field, values[field])
             initiative.version += 1
             initiative.updated_by = dict(receipt.actor)
             try:
@@ -561,6 +580,8 @@ def _transition(
             if command == "ACCEPT_REFINEMENT":
                 if initiative.state != InitiativeState.DRAFT:
                     raise InitiativeStateConflict
+                if initiative.business_intent is None:
+                    raise InitiativeValidationError(field="business_intent")
                 _resolve_product(workspace_id=workspace.id, product_id=initiative.product_id)
                 _validate_current_assignments(initiative)
                 initiative.state = InitiativeState.ALIGNING

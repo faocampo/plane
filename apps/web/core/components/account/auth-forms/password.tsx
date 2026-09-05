@@ -17,7 +17,7 @@ import { CloseIcon } from "@plane/propel/icons";
 import { Input, PasswordStrengthIndicator, Spinner } from "@plane/ui";
 import { getPasswordStrength } from "@plane/utils";
 // components
-import { ForgotPasswordPopover } from "@/components/account/auth-forms/forgot-password-popover";
+import { CurvePasswordRecoveryUnavailable } from "@/components/curve/curve-auth-brand";
 // constants
 // helpers
 import { EAuthModes, EAuthSteps } from "@/helpers/authentication.helper";
@@ -93,7 +93,7 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
             {t("auth.common.forgot_password")}
           </Link>
         ) : (
-          <ForgotPasswordPopover />
+          <CurvePasswordRecoveryUnavailable />
         )}
       </div>
     ) : (
@@ -105,11 +105,9 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
 
   const isButtonDisabled = useMemo(
     () =>
-      !isSubmitting &&
-      !!passwordFormData.password &&
-      (mode === EAuthModes.SIGN_UP ? passwordFormData.password === passwordFormData.confirm_password : true)
-        ? false
-        : true,
+      isSubmitting ||
+      !passwordFormData.password ||
+      (mode === EAuthModes.SIGN_UP && passwordFormData.password !== passwordFormData.confirm_password),
     [isSubmitting, mode, passwordFormData.confirm_password, passwordFormData.password]
   );
 
@@ -214,7 +212,6 @@ export const AuthPasswordForm = observer(function AuthPasswordForm(props: Props)
               onFocus={() => setIsPasswordInputFocused(true)}
               onBlur={() => setIsPasswordInputFocused(false)}
               autoComplete="off"
-              autoFocus
             />
             <button
               type="button"

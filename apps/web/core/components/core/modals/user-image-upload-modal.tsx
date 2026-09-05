@@ -64,12 +64,12 @@ export const UserImageUploadModal = observer(function UserImageUploadModal(props
       onSuccess(asset_url);
       setImage(null);
     } catch (error) {
+      const uploadError = error as { detail?: string; error?: string } | undefined;
       setToast({
         type: TOAST_TYPE.ERROR,
-        title: "Error!",
-        message: error?.toString() ?? "Something went wrong. Please try again.",
+        title: "Image not uploaded",
+        message: uploadError?.error ?? uploadError?.detail ?? "The image could not be uploaded. Please try again.",
       });
-      throw new Error("Error in uploading file.");
     } finally {
       setIsImageUploading(false);
     }
@@ -117,7 +117,7 @@ export const UserImageUploadModal = observer(function UserImageUploadModal(props
                   </button>
                   <img
                     src={image ? URL.createObjectURL(image) : value ? getFileURL(value) : ""}
-                    alt="image"
+                    alt="Selected profile preview"
                     className="absolute top-0 left-0 h-full w-full rounded-md object-cover"
                   />
                 </>

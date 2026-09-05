@@ -406,7 +406,7 @@
     "modal": {
       "url": {
         "text": "URL",
-        "required": "URL is invalid",
+        "required": "Enter a valid website address, such as https://example.com.",
         "placeholder": "Type or paste a URL"
       },
       "title": {

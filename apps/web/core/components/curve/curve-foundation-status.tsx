@@ -252,7 +252,7 @@ export function CurveFoundationStatus({ workspaceSlug, workspaceId }: { workspac
         )}
         aria-labelledby="foundation-summary-title"
       >
-        <div className="grid items-center gap-5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+        <div className="grid items-center gap-5 lg:grid-cols-[auto_minmax(0,1fr)_auto]">
           <div
             className={cn(
               "grid size-12 place-items-center rounded-xl",
@@ -286,7 +286,7 @@ export function CurveFoundationStatus({ workspaceSlug, workspaceId }: { workspac
               )}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">
+          <div className="flex flex-wrap gap-2 lg:justify-end">
             {isStale ? (
               <Button size="xl" onClick={() => void resync()} prependIcon={<RefreshCw />}>
                 Resync status

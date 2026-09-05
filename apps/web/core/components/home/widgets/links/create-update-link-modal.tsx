@@ -14,8 +14,9 @@ import { Button } from "@plane/propel/button";
 import type { TLinkEditableFields } from "@plane/types";
 import { Input, ModalCore } from "@plane/ui";
 import type { TLinkOperations } from "./use-links";
+import { normalizeQuickLinkUrl } from "./url";
 
-export type TLinkOperationsModal = Exclude<TLinkOperations, "remove">;
+export type TLinkOperationsModal = Omit<TLinkOperations, "remove">;
 
 export type TLinkCreateFormFieldOptions = TLinkEditableFields & {
   id?: string;
@@ -52,7 +53,8 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
   };
 
   const handleFormSubmit = async (formData: TLinkCreateFormFieldOptions) => {
-    const parsedUrl = formData.url.startsWith("http") ? formData.url : `http://${formData.url}`;
+    const parsedUrl = normalizeQuickLinkUrl(formData.url);
+    if (!parsedUrl) return;
     try {
       if (!formData || !formData.id) await linkOperations.create({ title: formData.title, url: parsedUrl });
       else await linkOperations.update(formData.id, { title: formData.title, url: parsedUrl });
@@ -85,6 +87,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                 name="url"
                 rules={{
                   required: t("link.modal.url.required"),
+                  validate: (value) => !!normalizeQuickLinkUrl(value) || t("link.modal.url.required"),
                 }}
                 render={({ field: { value, onChange, ref } }) => (
                   <Input
@@ -96,10 +99,20 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                     hasError={Boolean(errors.url)}
                     placeholder={t("link.modal.url.placeholder")}
                     className="w-full"
+                    maxLength={2048}
+                    aria-describedby={errors.url ? "quick-link-url-error" : undefined}
                   />
                 )}
               />
-              {errors.url && <span className="text-11 text-danger-primary">{t("link.modal.url.required")}</span>}
+              {errors.url && (
+                <span
+                  id="quick-link-url-error"
+                  role="alert"
+                  className="mt-1 block text-11 font-medium text-danger-primary"
+                >
+                  {errors.url.message?.toString() ?? t("link.modal.url.required")}
+                </span>
+              )}
             </div>
             <div>
               <label htmlFor="title" className="mb-2 text-14 font-medium text-secondary">

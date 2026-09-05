@@ -8,7 +8,7 @@ import { type ReactNode } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Activity, Blocks, FileCheck2, Gauge, Layers3, Route, Settings, ShieldCheck, Sparkles } from "lucide-react";
+import { Activity, Blocks, FileCheck2, Gauge, Layers3, ListTodo, Route, ShieldCheck, Sparkles } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import {
@@ -22,7 +22,6 @@ import { AppSidebarToggleButton } from "@/components/sidebar/sidebar-toggle-butt
 import { SidebarItemBase } from "@/components/workspace/sidebar/sidebar-item";
 import { WorkspaceMenuRoot } from "@/components/workspace/sidebar/workspace-menu-root";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
-import { CurveSourceLink } from "./curve-source-link";
 
 const CURVE_SIDEBAR_SKELETON_ROWS = [
   "product-overview",
@@ -32,7 +31,6 @@ const CURVE_SIDEBAR_SKELETON_ROWS = [
   "work-projects",
   "work-views",
   "platform-foundation",
-  "platform-settings",
 ];
 
 function CurveNavSection({ label, badge, children }: { label: string; badge?: string; children: ReactNode }) {
@@ -104,6 +102,7 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   const { resolvedTheme } = useTheme();
   const { toggleSidebar } = useAppTheme();
   const foundationHref = `/${slug}/curve`;
+  const initiativesHref = `${foundationHref}/initiatives`;
   const closeMobileNavigation = () => {
     if (window.innerWidth < 768) toggleSidebar(true);
   };
@@ -111,23 +110,27 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   return (
     <div
       id="curve-workspace-navigation"
-      className="flex h-full w-full animate-fade-in flex-col"
+      className={cn("flex h-full w-full animate-fade-in flex-col", resolvedTheme === "dark" && "bg-[#0B1020]")}
       aria-label="Curve workspace navigation"
     >
-      <div className="flex items-center justify-between gap-3 px-5 pb-3">
-        <img
-          src={resolvedTheme === "dark" ? "/curve/curve-logo-dark-v1.png" : "/curve/curve-logo-light-v1.webp"}
-          alt="Curve"
-          className={cn("h-9 w-auto object-contain object-left", resolvedTheme === "dark" && "max-w-32")}
-        />
+      <div className="flex min-h-14 items-center justify-between gap-3 px-5 pb-3">
+        {resolvedTheme === "dark" ? (
+          <div className="relative h-10 w-[8.25rem] shrink-0 overflow-hidden" aria-label="Curve">
+            <img
+              src="/curve/curve-logo-dark-v1.png"
+              alt=""
+              className="absolute -top-[3.2rem] -left-[2.7rem] h-36 w-auto max-w-none"
+            />
+          </div>
+        ) : (
+          <img
+            src="/curve/curve-logo-light-v1.webp"
+            alt="Curve"
+            className="h-auto w-[8.25rem] shrink-0 object-contain object-left"
+          />
+        )}
         <AppSidebarToggleButton controlsId="curve-workspace-navigation" />
       </div>
-      <div className="px-4 pb-3">
-        <div className="rounded-md border border-subtle bg-layer-1 p-1">
-          <WorkspaceMenuRoot variant="top-navigation" />
-        </div>
-      </div>
-
       <ScrollArea
         orientation="vertical"
         scrollType="hover"
@@ -137,7 +140,13 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
       >
         <CurveNavSection label="Product">
           <CurveUpcomingItem label="Overview" icon={<Sparkles className="size-4" />} />
-          <CurveUpcomingItem label="Initiatives" icon={<Sparkles className="size-4" />} />
+          <CurveLink
+            href={initiativesHref}
+            label="Initiatives"
+            icon={<ListTodo className="size-4" />}
+            active={pathname === initiativesHref || pathname.startsWith(`${initiativesHref}/`)}
+            onNavigate={closeMobileNavigation}
+          />
           <CurveUpcomingItem label="Roadmaps" icon={<Route className="size-4" />} />
         </CurveNavSection>
 
@@ -165,22 +174,14 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
             href={foundationHref}
             label="Foundation status"
             icon={<Gauge className="size-4" />}
-            active={pathname === foundationHref || pathname.startsWith(`${foundationHref}/`)}
-            onNavigate={closeMobileNavigation}
-          />
-          <CurveLink
-            href={`/${slug}/settings`}
-            label="Settings"
-            icon={<Settings className="size-4" />}
-            active={pathname.startsWith(`/${slug}/settings`)}
+            active={pathname === foundationHref}
             onNavigate={closeMobileNavigation}
           />
         </CurveNavSection>
       </ScrollArea>
 
-      <div className="border-t border-subtle px-5 py-3">
-        <p className="mb-1 text-10 text-placeholder">Plane provides Curve&apos;s work-management foundation.</p>
-        <CurveSourceLink />
+      <div className="border-t border-subtle px-3 py-3">
+        <WorkspaceMenuRoot variant="curve-sidebar" />
       </div>
     </div>
   );

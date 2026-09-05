@@ -30,7 +30,7 @@ import { WorkspaceLogo } from "../logo";
 import SidebarDropdownItem from "./dropdown-item";
 
 type WorkspaceMenuRootProps = {
-  variant: "sidebar" | "top-navigation";
+  variant: "sidebar" | "top-navigation" | "curve-sidebar";
 };
 
 export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: WorkspaceMenuRootProps) {
@@ -80,6 +80,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
       className={cn("relative flex h-full w-fit max-w-48 truncate whitespace-nowrap", {
         "w-full justify-center text-center": variant === "sidebar",
         "flex-grow justify-stretch truncate text-left": variant === "top-navigation",
+        "w-full justify-stretch truncate text-left": variant === "curve-sidebar",
       })}
     >
       {({ open, close }: { open: boolean; close: () => void }) => {
@@ -110,7 +111,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
                 />
               </Menu.Button>
             )}
-            {variant === "top-navigation" && (
+            {(variant === "top-navigation" || variant === "curve-sidebar") && (
               <Menu.Button
                 className={cn(
                   "group/menu-button flex flex-grow items-center justify-between gap-1 truncate rounded-sm p-1 text-13 font-medium text-secondary hover:bg-layer-1 focus:outline-none",
@@ -151,6 +152,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
                     {
                       "top-11 left-14": variant === "sidebar",
                       "top-10 left-4": variant === "top-navigation",
+                      "bottom-4 left-4": variant === "curve-sidebar",
                     }
                   )}
                 >

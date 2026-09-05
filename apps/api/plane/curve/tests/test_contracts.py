@@ -79,6 +79,12 @@ SCHEMA_DIGESTS = {
     "temporal-orchestration.schema.json": "9e5d72eea70d542dad9d15f372f0b90f5e68a0654735c3a7d2cd900df8b7fb47",
 }
 
+M1_01B_SCHEMA_DIGESTS = {
+    "initiative-create-request-v1.1.schema.json": "35f348286fc417a8dd5bca4994856620aacb257101ecb73fe0749f6ed3bb95dd",
+    "initiative-update-request-v1.1.schema.json": "7871d3e8929fe24a82f4d661ff39a35004c1457f518b407967ca9e3562c80eaa",
+    "initiative-v1.1.schema.json": "dc1e4495ff439f4ca6ee4dfa491434f351137843ac46dde3849816eabb9c7305",
+}
+
 
 @pytest.fixture(autouse=True)
 def _curve_policy_settings(settings):
@@ -131,10 +137,15 @@ def create_contract_operation(workspace_id):
 
 def test_schema_snapshot_digests_bind_the_pinned_curve_revision():
     schema_directory = Path(__file__).parents[1] / "contracts" / "schemas"
-    observed = {
+    all_observed = {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in schema_directory.glob("*.schema.json")
     }
+    observed = {name: all_observed[name] for name in SCHEMA_DIGESTS}
+    m1_01b_observed = {name: all_observed[name] for name in M1_01B_SCHEMA_DIGESTS}
+
     assert observed == SCHEMA_DIGESTS
+    assert m1_01b_observed == M1_01B_SCHEMA_DIGESTS
+    assert set(all_observed) == set(SCHEMA_DIGESTS) | set(M1_01B_SCHEMA_DIGESTS)
 
 
 def test_persisted_records_serialize_against_pinned_json_schemas(schema_contracts):
