@@ -10,9 +10,10 @@ submission. The following contract documents are publicly available:
 - [Curve integration contract](https://github.com/faocampo/curve/blob/3b5861401f327a01234d7c27b56e4a6d5384b945/docs/technical/integration-contracts.md)
   (external authoring, current authorization and lifecycle authority).
 
-The two files in `prd_candidate_schemas` (closed artifact/evidence metadata and
-AccessEnvelope schemas) are byte-pinned copies of the public Curve revision
-above. The validator separately verifies the existing common schema. The
+The three files in `prd_candidate_schemas` (closed artifact/evidence metadata,
+external checkpoint/review and AccessEnvelope schemas) are byte-pinned copies of
+the public Curve revision above. The validator separately verifies the existing
+common, gate-assignment and Product schemas. The
 109-file public consumer edition and its execution/capability gates are unchanged.
 
 This backend increment adds four metadata tables and an internal transaction
@@ -65,6 +66,29 @@ and must be excluded from runtime application roles.
 
 ## Remaining runtime integration
 
+The [review validator](prd_review_validation.py) (pure exact-subject and gate
+consistency checks) now validates checkpoint binding identity, the entire native
+PRD object reference, exact snapshot/digest, author, normalization/access/retention
+references, chronology and immediate checkpoint predecessor. Historical source
+container moves preserve the captured location. Native artifact sequence and
+evidence-member integrity remain responsibilities of the metadata repository.
+
+Its review check covers approval, changes requested and rejection. It compares
+the displayed checkpoint, artifact version, content digest, source version and
+evidence snapshot to the server's current subject. It requires the authenticated
+human Product Approver, exact assignment identity, all three active human gates,
+current risk and policy versions, and assignment validity through the final
+decision. Standard and High risk require three distinct people. Failures expose
+fixed error codes without rationale, document content or schema diagnostics.
+
+These checks consume trusted server records, return no permission grant and
+perform no database mutation. They are not yet wired to command handlers.
+Current membership, policy, access and cancellation must be independently loaded
+and revalidated at the commit fence. Approval also requires stable live source
+validation; a negative outcome may review the exact immutable submission after
+live edits. The schema's rationale field remains in memory here. Persisting or
+returning rationale requires its separate protected retention/access handling.
+
 The authenticated submission command must check current actor, workspace/object,
 source/evidence access, capability, readiness, body integrity and applicable
 storage/policy authority before using this helper. It must recheck the Initiative
@@ -86,6 +110,7 @@ submissions and reversible migrations) use real PostgreSQL with SQL guards.
 
 ```sh
 pytest plane/curve/tests/test_prd_metadata_models.py --create-db
+pytest plane/curve/tests/test_prd_review_validation.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```

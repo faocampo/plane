@@ -16,11 +16,17 @@ from referencing import Registry, Resource
 
 
 SCHEMA_PINS = {
+    "external-prd-v1.schema.json": "f1bdd4ce2d037327b83d352c09e5373882f2b71475605e7fbb93f891ea012eb5",
     "access-envelope.schema.json": "eb6c978390675fc3042803ab4633052f7da49fc7a49305f9bf7ff8c284081dd1",
     "prd-artifact-records-v1.schema.json": "0e6047491c12d5833518e3a32be435ece5765836eb99ace8e82c933ad2411bcf",
 }
 SCHEMA_BASE = "https://curve.example.invalid/contracts/schemas/"
 MAX_SAFE_INTEGER = 9007199254740991
+EXISTING_SCHEMA_PINS = {
+    "common.schema.json": "54b32643ee06d5458934c033a890b639d6c8f8a75346743ba8ef054320bfc3de",
+    "gate-assignment.schema.json": "5b614728e2666698e188eaf325f47f000befa056cc514bd743e12e4807070e97",
+    "product.schema.json": "ec4c08fe6c3ac71201ec80f7a5554f9c2161436a32687c5547c50735b1626a47",
+}
 
 
 def require_metadata(condition, code):
@@ -69,12 +75,13 @@ def metadata_digest(value):
 @lru_cache(maxsize=1)
 def _registry():
     root = Path(__file__).parent
-    common_bytes = (root / "contracts/schemas/common.schema.json").read_bytes()
-    require_metadata(
-        hashlib.sha256(common_bytes).hexdigest() == "54b32643ee06d5458934c033a890b639d6c8f8a75346743ba8ef054320bfc3de",
-        "PRD_SCHEMA_INTEGRITY_FAILED",
-    )
-    resources = [json.loads(common_bytes)]
+    resources = []
+    for name, digest in EXISTING_SCHEMA_PINS.items():
+        path = root / "contracts/schemas" / name
+        require_metadata(not path.is_symlink(), "PRD_SCHEMA_INTEGRITY_FAILED")
+        data = path.read_bytes()
+        require_metadata(hashlib.sha256(data).hexdigest() == digest, "PRD_SCHEMA_INTEGRITY_FAILED")
+        resources.append(json.loads(data))
     candidate_root = root / "prd_candidate_schemas"
     require_metadata(
         {path.name for path in candidate_root.iterdir()} == set(SCHEMA_PINS), "PRD_SCHEMA_INTEGRITY_FAILED"
@@ -89,8 +96,23 @@ def _registry():
 
 
 def validate_record(kind, value):
+    _validate_reference("prd-artifact-records-v1.schema.json#/$defs/" + kind, value)
+
+
+def validate_external_record(kind, value):
+    _validate_reference("external-prd-v1.schema.json#/$defs/" + kind, value)
+
+
+def validate_gate_record(value):
+    _validate_reference("gate-assignment.schema.json", value)
+
+
+def _validate_reference(reference, value):
+    # Bound input complexity and require JSON-safe integer values before walking
+    # the schema. The digest is discarded; this is a validation-only boundary.
+    metadata_digest(value)
     validator = Draft202012Validator(
-        {"$ref": SCHEMA_BASE + "prd-artifact-records-v1.schema.json#/$defs/" + kind},
+        {"$ref": SCHEMA_BASE + reference},
         registry=_registry(),
         format_checker=FormatChecker(),
     )
