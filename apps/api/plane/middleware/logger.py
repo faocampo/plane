@@ -18,6 +18,7 @@ from rest_framework.request import Request
 from plane.utils.ip_address import get_client_ip
 from plane.utils.exception_logger import log_exception
 from plane.bgtasks.logger_task import process_logs
+from plane.curve.request_privacy import is_curve_request
 
 api_logger = logging.getLogger("plane.api.request")
 
@@ -56,11 +57,12 @@ class RequestLoggerMiddleware:
             request.user.id if getattr(request, "user") and getattr(request.user, "is_authenticated", False) else None
         )
 
-        user_agent = request.META.get("HTTP_USER_AGENT", "")
+        user_agent = "" if is_curve_request(request) else request.META.get("HTTP_USER_AGENT", "")
 
         # Log the request information
+        logged_path = request.path if is_curve_request(request) else request.get_full_path()
         api_logger.info(
-            f"{request.method} {request.get_full_path()} {response.status_code}",
+            f"{request.method} {logged_path} {response.status_code}",
             extra={
                 "path": request.path,
                 "method": request.method,
@@ -85,7 +87,7 @@ class APITokenLogMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        request_body = request.body
+        request_body = None if is_curve_request(request) else request.body
         response = self.get_response(request)
         self.process_request(request, response, request_body)
         return response
@@ -135,6 +137,7 @@ class APITokenLogMiddleware:
             return
 
         try:
+            protected = is_curve_request(request)
             log_data = {
                 # Tokenize the (high-entropy) API key into a stable, non-reversible
                 # identifier so logs can be correlated to a token without ever
@@ -148,13 +151,15 @@ class APITokenLogMiddleware:
                 ).hexdigest(),
                 "path": request.path,
                 "method": request.method,
-                "query_params": request.META.get("QUERY_STRING", ""),
-                "headers": self._redacted_headers(request),
-                "body": self._safe_decode_body(request_body) if request_body else None,
-                "response_body": self._safe_decode_body(response.content) if response.content else None,
+                "query_params": "" if protected else request.META.get("QUERY_STRING", ""),
+                "headers": "{}" if protected else self._redacted_headers(request),
+                "body": None if protected else (self._safe_decode_body(request_body) if request_body else None),
+                "response_body": None
+                if protected
+                else (self._safe_decode_body(response.content) if response.content else None),
                 "response_code": response.status_code,
                 "ip_address": get_client_ip(request=request),
-                "user_agent": request.META.get("HTTP_USER_AGENT", None),
+                "user_agent": None if protected else request.META.get("HTTP_USER_AGENT", None),
             }
 
             process_logs.delay(log_data=log_data)
