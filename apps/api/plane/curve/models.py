@@ -1355,6 +1355,11 @@ class PolicyDecision(ImmutableRecordModel):
                     models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
                     | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
+                    | models.Q(
+                        policy_key="CURVE_PRD_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c",
+                    )
                 ),
                 name="curve_policy_identity_ck",
             ),
