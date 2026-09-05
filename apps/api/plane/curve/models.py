@@ -409,6 +409,7 @@ class Initiative(models.Model):
             models.Index(fields=["workspace_id", "product_id", "state"], name="curve_init_ws_product_idx"),
         ]
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_init_ws_id_uq"),
             models.UniqueConstraint(
                 models.F("workspace_id"),
                 Lower("keyword"),
@@ -583,6 +584,7 @@ class ProviderConnection(WorkspaceScopedModel):
             ),
         ]
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_pconn_ws_id_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "environment", "adapter_key"],
                 name="curve_pconn_ws_env_adapter_uq",
@@ -699,6 +701,127 @@ class ProviderConnection(WorkspaceScopedModel):
     def save(self, *args, **kwargs):
         self._validate_current_capability_scope()
         return super().save(*args, **kwargs)
+
+
+class DocumentSynchronizationStatus(models.TextChoices):
+    CURRENT = "CURRENT", "Current"
+    CHANGED_SINCE_SUBMISSION = "CHANGED_SINCE_SUBMISSION", "Changed since submission"
+    CHANGED_SINCE_APPROVAL = "CHANGED_SINCE_APPROVAL", "Changed since approval"
+    ACCESS_REVOKED = "ACCESS_REVOKED", "Access revoked"
+    MOVED_OUTSIDE_POLICY = "MOVED_OUTSIDE_POLICY", "Moved outside policy"
+    DELETED = "DELETED", "Deleted"
+    PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE", "Provider unavailable"
+    RECONCILIATION_REQUIRED = "RECONCILIATION_REQUIRED", "Reconciliation required"
+
+
+class DocumentAccessStatus(models.TextChoices):
+    ALLOWED = "ALLOWED", "Allowed"
+    DENIED = "DENIED", "Denied"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class ExternalDocumentBindingQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("Document binding creation requires scoped instance validation")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        raise ImmutableRecordError("Document binding changes require versioned instance updates")
+
+    def update(self, **kwargs):
+        raise ImmutableRecordError("Document binding changes require versioned instance updates")
+
+    def delete(self):
+        raise ImmutableRecordError("Document binding deletion requires a governed successor policy")
+
+
+class ExternalDocumentBinding(models.Model):
+    """External PRD identity and observation metadata; no content or live transport.
+
+    The consuming command must authenticate, authorize, and audit before using
+    this persistence primitive. Stored access status is a projection, never a
+    permission grant. Composite tenant FKs and identity/version triggers are
+    installed by the migration, including for writes outside the ORM.
+    """
+
+    objects = models.Manager.from_queryset(ExternalDocumentBindingQuerySet)()
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    initiative = models.ForeignKey(Initiative, on_delete=models.PROTECT, related_name="document_bindings")
+    artifact_kind = models.CharField(max_length=16, default="PRD", editable=False)
+    provider_connection = models.ForeignKey(
+        ProviderConnection, on_delete=models.PROTECT, related_name="document_bindings"
+    )
+    provider_file_id = models.CharField(max_length=512, editable=False)
+    provider_container_id = models.CharField(max_length=512)
+    canonical_url = models.URLField(max_length=2048)
+    current_provider_version = models.CharField(max_length=512)
+    current_revision_id = models.CharField(max_length=512, null=True, blank=True)
+    current_modified_at = models.DateTimeField()
+    synchronization_status = models.CharField(
+        max_length=32,
+        choices=DocumentSynchronizationStatus.choices,
+        default=DocumentSynchronizationStatus.RECONCILIATION_REQUIRED,
+    )
+    access_status = models.CharField(
+        max_length=16, choices=DocumentAccessStatus.choices, default=DocumentAccessStatus.UNKNOWN
+    )
+    last_reconciled_at = models.DateTimeField(null=True, blank=True)
+    version = models.PositiveBigIntegerField(default=1, editable=False)
+    created_by = models.JSONField(editable=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    class Meta:
+        db_table = "curve_external_document_binding"
+        constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_doc_ws_id_uq"),
+            models.UniqueConstraint(
+                fields=["workspace_id", "initiative", "artifact_kind"], name="curve_doc_ws_init_kind_uq"
+            ),
+            models.CheckConstraint(condition=models.Q(schema_version="1.0"), name="curve_doc_schema_ck"),
+            models.CheckConstraint(condition=models.Q(artifact_kind="PRD"), name="curve_doc_kind_ck"),
+            models.CheckConstraint(condition=models.Q(version__gte=1), name="curve_doc_version_ck"),
+            models.CheckConstraint(
+                condition=models.Q(synchronization_status__in=DocumentSynchronizationStatus.values),
+                name="curve_doc_sync_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(access_status__in=DocumentAccessStatus.values), name="curve_doc_access_ck"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(canonical_url__regex=r"^https://[^[:space:]]+$"), name="curve_doc_url_ck"
+            ),
+            *[
+                models.CheckConstraint(condition=models.Q(**{f"{field}__regex": r"^[A-Za-z0-9._~-]+$"}), name=name)
+                for field, name in (
+                    ("provider_file_id", "curve_doc_file_ck"),
+                    ("provider_container_id", "curve_doc_container_ck"),
+                    ("current_provider_version", "curve_doc_provider_version_ck"),
+                    ("current_revision_id", "curve_doc_revision_ck"),
+                )
+            ],
+        ]
+
+    def save(self, *args, **kwargs):
+        # Scope before loading referenced metadata. The DB repeats these checks
+        # with composite FKs, so concurrent parent changes cannot cross tenants.
+        if not Initiative.objects.filter(id=self.initiative_id, workspace_id=self.workspace_id).exists():
+            raise ValidationError("Document binding Initiative must belong to its workspace")
+        if not ProviderConnection.objects.filter(
+            id=self.provider_connection_id, workspace_id=self.workspace_id
+        ).exists():
+            raise ValidationError("Document binding connection must belong to its workspace")
+        # Force insertion for new IDs: Django's update-then-insert fallback could
+        # otherwise rewrite an existing binding supplied with a colliding UUID.
+        if self._state.adding:
+            kwargs["force_insert"] = True
+        else:
+            kwargs["force_update"] = True
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ImmutableRecordError("Document binding deletion requires a governed successor policy")
 
 
 class ProviderCapability(ImmutableRecordModel):
