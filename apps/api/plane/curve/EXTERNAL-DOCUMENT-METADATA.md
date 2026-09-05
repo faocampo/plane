@@ -63,9 +63,11 @@ record the external-resource boundary, and commit the event/result together.
 Those operations require a separately tested lifecycle-constraint amendment;
 inserting this persistence primitive alone never creates a live external link.
 
-Checkpoint ArtifactVersion/EvidenceSnapshot records, protected object integrity,
-PRD readiness, assigned-human review and the PRD Review to Planning transition
-remain the next increments. Retention/storage and documentation-provider gates
+The [PRD metadata increment](PRD-METADATA.md) (immutable ArtifactVersions, exact
+evidence snapshots and transactional persistence) supplies the next dependency.
+DocumentCheckpoint integration, protected object integrity, PRD readiness,
+assigned-human review and the PRD Review to Planning transition remain subsequent
+increments. Retention/storage and documentation-provider gates
 remain in force for activation. Actual policy values, approval identities and
 deployment configuration belong to approved private governance storage.
 

@@ -1367,3 +1367,12 @@ class AuditEvent(ImmutableRecordModel):
                 name="curve_audit_sequence_positive_ck",
             ),
         ]
+
+
+# Register the additive PRD model module after the shared bases are defined.
+from .prd_models import (  # noqa: E402,F401
+    PrdArtifact,
+    PrdArtifactVersion,
+    PrdEvidenceItemVersion,
+    PrdEvidenceSnapshot,
+)
