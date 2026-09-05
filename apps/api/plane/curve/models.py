@@ -227,6 +227,7 @@ class Operation(WorkspaceScopedModel):
             models.Index(fields=["workspace_id", "status"], name="curve_op_workspace_state_idx"),
         ]
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_operation_scope_uq"),
             models.CheckConstraint(
                 condition=(
                     ~models.Q(
@@ -1422,3 +1423,4 @@ from .prd_models import (  # noqa: E402,F401
 )
 from .prd_checkpoint_models import DocumentCheckpoint  # noqa: E402,F401
 from .prd_review_models import PrdReviewDecision  # noqa: E402,F401
+from .prd_command_models import PrdAcceptedCommand  # noqa: E402,F401
