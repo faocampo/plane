@@ -31,7 +31,7 @@ export const toSafeCurveProblem = (error: unknown, fallbackTitle: string): ICurv
     type:
       typeof response?.data?.type === "string"
         ? response.data.type
-        : "https://curve.x3m.internal/problems/request-failed",
+        : "https://curve.example.invalid/problems/request-failed",
     title: permissionLimited
       ? "Initiatives are unavailable"
       : conflict

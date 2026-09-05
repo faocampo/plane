@@ -33,7 +33,7 @@ describe("Curve Home overview", () => {
   it("keeps Home focused on cross-project signals and routes detailed work to My work", () => {
     render(
       <CurveHomeOverviewView
-        workspaceSlug="x3m"
+        workspaceSlug="example-workspace"
         activeInitiatives={4}
         aligningInitiatives={2}
         needsAttention={1}
@@ -46,14 +46,14 @@ describe("Curve Home overview", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Your control room" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Open My work/ })).toHaveAttribute("href", "/x3m/profile/");
+    expect(screen.getByRole("link", { name: /Open My work/ })).toHaveAttribute("href", "/example-workspace/profile/");
     expect(screen.getByRole("link", { name: /Initiative needs attention/ })).toHaveAttribute(
       "href",
-      "/x3m/curve/initiatives/?summary=NEEDS_ATTENTION"
+      "/example-workspace/curve/initiatives/?summary=NEEDS_ATTENTION"
     );
     expect(screen.getByRole("link", { name: /Initiatives in alignment/ })).toHaveAttribute(
       "href",
-      "/x3m/curve/initiatives/?state=ALIGNING"
+      "/example-workspace/curve/initiatives/?state=ALIGNING"
     );
 
     const attentionQueue = screen.getByRole("heading", { name: "Attention queue" }).parentElement?.parentElement;
@@ -71,7 +71,7 @@ describe("Curve Home overview", () => {
   });
 
   it("uses the broader unread total when no mention is waiting", () => {
-    render(<CurveHomeOverviewView workspaceSlug="x3m" unreadMentions={0} unreadNotifications={6} />);
+    render(<CurveHomeOverviewView workspaceSlug="example-workspace" unreadMentions={0} unreadNotifications={6} />);
 
     expect(screen.getByText("unread updates")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe("Curve Home overview", () => {
   it("shows unavailable evidence explicitly instead of presenting failed requests as zero", () => {
     render(
       <CurveHomeOverviewView
-        workspaceSlug="x3m"
+        workspaceSlug="example-workspace"
         isInitiativesUnavailable
         isNotificationsUnavailable
         isWorkUnavailable

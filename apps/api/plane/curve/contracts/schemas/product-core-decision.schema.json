@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/product-core-decision.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/product-core-decision.schema.json",
   "title": "M1-00A Product core decision",
   "type": "object",
   "additionalProperties": false,
@@ -15,9 +15,9 @@
       "additionalProperties": false,
       "required": ["name", "github_login", "title"],
       "properties": {
-        "name": { "const": "Federico Ocampo" },
-        "github_login": { "const": "faocampo" },
-        "title": { "const": "CTO at X3M" }
+        "name": { "const": "Designated reviewer" },
+        "github_login": { "const": "example-reviewer" },
+        "title": { "const": "Designated technical owner" }
       }
     },
     "semantics": {

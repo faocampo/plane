@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/inbox-message.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/inbox-message.schema.json",
   "title": "Curve deduplicating inbox message",
   "type": "object",
   "additionalProperties": false,

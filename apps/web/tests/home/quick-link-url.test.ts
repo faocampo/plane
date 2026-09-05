@@ -11,7 +11,9 @@ import { normalizeQuickLinkUrl } from "@/components/home/widgets/links/url";
 describe("Quicklink URL validation", () => {
   it("normalizes recognizable website addresses", () => {
     expect(normalizeQuickLinkUrl("example.com/docs")).toBe("https://example.com/docs");
-    expect(normalizeQuickLinkUrl("http://localhost:3000/x3m")).toBe("http://localhost:3000/x3m");
+    expect(normalizeQuickLinkUrl("http://localhost:3000/example-workspace")).toBe(
+      "http://localhost:3000/example-workspace"
+    );
   });
 
   it("rejects malformed or unsupported addresses before submission", () => {

@@ -49,7 +49,7 @@ from plane.curve.services import (
 from plane.db.models import WorkspaceMember
 
 
-INITIATIVE_EVENT_SCHEMA = "https://curve.x3m.internal/contracts/schemas/initiative-event-v1.schema.json"
+INITIATIVE_EVENT_SCHEMA = "https://curve.example.invalid/contracts/schemas/initiative-event-v1.schema.json"
 INITIATIVE_OUTBOX_DESTINATION = "CURVE_INITIATIVE_LOCAL_V1"
 MANUAL_FIRST_WORKFLOW_VERSION_ID = uuid.UUID("82000000-0000-4000-8000-000000000001")
 KEYWORD_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,49}$")
