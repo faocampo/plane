@@ -261,8 +261,8 @@ def test_two_concurrent_projection_updates_have_one_winner():
 
 @pytest.mark.django_db(transaction=True)
 def test_migration_round_trip_preserves_existing_parent_records():
-    target = ("curve", "0009_external_document_binding")
     previous = ("curve", "0008_initiative_business_intent")
+    latest = MigrationExecutor(connection).loader.graph.leaf_nodes()
     values = binding_values()
     initiative_id = values["initiative"].id
     provider_id = values["provider_connection"].id
@@ -272,11 +272,14 @@ def test_migration_round_trip_preserves_existing_parent_records():
         assert Initiative.objects.filter(pk=initiative_id).exists()
         assert ProviderConnection.objects.filter(pk=provider_id).exists()
     finally:
-        MigrationExecutor(connection).migrate([target])
+        MigrationExecutor(connection).migrate(latest)
     assert "curve_external_document_binding" in connection.introspection.table_names()
     ExternalDocumentBinding.objects.create(**values)
-    with pytest.raises(DatabaseError, match="preservation migration"):
-        MigrationExecutor(connection).migrate([previous])
+    try:
+        with pytest.raises(DatabaseError, match="preservation migration"):
+            MigrationExecutor(connection).migrate([previous])
+    finally:
+        MigrationExecutor(connection).migrate(latest)
     assert ExternalDocumentBinding.objects.count() == 1
     # The atomic rejected reverse migration leaves every DB guard installed.
     with pytest.raises(IntegrityError), transaction.atomic(), connection.cursor() as cursor:
