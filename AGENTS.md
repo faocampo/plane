@@ -2,10 +2,16 @@
 
 ## Repository delivery
 
-Follow the approved [repository delivery policy](https://github.com/faocampo/curve/blob/580a68d23987365b64f272b6b2336470d46f0dfd/docs/technical/repository-delivery-policy.md)
+Follow the approved [repository delivery policy](https://github.com/faocampo/curve/blob/77dbfe5f50e0ac3e585dd2b57e687fa425e780e2/docs/technical/repository-delivery-policy.md)
 (PR scope, integration gates, evidence and safe remote-branch cleanup), approved
 2026-09-06 for human-directed Curve/Plane development. Plane integrates into
-`preview`; verify the live base before starting.
+`curve-integration` (the fork's default branch); verify the live base before starting.
+The fork's `preview` tracks `makeplane/plane`'s `preview` exactly. Keep Curve changes
+off that tracking branch. Bring upstream updates into `curve-integration` through
+a reviewed and tested PR. Record exact tips, preserve divergent work and use an
+exact-tip lease when synchronizing `preview`. Upstream synchronization has no
+deployment authority; the fork's upstream push-triggered publishing workflow
+remains disabled until separately authorized.
 
 - Use one cohesive outcome per PR and reuse it for rework. Check existing and
   merged PRs for equivalent work before creating a branch or PR.

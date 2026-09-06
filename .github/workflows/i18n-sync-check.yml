@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
     branches:
-      - "preview"
+      - "curve-integration"
     types:
       - "opened"
       - "synchronize"
@@ -15,7 +15,7 @@ on:
       - ".github/workflows/i18n-sync-check.yml"
   push:
     branches:
-      - "preview"
+      - "curve-integration"
     paths:
       - "packages/i18n/**"
 
