@@ -7,12 +7,14 @@ from plane.curve.temporal.orchestration_workflows import (
     CurveSliceAttemptWorkflowV1,
 )
 from plane.curve.temporal.workflows import CurveOperationWorkflowV1
+from plane.curve.temporal.prd_workflows import CurvePrdOperationWorkflowV1
 
 
 CURVE_WORKFLOWS_V1 = (
     CurveOperationWorkflowV1,
     CurveInitiativeOrchestrationWorkflowV1,
     CurveSliceAttemptWorkflowV1,
+    CurvePrdOperationWorkflowV1,
 )
 
 CURVE_WORKFLOW_TYPE_NAMES_V1 = tuple(
