@@ -1,5 +1,30 @@
 # Agent Development Guide
 
+## Repository delivery
+
+Follow the approved [repository delivery policy](https://github.com/faocampo/curve/blob/580a68d23987365b64f272b6b2336470d46f0dfd/docs/technical/repository-delivery-policy.md)
+(PR scope, integration gates, evidence and safe remote-branch cleanup), approved
+2026-09-06 for human-directed Curve/Plane development. Plane integrates into
+`preview`; verify the live base before starting.
+
+- Use one cohesive outcome per PR and reuse it for rework. Check existing and
+  merged PRs for equivalent work before creating a branch or PR.
+- Allow at most two open dependent PRs per workstream, including the root.
+  Larger stacks require an explicit owner-approved, bounded exception.
+- Resolve the oldest integration gate first. During human review, prioritize
+  the reviewable flow or independent work; freeze additional dependent PRs.
+- Finish validation, review, authorized merge, integration verification, handoff
+  update and remote-branch retirement. Preserve exact-head evidence and approvals.
+- Routine delivery and verified remote cleanup within the user's authorized scope
+  need no repeated confirmation. Human UX/security gates and repository protections
+  remain binding; production deployment and activation require separate authority.
+- Delete only verified merged/superseded remote tips without unique work, open
+  dependents or active use. Preserve local worktrees, changes, stashes and history.
+
+The existing Initiative-shell stack remains held for owner UX acceptance of
+document handling, reviewer responsibilities and operational-flow simplification.
+These development instructions leave Curve-dispatched runtime authority unchanged.
+
 ## Commands
 
 - `pnpm dev` - Start all dev servers (web:3000, admin:3001)
