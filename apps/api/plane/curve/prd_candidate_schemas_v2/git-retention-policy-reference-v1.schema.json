@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/schemas/git-retention-policy-reference-v1.schema.json",
+  "title": "Exact Git retention policy version reference",
+  "description": "Commit identity only. The workspace-scoped trusted configuration resolves the approved repository and policy path; this reference grants no authority or activation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resource_type", "resource_id"],
+  "properties": {
+    "resource_type": {"const": "RETENTION_POLICY_VERSION"},
+    "resource_id": {"$ref": "#/$defs/Commit"}
+  },
+  "$defs": {
+    "Commit": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 40,
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Full lowercase commit object ID for the currently supported Git SHA-1 object format. Branches, tags, revision expressions, UUID aliases and abbreviated hashes are rejected. Other object formats require a versioned contract."
+    }
+  }
+}

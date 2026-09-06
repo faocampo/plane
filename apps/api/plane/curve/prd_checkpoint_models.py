@@ -17,6 +17,7 @@ from .prd_review_validation import validate_checkpoint_subject
 
 
 class DocumentCheckpoint(PrdImmutableModel):
+    metadata_schema_version = models.CharField(max_length=32, default="1.0", db_default="1.0", editable=False)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace_id = models.UUIDField(editable=False)
     initiative = models.ForeignKey("curve.Initiative", on_delete=models.PROTECT)
@@ -36,7 +37,7 @@ class DocumentCheckpoint(PrdImmutableModel):
     normalization_schema_version = models.CharField(max_length=255, editable=False)
     access_evaluation_id = models.UUIDField(editable=False)
     completeness_check_id = models.UUIDField(editable=False)
-    retention_policy_version_id = models.UUIDField(editable=False)
+    retention_policy_version_id = models.CharField(max_length=40, editable=False)
     access_envelope_id = models.UUIDField(editable=False)
     submitted_or_approved_by = models.JSONField(editable=False)
     recorded_at = models.DateTimeField(default=timezone.now, editable=False)
@@ -44,6 +45,16 @@ class DocumentCheckpoint(PrdImmutableModel):
     class Meta:
         db_table = "curve_document_checkpoint"
         constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        metadata_schema_version="1.0",
+                        retention_policy_version_id__regex=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    )
+                    | models.Q(metadata_schema_version="2.0", retention_policy_version_id__regex=r"^[0-9a-f]{40}$")
+                ),
+                name="curve_cp_retention_edition_ck",
+            ),
             models.UniqueConstraint(fields=["workspace_id", "initiative", "id"], name="curve_cp_scope_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "initiative", "external_document_binding", "id"],
@@ -79,7 +90,7 @@ class DocumentCheckpoint(PrdImmutableModel):
 
     def as_record(self):
         return dict(
-            schema_version="1.0",
+            schema_version=self.metadata_schema_version,
             id=str(self.id),
             workspace_id=str(self.workspace_id),
             initiative_id=str(self.initiative_id),

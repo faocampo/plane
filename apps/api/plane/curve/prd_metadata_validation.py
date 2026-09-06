@@ -22,6 +22,13 @@ SCHEMA_PINS = {
     "prd-artifact-records-v1.schema.json": "0e6047491c12d5833518e3a32be435ece5765836eb99ace8e82c933ad2411bcf",
 }
 SCHEMA_BASE = "https://curve.example.invalid/contracts/schemas/"
+V2_SCHEMA_PINS = {
+    "access-envelope-v2.schema.json": "34581ce97b954e5dc75788738ced50278877924ad9da9a72101f1f7e0bbb72b7",
+    "external-prd-v2.schema.json": "37964ec3848e2d2c5cd99144349fc622eabd03a91993e557cf2568eecb10ba02",
+    "git-retention-policy-reference-v1.schema.json": "036797269f39b6d4fdd64b45ca75832592330c775493b5f98b278c1723af2d36",
+    "prd-artifact-records-v2.schema.json": "f02c651117eb22f316c7beaa53755b951dfedf1ade6c23fd2fdad993cbac4b09",
+    "prd-review-decision-record-v2.schema.json": "b2490472699b50397e576cd5a553c05eb74714edd3799c2cfc42c0fd6a707763",
+}
 MAX_SAFE_INTEGER = 9007199254740991
 EXISTING_SCHEMA_PINS = {
     "policy-evaluation.schema.json": "826610d5af15c28b265aa5882b50c23cf94874158a739473c4ac9937219374c7",
@@ -94,15 +101,28 @@ def _registry():
         data = path.read_bytes()
         require_metadata(hashlib.sha256(data).hexdigest() == digest, "PRD_SCHEMA_INTEGRITY_FAILED")
         resources.append(json.loads(data))
+    v2_root = root / "prd_candidate_schemas_v2"
+    require_metadata(
+        not v2_root.is_symlink() and {p.name for p in v2_root.iterdir()} == set(V2_SCHEMA_PINS),
+        "PRD_SCHEMA_INTEGRITY_FAILED",
+    )
+    for name, digest in V2_SCHEMA_PINS.items():
+        path = v2_root / name
+        require_metadata(not path.is_symlink(), "PRD_SCHEMA_INTEGRITY_FAILED")
+        data = path.read_bytes()
+        require_metadata(hashlib.sha256(data).hexdigest() == digest, "PRD_SCHEMA_INTEGRITY_FAILED")
+        resources.append(json.loads(data))
     return Registry().with_resources((schema["$id"], Resource.from_contents(schema)) for schema in resources)
 
 
 def validate_record(kind, value):
-    _validate_reference("prd-artifact-records-v1.schema.json#/$defs/" + kind, value)
+    edition = "v2" if isinstance(value, dict) and value.get("schema_version") == "2.0-candidate" else "v1"
+    _validate_reference(f"prd-artifact-records-{edition}.schema.json#/$defs/" + kind, value)
 
 
 def validate_external_record(kind, value):
-    _validate_reference("external-prd-v1.schema.json#/$defs/" + kind, value)
+    edition = "v2" if isinstance(value, dict) and value.get("schema_version") == "2.0" else "v1"
+    _validate_reference(f"external-prd-{edition}.schema.json#/$defs/" + kind, value)
 
 
 def validate_gate_record(value):
