@@ -439,6 +439,50 @@ references) exercise this boundary without Google access. Three isolated
 cross-language comparisons also matched the published reference's normalized
 values for supported nested content, unknown metadata and images.
 
+## Exact-subject structural readiness
+
+The [readiness evaluator](prd_readiness.py) (required sections, acceptance coverage
+and current-record checks) consumes protected normalized PRD and Idea Brief bytes
+from trusted capture/storage reads. It verifies each body's actual byte digest
+and document/workspace/Initiative identity before extracting content. It preserves
+that byte identity rather than reserializing the body to calculate a new digest.
+The consuming capture runtime remains responsible for its approved normalization
+and canonical serialization contract.
+
+The [readiness profile](prd_candidate_policy/prd-readiness-profile-v1.json)
+(required Idea Brief/PRD sections and declaration syntax) is copied byte-for-byte
+from the published [Curve readiness profile](https://github.com/faocampo/curve/blob/6049d229e13e0384d0d3e4c88229720da5f296c1/contracts/policy/prd-readiness-profile-v1.json)
+(candidate structural rules). Its file digest is checked on every evaluation.
+Existing core policy and public-contract pins remain unchanged.
+
+Headings, nested subsections, table cells and section-titled tabs supply body
+content. Duplicate, missing, empty and placeholder sections block readiness.
+Headers, footnotes and tables of contents cannot replace required body sections.
+Requirement and acceptance IDs must have descriptions, be unique and provide
+complete declared-requirement coverage. Unsupported body structures fail closed.
+
+Inventory input is closed, bounded and bound to both exact body digests, the
+workspace, Initiative and evaluation instant. Blockers require resolution
+references; assumptions require active human owners, validation-plan references
+and due stages. The consuming runtime must independently establish a complete
+inventory and resolve those references and owners through current domain reads.
+A browser-supplied completeness flag or reference string grants no authority.
+
+The immutable in-memory result exposes a detached metadata-only report with the
+profile digest, exact source/version/subject, evidence snapshot, inventory digest,
+evaluation instant and stable reason codes. Final report validation requires every
+exact expected subject field and a current READY result. The caller must retrieve
+the report through authorized immutable persistence and derive the expected
+subject from current records; the validator establishes no permission grant.
+
+The [readiness tests](tests/test_prd_readiness.py) (missing content, traceability,
+scope/digest substitution, stale inventory/reports, immutable output, byte limits
+and malformed input) use the backend normalizer and fabricated content. Four
+cross-language report comparisons matched the published reference for supported
+ready, missing-section, unresolved-blocker and stale-inventory cases. Semantic
+business review, inventory/report persistence and checkpoint-runtime wiring remain
+required before live submission activation.
+
 ## Regression commands
 
 [Database tests](tests/test_prd_metadata_models.py) (empty/material evidence,
