@@ -11,6 +11,21 @@ const workflow = readFileSync(
   "utf8"
 );
 
+test("integration checks target Curve while preview stays an upstream tracking branch", () => {
+  for (const file of [
+    "pull-request-build-lint-web-apps.yml",
+    "pull-request-build-lint-api.yml",
+    "copyright-check.yml",
+    "codeql.yml",
+    "i18n-sync-check.yml",
+    "react-doctor.yml",
+  ]) {
+    const source = readFileSync(new URL(`../../.github/workflows/${file}`, import.meta.url), "utf8");
+    assert.ok(source.includes("curve-integration"), file);
+    assert.doesNotMatch(source, /branches:[\s\S]*?\bpreview\b/, file);
+  }
+});
+
 test("manual runs are declared and all three entry jobs allow explicit dispatch", () => {
   assert.match(workflow, /  workflow_dispatch:/);
   const conditions = [...workflow.matchAll(/    if: \|\n([\s\S]*?)(?=    env:)/g)];
