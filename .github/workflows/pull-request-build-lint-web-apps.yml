@@ -15,6 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Manual validation covers all packages; PRs retain affected-package selection.
+env:
+  VALIDATION_SCOPE: ${{ github.event_name == 'pull_request' && '--affected' || '' }}
+
 jobs:
   # Format check has no build dependencies - run immediately in parallel
   check-format:
@@ -22,8 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
       github.event.pull_request.draft == false &&
       github.event.pull_request.requested_reviewers != null
+      )
     env:
       TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
       TURBO_SCM_HEAD: ${{ github.sha }}
@@ -36,9 +43,14 @@ jobs:
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
+        with:
+          node-version: "22.18.0"
 
       - name: Enable Corepack and pnpm
         run: corepack enable pnpm
+
+      - name: Validate workflow selection contract
+        run: node --test scripts/tests/web-validation-workflow.test.mjs
 
       - name: Get pnpm store directory
         shell: bash
@@ -56,7 +68,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: pnpm turbo run check:format --affected
+        run: pnpm turbo run check:format $VALIDATION_SCOPE
 
   # Build packages - required for lint and type checks
   build:
@@ -64,8 +76,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
       github.event.pull_request.draft == false &&
       github.event.pull_request.requested_reviewers != null
+      )
     env:
       TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
       TURBO_SCM_HEAD: ${{ github.sha }}
@@ -79,6 +94,8 @@ jobs:
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
+        with:
+          node-version: "22.18.0"
 
       - name: Enable Corepack and pnpm
         run: corepack enable pnpm
@@ -108,7 +125,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build packages
-        run: pnpm turbo run build --affected
+        run: pnpm turbo run build $VALIDATION_SCOPE
 
       - name: Save Turbo cache
         uses: actions/cache/save@v5
@@ -122,8 +139,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
       github.event.pull_request.draft == false &&
       github.event.pull_request.requested_reviewers != null
+      )
     env:
       TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha }}
       TURBO_SCM_HEAD: ${{ github.sha }}
@@ -136,6 +156,8 @@ jobs:
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
+        with:
+          node-version: "22.18.0"
 
       - name: Enable Corepack and pnpm
         run: corepack enable pnpm
@@ -156,7 +178,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run check:lint
-        run: pnpm turbo run check:lint --affected
+        run: pnpm turbo run check:lint $VALIDATION_SCOPE
 
   # Type check depends on build artifacts
   check-types:
@@ -177,6 +199,8 @@ jobs:
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
+        with:
+          node-version: "22.18.0"
 
       - name: Enable Corepack and pnpm
         run: corepack enable pnpm
@@ -203,4 +227,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run check:types
-        run: pnpm turbo run check:types --affected
+        run: pnpm turbo run check:types $VALIDATION_SCOPE
