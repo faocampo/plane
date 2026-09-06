@@ -509,8 +509,26 @@ fabricated backfills. Persistence grants no provider or storage permission.
 The [persistence tests](tests/test_prd_readiness_models.py) (READY/BLOCKED round
 trips, tenant and Initiative isolation, direct-SQL guards, atomic audit rollback,
 duplicate identity and retained migration preservation) run against PostgreSQL.
-This increment leaves live runtime activation and user-facing submission wiring
-for subsequent integration.
+The [completion service](prd_completion.py) (accepted-command final transaction)
+requires a fresh READY report for submission and compares it with the current
+Initiative, exact checkpoint bytes, provider version, binding and evidence
+snapshot. Its identity must equal the accepted completeness-check reference.
+The report is persisted under the same active human policy receipt as the
+checkpoint, lifecycle transition, Operation result and single linked audit;
+failure rolls back the complete domain effect.
+
+Preparation supplies an independently resolved current readiness subject.
+The trusted runtime must refresh its Idea Brief, evidence and inventory ownership
+and identity during final local revalidation. Copying expected fields from a
+browser report does not establish those facts. Assessment occurs after command
+acceptance and before checkpoint recording. Completed-command redelivery returns
+the committed outcome without inserting another report.
+
+The [completion tests](tests/test_prd_completion.py) (normalized synthetic PRD
+assessment, return/resubmit/approve, missing or blocked reports, subject mismatch
+and outbox rollback) exercise report persistence through the real lifecycle
+service. Live protected-storage runtime activation and user-facing submission
+wiring remain subsequent integration work.
 
 ## Regression commands
 
