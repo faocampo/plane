@@ -34,6 +34,7 @@ from plane.curve.temporal.activities import (  # noqa: E402
     mark_operation_succeeded,
 )
 from plane.curve.temporal.relay import run_relay_loop  # noqa: E402
+from plane.curve.temporal.prd_activities import complete_prd_activity, settle_prd_activity  # noqa: E402
 from plane.curve.temporal.registry import CURVE_WORKFLOWS_V1  # noqa: E402
 from plane.curve.temporal.worker_lifecycle import supervise_worker_lifecycle  # noqa: E402
 
@@ -69,6 +70,8 @@ async def run_worker() -> None:
                     mark_operation_running,
                     mark_operation_succeeded,
                     mark_operation_cancelled,
+                    complete_prd_activity,
+                    settle_prd_activity,
                 ],
                 activity_executor=executor,
                 identity=identity,

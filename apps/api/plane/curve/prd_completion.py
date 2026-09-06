@@ -133,7 +133,7 @@ def _worker_grant(runtime, workspace_id, operation_id):
     return grant
 
 
-def _transition(runtime, operation, status, error=None):
+def _transition(runtime, operation, status, error=None, workflow_id=None):
     grant = _worker_grant(runtime, operation.workspace_id, operation.id)
     return transition_operation_with_service_authorization(
         workspace_id=operation.workspace_id,
@@ -147,6 +147,7 @@ def _transition(runtime, operation, status, error=None):
         progress_percent=100 if status == "SUCCEEDED" else None,
         error=error,
         destination=_DESTINATION,
+        workflow_id=workflow_id,
     )
 
 
@@ -266,7 +267,7 @@ def _submit(record, prepared, initiative, actor):
     )
 
 
-def complete_prd_operation(*, workspace_id, operation_id):
+def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
     """Run an accepted command under a trusted, explicitly configured runtime.
 
     Runtime worker_authorization and revalidate_completion are current local
@@ -285,7 +286,9 @@ def complete_prd_operation(*, workspace_id, operation_id):
         )
     )
     workspace_id, operation_id = uuid.UUID(str(workspace_id)), uuid.UUID(str(operation_id))
+    guard = execution_guard if execution_guard is not None else lambda: True
     try:
+        _require(callable(guard) and guard() is True)
         _worker_grant(runtime, workspace_id, operation_id)
         record = PrdAcceptedCommand.objects.find_by_id(workspace_id=workspace_id, record_id=operation_id)
         _require(record is not None)
@@ -349,6 +352,7 @@ def complete_prd_operation(*, workspace_id, operation_id):
                             audit("NO_EFFECT")
                             return _outcome(operation)
                         _preflight(_command(record), workspace_id, record.initiative_id)
+                        _require(guard() is True)
                         if prepared is None:
                             if operation.status == "PENDING":
                                 operation = _transition(runtime, operation, "QUEUED")
@@ -359,6 +363,7 @@ def complete_prd_operation(*, workspace_id, operation_id):
                             return None
                         _require(operation.status == "RUNNING")
                         _proof(prepared, record)
+                        _require(guard() is True)
                         _require(runtime.revalidate_completion(prepared=prepared, command=record) is True)
                         _proof(prepared, record)
                         initiative = Initiative.objects.find_by_id(
@@ -375,6 +380,7 @@ def complete_prd_operation(*, workspace_id, operation_id):
                         operation.result_ref = result_ref
                         operation.save(update_fields=["result_ref", "updated_at"])
                         operation = _transition(runtime, operation, "SUCCEEDED")
+                        _require(guard() is True)
                         audit("SUCCEEDED", result_ref)
                         return _outcome(operation, True)
                 except Exception:
