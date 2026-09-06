@@ -553,9 +553,19 @@ existing checkpoint graph, concurrency and scope tests. Current authorization
 must still resolve the exact policy through trusted workspace configuration.
 Schema acceptance grants no policy approval or storage activation.
 
-This increment covers artifact versions and checkpoints. Evidence persistence,
-approval-rationale metadata and accepted-command service adoption of commit
-references remain pending. Their immutable legacy records retain UUID behavior.
+The [rationale migration](migrations/0018_prd_rationale_git_retention.py)
+(versioned approval-rationale retention references) extends the same preservation
+rules to review decisions. Conversion uses the explicit decision wire edition:
+v2 decisions produce v2 metadata with full policy commits, and reconstruction
+preserves the wire edition and original verified rationale bytes. Other policy
+IDs remain UUIDs. A rationale policy reference is independently scoped from the
+checkpoint body's retention reference.
+
+The [rationale retention tests](tests/test_prd_rationale_git_retention.py)
+(all terminal decisions, exact reconstruction, database enforcement and rollback)
+exercise both editions alongside existing scope, actor and concurrency tests.
+Evidence persistence and accepted-command service adoption of commit references
+remain pending. Their immutable legacy records retain UUID behavior.
 
 ## Regression commands
 
@@ -581,6 +591,7 @@ pytest plane/curve/tests/test_prd_acceptance_api.py
 pytest plane/curve/tests/test_prd_completion.py
 pytest plane/curve/tests/test_prd_readiness.py plane/curve/tests/test_prd_readiness_models.py
 pytest plane/curve/tests/test_prd_git_retention.py
+pytest plane/curve/tests/test_prd_rationale_git_retention.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```

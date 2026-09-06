@@ -130,7 +130,8 @@ def validate_gate_record(value):
 
 
 def validate_review_decision_record(value):
-    _validate_reference("prd-review-decision-record-v1.schema.json", value)
+    edition = "v2" if isinstance(value, dict) and value.get("schema_version") == "2.0-candidate" else "v1"
+    _validate_reference(f"prd-review-decision-record-{edition}.schema.json", value)
 
 
 def validate_prd_object_acl(value):

@@ -46,7 +46,7 @@ def review_decision_metadata(
     validate_external_record("Decision", decision)
     metadata = {key: deepcopy(value) for key, value in decision.items() if key != "rationale"}
     metadata.update(
-        schema_version="1.0-candidate",
+        schema_version="2.0-candidate" if decision["schema_version"] == "2.0" else "1.0-candidate",
         rationale_ref=deepcopy(rationale_ref),
         rationale_access_envelope_id=str(rationale_access_envelope_id),
         rationale_retention_policy_version_id=str(rationale_retention_policy_version_id),
@@ -65,6 +65,8 @@ def review_decision_wire_record(*, metadata, rationale_bytes):
         raise ValidationError("PRD_RATIONALE_ENCODING_INVALID", code="PRD_RATIONALE_ENCODING_INVALID") from None
     require_metadata(encode_review_rationale(rationale) == rationale_bytes, "PRD_RATIONALE_OBJECT_MISMATCH")
     decision = {key: deepcopy(value) for key, value in metadata.items() if key not in RATIONALE_METADATA_FIELDS}
-    decision.update(schema_version="1.0", rationale=rationale)
+    decision.update(
+        schema_version="2.0" if metadata["schema_version"] == "2.0-candidate" else "1.0", rationale=rationale
+    )
     validate_external_record("Decision", decision)
     return decision
