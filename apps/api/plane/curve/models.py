@@ -1424,3 +1424,4 @@ from .prd_models import (  # noqa: E402,F401
 from .prd_checkpoint_models import DocumentCheckpoint  # noqa: E402,F401
 from .prd_review_models import PrdReviewDecision  # noqa: E402,F401
 from .prd_command_models import PrdAcceptedCommand  # noqa: E402,F401
+from .prd_readiness_models import PrdReadinessRecord  # noqa: E402,F401
