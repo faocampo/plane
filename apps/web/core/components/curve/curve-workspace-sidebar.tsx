@@ -8,7 +8,18 @@ import { type ReactNode } from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Activity, Blocks, FileCheck2, Gauge, Layers3, ListTodo, Route, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Activity,
+  Blocks,
+  FileCheck2,
+  FolderKanban,
+  Gauge,
+  Layers3,
+  ListTodo,
+  Route,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 
 import {
@@ -103,6 +114,7 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   const { toggleSidebar } = useAppTheme();
   const foundationHref = `/${slug}/curve`;
   const initiativesHref = `${foundationHref}/initiatives`;
+  const projectsHref = `${foundationHref}/projects`;
   const closeMobileNavigation = () => {
     if (window.innerWidth < 768) toggleSidebar(true);
   };
@@ -158,7 +170,13 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
 
         <CurveNavSection label="Work management" badge="Plane-backed">
           <SidebarItemBase item={WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS.home} />
-          <SidebarItemBase item={WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS.projects} />
+          <CurveLink
+            href={projectsHref}
+            label="Projects"
+            icon={<FolderKanban className="size-4" />}
+            active={pathname === projectsHref || pathname.startsWith(`${projectsHref}/`)}
+            onNavigate={closeMobileNavigation}
+          />
           <SidebarItemBase item={WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS["your-work"]} />
           <SidebarItemBase item={WORKSPACE_SIDEBAR_DYNAMIC_NAVIGATION_ITEMS.views} additionalStaticItems={["views"]} />
           <SidebarItemBase

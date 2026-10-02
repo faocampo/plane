@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { CurveWorkspaceSidebar } from "@/components/curve/curve-workspace-sidebar";
@@ -74,6 +74,17 @@ vi.mock("@/hooks/use-curve-workspace-shell", () => ({
 vi.mock("@/app/(all)/[workspaceSlug]/(projects)/star-us-link", () => ({ StarUsOnGitHubLink: () => null }));
 
 describe("Curve navigation placement", () => {
+  it("routes Work management Projects to the Curve outlook", () => {
+    render(<CurveWorkspaceSidebar />);
+    const workManagement = screen.getByRole("region", { name: "Work management" });
+    expect(within(workManagement).getByRole("link", { name: "Projects" })).toHaveAttribute(
+      "href",
+      "/example-workspace/curve/projects"
+    );
+    expect(screen.getAllByRole("link", { name: "Projects" })).toHaveLength(1);
+    expect(workManagement).toHaveTextContent("Plane-backed");
+  });
+
   it("keeps the workspace selector in the bottom area of the Curve sidebar", () => {
     render(<CurveWorkspaceSidebar />);
 
