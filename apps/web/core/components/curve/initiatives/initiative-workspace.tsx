@@ -21,8 +21,10 @@ import type {
 } from "@plane/types";
 import { Button } from "@plane/ui";
 import { calculateTimeAgo, cn } from "@plane/utils";
+import { useUser } from "@/hooks/store/user";
 import { useCurveInitiatives } from "@/hooks/use-curve-initiatives";
 import { InitiativeCreateDrawer } from "./initiative-create-drawer";
+import { PrdReviewPanel } from "./prd-review-panel";
 import {
   InitiativeAvatar,
   InitiativeRiskBadge,
@@ -154,6 +156,8 @@ function InitiativeRow({
 }
 
 function InitiativeDetail({
+  workspaceSlug,
+  viewerId,
   initiative,
   product,
   members,
@@ -163,6 +167,8 @@ function InitiativeDetail({
   onEdit,
   onAction,
 }: {
+  workspaceSlug: string;
+  viewerId?: string;
   initiative: ICurveInitiative;
   product?: ICurveProduct;
   members: Map<string, IWorkspaceMember>;
@@ -217,7 +223,7 @@ function InitiativeDetail({
                   ? "The last confirmed lifecycle stage is preserved. A reason is required to resume."
                   : initiative.state === "CANCELLED"
                     ? "Its history remains available. Cancellation cannot be reversed."
-                    : "This view shows the confirmed Initiative state. It does not load document readiness or approval decisions."}
+                    : "Check the authorized PRD context below. Lifecycle state alone does not establish a current approval."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
             {isDraft && (
@@ -263,29 +269,7 @@ function InitiativeDetail({
             {initiative.description.body}
           </p>
         </section>
-        <section aria-labelledby="curve-initiative-documents-title" className="border-t border-subtle pt-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 id="curve-initiative-documents-title" className="text-13 font-semibold text-primary">
-              Documents and PRD approval
-            </h3>
-            <span className="text-12 text-secondary">Readiness not checked</span>
-          </div>
-          <p className="mt-2 max-w-prose text-12 leading-5 text-secondary">
-            Document submission and approval are not connected to this view yet. Document contents, access and approval
-            decisions cannot be verified here.
-          </p>
-          <details className="mt-3">
-            <summary className="focus-visible:outline-accent-primary cursor-pointer rounded-sm py-1 text-12 font-medium text-accent-primary focus-visible:outline-2">
-              What is needed for PRD review?
-            </summary>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-12 leading-5 text-secondary">
-              <li>A current Idea Brief and PRD with requirements and linked acceptance criteria.</li>
-              <li>Resolved blockers and owned assumptions with validation plans.</li>
-              <li>An immutable document version and supporting evidence the assigned Product Approver can access.</li>
-              <li>A fresh readiness check for that exact version. Readiness alone does not mean approval.</li>
-            </ul>
-          </details>
-        </section>
+        <PrdReviewPanel workspaceSlug={workspaceSlug} initiative={initiative} viewerId={viewerId} />
         <section aria-labelledby="curve-initiative-gates-title" className="border-t border-subtle pt-5">
           <h3 id="curve-initiative-gates-title" className="text-13 font-semibold text-primary">
             Review responsibilities
@@ -564,6 +548,8 @@ function InitiativeEditDialog({
 }
 
 export const InitiativeWorkspace = observer(function InitiativeWorkspace({ workspaceSlug }: { workspaceSlug: string }) {
+  const userStore = useUser();
+  const viewerId = userStore.isAuthenticated ? userStore.data?.id : undefined;
   const {
     products,
     initiatives,
@@ -943,6 +929,8 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
         <section className="min-w-0" aria-label="Selected Initiative">
           {visibleSelected ? (
             <InitiativeDetail
+              workspaceSlug={workspaceSlug}
+              viewerId={viewerId}
               key={visibleSelected.id}
               initiative={visibleSelected}
               product={productMap.get(visibleSelected.product_id)}

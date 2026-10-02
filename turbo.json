@@ -88,6 +88,11 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": []
+    },
+    "@plane/services#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", "src/curve/prd-review-context.validator.mjs"]
     }
   }
 }

@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0-candidate",
+  "policy_key": "CURVE_PRD_METADATA_READ_POLICY",
+  "policy_version": 1,
+  "action": "CURVE.PRD.METADATA_READ",
+  "default_effect": "DENY",
+  "explicit_deny_wins": true,
+  "allowed_actor_type": "HUMAN",
+  "active_workspace_membership_required": true,
+  "allowed_classifications": [
+    "INTERNAL",
+    "CONFIDENTIAL",
+    "RESTRICTED"
+  ],
+  "owner_or_admin_bypass": false,
+  "required_current_checks": [
+    "membership",
+    "classification_access",
+    "object_metadata",
+    "source_metadata",
+    "evidence_metadata"
+  ],
+  "exact_resource": [
+    "workspace_id",
+    "initiative_id",
+    "initiative_version",
+    "actor_id"
+  ],
+  "permitted_projection": "PRD_REVIEW_CONTEXT_METADATA_V1",
+  "protected_content": "NO_BODY_OR_RATIONALE",
+  "source_urls": false,
+  "mutation_authority": false,
+  "runtime_activation": false
+}

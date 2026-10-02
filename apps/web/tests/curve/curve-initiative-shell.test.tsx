@@ -19,6 +19,12 @@ vi.mock("@/hooks/use-curve-initiatives", () => {
   return { useCurveInitiatives: useCurveInitiativesMock };
 });
 
+vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ isAuthenticated: true, data: { id: "viewer-1" } }) }));
+
+vi.mock("@/services/curve.service", () => ({
+  default: { retrievePrdReviewContext: vi.fn().mockRejectedValue(new Error("Unavailable")) },
+}));
+
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
     <a href={href} {...props}>
@@ -438,10 +444,8 @@ describe("Curve Initiative shell", () => {
 
   it("shows unverified readiness honestly and explains review responsibilities", async () => {
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
-    expect(screen.getByText("Readiness not checked")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Document contents, access and approval decisions cannot be verified here/)
-    ).toBeInTheDocument();
+    expect(await screen.findByText("PRD context unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/Access or current context could not be verified/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Approve|Submit PRD/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Active assignment")).not.toBeInTheDocument();
     expect(screen.getByText(/Assignments identify reviewers/)).toBeInTheDocument();
@@ -455,7 +459,7 @@ describe("Curve Initiative shell", () => {
     const linked = { ...initiatives[0], first_external_resource_at: "2026-09-01T12:00:00Z" };
     useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, initiatives: [linked], selectedInitiative: linked });
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
-    expect(screen.getByText("Readiness not checked")).toBeInTheDocument();
+    expect(await screen.findByText("PRD context unavailable")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Initiative details and activity"));
     expect(screen.getByText("Resource recorded; document access not verified")).toBeVisible();
   });

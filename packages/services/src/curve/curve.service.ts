@@ -7,6 +7,7 @@
 import { API_BASE_URL } from "@plane/constants";
 import type {
   ICurveInitiativeCreateRequest,
+  ICurvePrdReviewContext,
   ICurveInitiativeDraftUpdateRequest,
   ICurveInitiativeListFilters,
   ICurveInitiativeMutationResult,
@@ -21,6 +22,7 @@ import type {
   TCurveOperationType,
 } from "@plane/types";
 import { APIService } from "../api.service";
+import { decodeCurvePrdReviewContext } from "./prd-review-context";
 
 const normalizeCurveEtag = (etag: unknown): string => {
   if (typeof etag !== "string" || etag.length === 0) throw new Error("Curve ETag is unavailable");
@@ -30,6 +32,18 @@ const normalizeCurveEtag = (etag: unknown): string => {
 export class CurveService extends APIService {
   constructor(BASE_URL?: string) {
     super(BASE_URL || API_BASE_URL);
+  }
+
+  async retrievePrdReviewContext(
+    workspaceSlug: string,
+    scope: { workspaceId: string; initiativeId: string; initiativeVersion: number },
+    signal?: AbortSignal
+  ): Promise<ICurvePrdReviewContext> {
+    const response = await this.get(
+      `/api/v1/workspaces/${encodeURIComponent(workspaceSlug)}/curve/initiatives/${encodeURIComponent(scope.initiativeId)}/prd/review-context/`,
+      { signal, headers: { "Cache-Control": "no-cache" } }
+    );
+    return decodeCurvePrdReviewContext(response.data, scope);
   }
 
   private async requestCSRFToken(): Promise<string> {

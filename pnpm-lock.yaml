@@ -246,6 +246,12 @@ catalogs:
     '@vitest/coverage-v8':
       specifier: ^4.1.8
       version: 4.1.8
+    ajv:
+      specifier: 8.18.0
+      version: 8.18.0
+    ajv-formats:
+      specifier: 3.0.1
+      version: 3.0.1
     ast-types:
       specifier: 0.14.2
       version: 0.14.2
@@ -1661,6 +1667,12 @@ importers:
       '@plane/types':
         specifier: workspace:*
         version: link:../types
+      ajv:
+        specifier: 'catalog:'
+        version: 8.18.0
+      ajv-formats:
+        specifier: 'catalog:'
+        version: 3.0.1(ajv@8.18.0)
       axios:
         specifier: 1.18.1
         version: 1.18.1

@@ -140,6 +140,11 @@ CURVE_PROVIDER_REGISTRY_ENABLED = os.environ.get("CURVE_PROVIDER_REGISTRY_ENABLE
     "yes",
     "on",
 }
+# Metadata reads have their own policy and trusted adapter. Configuration alone
+# never enables PRD commands or activates a source/storage provider.
+CURVE_PRD_READ_ENABLED = False
+CURVE_PRD_READ_RUNTIME = None
+
 CURVE_SSE_REPLAY_LIMIT = max(1, min(1000, int(os.environ.get("CURVE_SSE_REPLAY_LIMIT", "100"))))
 CURVE_SSE_POLL_INTERVAL_SECONDS = max(
     0.1,

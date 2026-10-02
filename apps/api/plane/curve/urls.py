@@ -4,6 +4,7 @@
 
 from django.urls import path
 from plane.curve.prd_views import CurvePrdCommandEndpoint
+from plane.curve.prd_read_views import CurvePrdReviewContextEndpoint
 
 from plane.curve.views import (
     CurveEventStreamEndpoint,
@@ -27,6 +28,11 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/review-context/",
+        CurvePrdReviewContextEndpoint.as_view(),
+        name="curve-prd-review-context",
+    ),
     path(
         "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/submit",
         CurvePrdCommandEndpoint.as_view(route="submit"),

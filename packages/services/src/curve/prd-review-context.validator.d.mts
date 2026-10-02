@@ -3,7 +3,5 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-
-export * from "./curve.service";
-
-export * from "./prd-review-context";
+import type { ICurvePrdReviewContext } from "@plane/types";
+export default function validate(input: unknown): input is ICurvePrdReviewContext;
