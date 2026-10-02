@@ -6,11 +6,30 @@
 
 import type {
   IWorkspaceMember,
+  TCurveGateType,
   TCurveInitiativeBusinessIntent,
   TCurveInitiativeRiskTier,
   TCurveInitiativeState,
 } from "@plane/types";
 import { cn } from "@plane/utils";
+
+export const initiativeApproverRoles: Array<{ gate: TCurveGateType; label: string; responsibility: string }> = [
+  {
+    gate: "PRD_APPROVAL",
+    label: "Product Approver",
+    responsibility: "Reviews the exact PRD and its supporting evidence.",
+  },
+  {
+    gate: "PLAN_APPROVAL",
+    label: "Technical Approver",
+    responsibility: "Reviews the implementation plan before execution.",
+  },
+  {
+    gate: "CODE_READINESS",
+    label: "Code Approver",
+    responsibility: "Reviews code readiness before repository review.",
+  },
+];
 
 export const initiativeStateLabel: Record<TCurveInitiativeState, string> = {
   DRAFT: "Draft",

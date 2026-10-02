@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { type FormEvent, useMemo, useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 import { Dialog, EDialogWidth } from "@plane/propel/dialog";
@@ -17,8 +17,7 @@ import type {
 } from "@plane/types";
 import { Button } from "@plane/ui";
 import { cn } from "@plane/utils";
-import { memberDisplayName } from "./initiative-ui";
-import { initiativeBusinessIntentOptions } from "./initiative-ui";
+import { initiativeApproverRoles, initiativeBusinessIntentOptions, memberDisplayName } from "./initiative-ui";
 
 type TFormField =
   | "title"
@@ -28,18 +27,14 @@ type TFormField =
   | "productApprover"
   | "technicalApprover"
   | "codeApprover";
-
 type TFormErrors = Partial<Record<TFormField, string>>;
-
+const approverFields = ["productApprover", "technicalApprover", "codeApprover"] as const;
 const inputClassName =
   "mt-1 min-h-10 w-full rounded-md border border-subtle bg-surface-1 px-3 py-2 text-13 text-primary outline-none transition focus:border-accent-primary focus:ring-2 focus:ring-accent-subtle disabled:cursor-not-allowed disabled:bg-layer-1 disabled:text-tertiary";
-
 const fieldLabelClassName = "text-12 font-semibold text-primary";
 const errorTextClassName = "mt-1 text-12 font-medium text-danger-primary";
 const fieldClassName = (hasError: boolean) =>
   cn(inputClassName, hasError && "border-danger-strong focus:border-danger-strong focus:ring-danger-subtle");
-
-const defaultApproverIds = (members: IWorkspaceMember[]) => [0, 1, 2].map((index) => members[index]?.member.id ?? "");
 
 export function InitiativeCreateDrawer({
   open,
@@ -56,362 +51,404 @@ export function InitiativeCreateDrawer({
   onClose: () => void;
   onCreate: (payload: ICurveInitiativeCreateRequest) => Promise<boolean>;
 }) {
-  const initialApprovers = useMemo(() => defaultApproverIds(members), [members]);
+  const [step, setStep] = useState<"definition" | "reviewers">("definition");
   const [title, setTitle] = useState("");
-  const [productId, setProductId] = useState(products[0]?.id ?? "");
+  const [productId, setProductId] = useState(products.length === 1 ? products[0].id : "");
   const [keyword, setKeyword] = useState("");
+  const [keywordEdited, setKeywordEdited] = useState(false);
   const [description, setDescription] = useState("");
   const [riskTier, setRiskTier] = useState<TCurveInitiativeRiskTier>("STANDARD");
   const [businessIntent, setBusinessIntent] = useState<TCurveInitiativeBusinessIntent | "">("");
-  const [approverIds, setApproverIds] = useState(initialApprovers);
+  const [approverIds, setApproverIds] = useState(["", "", ""]);
   const [errors, setErrors] = useState<TFormErrors>({});
   const [submissionFailed, setSubmissionFailed] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const inFlight = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  const productRef = useRef<HTMLSelectElement>(null);
-  const keywordRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
-  const approverRefs = [
-    useRef<HTMLSelectElement>(null),
-    useRef<HTMLSelectElement>(null),
-    useRef<HTMLSelectElement>(null),
-  ];
+  const stepTitleRef = useRef<HTMLHeadingElement>(null);
+  const busy = isSubmitting || pending;
+  const selectedBusinessIntent = initiativeBusinessIntentOptions.find(({ value }) => value === businessIntent);
 
   const focusField = (field: TFormField) => {
-    const target =
-      field === "title"
-        ? titleRef.current
-        : field === "product"
-          ? productRef.current
-          : field === "keyword"
-            ? keywordRef.current
-            : field === "description"
-              ? descriptionRef.current
-              : field === "productApprover"
-                ? approverRefs[0].current
-                : field === "technicalApprover"
-                  ? approverRefs[1].current
-                  : approverRefs[2].current;
-    target?.focus();
+    window.setTimeout(() => formRef.current?.querySelector<HTMLElement>(`#curve-initiative-${field}`)?.focus(), 0);
   };
-
-  const validate = () => {
-    const nextErrors: TFormErrors = {};
-    if (!title.trim()) nextErrors.title = "Enter a title.";
-    if (!productId) nextErrors.product = "Choose an active Product.";
+  const definitionErrors = (): TFormErrors => {
+    const result: TFormErrors = {};
+    if (!title.trim()) result.title = "Enter a title.";
+    if (!products.some(({ id }) => id === productId)) result.product = "Choose an active Product.";
+    if (!description.trim()) result.description = "Describe the problem and intended outcome.";
     if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,49}$/.test(keyword))
-      nextErrors.keyword = "Use 1–50 letters, numbers, or hyphens, starting with a letter or number.";
-    if (!description.trim()) nextErrors.description = "Describe the problem and intended outcome.";
-
-    const approverFields: TFormField[] = ["productApprover", "technicalApprover", "codeApprover"];
-    approverIds.forEach((approverId, index) => {
-      if (!approverId) nextErrors[approverFields[index] as TFormField] = "Choose an active human.";
+      result.keyword = "Use 1–50 letters, numbers, or hyphens, starting with a letter or number.";
+    return result;
+  };
+  const showErrors = (nextErrors: TFormErrors) => {
+    setErrors(nextErrors);
+    const first = Object.keys(nextErrors)[0] as TFormField | undefined;
+    if (!first) return false;
+    if (![...approverFields].includes(first as (typeof approverFields)[number])) setStep("definition");
+    if (nextErrors.keyword) setDetailsOpen(true);
+    focusField(first);
+    return true;
+  };
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (busy || inFlight.current) return;
+    setSubmissionFailed(false);
+    const nextErrors = definitionErrors();
+    if (step === "definition") {
+      if (showErrors(nextErrors)) return;
+      setStep("reviewers");
+      window.setTimeout(() => {
+        stepTitleRef.current?.focus({ preventScroll: true });
+        if (panelRef.current) panelRef.current.scrollTop = 0;
+      }, 0);
+      return;
+    }
+    approverIds.forEach((id, index) => {
+      if (!members.some(({ member }) => member.id === id))
+        nextErrors[approverFields[index]] = "Choose an active human.";
     });
-    if (riskTier !== "LOW" && new Set(approverIds.filter(Boolean)).size !== 3) {
+    if (riskTier !== "LOW" && approverIds.every(Boolean) && new Set(approverIds).size !== 3) {
       approverFields.forEach((field) => {
         nextErrors[field] = "Choose three distinct active humans for Standard or High risk.";
       });
     }
-
-    setErrors(nextErrors);
-    const firstError = Object.keys(nextErrors)[0] as TFormField | undefined;
-    if (firstError) focusField(firstError);
-    return Object.keys(nextErrors).length === 0;
+    if (showErrors(nextErrors)) return;
+    inFlight.current = true;
+    setPending(true);
+    try {
+      const succeeded = await onCreate({
+        product_id: productId,
+        mode: "STANDALONE",
+        roadmap_item_id: null,
+        keyword,
+        title: title.trim(),
+        description: { schema_version: "1.0", format: "MARKDOWN", body: description.trim() },
+        risk_tier: riskTier,
+        business_intent: businessIntent || null,
+        gate_assignments: initiativeApproverRoles.map((role, index) => ({
+          gate_type: role.gate,
+          approver_user_id: approverIds[index],
+        })),
+      });
+      if (succeeded) onClose();
+      else setSubmissionFailed(true);
+    } catch {
+      setSubmissionFailed(true);
+    } finally {
+      inFlight.current = false;
+      setPending(false);
+    }
   };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setSubmissionFailed(false);
-    if (!validate()) return;
-    const succeeded = await onCreate({
-      product_id: productId,
-      mode: "STANDALONE",
-      roadmap_item_id: null,
-      keyword,
-      title: title.trim(),
-      description: {
-        schema_version: "1.0",
-        format: "MARKDOWN",
-        body: description.trim(),
-      },
-      risk_tier: riskTier,
-      business_intent: businessIntent || null,
-      gate_assignments: [
-        { gate_type: "PRD_APPROVAL", approver_user_id: approverIds[0] ?? "" },
-        { gate_type: "PLAN_APPROVAL", approver_user_id: approverIds[1] ?? "" },
-        { gate_type: "CODE_READINESS", approver_user_id: approverIds[2] ?? "" },
-      ],
-    });
-    if (succeeded) onClose();
-    else setSubmissionFailed(true);
-  };
-
-  const setApprover = (index: number, value: string) => {
-    setApproverIds((current) =>
-      current.map((approverId, currentIndex) => (currentIndex === index ? value : approverId))
-    );
-    setErrors((current) => ({
-      ...current,
-      productApprover: undefined,
-      technicalApprover: undefined,
-      codeApprover: undefined,
-    }));
-  };
-
-  const approverFields: Array<{ label: string; key: TFormField }> = [
-    { label: "Product Approver", key: "productApprover" },
-    { label: "Technical Approver", key: "technicalApprover" },
-    { label: "Code Approver", key: "codeApprover" },
-  ];
-  const errorCount = Object.keys(errors).filter((field) => !!errors[field as TFormField]).length;
-  const selectedBusinessIntent = initiativeBusinessIntentOptions.find(({ value }) => value === businessIntent);
+  const errorFor = (field: TFormField) =>
+    errors[field] ? (
+      <p id={`curve-initiative-${field}-error`} className={errorTextClassName}>
+        {errors[field]}
+      </p>
+    ) : null;
+  const clearError = (field: TFormField) => setErrors((current) => ({ ...current, [field]: undefined }));
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !busy && onClose()}>
       <Dialog.Panel
+        ref={panelRef}
         initialFocus={titleRef}
         width={EDialogWidth.XXL}
         className="!top-0 !right-0 !bottom-0 !left-auto h-dvh w-full !max-w-none !translate-x-0 !translate-y-0 overflow-y-auto rounded-none border-y-0 border-r-0 sm:w-[36rem]"
       >
-        <form noValidate onSubmit={handleSubmit} className="flex min-h-full flex-col">
-          <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-subtle bg-surface-1 px-5 py-5 sm:px-6">
-            <div>
-              <Dialog.Title className="text-20 leading-6">New Initiative</Dialog.Title>
-              <p className="mt-1 text-12 text-secondary">
-                Create one governed standalone Initiative under an active Product.
-              </p>
+        <form ref={formRef} noValidate onSubmit={handleSubmit} className="flex min-h-full flex-col" aria-busy={busy}>
+          <header className="sticky top-0 z-10 border-b border-subtle bg-surface-1 px-5 py-5 sm:px-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Dialog.Title className="text-20 leading-6">New Initiative</Dialog.Title>
+                <p className="mt-1 text-12 text-secondary">Define an outcome, then choose who reviews it.</p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={busy}
+                className="focus-visible:outline-accent-primary grid size-10 shrink-0 place-items-center rounded-md text-secondary hover:bg-layer-1 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50"
+                aria-label="Close new Initiative"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="focus-visible:outline-accent-primary grid size-10 shrink-0 place-items-center rounded-md text-secondary hover:bg-layer-1 focus-visible:outline-2 focus-visible:outline-offset-2"
-              aria-label="Close new Initiative"
-            >
-              <X className="size-4" aria-hidden="true" />
-            </button>
-          </div>
-
-          <div className="flex-1 space-y-5 px-5 py-5 sm:px-6">
-            <p className="sr-only" role="alert" aria-live="assertive">
-              {errorCount > 0 ? `Review ${errorCount} invalid ${errorCount === 1 ? "field" : "fields"}.` : ""}
+            <ol className="mt-5 flex gap-6 text-12" aria-label="Creation steps">
+              <li
+                aria-current={step === "definition" ? "step" : undefined}
+                className={step === "definition" ? "font-semibold text-primary" : "text-secondary"}
+              >
+                1. Define outcome
+              </li>
+              <li
+                aria-current={step === "reviewers" ? "step" : undefined}
+                className={step === "reviewers" ? "font-semibold text-primary" : "text-secondary"}
+              >
+                2. Assign reviewers
+              </li>
+            </ol>
+          </header>
+          <div className="flex-1 space-y-5 px-5 py-6 sm:px-6">
+            <p className="sr-only" role="alert">
+              {Object.values(errors).some(Boolean) ? "Review the highlighted fields." : ""}
             </p>
             {submissionFailed && (
               <div
                 role="alert"
                 className="rounded-md border border-danger-subtle bg-danger-subtle p-3 text-12 text-danger-primary"
               >
-                The Initiative could not be created. Your input remains available; review the message in the workspace
-                and try again.
+                The Initiative could not be created. Your input remains available. Check your connection or refresh the
+                workspace, then try again.
               </div>
             )}
-
-            <div>
-              <label htmlFor="curve-initiative-title" className={fieldLabelClassName}>
-                Title <span className="text-danger-primary">*</span>
-              </label>
-              <input
-                ref={titleRef}
-                id="curve-initiative-title"
-                value={title}
-                onChange={(event) => {
-                  setTitle(event.target.value);
-                  setErrors((current) => ({ ...current, title: undefined }));
-                }}
-                className={fieldClassName(!!errors.title)}
-                maxLength={255}
-                aria-invalid={!!errors.title}
-                aria-describedby={errors.title ? "curve-initiative-title-error" : undefined}
-              />
-              {errors.title && (
-                <p id="curve-initiative-title-error" className={errorTextClassName}>
-                  {errors.title}
+            {step === "definition" ? (
+              <>
+                <p className="text-12 text-secondary">
+                  Title, Product and outcome are required. You can refine this Draft before alignment.
                 </p>
-              )}
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="curve-initiative-product" className={fieldLabelClassName}>
-                  Product <span className="text-danger-primary">*</span>
-                </label>
-                <select
-                  ref={productRef}
-                  id="curve-initiative-product"
-                  value={productId}
-                  onChange={(event) => {
-                    setProductId(event.target.value);
-                    setErrors((current) => ({ ...current, product: undefined }));
-                  }}
-                  className={fieldClassName(!!errors.product)}
-                  aria-invalid={!!errors.product}
-                  aria-describedby={errors.product ? "curve-initiative-product-error" : undefined}
-                >
-                  <option value="">Choose a Product</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.product && (
-                  <p id="curve-initiative-product-error" className={errorTextClassName}>
-                    {errors.product}
+                <div>
+                  <label htmlFor="curve-initiative-title" className={fieldLabelClassName}>
+                    Title
+                  </label>
+                  <input
+                    ref={titleRef}
+                    id="curve-initiative-title"
+                    required
+                    value={title}
+                    onChange={(event) => {
+                      setTitle(event.target.value);
+                      clearError("title");
+                      if (!keywordEdited)
+                        setKeyword(
+                          event.target.value
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, "-")
+                            .replace(/^-|-$/g, "")
+                            .slice(0, 50)
+                        );
+                    }}
+                    className={fieldClassName(!!errors.title)}
+                    maxLength={255}
+                    aria-invalid={!!errors.title}
+                    aria-describedby={errors.title ? "curve-initiative-title-error" : undefined}
+                  />
+                  {errorFor("title")}
+                </div>
+                <div>
+                  <label htmlFor="curve-initiative-product" className={fieldLabelClassName}>
+                    Product
+                  </label>
+                  <select
+                    id="curve-initiative-product"
+                    required
+                    value={productId}
+                    onChange={(event) => {
+                      setProductId(event.target.value);
+                      clearError("product");
+                    }}
+                    className={fieldClassName(!!errors.product)}
+                    aria-invalid={!!errors.product}
+                    aria-describedby={errors.product ? "curve-initiative-product-error" : undefined}
+                  >
+                    <option value="">Choose a Product</option>
+                    {products.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errorFor("product")}
+                </div>
+                <div>
+                  <label htmlFor="curve-initiative-description" className={fieldLabelClassName}>
+                    Problem and intended outcome
+                  </label>
+                  <textarea
+                    id="curve-initiative-description"
+                    required
+                    value={description}
+                    onChange={(event) => {
+                      setDescription(event.target.value);
+                      clearError("description");
+                    }}
+                    className={`${fieldClassName(!!errors.description)} min-h-32 resize-y`}
+                    maxLength={20000}
+                    aria-invalid={!!errors.description}
+                    aria-describedby={
+                      errors.description ? "curve-initiative-description-error" : "curve-initiative-description-help"
+                    }
+                  />
+                  <p id="curve-initiative-description-help" className="mt-1 text-12 leading-5 text-secondary">
+                    What needs to change, and what would a good result look like?
                   </p>
-                )}
-              </div>
-              <div>
-                <label htmlFor="curve-initiative-keyword" className={fieldLabelClassName}>
-                  Keyword <span className="text-danger-primary">*</span>
-                </label>
-                <input
-                  ref={keywordRef}
-                  id="curve-initiative-keyword"
-                  value={keyword}
-                  onChange={(event) => {
-                    setKeyword(event.target.value);
-                    setErrors((current) => ({ ...current, keyword: undefined }));
-                  }}
-                  className={fieldClassName(!!errors.keyword)}
-                  maxLength={50}
-                  aria-invalid={!!errors.keyword}
-                  aria-describedby={errors.keyword ? "curve-initiative-keyword-error" : undefined}
-                />
-                {errors.keyword && (
-                  <p id="curve-initiative-keyword-error" className={errorTextClassName}>
-                    {errors.keyword}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="curve-initiative-risk" className={fieldLabelClassName}>
-                  Risk tier
-                </label>
-                <select
-                  id="curve-initiative-risk"
-                  value={riskTier}
-                  onChange={(event) => {
-                    setRiskTier(event.target.value as TCurveInitiativeRiskTier);
-                    setErrors((current) => ({
-                      ...current,
-                      productApprover: undefined,
-                      technicalApprover: undefined,
-                      codeApprover: undefined,
-                    }));
-                  }}
-                  className={inputClassName}
+                  {errorFor("description")}
+                </div>
+                <details
+                  open={detailsOpen}
+                  onToggle={(event) => setDetailsOpen(event.currentTarget.open)}
+                  className="border-t border-subtle pt-4"
                 >
-                  <option value="LOW">Low</option>
-                  <option value="STANDARD">Standard</option>
-                  <option value="HIGH">High</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="curve-initiative-mode" className={fieldLabelClassName}>
-                  Mode
-                </label>
-                <select id="curve-initiative-mode" value="STANDALONE" disabled className={inputClassName}>
-                  <option value="STANDALONE">Standalone</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="curve-initiative-business-intent" className={fieldLabelClassName}>
-                Business intent
-              </label>
-              <select
-                id="curve-initiative-business-intent"
-                value={businessIntent}
-                onChange={(event) => setBusinessIntent(event.target.value as TCurveInitiativeBusinessIntent | "")}
-                className={inputClassName}
-                aria-describedby="curve-initiative-business-intent-help"
-              >
-                <option value="">Decide during Draft</option>
-                {initiativeBusinessIntentOptions.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <p id="curve-initiative-business-intent-help" className="mt-1 text-11 leading-5 text-secondary">
-                {selectedBusinessIntent?.description ?? "Choose during Draft; an intent is required before alignment."}
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="curve-initiative-description" className={fieldLabelClassName}>
-                Problem and intended outcome <span className="text-danger-primary">*</span>
-              </label>
-              <textarea
-                ref={descriptionRef}
-                id="curve-initiative-description"
-                value={description}
-                onChange={(event) => {
-                  setDescription(event.target.value);
-                  setErrors((current) => ({ ...current, description: undefined }));
-                }}
-                className={`${fieldClassName(!!errors.description)} min-h-32 resize-y`}
-                maxLength={20000}
-                aria-invalid={!!errors.description}
-                aria-describedby={errors.description ? "curve-initiative-description-error" : undefined}
-              />
-              {errors.description && (
-                <p id="curve-initiative-description-error" className={errorTextClassName}>
-                  {errors.description}
-                </p>
-              )}
-            </div>
-
-            <fieldset className="space-y-4">
-              <legend className="text-13 font-semibold text-primary">Mandatory human gates</legend>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {approverFields.map(({ label, key }, index) => (
-                  <div key={key} className={index === 2 ? "sm:col-span-2" : undefined}>
-                    <label htmlFor={`curve-initiative-${key}`} className={fieldLabelClassName}>
-                      {label}
-                    </label>
-                    <select
-                      ref={approverRefs[index]}
-                      id={`curve-initiative-${key}`}
-                      value={approverIds[index] ?? ""}
-                      onChange={(event) => setApprover(index, event.target.value)}
-                      className={fieldClassName(!!errors[key])}
-                      aria-invalid={!!errors[key]}
-                      aria-describedby={errors[key] ? `curve-initiative-${key}-error` : undefined}
-                    >
-                      <option value="">Choose an active human</option>
-                      {members.map((member) => (
-                        <option key={member.member.id} value={member.member.id}>
-                          {memberDisplayName(member)}
-                        </option>
-                      ))}
-                    </select>
-                    {errors[key] && (
-                      <p id={`curve-initiative-${key}-error`} className={errorTextClassName}>
-                        {errors[key]}
+                  <summary className="focus-visible:outline-accent-primary cursor-pointer rounded-sm py-1 text-12 font-medium text-primary focus-visible:outline-2">
+                    Keyword and business intent
+                  </summary>
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <label htmlFor="curve-initiative-keyword" className={fieldLabelClassName}>
+                        Keyword
+                      </label>
+                      <input
+                        id="curve-initiative-keyword"
+                        required
+                        value={keyword}
+                        onChange={(event) => {
+                          setKeyword(event.target.value);
+                          setKeywordEdited(true);
+                          clearError("keyword");
+                        }}
+                        className={fieldClassName(!!errors.keyword)}
+                        maxLength={50}
+                        aria-invalid={!!errors.keyword}
+                        aria-describedby={
+                          errors.keyword ? "curve-initiative-keyword-error" : "curve-initiative-keyword-help"
+                        }
+                      />
+                      <p id="curve-initiative-keyword-help" className="mt-1 text-12 text-secondary">
+                        Suggested from the title. Use letters, numbers and hyphens.
                       </p>
-                    )}
+                      {errorFor("keyword")}
+                    </div>
+                    <div>
+                      <label htmlFor="curve-initiative-business-intent" className={fieldLabelClassName}>
+                        Business intent
+                      </label>
+                      <select
+                        id="curve-initiative-business-intent"
+                        value={businessIntent}
+                        onChange={(event) =>
+                          setBusinessIntent(event.target.value as TCurveInitiativeBusinessIntent | "")
+                        }
+                        className={inputClassName}
+                        aria-describedby="curve-initiative-business-intent-help"
+                      >
+                        <option value="">Decide during Draft</option>
+                        {initiativeBusinessIntentOptions.map(({ value, label }) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                      <p id="curve-initiative-business-intent-help" className="mt-1 text-12 leading-5 text-secondary">
+                        {selectedBusinessIntent?.description ?? "Optional now. Required before starting alignment."}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </fieldset>
-
-            <p className="rounded-md bg-layer-1 p-3 text-11 leading-5 text-secondary">
-              Standard and High risk require three distinct active humans. The backend verifies workspace membership and
-              remains authoritative.
-            </p>
+                </details>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h2 ref={stepTitleRef} tabIndex={-1} className="text-16 font-semibold text-primary outline-none">
+                    Who reviews this Initiative?
+                  </h2>
+                  <p className="mt-2 text-12 leading-5 text-secondary">
+                    Choose a person for each required role. Assigning a reviewer does not approve any work.
+                  </p>
+                  <p className="mt-3 text-13 font-medium break-words text-primary">{title}</p>
+                  <p className="mt-1 text-12 text-secondary">{products.find(({ id }) => id === productId)?.name}</p>
+                </div>
+                <div>
+                  <label htmlFor="curve-initiative-risk" className={fieldLabelClassName}>
+                    Risk tier
+                  </label>
+                  <select
+                    id="curve-initiative-risk"
+                    value={riskTier}
+                    onChange={(event) => {
+                      setRiskTier(event.target.value as TCurveInitiativeRiskTier);
+                      setErrors({});
+                    }}
+                    className={inputClassName}
+                    aria-describedby="curve-initiative-reviewer-rule"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="STANDARD">Standard</option>
+                    <option value="HIGH">High</option>
+                  </select>
+                  <p id="curve-initiative-reviewer-rule" className="mt-2 text-12 leading-5 text-secondary">
+                    {riskTier === "LOW"
+                      ? "One person can hold multiple roles at Low risk. All three roles still need an assignment."
+                      : "Standard and High risk require three different people. Choose each reviewer explicitly."}
+                  </p>
+                </div>
+                <fieldset className="space-y-5 border-t border-subtle pt-5" disabled={busy}>
+                  <legend className="sr-only">Required reviewers</legend>
+                  {initiativeApproverRoles.map((role, index) => {
+                    const field = approverFields[index];
+                    return (
+                      <div key={field}>
+                        <label htmlFor={`curve-initiative-${field}`} className={fieldLabelClassName}>
+                          {role.label}
+                        </label>
+                        <p id={`curve-initiative-${field}-help`} className="mt-1 text-12 text-secondary">
+                          {role.responsibility}
+                        </p>
+                        <select
+                          id={`curve-initiative-${field}`}
+                          required
+                          value={approverIds[index]}
+                          onChange={(event) => {
+                            setApproverIds((current) =>
+                              current.map((id, i) => (i === index ? event.target.value : id))
+                            );
+                            setErrors({});
+                          }}
+                          className={fieldClassName(!!errors[field])}
+                          aria-invalid={!!errors[field]}
+                          aria-describedby={`curve-initiative-${field}-help${errors[field] ? ` curve-initiative-${field}-error` : ""}`}
+                        >
+                          <option value="">Choose a reviewer</option>
+                          {members.map((member) => (
+                            <option key={member.member.id} value={member.member.id}>
+                              {memberDisplayName(member)}
+                            </option>
+                          ))}
+                        </select>
+                        {errorFor(field)}
+                      </div>
+                    );
+                  })}
+                </fieldset>
+                <p className="border-t border-subtle pt-4 text-12 leading-5 text-secondary">
+                  Creates a Draft. Alignment and PRD approval happen separately.
+                </p>
+              </>
+            )}
           </div>
-
-          <div className="sticky bottom-0 flex justify-end gap-2 border-t border-subtle bg-surface-1 px-5 py-4 sm:px-6">
-            <Button type="button" size="lg" variant="neutral-primary" onClick={onClose}>
-              Cancel
+          <footer className="sticky bottom-0 flex flex-wrap items-center justify-end gap-2 border-t border-subtle bg-surface-1 px-5 py-4 sm:px-6">
+            <Button
+              type="button"
+              size="lg"
+              variant="neutral-primary"
+              disabled={busy}
+              onClick={() => {
+                if (step === "reviewers") {
+                  setStep("definition");
+                  window.setTimeout(() => {
+                    titleRef.current?.focus({ preventScroll: true });
+                    if (panelRef.current) panelRef.current.scrollTop = 0;
+                  }, 0);
+                } else onClose();
+              }}
+            >
+              {step === "reviewers" ? "Back" : "Close"}
             </Button>
-            <Button type="submit" size="lg" loading={isSubmitting}>
-              Create Initiative
+            <Button type="submit" size="lg" loading={busy}>
+              {step === "definition" ? "Continue to reviewers" : "Create Initiative"}
             </Button>
-          </div>
+          </footer>
         </form>
       </Dialog.Panel>
     </Dialog>

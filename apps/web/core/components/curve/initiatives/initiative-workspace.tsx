@@ -15,7 +15,6 @@ import type {
   ICurveInitiativeDraftUpdateRequest,
   ICurveProduct,
   IWorkspaceMember,
-  TCurveGateType,
   TCurveInitiativeBusinessIntent,
   TCurveInitiativeListState,
   TCurveInitiativeRiskTier,
@@ -28,16 +27,11 @@ import {
   InitiativeAvatar,
   InitiativeRiskBadge,
   InitiativeStateBadge,
+  initiativeApproverRoles,
   initiativeBusinessIntentLabel,
   initiativeBusinessIntentOptions,
   memberDisplayName,
 } from "./initiative-ui";
-
-const gateLabels: Record<TCurveGateType, string> = {
-  PRD_APPROVAL: "Product Approver",
-  PLAN_APPROVAL: "Technical Approver",
-  CODE_READINESS: "Code Approver",
-};
 
 const filterClassName =
   "min-h-10 rounded-md border border-subtle bg-surface-1 px-3 text-12 text-primary outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-subtle";
@@ -85,7 +79,7 @@ function InitiativeLoading() {
     >
       <div className="h-10 w-64 rounded-md bg-layer-1" />
       <div className="h-24 rounded-xl bg-layer-1" />
-      <div className="grid gap-5 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(16rem,0.65fr)_minmax(0,1.35fr)]">
         <div className="h-96 rounded-xl bg-layer-1" />
         <div className="h-96 rounded-xl bg-layer-1" />
       </div>
@@ -146,7 +140,6 @@ function InitiativeRow({
           <p className="font-mono truncate text-10 text-tertiary">#{initiative.keyword}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <InitiativeRiskBadge risk={initiative.risk_tier} />
-            <span className="text-10 text-tertiary">{initiativeBusinessIntentLabel(initiative.business_intent)}</span>
             <span className="text-10 text-tertiary">Updated {calculateTimeAgo(initiative.updated_at)}</span>
           </div>
         </div>
@@ -180,163 +173,207 @@ function InitiativeDetail({
   onAction: (action: TReasonAction) => void;
 }) {
   const canMutate = !!etag && !isMutating;
-  const canStartAlignment = canMutate && !!initiative.business_intent;
+  const canEdit = initiative.state === "DRAFT" && !initiative.first_external_resource_at;
+  const isDraft = initiative.state === "DRAFT";
+  const nextStep = isDraft
+    ? initiative.business_intent
+      ? "Start alignment"
+      : "Choose a business intent"
+    : initiative.state === "ALIGNING"
+      ? "Prepare for PRD review"
+      : initiative.state === "PAUSED"
+        ? "Resume when the work can continue"
+        : initiative.state === "CANCELLED"
+          ? "This Initiative is cancelled"
+          : initiative.state === "PRD_REVIEW"
+            ? "Review the submitted PRD"
+            : "Check the current lifecycle stage";
   return (
     <article aria-labelledby="curve-initiative-detail-title" className="min-w-0">
       <header className="border-b border-subtle px-5 py-5 sm:px-6">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <InitiativeStateBadge state={initiative.state} />
           <InitiativeRiskBadge risk={initiative.risk_tier} />
         </div>
         <h2
           id="curve-initiative-detail-title"
-          className="mt-3 text-24 leading-8 font-semibold tracking-[-0.02em] text-primary"
+          className="mt-3 text-24 leading-8 font-semibold tracking-[-0.02em] break-words text-primary"
         >
           {initiative.title}
         </h2>
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-11 text-secondary">
-          <span>{product?.name ?? "Product unavailable"}</span>
-          <span aria-hidden="true">•</span>
-          <code className="rounded bg-layer-1 px-1.5 py-0.5 text-10">#{initiative.keyword}</code>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
-          {initiative.state === "DRAFT" && !initiative.first_external_resource_at && (
-            <Button size="lg" variant="neutral-primary" prependIcon={<Pencil />} disabled={!canMutate} onClick={onEdit}>
-              Edit Initiative
-            </Button>
-          )}
-          {initiative.state === "DRAFT" && (
-            <Button size="lg" disabled={!canStartAlignment} loading={isMutating} onClick={onAccept}>
-              Start alignment
-            </Button>
-          )}
-          {(initiative.state === "DRAFT" || initiative.state === "ALIGNING") && (
-            <Button size="lg" variant="neutral-primary" disabled={!canMutate} onClick={() => onAction("pause")}>
-              Pause
-            </Button>
-          )}
-          {initiative.state === "PAUSED" && (
-            <Button size="lg" disabled={!canMutate} loading={isMutating} onClick={() => onAction("resume")}>
-              Resume
-            </Button>
-          )}
-          {initiative.state !== "CANCELLED" && (
-            <Button size="lg" variant="neutral-primary" disabled={!canMutate} onClick={() => onAction("cancel")}>
-              Cancel
-            </Button>
-          )}
-          {!etag && initiative.state !== "CANCELLED" && (
-            <span className="self-center text-11 text-tertiary">Loading current version…</span>
-          )}
-        </div>
-        {initiative.state === "DRAFT" && (
-          <p className="mt-2 max-w-2xl text-11 text-secondary">
-            {initiative.business_intent
-              ? "Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver assignments."
-              : "Choose and save a business intent before starting alignment."}
+        <p className="mt-2 text-12 break-words text-secondary">
+          {product?.name ?? "Product unavailable"} · #{initiative.keyword}
+        </p>
+        <div className="mt-6">
+          <h3 className="text-13 font-semibold text-primary">{nextStep}</h3>
+          <p className="mt-1 max-w-prose text-12 leading-5 text-secondary">
+            {isDraft
+              ? initiative.business_intent
+                ? "Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver assignments."
+                : "Choose and save a business intent before starting alignment."
+              : initiative.state === "ALIGNING"
+                ? "Complete the Idea Brief and PRD, resolve blockers and identify assumptions before submitting an exact version for review."
+                : initiative.state === "PAUSED"
+                  ? "The last confirmed lifecycle stage is preserved. A reason is required to resume."
+                  : initiative.state === "CANCELLED"
+                    ? "Its history remains available. Cancellation cannot be reversed."
+                    : "This view shows the confirmed Initiative state. It does not load document readiness or approval decisions."}
           </p>
-        )}
-        {initiative.state === "ALIGNING" && (
-          <div className="mt-3 flex flex-col justify-between gap-2 rounded-lg bg-layer-1 px-3 py-3 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-11 font-semibold text-primary">Next: PRD review</p>
-              <p className="mt-0.5 max-w-2xl text-10 leading-5 text-secondary">
-                Complete the Idea Brief and PRD, resolve or classify blockers, then submit an immutable version for
-                review.
-              </p>
-            </div>
-            <span className="shrink-0 text-10 font-medium text-tertiary">Submission workspace planned</span>
+          <div className="mt-3 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
+            {isDraft && (
+              <Button
+                size="lg"
+                disabled={!canMutate || !initiative.business_intent}
+                loading={isMutating}
+                onClick={onAccept}
+              >
+                Start alignment
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                size="lg"
+                variant="neutral-primary"
+                prependIcon={<Pencil />}
+                disabled={!canMutate}
+                onClick={onEdit}
+              >
+                Edit Initiative
+              </Button>
+            )}
+            {initiative.state === "PAUSED" && (
+              <Button size="lg" disabled={!canMutate} loading={isMutating} onClick={() => onAction("resume")}>
+                Resume
+              </Button>
+            )}
           </div>
-        )}
-      </header>
-
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <div className="space-y-7 px-5 py-6 sm:px-6">
-          <section aria-labelledby="curve-initiative-problem-title">
-            <h3 id="curve-initiative-problem-title" className="text-13 font-semibold text-primary">
-              Problem and intended outcome
-            </h3>
-            <p className="mt-2 text-13 leading-6 whitespace-pre-wrap text-secondary">{initiative.description.body}</p>
-          </section>
-          <section aria-labelledby="curve-initiative-gates-title">
-            <h3 id="curve-initiative-gates-title" className="text-13 font-semibold text-primary">
-              Mandatory human gates
-            </h3>
-            <ul className="mt-3 space-y-2">
-              {initiative.gate_assignments.map((assignment) => {
-                const member = members.get(assignment.approver.actor_id);
-                return (
-                  <li key={assignment.id} className="flex items-center gap-3 rounded-lg bg-layer-1 px-3 py-3">
-                    <InitiativeAvatar member={member} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-12 font-medium text-primary">{gateLabels[assignment.gate_type]}</p>
-                      <p className="truncate text-11 text-secondary">{memberDisplayName(member)}</p>
-                    </div>
-                    <span className="text-10 font-medium text-success-primary">Active assignment</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-          <section aria-labelledby="curve-initiative-activity-title">
-            <h3 id="curve-initiative-activity-title" className="text-13 font-semibold text-primary">
-              Lifecycle activity
-            </h3>
-            <ol className="mt-3 space-y-3 border-l border-subtle pl-4">
-              <li>
-                <p className="text-12 font-medium text-primary">Last confirmed update</p>
-                <p className="mt-0.5 text-11 text-secondary">{calculateTimeAgo(initiative.updated_at)}</p>
-              </li>
-              <li>
-                <p className="text-12 font-medium text-primary">Initiative created</p>
-                <p className="mt-0.5 text-11 text-secondary">{calculateTimeAgo(initiative.created_at)}</p>
-              </li>
-            </ol>
-          </section>
+          {!etag && initiative.state !== "CANCELLED" && (
+            <p className="mt-2 text-12 text-secondary" role="status">
+              Loading current version…
+            </p>
+          )}
         </div>
-        <aside
-          className="border-t border-subtle bg-layer-1 px-5 py-6 lg:border-t-0 lg:border-l"
-          aria-label="Initiative metadata"
-        >
-          <dl className="space-y-5">
+      </header>
+      <div className="space-y-7 px-5 py-6 sm:px-6">
+        <section aria-labelledby="curve-initiative-problem-title">
+          <h3 id="curve-initiative-problem-title" className="text-13 font-semibold text-primary">
+            Problem and intended outcome
+          </h3>
+          <p className="mt-2 max-w-prose text-13 leading-6 break-words whitespace-pre-wrap text-secondary">
+            {initiative.description.body}
+          </p>
+        </section>
+        <section aria-labelledby="curve-initiative-documents-title" className="border-t border-subtle pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 id="curve-initiative-documents-title" className="text-13 font-semibold text-primary">
+              Documents and PRD approval
+            </h3>
+            <span className="text-12 text-secondary">Readiness not checked</span>
+          </div>
+          <p className="mt-2 max-w-prose text-12 leading-5 text-secondary">
+            Document submission and approval are not connected to this view yet. Document contents, access and approval
+            decisions cannot be verified here.
+          </p>
+          <details className="mt-3">
+            <summary className="focus-visible:outline-accent-primary cursor-pointer rounded-sm py-1 text-12 font-medium text-accent-primary focus-visible:outline-2">
+              What is needed for PRD review?
+            </summary>
+            <ul className="mt-3 list-disc space-y-2 pl-5 text-12 leading-5 text-secondary">
+              <li>A current Idea Brief and PRD with requirements and linked acceptance criteria.</li>
+              <li>Resolved blockers and owned assumptions with validation plans.</li>
+              <li>An immutable document version and supporting evidence the assigned Product Approver can access.</li>
+              <li>A fresh readiness check for that exact version. Readiness alone does not mean approval.</li>
+            </ul>
+          </details>
+        </section>
+        <section aria-labelledby="curve-initiative-gates-title" className="border-t border-subtle pt-5">
+          <h3 id="curve-initiative-gates-title" className="text-13 font-semibold text-primary">
+            Review responsibilities
+          </h3>
+          <p className="mt-1 text-12 text-secondary">
+            Assignments identify reviewers. They are not approval decisions.
+          </p>
+          <ul className="mt-4 divide-y divide-subtle">
+            {initiativeApproverRoles.map((role) => {
+              const assignment = initiative.gate_assignments.find(
+                (entry) => entry.gate_type === role.gate && !entry.valid_until
+              );
+              const member = assignment ? members.get(assignment.approver.actor_id) : undefined;
+              return (
+                <li key={role.gate} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                  <InitiativeAvatar member={member} />
+                  <div className="min-w-0">
+                    <p className="text-12 font-semibold text-primary">{role.label}</p>
+                    <p className="mt-1 text-12 break-words text-secondary">
+                      {assignment
+                        ? member
+                          ? memberDisplayName(member)
+                          : "Assigned member unavailable"
+                        : "No current assignment"}
+                    </p>
+                    <p className="mt-1 text-12 leading-5 text-secondary">{role.responsibility}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+        <details className="border-t border-subtle pt-4">
+          <summary className="focus-visible:outline-accent-primary cursor-pointer rounded-sm py-1 text-12 font-medium text-primary focus-visible:outline-2">
+            Initiative details and activity
+          </summary>
+          <dl className="mt-4 grid gap-4 text-12 sm:grid-cols-2" aria-label="Initiative metadata">
             <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Business intent</dt>
-              <dd className="mt-1 text-11 text-primary">{initiativeBusinessIntentLabel(initiative.business_intent)}</dd>
+              <dt className="text-secondary">Business intent</dt>
+              <dd className="mt-1 text-primary">{initiativeBusinessIntentLabel(initiative.business_intent)}</dd>
             </div>
             <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Mode</dt>
-              <dd className="mt-1 text-11 text-primary">Standalone</dd>
+              <dt className="text-secondary">Creator</dt>
+              <dd className="mt-1 text-primary">{memberDisplayName(members.get(initiative.creator.actor_id))}</dd>
             </div>
             <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Creator</dt>
-              <dd className="mt-1 text-11 text-primary">
-                {memberDisplayName(members.get(initiative.creator.actor_id))}
+              <dt className="text-secondary">Record version</dt>
+              <dd className="mt-1 text-primary">v{initiative.version}</dd>
+              <dd className="mt-1 text-secondary">Prevents overwriting a newer update.</dd>
+            </div>
+            <div>
+              <dt className="text-secondary">External resource</dt>
+              <dd className="mt-1 text-primary">
+                {initiative.first_external_resource_at
+                  ? "Resource recorded; document access not verified"
+                  : "None recorded"}
               </dd>
             </div>
             <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Record version</dt>
-              <dd className="mt-1 text-11 text-primary">v{initiative.version}</dd>
-              <dd className="mt-1 text-10 leading-4 text-secondary">Prevents overwriting a newer update.</dd>
-            </div>
-            <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Updated</dt>
-              <dd className="mt-1 text-11 text-primary">{new Date(initiative.updated_at).toLocaleString()}</dd>
-            </div>
-            <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">External resource</dt>
-              <dd className="mt-1 text-11 text-primary">
-                {initiative.first_external_resource_at ? "Linked" : "None linked"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">Delivery projects</dt>
-              <dd className="mt-1 text-11 text-primary">No linked work yet</dd>
-              <dd className="mt-1 text-10 leading-4 text-secondary">
-                Projects appear here through their linked roadmap work items.
-              </dd>
+              <dt className="text-secondary">Delivery projects</dt>
+              <dd className="mt-1 text-primary">Links are not loaded in this view</dd>
             </div>
           </dl>
-        </aside>
+          <h3 className="mt-5 text-12 font-semibold text-primary">Lifecycle activity</h3>
+          <p className="mt-2 text-12 text-secondary">
+            Last updated {calculateTimeAgo(initiative.updated_at)} · Created {calculateTimeAgo(initiative.created_at)}
+          </p>
+        </details>
+        {initiative.state !== "CANCELLED" && (
+          <details className="border-t border-subtle pt-4">
+            <summary className="focus-visible:outline-accent-primary cursor-pointer rounded-sm py-1 text-12 font-medium text-primary focus-visible:outline-2">
+              Manage Initiative
+            </summary>
+            <p className="mt-3 text-12 leading-5 text-secondary">
+              Pause to keep the work recoverable. Cancellation is permanent for this Initiative. Both require a reason.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(isDraft || initiative.state === "ALIGNING") && (
+                <Button size="lg" variant="neutral-primary" disabled={!canMutate} onClick={() => onAction("pause")}>
+                  Pause
+                </Button>
+              )}
+              <Button size="lg" variant="neutral-primary" disabled={!canMutate} onClick={() => onAction("cancel")}>
+                Cancel
+              </Button>
+            </div>
+          </details>
+        )}
       </div>
     </article>
   );
@@ -558,6 +595,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
   const [riskFilter, setRiskFilter] = useState<"ALL" | TCurveInitiativeRiskTier>("ALL");
   const [summaryFilter, setSummaryFilter] = useState<TSummaryFilter | undefined>(initialSummaryFilter);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createRevision, setCreateRevision] = useState(0);
   const [editOpen, setEditOpen] = useState(false);
   const [reasonAction, setReasonAction] = useState<TReasonAction>();
   const [reason, setReason] = useState("");
@@ -621,6 +659,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
   const submitReasonAction = async () => {
     if (!reasonAction || !reason.trim()) {
       setReasonError(true);
+      reasonRef.current?.focus();
       return;
     }
     const succeeded =
@@ -643,7 +682,10 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
 
   const handleCreate = async (payload: Parameters<typeof createInitiative>[0]) => {
     const succeeded = await createInitiative(payload);
-    if (succeeded) setAnnouncement("Initiative created in Draft state.");
+    if (succeeded) {
+      setAnnouncement("Initiative created in Draft state.");
+      setCreateRevision((revision) => revision + 1);
+    }
     return succeeded;
   };
 
@@ -692,10 +734,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
       <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-11 font-semibold tracking-[0.08em] text-accent-primary uppercase">Product</p>
-            <span className="rounded-full bg-layer-1 px-2 py-1 text-10 font-medium text-secondary">
-              Local · manual-first
-            </span>
+            <span className="rounded-full bg-layer-1 px-2 py-1 text-10 font-medium text-secondary">Manual-first</span>
           </div>
           <h1 className="mt-1 text-32 leading-tight font-semibold tracking-[-0.025em] text-primary">Initiatives</h1>
         </div>
@@ -718,10 +757,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
         </div>
       </header>
 
-      <section
-        className="mt-4 grid overflow-hidden rounded-xl border border-subtle bg-layer-1 shadow-raised-100 sm:grid-cols-3"
-        aria-label="Loaded Initiative portfolio summary"
-      >
+      <section className="mt-5 flex flex-wrap gap-2" aria-label="Loaded Initiative portfolio summary">
         {[
           { id: "ACTIVE" as const, label: "Active", value: activeCount, detail: "Draft or aligning" },
           { id: "PAUSED" as const, label: "Paused", value: pausedCount, detail: "Explicitly recoverable" },
@@ -737,17 +773,17 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             key={label}
             onClick={() => toggleSummaryFilter(id)}
             className={cn(
-              "border-b border-subtle px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-layer-2 focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none focus-visible:ring-inset sm:border-r sm:border-b-0 sm:last:border-r-0",
+              "min-h-10 rounded-md border border-subtle px-3 py-2 text-left transition-colors hover:bg-layer-1 focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none",
               summaryFilter === id && "bg-accent-subtle"
             )}
+            title={detail}
             aria-label={`Filter Initiatives: ${label}`}
             aria-pressed={summaryFilter === id}
           >
             <div className="flex items-baseline gap-2">
-              <p className="text-20 leading-6 font-semibold text-primary">{value}</p>
-              <p className="text-9 font-semibold tracking-[0.08em] text-tertiary uppercase">{label}</p>
+              <p className="text-12 font-semibold text-primary tabular-nums">{value}</p>
+              <p className="text-12 text-secondary">{label}</p>
             </div>
-            <p className="text-10 text-secondary">{detail}</p>
           </button>
         ))}
       </section>
@@ -793,11 +829,8 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
         </div>
       )}
 
-      <section
-        className="mt-4 overflow-hidden rounded-xl border border-subtle bg-layer-1 shadow-raised-100"
-        aria-label="Initiative filters"
-      >
-        <div className="grid gap-3 p-3 md:grid-cols-[minmax(0,1fr)_12rem_12rem_auto]">
+      <section className="mt-4 border-b border-subtle" aria-label="Initiative filters">
+        <div className="grid gap-3 pb-4 md:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]">
           <label className="relative">
             <span className="sr-only">Search loaded Initiatives</span>
             <Search
@@ -844,14 +877,28 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
               <option value="HIGH">High risk</option>
             </select>
           </label>
-          <p className="self-center text-right text-11 text-tertiary" role="status">
+          <p className="self-center text-12 text-secondary md:text-right" role="status">
             Showing {visibleInitiatives.length} of {initiatives.length}
             {nextCursor ? " · more available" : ""}
+            {filtered && (
+              <button
+                type="button"
+                className="focus-visible:outline-accent-primary ml-2 min-h-10 rounded-sm px-1 font-medium text-accent-primary focus-visible:outline-2"
+                onClick={() => {
+                  setSearch("");
+                  setStateFilter("ALL");
+                  setRiskFilter("ALL");
+                  setSummaryFilter(undefined);
+                }}
+              >
+                Clear filters
+              </button>
+            )}
           </p>
         </div>
       </section>
 
-      <div className="mt-4 grid overflow-hidden rounded-xl border border-subtle bg-surface-1 shadow-raised-100 lg:grid-cols-[minmax(18rem,0.72fr)_minmax(0,1.28fr)]">
+      <div className="mt-4 grid overflow-hidden rounded-xl border border-subtle bg-surface-1 shadow-raised-100 lg:grid-cols-[minmax(16rem,0.65fr)_minmax(0,1.35fr)]">
         <section
           className="min-w-0 border-b border-subtle lg:border-r lg:border-b-0"
           aria-labelledby="curve-initiative-list-title"
@@ -919,16 +966,15 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
         </section>
       </div>
 
-      {createOpen && (
-        <InitiativeCreateDrawer
-          open
-          products={products}
-          members={activeMembers}
-          isSubmitting={isMutating}
-          onClose={closeCreate}
-          onCreate={handleCreate}
-        />
-      )}
+      <InitiativeCreateDrawer
+        key={createRevision}
+        open={createOpen}
+        products={products}
+        members={activeMembers}
+        isSubmitting={isMutating}
+        onClose={closeCreate}
+        onCreate={handleCreate}
+      />
 
       {editOpen && selectedInitiative?.state === "DRAFT" && !selectedInitiative.first_external_resource_at && (
         <InitiativeEditDialog
