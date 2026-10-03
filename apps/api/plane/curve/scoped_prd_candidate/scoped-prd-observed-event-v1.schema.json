@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/scoped-prd-v1/scoped-prd-observed-event-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "event_type",
+    "observation_id",
+    "observation_digest",
+    "initiative_id",
+    "policy_decision_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.scoped-prd/v1-candidate"
+    },
+    "policy_edition": {
+      "const": "EXACT_EXISTING_WORK_SCOPED_PRD_V1"
+    },
+    "event_type": {
+      "const": "CURVE.SCOPED_PRD.OBSERVATION_RECORDED"
+    },
+    "observation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "observation_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "initiative_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "policy_decision_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    }
+  }
+}

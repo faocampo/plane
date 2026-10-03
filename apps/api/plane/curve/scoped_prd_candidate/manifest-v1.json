@@ -1,0 +1,12 @@
+{
+  "policy-v1.json": "sha256:10ecfff684e02ad6d56a92ea94826ae1d880cc02e6baac052678fa183b8f79c7",
+  "scoped-prd-approve-v1.schema.json": "sha256:12036127a0f054997155a8595259215d0ffe9e81aaab51da31876aaa596c954c",
+  "scoped-prd-decision-v1.schema.json": "sha256:efd519114a4b8b0b90f557db6b509d3f26646620f5f9024ffcb31c23e851985f",
+  "scoped-prd-observation-v1.schema.json": "sha256:ab032ce3f151c03365248a58cd0f01b37acb0b1b9e8aa314da629d0518f49a6e",
+  "scoped-prd-observe-v1.schema.json": "sha256:b361521e38622ce4ec55bc9479c86cf14974ccc32f03277a8107a2b2d070bd09",
+  "scoped-prd-observed-event-v1.schema.json": "sha256:ab749093de5cb022f37bc5b6b3ce39ea5508db729e7ec372369cd21b252a6962",
+  "scoped-prd-readiness-v1.schema.json": "sha256:a90e8dd974be562f29317e4675618c11ecb15d9cf530a9d1ba8fd96a4ee2abad",
+  "scoped-prd-return-for-revision-v1.schema.json": "sha256:8f96471cc042d9b1fa8d66fda3cb327bdb7506ce936f1be4985960884c993594",
+  "scoped-prd-subject-v1.schema.json": "sha256:9d363e0f040c75f2ed2daf738a2718abccd9becd33dcf527615a2291a58d7e2d",
+  "scoped-prd-submit-v1.schema.json": "sha256:a3c7d9d4c854cd006f17784c6f98d945f7a67e2d3d752f097ef3feb48cb37658"
+}
