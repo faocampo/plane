@@ -140,6 +140,10 @@ CURVE_PROVIDER_REGISTRY_ENABLED = os.environ.get("CURVE_PROVIDER_REGISTRY_ENABLE
     "yes",
     "on",
 }
+# Additive candidate: operator-reviewed local configuration only; no environment activation.
+CURVE_PROJECT_ASSOCIATIONS_ENABLED = False
+CURVE_LOCAL_PLANE_INSTALLATION_ID = None
+
 # Metadata reads have their own policy and trusted adapter. Configuration alone
 # never enables PRD commands or activates a source/storage provider.
 CURVE_PRD_READ_ENABLED = False

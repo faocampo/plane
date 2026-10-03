@@ -3,6 +3,11 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.curve.project_association_views import (
+    CurveProjectAssociationCreateEndpoint,
+    CurveProjectAssociationDetailEndpoint,
+    CurveProjectAssociationEndEndpoint,
+)
 from plane.curve.prd_views import CurvePrdCommandEndpoint
 from plane.curve.prd_read_views import CurvePrdReviewContextEndpoint
 
@@ -28,6 +33,21 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-associations/",
+        CurveProjectAssociationCreateEndpoint.as_view(),
+        name="curve-project-association-create",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/project-associations/<uuid:association_id>/",
+        CurveProjectAssociationDetailEndpoint.as_view(),
+        name="curve-project-association-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/project-associations/<uuid:association_id>/end/",
+        CurveProjectAssociationEndEndpoint.as_view(),
+        name="curve-project-association-end",
+    ),
     path(
         "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/review-context/",
         CurvePrdReviewContextEndpoint.as_view(),

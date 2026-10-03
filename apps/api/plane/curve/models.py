@@ -286,6 +286,7 @@ class Product(models.Model):
     class Meta:
         db_table = "curve_product"
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_product_ws_id_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "key"],
                 name="curve_product_workspace_key_uniq",
@@ -1353,7 +1354,12 @@ class PolicyDecision(ImmutableRecordModel):
             ),
             models.CheckConstraint(
                 condition=(
-                    models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
+                    models.Q(
+                        policy_key="CURVE_PROJECT_ASSOCIATION_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:0ea402f3db6a7fb0743a79a45644d79235a685781ad844d3c42230da2c548691",
+                    )
+                    | models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
                     | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
                     | models.Q(
@@ -1425,3 +1431,4 @@ from .prd_checkpoint_models import DocumentCheckpoint  # noqa: E402,F401
 from .prd_review_models import PrdReviewDecision  # noqa: E402,F401
 from .prd_command_models import PrdAcceptedCommand  # noqa: E402,F401
 from .prd_readiness_models import PrdReadinessRecord  # noqa: E402,F401
+from .project_association_models import ProjectAssociation, ProjectAssociationState  # noqa: E402,F401
