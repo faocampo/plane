@@ -17,3 +17,11 @@ def is_curve_request(request):
 
 def is_prd_command_request(request):
     return bool(_PRD.fullmatch(request.path_info))
+
+
+SCOPE_PROPOSAL_MAX_BYTES = 65536
+_SCOPE = re.compile(r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/scope-proposal/?$")
+
+
+def is_scope_proposal_request(request):
+    return bool(_SCOPE.fullmatch(request.path_info))

@@ -1359,6 +1359,11 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_version=1,
                         policy_manifest_digest="sha256:0ea402f3db6a7fb0743a79a45644d79235a685781ad844d3c42230da2c548691",
                     )
+                    | models.Q(
+                        policy_key="CURVE_SCOPE_PROPOSAL_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:778bdbd6fb82f51482d791d22ae6cf884a8906e91613b07cdafc6b429d24e266",
+                    )
                     | models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
                     | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
@@ -1432,3 +1437,5 @@ from .prd_review_models import PrdReviewDecision  # noqa: E402,F401
 from .prd_command_models import PrdAcceptedCommand  # noqa: E402,F401
 from .prd_readiness_models import PrdReadinessRecord  # noqa: E402,F401
 from .project_association_models import ProjectAssociation, ProjectAssociationState  # noqa: E402,F401
+
+from .scope_proposal_models import ScopeProposal, ScopeProposalRevision, ScopeProposalItem, ScopePurpose  # noqa: E402,F401

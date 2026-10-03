@@ -17,6 +17,7 @@ from django.db import transaction
 from .models import Initiative
 from .prd_checkpoint_repository import append_document_checkpoint_metadata
 from .prd_metadata_validation import require_metadata
+from .scope_prd_guard import require_legacy_prd_scope
 
 
 def _lock_subject(*, workspace_id, initiative_id, expected_version, expected_checkpoint_id):
@@ -50,6 +51,7 @@ def record_prd_submission_transition(
         expected_version=expected_version,
         expected_checkpoint_id=expected_checkpoint_id,
     )
+    require_legacy_prd_scope(workspace_id=workspace_id, initiative_id=initiative_id, action="CURVE.PRD.SUBMIT")
     require_metadata(initiative.state in {"ALIGNING", "PRD_REVIEW"}, "PRD_INITIATIVE_STATE_CONFLICT")
     require_metadata(
         actor == checkpoint.submitted_or_approved_by and actor.get("actor_type") == "HUMAN",
@@ -82,6 +84,7 @@ def record_prd_submission_transition(
                 "updated_at",
             ]
         )
+        require_legacy_prd_scope(workspace_id=workspace_id, initiative_id=initiative_id, action="CURVE.PRD.SUBMIT")
     return initiative
 
 
@@ -100,6 +103,8 @@ def record_prd_decision_transition(
         expected_version=expected_version,
         expected_checkpoint_id=expected_checkpoint_id,
     )
+    if decision.state == "APPROVED":
+        require_legacy_prd_scope(workspace_id=workspace_id, initiative_id=initiative_id, action="CURVE.PRD.APPROVE")
     require_metadata(initiative.state == "PRD_REVIEW", "PRD_INITIATIVE_STATE_CONFLICT")
     require_metadata(
         decision.workspace_id == initiative.workspace_id
@@ -115,4 +120,6 @@ def record_prd_decision_transition(
         initiative.version += 1
         initiative.updated_by = deepcopy(actor)
         initiative.save(update_fields=["controlling_prd_decision_id", "state", "version", "updated_by", "updated_at"])
+        if decision.state == "APPROVED":
+            require_legacy_prd_scope(workspace_id=workspace_id, initiative_id=initiative_id, action="CURVE.PRD.APPROVE")
     return initiative

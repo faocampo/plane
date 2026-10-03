@@ -12,6 +12,7 @@ from .prd_command_models import PrdAcceptedCommand
 from .prd_commands import check_prd_command_subject
 from .prd_metadata_validation import require_metadata
 from .services import idempotency_key_digest, sha256_digest
+from .scope_prd_guard import require_legacy_prd_scope
 
 
 def record_accepted_prd_command(
@@ -42,6 +43,7 @@ def record_accepted_prd_command(
         workspace_id=operation.workspace_id, record_id=operation.target["resource_id"], for_update=True
     )
     require_metadata(initiative is not None, "PRD_COMMAND_SUBJECT_UNAVAILABLE")
+    require_legacy_prd_scope(workspace_id=operation.workspace_id, initiative_id=initiative.id, action=command.action)
     subject = command.subject_metadata()
     records = {}
     if command.action == "CURVE.PRD.SUBMIT":
@@ -79,4 +81,5 @@ def record_accepted_prd_command(
         retention_policy_version_id=retention_policy_version_id,
     )
     record.save()
+    require_legacy_prd_scope(workspace_id=operation.workspace_id, initiative_id=initiative.id, action=command.action)
     return record

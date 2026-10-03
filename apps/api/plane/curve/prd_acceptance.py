@@ -37,6 +37,7 @@ from .policy_services import (
 from .prd_command_repository import record_accepted_prd_command
 from .prd_commands import PrdCommandError, check_prd_command_subject
 from .prd_policy_context import build_prd_policy_context
+from .scope_prd_guard import require_legacy_prd_scope
 from .services import (
     _append_audit_event,
     _create_operation_authorized,
@@ -90,6 +91,7 @@ def _preflight(command, workspace_id, initiative_id):
     initiative = Initiative.objects.find_by_id(workspace_id=workspace_id, record_id=initiative_id, for_update=True)
     if initiative is None:
         raise PrdCommandError("PRD_SUBJECT_UNAVAILABLE", 404)
+    require_legacy_prd_scope(workspace_id=workspace_id, initiative_id=initiative_id, action=command.action)
     subject = command.subject_metadata()
     records = {}
     if command.action == "CURVE.PRD.SUBMIT":
@@ -154,6 +156,11 @@ def accept_prd_command(*, request, workspace_slug, initiative_id, command):
 
             try:
                 with transaction.atomic():
+                    # Replays also require the current subject guard. An earlier
+                    # accepted command cannot grandfather unsupported scope.
+                    require_legacy_prd_scope(
+                        workspace_id=receipt.workspace_id, initiative_id=initiative_id, action=command.action
+                    )
                     existing = IdempotencyRecord.objects.filter(
                         workspace_id=receipt.workspace_id,
                         principal_scope=f"HUMAN:{actor['actor_id']}",
@@ -182,6 +189,11 @@ def accept_prd_command(*, request, workspace_slug, initiative_id, command):
                             or not prepared.valid_from <= timezone.now() < prepared.valid_until
                         ):
                             raise PrdRuntimeUnavailable
+                    # Trusted runtime hooks run under the same fence, but their
+                    # return value cannot stand in for the current scope check.
+                    require_legacy_prd_scope(
+                        workspace_id=receipt.workspace_id, initiative_id=initiative_id, action=command.action
+                    )
                     result = _create_operation_authorized(
                         authorization_receipt=receipt,
                         authorization_action=command.action,
@@ -216,6 +228,9 @@ def accept_prd_command(*, request, workspace_slug, initiative_id, command):
                             access_envelope_id=prepared.access_envelope_id,
                             retention_policy_version_id=prepared.retention_policy_version_id,
                         )
+                    require_legacy_prd_scope(
+                        workspace_id=receipt.workspace_id, initiative_id=initiative_id, action=command.action
+                    )
                     return result
             except Exception as error:
                 audit("CURVE.PRD.ACCEPTANCE_REJECTED")

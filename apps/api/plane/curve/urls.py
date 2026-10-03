@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.curve.scope_proposal_views import CurveScopeProposalEndpoint, CurveScopeProposalRevisionEndpoint
 from plane.curve.project_association_views import (
     CurveProjectAssociationCreateEndpoint,
     CurveProjectAssociationDetailEndpoint,
@@ -33,6 +34,16 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-proposal/",
+        CurveScopeProposalEndpoint.as_view(),
+        name="curve-scope-proposal",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-proposal/revisions/<uuid:revision_id>/",
+        CurveScopeProposalRevisionEndpoint.as_view(),
+        name="curve-scope-proposal-revision",
+    ),
     path(
         "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-associations/",
         CurveProjectAssociationCreateEndpoint.as_view(),

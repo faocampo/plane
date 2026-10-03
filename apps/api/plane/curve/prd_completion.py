@@ -29,7 +29,7 @@ from .policy_services import (
     transition_operation_with_service_authorization,
 )
 from .prd_acceptance import _preflight
-from .prd_commands import PrdCommand
+from .prd_commands import PrdCommand, PrdCommandError
 from .prd_lifecycle_repository import record_prd_decision_transition, record_prd_submission_transition
 from .prd_metadata_validation import instant
 from .prd_policy_context import build_prd_policy_context
@@ -37,6 +37,7 @@ from .prd_review_validation import validate_review_subject
 from .prd_readiness import ReadinessReport, require_current_prd_readiness
 from .prd_readiness_repository import record_prd_readiness_metadata
 from .services import _append_audit_event, sha256_digest
+from .scope_prd_guard import require_legacy_prd_scope
 
 
 class PrdCompletionUnavailable(RuntimeError):
@@ -367,11 +368,19 @@ def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
                 try:
                     with transaction.atomic():
                         _require(binding_valid)
-                        if operation.status in _TERMINAL:
+                        # Failure/cancellation outcomes cannot submit or approve
+                        # a PRD. Preserve these safe no-effect reads and exits.
+                        if operation.status in {"FAILED", "CANCELLED"}:
                             audit("NO_EFFECT")
                             return _outcome(operation)
                         if operation.status == "CANCEL_REQUESTED":
                             operation = _transition(runtime, operation, "CANCELLED")
+                            audit("NO_EFFECT")
+                            return _outcome(operation)
+                        require_legacy_prd_scope(
+                            workspace_id=workspace_id, initiative_id=record.initiative_id, action=record.action
+                        )
+                        if operation.status == "SUCCEEDED":
                             audit("NO_EFFECT")
                             return _outcome(operation)
                         _preflight(_command(record), workspace_id, record.initiative_id)
@@ -382,6 +391,9 @@ def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
                             if operation.status == "QUEUED":
                                 operation = _transition(runtime, operation, "RUNNING")
                             _require(operation.status == "RUNNING")
+                            require_legacy_prd_scope(
+                                workspace_id=workspace_id, initiative_id=record.initiative_id, action=record.action
+                            )
                             audit("NO_EFFECT")
                             return None
                         _require(operation.status == "RUNNING")
@@ -389,6 +401,9 @@ def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
                         _require(guard() is True)
                         _require(runtime.revalidate_completion(prepared=prepared, command=record) is True)
                         _proof(prepared, record)
+                        require_legacy_prd_scope(
+                            workspace_id=workspace_id, initiative_id=record.initiative_id, action=record.action
+                        )
                         initiative = Initiative.objects.find_by_id(
                             workspace_id=workspace_id, record_id=record.initiative_id, for_update=True
                         )
@@ -406,14 +421,21 @@ def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
                         operation.save(update_fields=["result_ref", "updated_at"])
                         operation = _transition(runtime, operation, "SUCCEEDED")
                         _require(guard() is True)
+                        require_legacy_prd_scope(
+                            workspace_id=workspace_id, initiative_id=record.initiative_id, action=record.action
+                        )
                         audit("SUCCEEDED", result_ref)
                         return _outcome(operation, True)
-                except Exception:
+                except Exception as error:
                     audit("NO_EFFECT")
+                    if isinstance(error, PrdCommandError) and error.code == "PRD_SCOPE_BRIDGE_UNAVAILABLE":
+                        raise
                     raise PrdCompletionUnavailable from None
 
             return execute_authorized_mutation(
-                context_builder=context, mutation_callback=mutate, no_effect_exceptions=(PrdCompletionUnavailable,)
+                context_builder=context,
+                mutation_callback=mutate,
+                no_effect_exceptions=(PrdCompletionUnavailable, PrdCommandError),
             )
 
         first = phase()
@@ -430,18 +452,38 @@ def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
         try:
             with transaction.atomic():
                 _worker_grant(runtime, workspace_id, operation_id)
-                operation = Operation.objects.select_for_update().get(workspace_id=workspace_id, id=operation_id)
-                _require(
-                    PrdAcceptedCommand.objects.filter(workspace_id=workspace_id, operation_id=operation_id).exists()
+                settled_record = PrdAcceptedCommand.objects.find_by_id(
+                    workspace_id=workspace_id, record_id=operation_id
                 )
+                _require(settled_record is not None)
+                _require(
+                    Initiative.objects.find_by_id(
+                        workspace_id=workspace_id, record_id=settled_record.initiative_id, for_update=True
+                    )
+                    is not None
+                )
+                operation = Operation.objects.select_for_update().get(workspace_id=workspace_id, id=operation_id)
+                if operation.status == "CANCEL_REQUESTED":
+                    operation = _transition(runtime, operation, "CANCELLED")
+                    return _outcome(operation)
+                # Failure settlement cannot apply a PRD effect. A previously
+                # successful outcome still needs the same current scope fence;
+                # this error path must never launder a denied success replay.
+                if operation.status == "SUCCEEDED":
+                    require_legacy_prd_scope(
+                        workspace_id=workspace_id,
+                        initiative_id=settled_record.initiative_id,
+                        action=settled_record.action,
+                    )
                 if operation.status not in _TERMINAL:
-                    status = "CANCELLED" if operation.status == "CANCEL_REQUESTED" else "FAILED"
                     operation = _transition(
                         runtime,
                         operation,
-                        status,
-                        None if status == "CANCELLED" else {"code": "PRD_COMPLETION_REJECTED", "retryable": False},
+                        "FAILED",
+                        {"code": "PRD_COMPLETION_REJECTED", "retryable": False},
                     )
                 return _outcome(operation)
-        except Exception:
+        except Exception as error:
+            if isinstance(error, PrdCommandError) and error.code == "PRD_SCOPE_BRIDGE_UNAVAILABLE":
+                raise
             raise PrdCompletionUnavailable from None
