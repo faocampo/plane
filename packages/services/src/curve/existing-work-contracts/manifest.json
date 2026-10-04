@@ -70,5 +70,11 @@
     "type": "CurveScopeReopeningPreconditionsV1",
     "source": "apps/api/plane/curve/scope_reopening_read_candidate/scope-reopening-precondition-v1.schema.json",
     "sha256": "ae1ee3cd886156c83ca0c4f5e20b690fe7b67b34373c1cda4d6c29595b8b091e"
+  },
+  {
+    "name": "project-association-precondition-v1",
+    "type": "CurveProjectAssociationPreconditionsV1",
+    "source": "apps/api/plane/curve/project_association_read_candidate/project-association-precondition-v1.schema.json",
+    "sha256": "5c89be086e2cc7a3efdb7a5247d82f5f8280ed88a4df1c74f7efce7298015a60"
   }
 ]

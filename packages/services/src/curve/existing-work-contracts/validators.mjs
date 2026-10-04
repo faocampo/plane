@@ -10595,3 +10595,778 @@ function validate31(
   return errors === 0;
 }
 validate31.evaluated = { props: true, dynamicProps: false, dynamicItems: false };
+export const validateCurveProjectAssociationPreconditionsV1 = validate32;
+const schema43 = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://curve.example.invalid/candidates/project-association-precondition-v1.schema.json",
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "schema_version",
+    "policy_edition",
+    "workspace_id",
+    "product_id",
+    "provider_installation_id",
+    "source_project_id",
+    "product_version",
+    "availability",
+    "association_id",
+    "observed_at",
+  ],
+  properties: {
+    schema_version: { const: "curve.project-association-precondition/v1-candidate" },
+    policy_edition: { const: "LOCAL_NATIVE_PROJECT_ASSOCIATION_PRECONDITION_READ_V1" },
+    workspace_id: {
+      type: "string",
+      format: "uuid",
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    },
+    product_id: {
+      type: "string",
+      format: "uuid",
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    },
+    provider_installation_id: {
+      type: "string",
+      format: "uuid",
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    },
+    source_project_id: {
+      type: "string",
+      format: "uuid",
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    },
+    product_version: { type: "integer", minimum: 1, maximum: 9007199254740991 },
+    availability: { enum: ["AVAILABLE", "ASSOCIATED_WITH_SELECTED_PRODUCT", "ASSOCIATED_ELSEWHERE"] },
+    association_id: {
+      anyOf: [
+        { type: "string", format: "uuid", pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+        { type: "null" },
+      ],
+    },
+    observed_at: { type: "string", format: "date-time", pattern: "Z$" },
+  },
+  allOf: [
+    {
+      if: { properties: { availability: { const: "ASSOCIATED_WITH_SELECTED_PRODUCT" } }, required: ["availability"] },
+      then: {
+        properties: {
+          association_id: {
+            type: "string",
+            format: "uuid",
+            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          },
+        },
+      },
+      else: { properties: { association_id: { type: "null" } } },
+    },
+  ],
+};
+const pattern111 = new RegExp("Z$", "u");
+function validate32(
+  data,
+  { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}
+) {
+  /*# sourceURL="https://curve.example.invalid/candidates/project-association-precondition-v1.schema.json" */ let vErrors =
+    null;
+  let errors = 0;
+  const evaluated0 = validate32.evaluated;
+  if (evaluated0.dynamicProps) {
+    evaluated0.props = undefined;
+  }
+  if (evaluated0.dynamicItems) {
+    evaluated0.items = undefined;
+  }
+  const _errs2 = errors;
+  let valid1 = true;
+  const _errs3 = errors;
+  if (data && typeof data == "object" && !Array.isArray(data)) {
+    let missing0;
+    if (data.availability === undefined && (missing0 = "availability")) {
+      const err0 = {};
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    } else {
+      if (data.availability !== undefined) {
+        if ("ASSOCIATED_WITH_SELECTED_PRODUCT" !== data.availability) {
+          const err1 = {};
+          if (vErrors === null) {
+            vErrors = [err1];
+          } else {
+            vErrors.push(err1);
+          }
+          errors++;
+        }
+      }
+    }
+  }
+  var _valid0 = _errs3 === errors;
+  errors = _errs2;
+  if (vErrors !== null) {
+    if (_errs2) {
+      vErrors.length = _errs2;
+    } else {
+      vErrors = null;
+    }
+  }
+  let ifClause0;
+  if (_valid0) {
+    const _errs5 = errors;
+    if (data && typeof data == "object" && !Array.isArray(data)) {
+      if (data.association_id !== undefined) {
+        let data1 = data.association_id;
+        const _errs6 = errors;
+        if (errors === _errs6) {
+          if (errors === _errs6) {
+            if (typeof data1 === "string") {
+              if (!pattern4.test(data1)) {
+                validate32.errors = [
+                  {
+                    instancePath: instancePath + "/association_id",
+                    schemaPath: "#/allOf/0/then/properties/association_id/pattern",
+                    keyword: "pattern",
+                    params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                    message:
+                      'must match pattern "' + "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" + '"',
+                  },
+                ];
+                return false;
+              } else {
+                if (!formats0.test(data1)) {
+                  validate32.errors = [
+                    {
+                      instancePath: instancePath + "/association_id",
+                      schemaPath: "#/allOf/0/then/properties/association_id/format",
+                      keyword: "format",
+                      params: { format: "uuid" },
+                      message: 'must match format "' + "uuid" + '"',
+                    },
+                  ];
+                  return false;
+                }
+              }
+            } else {
+              validate32.errors = [
+                {
+                  instancePath: instancePath + "/association_id",
+                  schemaPath: "#/allOf/0/then/properties/association_id/type",
+                  keyword: "type",
+                  params: { type: "string" },
+                  message: "must be string",
+                },
+              ];
+              return false;
+            }
+          }
+        }
+      }
+    }
+    var _valid0 = _errs5 === errors;
+    valid1 = _valid0;
+    if (valid1) {
+      var props0 = {};
+      props0.association_id = true;
+      props0.availability = true;
+    }
+    ifClause0 = "then";
+  } else {
+    const _errs8 = errors;
+    if (data && typeof data == "object" && !Array.isArray(data)) {
+      if (data.association_id !== undefined) {
+        if (data.association_id !== null) {
+          validate32.errors = [
+            {
+              instancePath: instancePath + "/association_id",
+              schemaPath: "#/allOf/0/else/properties/association_id/type",
+              keyword: "type",
+              params: { type: "null" },
+              message: "must be null",
+            },
+          ];
+          return false;
+        }
+      }
+    }
+    var _valid0 = _errs8 === errors;
+    valid1 = _valid0;
+    if (valid1) {
+      if (props0 !== true) {
+        props0 = props0 || {};
+        props0.association_id = true;
+      }
+    }
+    ifClause0 = "else";
+  }
+  if (!valid1) {
+    const err2 = {
+      instancePath,
+      schemaPath: "#/allOf/0/if",
+      keyword: "if",
+      params: { failingKeyword: ifClause0 },
+      message: 'must match "' + ifClause0 + '" schema',
+    };
+    if (vErrors === null) {
+      vErrors = [err2];
+    } else {
+      vErrors.push(err2);
+    }
+    errors++;
+    validate32.errors = vErrors;
+    return false;
+  }
+  if (errors === 0) {
+    if (data && typeof data == "object" && !Array.isArray(data)) {
+      let missing1;
+      if (
+        (data.schema_version === undefined && (missing1 = "schema_version")) ||
+        (data.policy_edition === undefined && (missing1 = "policy_edition")) ||
+        (data.workspace_id === undefined && (missing1 = "workspace_id")) ||
+        (data.product_id === undefined && (missing1 = "product_id")) ||
+        (data.provider_installation_id === undefined && (missing1 = "provider_installation_id")) ||
+        (data.source_project_id === undefined && (missing1 = "source_project_id")) ||
+        (data.product_version === undefined && (missing1 = "product_version")) ||
+        (data.availability === undefined && (missing1 = "availability")) ||
+        (data.association_id === undefined && (missing1 = "association_id")) ||
+        (data.observed_at === undefined && (missing1 = "observed_at"))
+      ) {
+        validate32.errors = [
+          {
+            instancePath,
+            schemaPath: "#/required",
+            keyword: "required",
+            params: { missingProperty: missing1 },
+            message: "must have required property '" + missing1 + "'",
+          },
+        ];
+        return false;
+      } else {
+        const _errs11 = errors;
+        for (const key0 in data) {
+          if (!func5.call(schema43.properties, key0)) {
+            validate32.errors = [
+              {
+                instancePath,
+                schemaPath: "#/additionalProperties",
+                keyword: "additionalProperties",
+                params: { additionalProperty: key0 },
+                message: "must NOT have additional properties",
+              },
+            ];
+            return false;
+            break;
+          }
+        }
+        if (_errs11 === errors) {
+          if (data.schema_version !== undefined) {
+            const _errs12 = errors;
+            if ("curve.project-association-precondition/v1-candidate" !== data.schema_version) {
+              validate32.errors = [
+                {
+                  instancePath: instancePath + "/schema_version",
+                  schemaPath: "#/properties/schema_version/const",
+                  keyword: "const",
+                  params: { allowedValue: "curve.project-association-precondition/v1-candidate" },
+                  message: "must be equal to constant",
+                },
+              ];
+              return false;
+            }
+            var valid5 = _errs12 === errors;
+          } else {
+            var valid5 = true;
+          }
+          if (valid5) {
+            if (data.policy_edition !== undefined) {
+              const _errs13 = errors;
+              if ("LOCAL_NATIVE_PROJECT_ASSOCIATION_PRECONDITION_READ_V1" !== data.policy_edition) {
+                validate32.errors = [
+                  {
+                    instancePath: instancePath + "/policy_edition",
+                    schemaPath: "#/properties/policy_edition/const",
+                    keyword: "const",
+                    params: { allowedValue: "LOCAL_NATIVE_PROJECT_ASSOCIATION_PRECONDITION_READ_V1" },
+                    message: "must be equal to constant",
+                  },
+                ];
+                return false;
+              }
+              var valid5 = _errs13 === errors;
+            } else {
+              var valid5 = true;
+            }
+            if (valid5) {
+              if (data.workspace_id !== undefined) {
+                let data5 = data.workspace_id;
+                const _errs14 = errors;
+                if (errors === _errs14) {
+                  if (errors === _errs14) {
+                    if (typeof data5 === "string") {
+                      if (!pattern4.test(data5)) {
+                        validate32.errors = [
+                          {
+                            instancePath: instancePath + "/workspace_id",
+                            schemaPath: "#/properties/workspace_id/pattern",
+                            keyword: "pattern",
+                            params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                            message:
+                              'must match pattern "' +
+                              "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                              '"',
+                          },
+                        ];
+                        return false;
+                      } else {
+                        if (!formats0.test(data5)) {
+                          validate32.errors = [
+                            {
+                              instancePath: instancePath + "/workspace_id",
+                              schemaPath: "#/properties/workspace_id/format",
+                              keyword: "format",
+                              params: { format: "uuid" },
+                              message: 'must match format "' + "uuid" + '"',
+                            },
+                          ];
+                          return false;
+                        }
+                      }
+                    } else {
+                      validate32.errors = [
+                        {
+                          instancePath: instancePath + "/workspace_id",
+                          schemaPath: "#/properties/workspace_id/type",
+                          keyword: "type",
+                          params: { type: "string" },
+                          message: "must be string",
+                        },
+                      ];
+                      return false;
+                    }
+                  }
+                }
+                var valid5 = _errs14 === errors;
+              } else {
+                var valid5 = true;
+              }
+              if (valid5) {
+                if (data.product_id !== undefined) {
+                  let data6 = data.product_id;
+                  const _errs16 = errors;
+                  if (errors === _errs16) {
+                    if (errors === _errs16) {
+                      if (typeof data6 === "string") {
+                        if (!pattern4.test(data6)) {
+                          validate32.errors = [
+                            {
+                              instancePath: instancePath + "/product_id",
+                              schemaPath: "#/properties/product_id/pattern",
+                              keyword: "pattern",
+                              params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                              message:
+                                'must match pattern "' +
+                                "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                                '"',
+                            },
+                          ];
+                          return false;
+                        } else {
+                          if (!formats0.test(data6)) {
+                            validate32.errors = [
+                              {
+                                instancePath: instancePath + "/product_id",
+                                schemaPath: "#/properties/product_id/format",
+                                keyword: "format",
+                                params: { format: "uuid" },
+                                message: 'must match format "' + "uuid" + '"',
+                              },
+                            ];
+                            return false;
+                          }
+                        }
+                      } else {
+                        validate32.errors = [
+                          {
+                            instancePath: instancePath + "/product_id",
+                            schemaPath: "#/properties/product_id/type",
+                            keyword: "type",
+                            params: { type: "string" },
+                            message: "must be string",
+                          },
+                        ];
+                        return false;
+                      }
+                    }
+                  }
+                  var valid5 = _errs16 === errors;
+                } else {
+                  var valid5 = true;
+                }
+                if (valid5) {
+                  if (data.provider_installation_id !== undefined) {
+                    let data7 = data.provider_installation_id;
+                    const _errs18 = errors;
+                    if (errors === _errs18) {
+                      if (errors === _errs18) {
+                        if (typeof data7 === "string") {
+                          if (!pattern4.test(data7)) {
+                            validate32.errors = [
+                              {
+                                instancePath: instancePath + "/provider_installation_id",
+                                schemaPath: "#/properties/provider_installation_id/pattern",
+                                keyword: "pattern",
+                                params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                                message:
+                                  'must match pattern "' +
+                                  "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                                  '"',
+                              },
+                            ];
+                            return false;
+                          } else {
+                            if (!formats0.test(data7)) {
+                              validate32.errors = [
+                                {
+                                  instancePath: instancePath + "/provider_installation_id",
+                                  schemaPath: "#/properties/provider_installation_id/format",
+                                  keyword: "format",
+                                  params: { format: "uuid" },
+                                  message: 'must match format "' + "uuid" + '"',
+                                },
+                              ];
+                              return false;
+                            }
+                          }
+                        } else {
+                          validate32.errors = [
+                            {
+                              instancePath: instancePath + "/provider_installation_id",
+                              schemaPath: "#/properties/provider_installation_id/type",
+                              keyword: "type",
+                              params: { type: "string" },
+                              message: "must be string",
+                            },
+                          ];
+                          return false;
+                        }
+                      }
+                    }
+                    var valid5 = _errs18 === errors;
+                  } else {
+                    var valid5 = true;
+                  }
+                  if (valid5) {
+                    if (data.source_project_id !== undefined) {
+                      let data8 = data.source_project_id;
+                      const _errs20 = errors;
+                      if (errors === _errs20) {
+                        if (errors === _errs20) {
+                          if (typeof data8 === "string") {
+                            if (!pattern4.test(data8)) {
+                              validate32.errors = [
+                                {
+                                  instancePath: instancePath + "/source_project_id",
+                                  schemaPath: "#/properties/source_project_id/pattern",
+                                  keyword: "pattern",
+                                  params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                                  message:
+                                    'must match pattern "' +
+                                    "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                                    '"',
+                                },
+                              ];
+                              return false;
+                            } else {
+                              if (!formats0.test(data8)) {
+                                validate32.errors = [
+                                  {
+                                    instancePath: instancePath + "/source_project_id",
+                                    schemaPath: "#/properties/source_project_id/format",
+                                    keyword: "format",
+                                    params: { format: "uuid" },
+                                    message: 'must match format "' + "uuid" + '"',
+                                  },
+                                ];
+                                return false;
+                              }
+                            }
+                          } else {
+                            validate32.errors = [
+                              {
+                                instancePath: instancePath + "/source_project_id",
+                                schemaPath: "#/properties/source_project_id/type",
+                                keyword: "type",
+                                params: { type: "string" },
+                                message: "must be string",
+                              },
+                            ];
+                            return false;
+                          }
+                        }
+                      }
+                      var valid5 = _errs20 === errors;
+                    } else {
+                      var valid5 = true;
+                    }
+                    if (valid5) {
+                      if (data.product_version !== undefined) {
+                        let data9 = data.product_version;
+                        const _errs22 = errors;
+                        if (!(typeof data9 == "number" && !(data9 % 1) && !isNaN(data9) && isFinite(data9))) {
+                          validate32.errors = [
+                            {
+                              instancePath: instancePath + "/product_version",
+                              schemaPath: "#/properties/product_version/type",
+                              keyword: "type",
+                              params: { type: "integer" },
+                              message: "must be integer",
+                            },
+                          ];
+                          return false;
+                        }
+                        if (errors === _errs22) {
+                          if (typeof data9 == "number" && isFinite(data9)) {
+                            if (data9 > 9007199254740991 || isNaN(data9)) {
+                              validate32.errors = [
+                                {
+                                  instancePath: instancePath + "/product_version",
+                                  schemaPath: "#/properties/product_version/maximum",
+                                  keyword: "maximum",
+                                  params: { comparison: "<=", limit: 9007199254740991 },
+                                  message: "must be <= 9007199254740991",
+                                },
+                              ];
+                              return false;
+                            } else {
+                              if (data9 < 1 || isNaN(data9)) {
+                                validate32.errors = [
+                                  {
+                                    instancePath: instancePath + "/product_version",
+                                    schemaPath: "#/properties/product_version/minimum",
+                                    keyword: "minimum",
+                                    params: { comparison: ">=", limit: 1 },
+                                    message: "must be >= 1",
+                                  },
+                                ];
+                                return false;
+                              }
+                            }
+                          }
+                        }
+                        var valid5 = _errs22 === errors;
+                      } else {
+                        var valid5 = true;
+                      }
+                      if (valid5) {
+                        if (data.availability !== undefined) {
+                          let data10 = data.availability;
+                          const _errs24 = errors;
+                          if (
+                            !(
+                              data10 === "AVAILABLE" ||
+                              data10 === "ASSOCIATED_WITH_SELECTED_PRODUCT" ||
+                              data10 === "ASSOCIATED_ELSEWHERE"
+                            )
+                          ) {
+                            validate32.errors = [
+                              {
+                                instancePath: instancePath + "/availability",
+                                schemaPath: "#/properties/availability/enum",
+                                keyword: "enum",
+                                params: { allowedValues: schema43.properties.availability.enum },
+                                message: "must be equal to one of the allowed values",
+                              },
+                            ];
+                            return false;
+                          }
+                          var valid5 = _errs24 === errors;
+                        } else {
+                          var valid5 = true;
+                        }
+                        if (valid5) {
+                          if (data.association_id !== undefined) {
+                            let data11 = data.association_id;
+                            const _errs25 = errors;
+                            const _errs26 = errors;
+                            let valid6 = false;
+                            const _errs27 = errors;
+                            if (errors === _errs27) {
+                              if (errors === _errs27) {
+                                if (typeof data11 === "string") {
+                                  if (!pattern4.test(data11)) {
+                                    const err3 = {
+                                      instancePath: instancePath + "/association_id",
+                                      schemaPath: "#/properties/association_id/anyOf/0/pattern",
+                                      keyword: "pattern",
+                                      params: {
+                                        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                                      },
+                                      message:
+                                        'must match pattern "' +
+                                        "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                                        '"',
+                                    };
+                                    if (vErrors === null) {
+                                      vErrors = [err3];
+                                    } else {
+                                      vErrors.push(err3);
+                                    }
+                                    errors++;
+                                  } else {
+                                    if (!formats0.test(data11)) {
+                                      const err4 = {
+                                        instancePath: instancePath + "/association_id",
+                                        schemaPath: "#/properties/association_id/anyOf/0/format",
+                                        keyword: "format",
+                                        params: { format: "uuid" },
+                                        message: 'must match format "' + "uuid" + '"',
+                                      };
+                                      if (vErrors === null) {
+                                        vErrors = [err4];
+                                      } else {
+                                        vErrors.push(err4);
+                                      }
+                                      errors++;
+                                    }
+                                  }
+                                } else {
+                                  const err5 = {
+                                    instancePath: instancePath + "/association_id",
+                                    schemaPath: "#/properties/association_id/anyOf/0/type",
+                                    keyword: "type",
+                                    params: { type: "string" },
+                                    message: "must be string",
+                                  };
+                                  if (vErrors === null) {
+                                    vErrors = [err5];
+                                  } else {
+                                    vErrors.push(err5);
+                                  }
+                                  errors++;
+                                }
+                              }
+                            }
+                            var _valid1 = _errs27 === errors;
+                            valid6 = valid6 || _valid1;
+                            const _errs29 = errors;
+                            if (data11 !== null) {
+                              const err6 = {
+                                instancePath: instancePath + "/association_id",
+                                schemaPath: "#/properties/association_id/anyOf/1/type",
+                                keyword: "type",
+                                params: { type: "null" },
+                                message: "must be null",
+                              };
+                              if (vErrors === null) {
+                                vErrors = [err6];
+                              } else {
+                                vErrors.push(err6);
+                              }
+                              errors++;
+                            }
+                            var _valid1 = _errs29 === errors;
+                            valid6 = valid6 || _valid1;
+                            if (!valid6) {
+                              const err7 = {
+                                instancePath: instancePath + "/association_id",
+                                schemaPath: "#/properties/association_id/anyOf",
+                                keyword: "anyOf",
+                                params: {},
+                                message: "must match a schema in anyOf",
+                              };
+                              if (vErrors === null) {
+                                vErrors = [err7];
+                              } else {
+                                vErrors.push(err7);
+                              }
+                              errors++;
+                              validate32.errors = vErrors;
+                              return false;
+                            } else {
+                              errors = _errs26;
+                              if (vErrors !== null) {
+                                if (_errs26) {
+                                  vErrors.length = _errs26;
+                                } else {
+                                  vErrors = null;
+                                }
+                              }
+                            }
+                            var valid5 = _errs25 === errors;
+                          } else {
+                            var valid5 = true;
+                          }
+                          if (valid5) {
+                            if (data.observed_at !== undefined) {
+                              let data12 = data.observed_at;
+                              const _errs31 = errors;
+                              if (errors === _errs31) {
+                                if (errors === _errs31) {
+                                  if (typeof data12 === "string") {
+                                    if (!pattern111.test(data12)) {
+                                      validate32.errors = [
+                                        {
+                                          instancePath: instancePath + "/observed_at",
+                                          schemaPath: "#/properties/observed_at/pattern",
+                                          keyword: "pattern",
+                                          params: { pattern: "Z$" },
+                                          message: 'must match pattern "' + "Z$" + '"',
+                                        },
+                                      ];
+                                      return false;
+                                    } else {
+                                      if (!formats4.validate(data12)) {
+                                        validate32.errors = [
+                                          {
+                                            instancePath: instancePath + "/observed_at",
+                                            schemaPath: "#/properties/observed_at/format",
+                                            keyword: "format",
+                                            params: { format: "date-time" },
+                                            message: 'must match format "' + "date-time" + '"',
+                                          },
+                                        ];
+                                        return false;
+                                      }
+                                    }
+                                  } else {
+                                    validate32.errors = [
+                                      {
+                                        instancePath: instancePath + "/observed_at",
+                                        schemaPath: "#/properties/observed_at/type",
+                                        keyword: "type",
+                                        params: { type: "string" },
+                                        message: "must be string",
+                                      },
+                                    ];
+                                    return false;
+                                  }
+                                }
+                              }
+                              var valid5 = _errs31 === errors;
+                            } else {
+                              var valid5 = true;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      validate32.errors = [
+        { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" },
+      ];
+      return false;
+    }
+  }
+  validate32.errors = vErrors;
+  return errors === 0;
+}
+validate32.evaluated = { props: true, dynamicProps: false, dynamicItems: false };

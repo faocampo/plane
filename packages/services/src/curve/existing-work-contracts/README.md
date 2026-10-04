@@ -9,8 +9,10 @@ create a controlling binding, or confer native or gate authority.
 - `project-association.service.ts` (association create, exact detail and END transport)
   uses Product preconditions for create and association preconditions for END.
   END continues to return unavailable while the backend's authoritative dependency
-  guard is absent. A source creation-time observation is not current source freshness.
-- `scope-proposal.service.ts` (finite C1 replacement and current/exact revision reads)
+  guard is absent. A source creation-time observation is not current source
+  freshness.
+- `scope-proposal.service.ts` (finite C1 replacement and current/exact
+  revision reads)
   accepts only the original `1.0` revision edition. Its returned Initiative ETag
   describes that immutable revision and is not a fresh write precondition.
 - `scoped-prd-v1.service.ts` (explicit C2a metadata and command transport) requires
@@ -77,7 +79,8 @@ match the returned Initiative version, and callers may supply a known Initiative
 version to reject a stale response. Initial discovery may omit that expectation.
 
 The reopening mutation and its new C1 revision edition remain unsupported here.
-A new C1 revision edition fails closed instead of widening `1.0`. Pending reopening can
+A new C1 revision edition fails closed instead of widening `1.0`. Pending reopening
+can
 make legacy review metadata and C2a protected GETs unavailable. That is not proof
 of an absent PRD. Recovery will need an explicit freshly authorized observation
 capture/new submission flow; a GET must never silently trigger that mutation.
@@ -97,10 +100,38 @@ implementation; a sibling Curve checkout is not required to run these tests.
 
 From the web app, run `pnpm test tests/curve/existing-work-client.test.ts` and the
 broader `pnpm test tests/curve`. Use `pnpm exec tsc -p
-tests/curve/tsconfig.existing-work.json` to type-check the source-imported tests and
+tests/curve/tsconfig.existing-work.json` to type-check the source-imported tests
+and
 services against this checkout's DTOs under the web app's ES2022 target. Run the
 normal package build/type/lint checks, plus
 `node packages/services/generate-existing-work-validators.mjs --check` at repo root.
 If dependencies are symlinked to another worktree, source-imported tests still
 exercise these services, but type/build checks must resolve this checkout's types
 rather than silently accepting the sibling's old declarations.
+
+## Native association prerequisite
+
+`project-association-preconditions.service.ts` (closed advisory native-project
+precondition GET) discovers the server-owned installation UUID and current Product
+version for an exact authorized workspace/Product/source selection. Its separate
+`curve.project-association-precondition/v1-candidate` schema adds no source body,
+role or command authority. An ACTIVE association ID is returned only for the
+selected Product; a conflict elsewhere is redacted. Archived or unavailable
+Product/project selections fail closed. The returned strong Product ETag must
+match the DTO exactly. Existing CREATE still independently checks authority,
+version, uniqueness and idempotency. No mutation or automatic retry is performed.
+
+`packages/services/tests/project-association-preconditions.test.ts` (synthetic,
+source-imported read transport and schema parity coverage) can be run from the
+repository root with the web app's existing Vitest binary:
+
+```sh
+apps/web/node_modules/.bin/vitest run \
+  --config packages/services/tests/vitest.association-read.config.mjs
+packages/services/node_modules/.bin/tsc \
+  -p packages/services/tests/tsconfig.association-read.json
+```
+
+The dedicated test configuration resolves the already-installed web test runner
+and this checkout's source types; it does not require changing shared dependency
+links or overwriting another checkout's built packages.

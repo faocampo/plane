@@ -16,6 +16,7 @@ import type {
   CurveScopedPrdApproveV1,
   CurveScopedPrdReturnV1,
   CurveScopeReopeningPreconditionsV1,
+  CurveProjectAssociationPreconditionsV1,
 } from "@plane/types";
 export declare const validateCurveProjectAssociationCreate: {
   (input: unknown): input is CurveProjectAssociationCreate;
@@ -63,5 +64,9 @@ export declare const validateCurveScopedPrdReturnV1: {
 };
 export declare const validateCurveScopeReopeningPreconditionsV1: {
   (input: unknown): input is CurveScopeReopeningPreconditionsV1;
+  errors?: unknown;
+};
+export declare const validateCurveProjectAssociationPreconditionsV1: {
+  (input: unknown): input is CurveProjectAssociationPreconditionsV1;
   errors?: unknown;
 };

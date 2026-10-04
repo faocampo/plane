@@ -11,3 +11,6 @@ storybook-static/
 apps/api/plane/curve/contracts/schemas/*.schema.json
 apps/api/plane/curve/contracts/observability/*.json
 apps/api/plane/curve/contracts/schemas/semantic-fixtures/*.json
+
+# Raw backend schema mirrors: validated by exact-byte parity, never reformatted.
+packages/services/src/curve/existing-work-contracts/*.schema.json
