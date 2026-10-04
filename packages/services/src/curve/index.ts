@@ -7,3 +7,9 @@
 export * from "./curve.service";
 
 export * from "./prd-review-context";
+
+export * from "./project-association.service";
+export * from "./scope-proposal.service";
+export * from "./scoped-prd-v1.service";
+export * from "./existing-work-validation";
+export * from "./existing-work-read-state";

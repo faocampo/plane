@@ -1,0 +1,80 @@
+{
+  "revision": {
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "product_id": "00000000-0000-0000-0000-000000000002",
+    "initiative_id": "00000000-0000-0000-0000-000000000003",
+    "schema_version": "1.0",
+    "id": "00000000-0000-0000-0000-00000000000a",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "version": 1,
+    "initiative_version": 2,
+    "predecessor_id": null,
+    "item_count": 1,
+    "delivery_count": 1,
+    "membership_digest": "sha256:e3bfa8158c3f99af503b327cc8994290786f3816e7a2b4690b9704821f2af0be",
+    "created_by": "00000000-0000-0000-0000-000000000007",
+    "recorded_at": "2026-10-04T12:00:00Z",
+    "policy_edition": "EXPLICIT_EXISTING_WORK_SCOPE_PROPOSAL_V1",
+    "command_receipt_id": "00000000-0000-0000-0000-00000000000c",
+    "controlling": false,
+    "items": [
+      {
+        "association_id": "00000000-0000-0000-0000-000000000004",
+        "association_version": 1,
+        "source_issue_id": "00000000-0000-0000-0000-000000000009",
+        "purpose": "PROPOSED_DELIVERY",
+        "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+        "source_project_id": "00000000-0000-0000-0000-000000000006",
+        "source_observed_at": "2026-10-04T12:00:00Z",
+        "source_version": "édition-🧭-東京",
+        "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  },
+  "observation": {
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "product_id": "00000000-0000-0000-0000-000000000002",
+    "initiative_id": "00000000-0000-0000-0000-000000000003",
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "scope_revision_id": "00000000-0000-0000-0000-00000000000a",
+    "scope_revision": 1,
+    "membership_digest": "sha256:e3bfa8158c3f99af503b327cc8994290786f3816e7a2b4690b9704821f2af0be",
+    "id": "00000000-0000-0000-0000-00000000000d",
+    "initiative_version": 3,
+    "members": [
+      {
+        "association_id": "00000000-0000-0000-0000-000000000004",
+        "association_version": 1,
+        "source_issue_id": "00000000-0000-0000-0000-000000000009",
+        "purpose": "PROPOSED_DELIVERY",
+        "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+        "source_project_id": "00000000-0000-0000-0000-000000000006",
+        "source_version": "édition-🧭-東京",
+        "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "reviewers": [
+      {
+        "gate_assignment_id": "00000000-0000-0000-0000-000000000014",
+        "gate_type": "CODE_READINESS",
+        "approver_user_id": "00000000-0000-0000-0000-00000000001e"
+      },
+      {
+        "gate_assignment_id": "00000000-0000-0000-0000-000000000015",
+        "gate_type": "PLAN_APPROVAL",
+        "approver_user_id": "00000000-0000-0000-0000-00000000001f"
+      },
+      {
+        "gate_assignment_id": "00000000-0000-0000-0000-000000000016",
+        "gate_type": "PRD_APPROVAL",
+        "approver_user_id": "00000000-0000-0000-0000-000000000020"
+      }
+    ],
+    "created_by": "00000000-0000-0000-0000-000000000007",
+    "recorded_at": "2026-10-04T12:00:00Z",
+    "controlling": false,
+    "digest": "sha256:0a49a9e02e26d420b31c65764e4670b76184cf35322652e2cd59ef27360c8dd7"
+  }
+}

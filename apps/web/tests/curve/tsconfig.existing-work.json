@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "noEmit": true,
+    "paths": { "@plane/types": ["../../../../packages/types/src/index.ts"] }
+  },
+  "include": ["./existing-work-client.test.ts"]
+}
