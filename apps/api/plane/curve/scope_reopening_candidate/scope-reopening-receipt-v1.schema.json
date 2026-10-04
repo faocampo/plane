@@ -74,8 +74,6 @@
       "const": "ALIGNING"
     },
     "revision": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "$id": "https://curve.example.invalid/candidates/scope-reopening-v1/scope-proposal-revision-v2.schema.json",
       "type": "object",
       "additionalProperties": false,
       "required": [
