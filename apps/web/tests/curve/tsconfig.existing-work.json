@@ -4,7 +4,9 @@
     "composite": false,
     "incremental": false,
     "noEmit": true,
-    "paths": { "@plane/types": ["../../../../packages/types/src/index.ts"] }
+    "paths": {
+      "@plane/types": ["../../../../packages/types/src/index.ts"]
+    }
   },
-  "include": ["./existing-work-client.test.ts"]
+  "include": ["./existing-work-client.test.ts", "./scope-reopening-precondition-client.test.ts"]
 }

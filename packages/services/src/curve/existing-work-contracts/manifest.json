@@ -64,5 +64,11 @@
     "type": "CurveScopedPrdReturnV1",
     "source": "apps/api/plane/curve/scoped_prd_candidate/scoped-prd-return-for-revision-v1.schema.json",
     "sha256": "8f96471cc042d9b1fa8d66fda3cb327bdb7506ce936f1be4985960884c993594"
+  },
+  {
+    "name": "scope-reopening-precondition-v1",
+    "type": "CurveScopeReopeningPreconditionsV1",
+    "source": "apps/api/plane/curve/scope_reopening_read_candidate/scope-reopening-precondition-v1.schema.json",
+    "sha256": "ae1ee3cd886156c83ca0c4f5e20b690fe7b67b34373c1cda4d6c29595b8b091e"
   }
 ]

@@ -65,3 +65,4 @@ export * from "./pagination";
 export * from "./curve-prd-review-context";
 
 export * from "./curve-existing-work";
+export * from "./curve-scope-reopening-preconditions";

@@ -66,8 +66,18 @@ read results. Refresh immediately clears old protected data; newer loads and
 clear on navigation, logout and access changes. It exposes no capabilities,
 authenticated screen, mutation queue, persistence or absent-resource inference.
 
-A future scope-reopening edition is intentionally unsupported here. A new C1
-revision edition fails closed instead of widening `1.0`. Pending reopening can
+`scope-reopening-preconditions.service.ts` (separate minimal advisory precondition
+read) implements only the approved protected GET. Its closed
+`curve.scope-reopening-precondition/v1-candidate` edition returns the known
+workspace/Initiative IDs, Initiative/scope revision pins, eligibility and pending
+state. It exposes no Product, old source/member, association or checkpoint data.
+The server requires current human ProductApprover authority and the exact read
+ACL; eligibility is never a client write grant. The numeric response ETag must
+match the returned Initiative version, and callers may supply a known Initiative
+version to reject a stale response. Initial discovery may omit that expectation.
+
+The reopening mutation and its new C1 revision edition remain unsupported here.
+A new C1 revision edition fails closed instead of widening `1.0`. Pending reopening can
 make legacy review metadata and C2a protected GETs unavailable. That is not proof
 of an absent PRD. Recovery will need an explicit freshly authorized observation
 capture/new submission flow; a GET must never silently trigger that mutation.

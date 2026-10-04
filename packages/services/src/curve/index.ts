@@ -13,3 +13,4 @@ export * from "./scope-proposal.service";
 export * from "./scoped-prd-v1.service";
 export * from "./existing-work-validation";
 export * from "./existing-work-read-state";
+export * from "./scope-reopening-preconditions.service";

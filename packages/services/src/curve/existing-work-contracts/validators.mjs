@@ -10194,3 +10194,404 @@ function validate30(
   return errors === 0;
 }
 validate30.evaluated = { props: true, dynamicProps: false, dynamicItems: false };
+export const validateCurveScopeReopeningPreconditionsV1 = validate31;
+const schema42 = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  $id: "https://curve.example.invalid/candidates/scope-reopening-precondition-v1/scope-reopening-precondition-v1.schema.json",
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "schema_version",
+    "policy_edition",
+    "workspace_id",
+    "initiative_id",
+    "initiative_version",
+    "expected_scope_revision",
+    "eligibility",
+    "pending_reopening",
+  ],
+  properties: {
+    schema_version: { const: "curve.scope-reopening-precondition/v1-candidate" },
+    policy_edition: { const: "EXPLICIT_SCOPE_REOPENING_PRECONDITION_READ_V1" },
+    workspace_id: {
+      type: "string",
+      format: "uuid",
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    },
+    initiative_id: {
+      type: "string",
+      format: "uuid",
+      pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    },
+    initiative_version: { type: "integer", minimum: 1, maximum: 9007199254740991 },
+    expected_scope_revision: { type: "integer", minimum: 1, maximum: 9007199254740991 },
+    eligibility: { enum: ["REOPENABLE", "STATE_BLOCKED"] },
+    pending_reopening: { type: "boolean" },
+  },
+};
+function validate31(
+  data,
+  { instancePath = "", parentData, parentDataProperty, rootData = data, dynamicAnchors = {} } = {}
+) {
+  /*# sourceURL="https://curve.example.invalid/candidates/scope-reopening-precondition-v1/scope-reopening-precondition-v1.schema.json" */ let vErrors =
+    null;
+  let errors = 0;
+  const evaluated0 = validate31.evaluated;
+  if (evaluated0.dynamicProps) {
+    evaluated0.props = undefined;
+  }
+  if (evaluated0.dynamicItems) {
+    evaluated0.items = undefined;
+  }
+  if (errors === 0) {
+    if (data && typeof data == "object" && !Array.isArray(data)) {
+      let missing0;
+      if (
+        (data.schema_version === undefined && (missing0 = "schema_version")) ||
+        (data.policy_edition === undefined && (missing0 = "policy_edition")) ||
+        (data.workspace_id === undefined && (missing0 = "workspace_id")) ||
+        (data.initiative_id === undefined && (missing0 = "initiative_id")) ||
+        (data.initiative_version === undefined && (missing0 = "initiative_version")) ||
+        (data.expected_scope_revision === undefined && (missing0 = "expected_scope_revision")) ||
+        (data.eligibility === undefined && (missing0 = "eligibility")) ||
+        (data.pending_reopening === undefined && (missing0 = "pending_reopening"))
+      ) {
+        validate31.errors = [
+          {
+            instancePath,
+            schemaPath: "#/required",
+            keyword: "required",
+            params: { missingProperty: missing0 },
+            message: "must have required property '" + missing0 + "'",
+          },
+        ];
+        return false;
+      } else {
+        const _errs1 = errors;
+        for (const key0 in data) {
+          if (
+            !(
+              key0 === "schema_version" ||
+              key0 === "policy_edition" ||
+              key0 === "workspace_id" ||
+              key0 === "initiative_id" ||
+              key0 === "initiative_version" ||
+              key0 === "expected_scope_revision" ||
+              key0 === "eligibility" ||
+              key0 === "pending_reopening"
+            )
+          ) {
+            validate31.errors = [
+              {
+                instancePath,
+                schemaPath: "#/additionalProperties",
+                keyword: "additionalProperties",
+                params: { additionalProperty: key0 },
+                message: "must NOT have additional properties",
+              },
+            ];
+            return false;
+            break;
+          }
+        }
+        if (_errs1 === errors) {
+          if (data.schema_version !== undefined) {
+            const _errs2 = errors;
+            if ("curve.scope-reopening-precondition/v1-candidate" !== data.schema_version) {
+              validate31.errors = [
+                {
+                  instancePath: instancePath + "/schema_version",
+                  schemaPath: "#/properties/schema_version/const",
+                  keyword: "const",
+                  params: { allowedValue: "curve.scope-reopening-precondition/v1-candidate" },
+                  message: "must be equal to constant",
+                },
+              ];
+              return false;
+            }
+            var valid0 = _errs2 === errors;
+          } else {
+            var valid0 = true;
+          }
+          if (valid0) {
+            if (data.policy_edition !== undefined) {
+              const _errs3 = errors;
+              if ("EXPLICIT_SCOPE_REOPENING_PRECONDITION_READ_V1" !== data.policy_edition) {
+                validate31.errors = [
+                  {
+                    instancePath: instancePath + "/policy_edition",
+                    schemaPath: "#/properties/policy_edition/const",
+                    keyword: "const",
+                    params: { allowedValue: "EXPLICIT_SCOPE_REOPENING_PRECONDITION_READ_V1" },
+                    message: "must be equal to constant",
+                  },
+                ];
+                return false;
+              }
+              var valid0 = _errs3 === errors;
+            } else {
+              var valid0 = true;
+            }
+            if (valid0) {
+              if (data.workspace_id !== undefined) {
+                let data2 = data.workspace_id;
+                const _errs4 = errors;
+                if (errors === _errs4) {
+                  if (errors === _errs4) {
+                    if (typeof data2 === "string") {
+                      if (!pattern4.test(data2)) {
+                        validate31.errors = [
+                          {
+                            instancePath: instancePath + "/workspace_id",
+                            schemaPath: "#/properties/workspace_id/pattern",
+                            keyword: "pattern",
+                            params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                            message:
+                              'must match pattern "' +
+                              "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                              '"',
+                          },
+                        ];
+                        return false;
+                      } else {
+                        if (!formats0.test(data2)) {
+                          validate31.errors = [
+                            {
+                              instancePath: instancePath + "/workspace_id",
+                              schemaPath: "#/properties/workspace_id/format",
+                              keyword: "format",
+                              params: { format: "uuid" },
+                              message: 'must match format "' + "uuid" + '"',
+                            },
+                          ];
+                          return false;
+                        }
+                      }
+                    } else {
+                      validate31.errors = [
+                        {
+                          instancePath: instancePath + "/workspace_id",
+                          schemaPath: "#/properties/workspace_id/type",
+                          keyword: "type",
+                          params: { type: "string" },
+                          message: "must be string",
+                        },
+                      ];
+                      return false;
+                    }
+                  }
+                }
+                var valid0 = _errs4 === errors;
+              } else {
+                var valid0 = true;
+              }
+              if (valid0) {
+                if (data.initiative_id !== undefined) {
+                  let data3 = data.initiative_id;
+                  const _errs6 = errors;
+                  if (errors === _errs6) {
+                    if (errors === _errs6) {
+                      if (typeof data3 === "string") {
+                        if (!pattern4.test(data3)) {
+                          validate31.errors = [
+                            {
+                              instancePath: instancePath + "/initiative_id",
+                              schemaPath: "#/properties/initiative_id/pattern",
+                              keyword: "pattern",
+                              params: { pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+                              message:
+                                'must match pattern "' +
+                                "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" +
+                                '"',
+                            },
+                          ];
+                          return false;
+                        } else {
+                          if (!formats0.test(data3)) {
+                            validate31.errors = [
+                              {
+                                instancePath: instancePath + "/initiative_id",
+                                schemaPath: "#/properties/initiative_id/format",
+                                keyword: "format",
+                                params: { format: "uuid" },
+                                message: 'must match format "' + "uuid" + '"',
+                              },
+                            ];
+                            return false;
+                          }
+                        }
+                      } else {
+                        validate31.errors = [
+                          {
+                            instancePath: instancePath + "/initiative_id",
+                            schemaPath: "#/properties/initiative_id/type",
+                            keyword: "type",
+                            params: { type: "string" },
+                            message: "must be string",
+                          },
+                        ];
+                        return false;
+                      }
+                    }
+                  }
+                  var valid0 = _errs6 === errors;
+                } else {
+                  var valid0 = true;
+                }
+                if (valid0) {
+                  if (data.initiative_version !== undefined) {
+                    let data4 = data.initiative_version;
+                    const _errs8 = errors;
+                    if (!(typeof data4 == "number" && !(data4 % 1) && !isNaN(data4) && isFinite(data4))) {
+                      validate31.errors = [
+                        {
+                          instancePath: instancePath + "/initiative_version",
+                          schemaPath: "#/properties/initiative_version/type",
+                          keyword: "type",
+                          params: { type: "integer" },
+                          message: "must be integer",
+                        },
+                      ];
+                      return false;
+                    }
+                    if (errors === _errs8) {
+                      if (typeof data4 == "number" && isFinite(data4)) {
+                        if (data4 > 9007199254740991 || isNaN(data4)) {
+                          validate31.errors = [
+                            {
+                              instancePath: instancePath + "/initiative_version",
+                              schemaPath: "#/properties/initiative_version/maximum",
+                              keyword: "maximum",
+                              params: { comparison: "<=", limit: 9007199254740991 },
+                              message: "must be <= 9007199254740991",
+                            },
+                          ];
+                          return false;
+                        } else {
+                          if (data4 < 1 || isNaN(data4)) {
+                            validate31.errors = [
+                              {
+                                instancePath: instancePath + "/initiative_version",
+                                schemaPath: "#/properties/initiative_version/minimum",
+                                keyword: "minimum",
+                                params: { comparison: ">=", limit: 1 },
+                                message: "must be >= 1",
+                              },
+                            ];
+                            return false;
+                          }
+                        }
+                      }
+                    }
+                    var valid0 = _errs8 === errors;
+                  } else {
+                    var valid0 = true;
+                  }
+                  if (valid0) {
+                    if (data.expected_scope_revision !== undefined) {
+                      let data5 = data.expected_scope_revision;
+                      const _errs10 = errors;
+                      if (!(typeof data5 == "number" && !(data5 % 1) && !isNaN(data5) && isFinite(data5))) {
+                        validate31.errors = [
+                          {
+                            instancePath: instancePath + "/expected_scope_revision",
+                            schemaPath: "#/properties/expected_scope_revision/type",
+                            keyword: "type",
+                            params: { type: "integer" },
+                            message: "must be integer",
+                          },
+                        ];
+                        return false;
+                      }
+                      if (errors === _errs10) {
+                        if (typeof data5 == "number" && isFinite(data5)) {
+                          if (data5 > 9007199254740991 || isNaN(data5)) {
+                            validate31.errors = [
+                              {
+                                instancePath: instancePath + "/expected_scope_revision",
+                                schemaPath: "#/properties/expected_scope_revision/maximum",
+                                keyword: "maximum",
+                                params: { comparison: "<=", limit: 9007199254740991 },
+                                message: "must be <= 9007199254740991",
+                              },
+                            ];
+                            return false;
+                          } else {
+                            if (data5 < 1 || isNaN(data5)) {
+                              validate31.errors = [
+                                {
+                                  instancePath: instancePath + "/expected_scope_revision",
+                                  schemaPath: "#/properties/expected_scope_revision/minimum",
+                                  keyword: "minimum",
+                                  params: { comparison: ">=", limit: 1 },
+                                  message: "must be >= 1",
+                                },
+                              ];
+                              return false;
+                            }
+                          }
+                        }
+                      }
+                      var valid0 = _errs10 === errors;
+                    } else {
+                      var valid0 = true;
+                    }
+                    if (valid0) {
+                      if (data.eligibility !== undefined) {
+                        let data6 = data.eligibility;
+                        const _errs12 = errors;
+                        if (!(data6 === "REOPENABLE" || data6 === "STATE_BLOCKED")) {
+                          validate31.errors = [
+                            {
+                              instancePath: instancePath + "/eligibility",
+                              schemaPath: "#/properties/eligibility/enum",
+                              keyword: "enum",
+                              params: { allowedValues: schema42.properties.eligibility.enum },
+                              message: "must be equal to one of the allowed values",
+                            },
+                          ];
+                          return false;
+                        }
+                        var valid0 = _errs12 === errors;
+                      } else {
+                        var valid0 = true;
+                      }
+                      if (valid0) {
+                        if (data.pending_reopening !== undefined) {
+                          const _errs13 = errors;
+                          if (typeof data.pending_reopening !== "boolean") {
+                            validate31.errors = [
+                              {
+                                instancePath: instancePath + "/pending_reopening",
+                                schemaPath: "#/properties/pending_reopening/type",
+                                keyword: "type",
+                                params: { type: "boolean" },
+                                message: "must be boolean",
+                              },
+                            ];
+                            return false;
+                          }
+                          var valid0 = _errs13 === errors;
+                        } else {
+                          var valid0 = true;
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      validate31.errors = [
+        { instancePath, schemaPath: "#/type", keyword: "type", params: { type: "object" }, message: "must be object" },
+      ];
+      return false;
+    }
+  }
+  validate31.errors = vErrors;
+  return errors === 0;
+}
+validate31.evaluated = { props: true, dynamicProps: false, dynamicItems: false };
