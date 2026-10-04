@@ -131,7 +131,6 @@ be repeated after reload to continue submission. Empty replacement remains
 unsupported. No real-provider qualification, visual acceptance, broad repository
 check, public push, PR, tag movement or live activation occurred.
 
-
 ## Reproduction commands and retained logs
 
 Run from the backend app root using the restored disposable harness. The harness
