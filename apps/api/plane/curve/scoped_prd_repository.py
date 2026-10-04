@@ -236,12 +236,14 @@ def record_scoped_submission(*, receipt, record, context, snapshot, version, che
         subject.save()
         initiative.current_prd_checkpoint_id = checkpoint.id
         initiative.controlling_prd_decision_id = None
+        initiative.pending_scope_reopening_id = None
         initiative.state = "PRD_REVIEW"
         initiative.version += 1
         initiative.updated_by = deepcopy(actor)
         initiative.save(
             update_fields=[
                 "current_prd_checkpoint_id",
+                "pending_scope_reopening_id",
                 "controlling_prd_decision_id",
                 "state",
                 "version",

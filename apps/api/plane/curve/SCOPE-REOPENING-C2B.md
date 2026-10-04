@@ -56,6 +56,10 @@ creation, imported body, persistent permission evidence or source mutation.
 Old scope history is integrity-checked without demanding access to removed items;
 this permits remediation of deleted, inaccessible or obsolete historical members.
 The public receipt contains only replacement members, never removed-item data.
+The C1 precondition-discovery gap is closed by the separate read in
+`SCOPE-REOPENING-PRECONDITIONS-C2B.md` (minimal protected version pins). It exposes
+only already-known target IDs, version preconditions and advisory pending/eligible
+status to the current ProductApprover. It grants no write or source permission.
 
 All current checks are repeated after callbacks and before commit under workspace,
 Initiative, assignments, Product, human/member, scope head/revision, association,
@@ -76,7 +80,12 @@ head, sets Initiative to ALIGNING, increments its version, clears
 controlling_prd_decision_id, sets pending_scope_reopening_id, and commits policy,
 audit, DomainEvent, OutboxEvent and idempotency result. It is allowed only from
 ALIGNING, PRD_REVIEW or PLANNING in a verified pre-plan model edition. DRAFT,
-PAUSED, terminal and unsupported state/domain editions fail closed.
+PAUSED, terminal and unsupported state/domain editions fail closed. Existing
+authorized pause/resume/cancel transitions remain available after reopening with
+the marker retained and approval cleared: ALIGNING -> PAUSED (from ALIGNING),
+PAUSED -> ALIGNING, and ALIGNING/PAUSED -> CANCELLED. Reopening never resumes a
+paused Initiative or reactivates a terminal one. Ordinary ALIGNING metadata edits
+may advance the version without clearing the marker or restoring PRD authority.
 
 current_prd_checkpoint_id remains the last retained checkpoint solely as the
 predecessor for a later submission. Pending marker explicitly invalidates its
@@ -87,7 +96,11 @@ from RETAINED_STALE historical checkpoint status; approval_invalidated is a bool
 not a disclosure of a prior decision ID. It exposes no previous member list.
 
 Generic PRD metadata and current/scoped subject reads fail closed while pending;
-their closed DTOs are not widened. Scope GET dispatches the exact successor revision
+their closed DTOs are not widened. Observation GET also remains unavailable while
+pending because it uses that same protected read seam. POST observation returns
+its fresh closed DTO directly, and a new POST capture after reload can recover
+the required submission inputs; this is a bounded usability limitation, not a
+permanent submission dead end. Scope GET dispatches the exact successor revision
 schema, which conveys membership but makes no PRD authority claim. A fresh C2a
 observation may be captured; a fresh exact scoped checkpoint/subject/readiness and
 submission must commit atomically before the marker can clear. The new checkpoint
@@ -117,12 +130,20 @@ hashes, known writer inventory and proposed C2b additions) freezes the baseline.
 Migration names alone are never proof of deployed bytes or absence of an approved
 plan. Qualification has two independent parts:
 
-1. Application verifies pinned migration source bytes and exact registered Curve
+1. Application verifies exact supported Curve runtime Python module names and
+   bytes, pinned migration source bytes and exact registered Curve
    model/table/column catalog against a server-owned local qualification. The final
    0023 digest is pinned in a separate qualification artifact only after its code
    is finalized; the migration does not contain its own source hash. Unknown
    migration successors, source tampering, registered models or catalog changes
-   deny reopening. No operator boolean can waive this proof.
+   deny reopening. Tests are excluded from runtime writers; migrations are pinned
+   separately. The small `scope_reopening_qualification.py` (qualification
+   validator/loader) is the explicit trusted root excluded from its own source
+   closure to avoid recursive self-hashing. Unknown manifest shapes fail closed.
+   This reviewed local compatibility proof does not detect malicious replacement
+   of that trusted root, arbitrary outside code, or privileged DB operators.
+   External/dynamic writers are unsupported and default-off. No operator boolean
+   can waive this proof.
 2. DB guards independently verify the deployed physical Curve table/column,
    constraint, trigger and relevant function-definition catalog against an immutable
    versioned coverage seal. Seal installation must validate expected known

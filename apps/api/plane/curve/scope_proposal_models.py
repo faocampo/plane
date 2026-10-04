@@ -44,7 +44,12 @@ class ScopeRecord(models.Model):
     def save(self, *args, **kwargs):
         from .scope_proposal_policy import assert_scope_write
 
-        assert_scope_write(self)
+        from .scope_reopening_repository import reopening_write_active, assert_reopening_write
+
+        if reopening_write_active():
+            assert_reopening_write(self)
+        else:
+            assert_scope_write(self)
         if not self._state.adding and not isinstance(self, ScopeProposal):
             raise ImmutableRecordError("Scope revision and member history is immutable")
         return super().save(*args, **kwargs)
@@ -97,7 +102,10 @@ class ScopeProposalRevision(ScopeRecord):
             models.CheckConstraint(
                 condition=models.Q(membership_digest__regex=r"^sha256:[0-9a-f]{64}$"), name="curve_scope_digest_ck"
             ),
-            models.CheckConstraint(condition=models.Q(policy_edition=POLICY_EDITION), name="curve_scope_policy_ck"),
+            models.CheckConstraint(
+                condition=models.Q(policy_edition__in=[POLICY_EDITION, "REOPENED_EXISTING_WORK_SCOPE_PROPOSAL_V1"]),
+                name="curve_scope_policy_ck",
+            ),
         ]
 
 

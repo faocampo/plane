@@ -400,6 +400,7 @@ class Initiative(models.Model):
     first_external_resource_at = models.DateTimeField(null=True, blank=True, editable=False)
     current_prd_checkpoint_id = models.UUIDField(null=True, blank=True, editable=False)
     controlling_prd_decision_id = models.UUIDField(null=True, blank=True, editable=False)
+    pending_scope_reopening_id = models.UUIDField(null=True, blank=True, editable=False)
     version = models.PositiveBigIntegerField(default=1, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
@@ -1364,6 +1365,11 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_version=1,
                         policy_manifest_digest="sha256:778bdbd6fb82f51482d791d22ae6cf884a8906e91613b07cdafc6b429d24e266",
                     )
+                    | models.Q(
+                        policy_key="CURVE_SCOPE_REOPENING_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:598e492b7dc23369eaf3029d7e208b4fd338d03d3e3388fcb10305e9c02b0094",
+                    )
                     | models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
                     | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
@@ -1447,3 +1453,5 @@ from .scoped_prd_models import (  # noqa: E402,F401
     ScopedPrdSubject,
     ScopedPrdDecision,
 )
+
+from .scope_reopening_models import ScopeReopening  # noqa: E402,F401

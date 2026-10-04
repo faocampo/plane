@@ -34,6 +34,29 @@ class PrdAuthorityUnavailable(PermissionError):
 
 
 def build_prd_policy_context(*, request, workspace_slug, initiative_id, action, acl_resolver, for_update=False):
+    return _build_gate_policy_context(
+        request=request,
+        workspace_slug=workspace_slug,
+        initiative_id=initiative_id,
+        action=action,
+        acl_resolver=acl_resolver,
+        for_update=for_update,
+        supported_actions=PRD_ACTIONS,
+        manifest_digest=PRD_POLICY_MANIFEST_DIGEST,
+    )
+
+
+def _build_gate_policy_context(
+    *,
+    request,
+    workspace_slug,
+    initiative_id,
+    action,
+    acl_resolver,
+    for_update,
+    supported_actions,
+    manifest_digest,
+):
     if for_update and not transaction.get_connection().in_atomic_block:
         raise PermissionError("PRD_AUTHORIZATION_TRANSACTION_REQUIRED")
     try:
@@ -64,7 +87,7 @@ def build_prd_policy_context(*, request, workspace_slug, initiative_id, action, 
         and getattr(settings, "CURVE_PRD_COMMANDS_ENABLED", False) is True
     )
     initiative = None
-    if membership is not None and enabled and action in PRD_ACTIONS:
+    if membership is not None and enabled and action in supported_actions:
         initiative = Initiative.objects.find_by_id(
             workspace_id=workspace.id, record_id=resolved_id, for_update=for_update
         )
@@ -161,6 +184,6 @@ def build_prd_policy_context(*, request, workspace_slug, initiative_id, action, 
         target_context=None,
         service_authorization=None,
         evaluated_at=now.isoformat(),
-        policy_manifest_digest=PRD_POLICY_MANIFEST_DIGEST,
+        policy_manifest_digest=manifest_digest,
         correlation_id=correlation_id_for_request(request),
     )

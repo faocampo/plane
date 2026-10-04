@@ -26,8 +26,17 @@ def scope_membership_digest(items):
 
 
 def serialize_scope_revision(revision, items):
+    from .scope_proposal_models import POLICY_EDITION
+    from .scope_reopening_contracts import REVISION_EDITION
+
+    if revision.policy_edition == POLICY_EDITION:
+        schema_version = "1.0"
+    elif revision.policy_edition == REVISION_EDITION:
+        schema_version = "2.0"
+    else:
+        raise ValueError("Unknown scope revision edition")
     return {
-        "schema_version": "1.0",
+        "schema_version": schema_version,
         "id": str(revision.id),
         "workspace_id": str(revision.workspace_id),
         "proposal_id": str(revision.proposal_id),

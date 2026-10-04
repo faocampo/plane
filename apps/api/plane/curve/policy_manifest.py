@@ -16,11 +16,19 @@ CORE_POLICY_V2_MANIFEST_DIGEST = "sha256:2895b63392236afa07e6f0572d6ddb1c91aa7f4
 CORE_POLICY_V2_MANIFEST_PATH = Path(__file__).resolve().parent / "contracts" / "policy" / "core-policy-v2.json"
 PRD_POLICY_MANIFEST_DIGEST = "sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c"
 PRD_POLICY_MANIFEST_PATH = Path(__file__).resolve().parent / "prd_candidate_policy" / "prd-policy-v1.json"
+SCOPE_REOPENING_POLICY_MANIFEST_DIGEST = "sha256:598e492b7dc23369eaf3029d7e208b4fd338d03d3e3388fcb10305e9c02b0094"
+SCOPE_REOPENING_POLICY_MANIFEST_PATH = Path(__file__).resolve().parent / "scope_reopening_candidate" / "policy-v1.json"
+SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST = "sha256:bff7796e940087af1d1150f142800204fa9c26786ed911c9f449c44a0515916a"
+SCOPE_REOPENING_READ_POLICY_MANIFEST_PATH = (
+    Path(__file__).resolve().parent / "scope_reopening_read_candidate" / "policy-v1.json"
+)
 SUPPORTED_CORE_POLICY_MANIFEST_DIGESTS = frozenset(
     {
         CORE_POLICY_MANIFEST_DIGEST,
         CORE_POLICY_V2_MANIFEST_DIGEST,
         PRD_POLICY_MANIFEST_DIGEST,
+        SCOPE_REOPENING_POLICY_MANIFEST_DIGEST,
+        SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST,
     }
 )
 
@@ -137,6 +145,28 @@ def load_prd_policy_manifest() -> Mapping[str, object]:
     )
 
 
+@lru_cache(maxsize=1)
+def load_scope_reopening_policy_manifest() -> Mapping[str, object]:
+    return _load_manifest(
+        manifest_path=SCOPE_REOPENING_POLICY_MANIFEST_PATH,
+        manifest_digest=SCOPE_REOPENING_POLICY_MANIFEST_DIGEST,
+        schema_version="1.0-candidate",
+        policy_version=1,
+        policy_key="CURVE_SCOPE_REOPENING_POLICY",
+    )
+
+
+@lru_cache(maxsize=1)
+def load_scope_reopening_read_policy_manifest() -> Mapping[str, object]:
+    return _load_manifest(
+        manifest_path=SCOPE_REOPENING_READ_POLICY_MANIFEST_PATH,
+        manifest_digest=SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST,
+        schema_version="1.0-candidate",
+        policy_version=1,
+        policy_key="CURVE_SCOPE_REOPENING_PRECONDITION_POLICY",
+    )
+
+
 def load_core_policy_manifest_for_digest(policy_manifest_digest: object) -> Mapping[str, object] | None:
     """Resolve only a supported exact digest without silently changing policy."""
 
@@ -146,6 +176,10 @@ def load_core_policy_manifest_for_digest(policy_manifest_digest: object) -> Mapp
         return load_core_policy_v2_manifest()
     if policy_manifest_digest == PRD_POLICY_MANIFEST_DIGEST:
         return load_prd_policy_manifest()
+    if policy_manifest_digest == SCOPE_REOPENING_POLICY_MANIFEST_DIGEST:
+        return load_scope_reopening_policy_manifest()
+    if policy_manifest_digest == SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST:
+        return load_scope_reopening_read_policy_manifest()
     return None
 
 
@@ -153,3 +187,5 @@ def clear_core_policy_manifest_cache():
     load_core_policy_manifest.cache_clear()
     load_core_policy_v2_manifest.cache_clear()
     load_prd_policy_manifest.cache_clear()
+    load_scope_reopening_policy_manifest.cache_clear()
+    load_scope_reopening_read_policy_manifest.cache_clear()

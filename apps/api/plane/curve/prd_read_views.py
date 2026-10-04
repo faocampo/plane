@@ -39,8 +39,14 @@ def resolve_prd_read_scope(*, request, workspace_slug, initiative_id):
         ).exists()
     ):
         raise PrdReadUnavailable
-    initiative = Initiative.objects.filter(workspace_id=workspace["id"], id=initiative_id).values("version").first()
-    if initiative is None:
+    initiative = (
+        Initiative.objects.filter(workspace_id=workspace["id"], id=initiative_id)
+        .values("version", "pending_scope_reopening_id")
+        .first()
+    )
+    if initiative is None or initiative["pending_scope_reopening_id"] is not None:
+        # The retained checkpoint is historical while reopening is pending.
+        # The old closed metadata DTO cannot truthfully label this state.
         raise PrdReadUnavailable
     return {
         "workspace_id": str(workspace["id"]),

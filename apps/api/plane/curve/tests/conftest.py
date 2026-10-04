@@ -1,0 +1,51 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
+"""Keep immutable-ledger TRUNCATE protection active outside Django test teardown.
+
+Django's PostgreSQL execute_sql_flush() executes its entire generated SQL list in
+one transaction.atomic() block, with rollback-safe DDL. Only that generated list
+is adapted here: disable the ledger's statement-level TRUNCATE trigger, execute
+Django's original fixture cleanup, and enable/check the trigger before commit.
+The unmanaged coverage seal is never flushed. There is no application setting,
+raw-SQL interception, or test-body interval in which the protection is disabled.
+"""
+
+import pytest
+
+
+@pytest.fixture(scope="session", autouse=True)
+def immutable_reopening_ledger_test_teardown():
+    from django.db.backends.postgresql.operations import DatabaseOperations
+
+    original = DatabaseOperations.sql_flush
+
+    def sql_flush(operations, style, tables, *, reset_sequences=False, allow_cascade=False):
+        statements = original(operations, style, tables, reset_sequences=reset_sequences, allow_cascade=allow_cascade)
+        if "curve_scope_reopening" not in tables:
+            return statements
+        assert "curve_scope_reopening_coverage" not in tables, "Immutable coverage seal must survive fixture cleanup"
+        return [
+            """DO $$ BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_trigger
+                WHERE tgrelid='curve_scope_reopening'::regclass
+                  AND tgname='curve_reopen_no_truncate' AND tgenabled='O') THEN
+                RAISE EXCEPTION 'Reopening TRUNCATE guard was not enabled before fixture cleanup';
+              END IF;
+            END $$;""",
+            "ALTER TABLE curve_scope_reopening DISABLE TRIGGER curve_reopen_no_truncate;",
+            *statements,
+            "ALTER TABLE curve_scope_reopening ENABLE TRIGGER curve_reopen_no_truncate;",
+            """DO $$ BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_trigger
+                WHERE tgrelid='curve_scope_reopening'::regclass
+                  AND tgname='curve_reopen_no_truncate' AND tgenabled='O') THEN
+                RAISE EXCEPTION 'Reopening TRUNCATE guard was not restored after fixture cleanup';
+              END IF;
+              PERFORM curve_scope_reopening_verify_coverage();
+            END $$;""",
+        ]
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(DatabaseOperations, "sql_flush", sql_flush)
+        yield

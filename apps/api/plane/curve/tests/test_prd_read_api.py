@@ -155,7 +155,10 @@ def test_actual_scope_selector_uses_active_human_membership_and_exact_tenant(mon
     workspaces, members, initiatives = MagicMock(), MagicMock(), MagicMock()
     workspaces.filter.return_value.values.return_value.first.return_value = {"id": uuid.UUID(uid(1))}
     members.filter.return_value.exists.return_value = True
-    initiatives.filter.return_value.values.return_value.first.return_value = {"version": 7}
+    initiatives.filter.return_value.values.return_value.first.return_value = {
+        "version": 7,
+        "pending_scope_reopening_id": None,
+    }
     monkeypatch.setattr(Workspace, "objects", workspaces)
     monkeypatch.setattr(WorkspaceMember, "objects", members)
     monkeypatch.setattr(Initiative, "objects", initiatives)
@@ -174,7 +177,7 @@ def test_actual_scope_selector_uses_active_human_membership_and_exact_tenant(mon
         member__is_bot=False,
     )
     initiatives.filter.assert_called_once_with(workspace_id=uuid.UUID(uid(1)), id=uid(2))
-    initiatives.filter.return_value.values.assert_called_once_with("version")
+    initiatives.filter.return_value.values.assert_called_once_with("version", "pending_scope_reopening_id")
     members.filter.return_value.exists.return_value = False
     initiatives.reset_mock()
     with pytest.raises(PrdReadUnavailable):

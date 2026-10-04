@@ -47,6 +47,7 @@ def load_locked_scope(*, workspace_id, initiative_id):
         # Lazy imports avoid a models/repository cycle during app initialization.
         from .scope_proposal_models import POLICY_EDITION, ScopeProposal, ScopeProposalItem, ScopeProposalRevision
         from .scope_proposal_serialization import scope_membership_digest, serialize_scope_item
+        from .scope_reopening_contracts import REVISION_EDITION
 
         # Do not workspace-filter damaged metadata into apparent absence.
         heads = list(ScopeProposal.objects.select_for_update().filter(initiative_id=initiative.id)[:2])
@@ -72,7 +73,7 @@ def load_locked_scope(*, workspace_id, initiative_id):
             and revision.version == head.version
             and type(revision.initiative_version) is int
             and head.version + 1 <= revision.initiative_version <= initiative.version
-            and revision.policy_edition == POLICY_EDITION
+            and revision.policy_edition in {POLICY_EDITION, REVISION_EDITION}
             and isinstance(revision.created_by, uuid.UUID)
             and isinstance(revision.command_receipt_id, uuid.UUID)
             and _instant(revision.recorded_at)
@@ -128,6 +129,10 @@ def load_locked_scope(*, workspace_id, initiative_id):
         _require(
             scope_membership_digest([serialize_scope_item(member) for member in members]) == revision.membership_digest
         )
+        if revision.policy_edition == REVISION_EDITION:
+            from .scope_reopening_repository import require_reopened_revision
+
+            require_reopened_revision(revision, members)
         return initiative, head, revision, members
     except Exception:
         raise PrdCommandError("SCOPED_PRD_SCOPE_UNAVAILABLE", 503) from None

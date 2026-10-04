@@ -156,6 +156,12 @@ def load_scope_revision(context, revision_id=None):
         or revision.membership_digest != scope_membership_digest([serialize_scope_item(item) for item in items])
     ):
         raise CurvePolicyResourceNotFound
+    from .scope_reopening_repository import validate_scope_revision_edition
+
+    try:
+        validate_scope_revision_edition(revision, items)
+    except Exception:
+        raise CurvePolicyResourceNotFound from None
     return revision, items
 
 
@@ -384,8 +390,9 @@ def read_scope_proposal(*, request, workspace_slug, initiative_id, revision_id=N
             raise CurvePolicyResourceNotFound
         _authorize_revision(receipt, context, revision, items)
         append_scope_audit(receipt, target_ref=_ref(revision), outcome=AuditOutcome.ALLOWED)
-        data = serialize_scope_revision(revision, items)
-        validate_scope_contract("scope-proposal-revision-v1", data)
+        from .scope_reopening_repository import validate_scope_revision_edition
+
+        data = validate_scope_revision_edition(revision, items)
         return ScopeResult(data, 200)
 
     return execute_scope_action(
