@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "paths": {
+      "@/*": ["./core/*"],
+      "@/app/*": ["./app/*"],
+      "@/helpers/*": ["./helpers/*"],
+      "@/styles/*": ["./styles/*"],
+      "package.json": ["./package.json"],
+      "@plane/types": ["../../packages/types/src/index.ts"],
+      "@plane/services": ["../../packages/services/src/index.ts"]
+    }
+  }
+}

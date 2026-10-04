@@ -45,7 +45,7 @@ export default function CurveProjectsPage({ params }: Route.ComponentProps) {
       <PageHead title="Projects · Curve" />
       <CurveProjectsHeader />
       <div className="size-full overflow-y-auto bg-surface-1">
-        <ProjectOutlook workspaceSlug={workspaceSlug} />
+        <ProjectOutlook workspaceSlug={workspaceSlug} workspaceId={shell.workspace_id} />
       </div>
     </>
   );
