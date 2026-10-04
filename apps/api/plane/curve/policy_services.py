@@ -965,8 +965,15 @@ def request_operation_cancellation(
         from plane.curve.temporal.prd_contracts import PRD_DESTINATION
 
         actor = _human_actor(request.user)
+        from plane.curve.scoped_prd_models import ScopedPrdAcceptedCommand
+        from plane.curve.temporal.scoped_prd_contracts import PRD_DESTINATION as SCOPED_PRD_DESTINATION
+
         resolved_destination = (
-            PRD_DESTINATION
+            SCOPED_PRD_DESTINATION
+            if ScopedPrdAcceptedCommand.objects.filter(
+                workspace_id=receipt.workspace_id, operation_id=operation_id
+            ).exists()
+            else PRD_DESTINATION
             if PrdAcceptedCommand.objects.filter(workspace_id=receipt.workspace_id, operation_id=operation_id).exists()
             else destination
         )

@@ -343,6 +343,9 @@ async def run_relay_loop(*, client: Client, worker_id: str, stop_event: asyncio.
             from plane.curve.temporal.prd_relay import relay_prd_workspace_once
 
             await relay_prd_workspace_once(client=client, workspace_id=workspace_id, worker_id=worker_id)
+            from plane.curve.temporal.scoped_prd_relay import relay_scoped_prd_workspace_once
+
+            await relay_scoped_prd_workspace_once(client=client, workspace_id=workspace_id, worker_id=worker_id)
         try:
             await asyncio.wait_for(stop_event.wait(), timeout=0.5)
         except TimeoutError:

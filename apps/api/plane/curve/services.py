@@ -285,7 +285,7 @@ def _validate_transition_command(
         _validate_text(workflow_id, "workflow_id", maximum=1000)
         if (
             re.fullmatch(
-                r"curve:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:"
+                r"(?:curve|curve-scoped-prd-v1):[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:"
                 r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}",
                 workflow_id,
             )
@@ -892,7 +892,10 @@ def _request_operation_cancellation_authorized(
             and operation.workflow_id
             or operation.status in {OperationStatus.PENDING, OperationStatus.QUEUED, OperationStatus.RUNNING}
             and operation.operation_type == OperationType.WORKFLOW_COMMAND
-            and PrdAcceptedCommand.objects.filter(workspace_id=workspace_id, operation_id=operation.id).exists()
+            and (
+                PrdAcceptedCommand.objects.filter(workspace_id=workspace_id, operation_id=operation.id).exists()
+                or _has_scoped_prd_command(workspace_id, operation)
+            )
         ):
             _append_audit_event(
                 workspace_id=workspace_id,
@@ -1044,6 +1047,14 @@ def _transition_operation_authorized(
         operation = Operation.objects.select_for_update().filter(workspace_id=workspace_id, id=operation_id).first()
         if operation is None:
             raise CurveResourceNotFound
+        scoped_prd = _has_scoped_prd_command(workspace_id, operation)
+        if scoped_prd and destination != "CURVE_SCOPED_PRD_CANDIDATE_V1":
+            _invalid("destination")
+        if workflow_id is not None:
+            if workflow_id.startswith("curve-scoped-prd-v1:") and not scoped_prd:
+                _invalid("workflow_id")
+            if scoped_prd and workflow_id != f"curve-scoped-prd-v1:{workspace_id}:{operation_id}":
+                _invalid("workflow_id")
         if operation.aggregate_version != expected_version:
             _append_audit_event(
                 workspace_id=workspace_id,
@@ -1426,3 +1437,12 @@ def complete_inbox_message(
         message.last_error = None
         message.save(update_fields=["state", "processed_at", "result_digest", "last_error"])
         return message
+
+
+def _has_scoped_prd_command(workspace_id, operation):
+    """Explicit durable edition identity for safe pre-dispatch cancellation."""
+    from .scoped_prd_models import ScopedPrdAcceptedCommand
+
+    return ScopedPrdAcceptedCommand.objects.filter(
+        workspace_id=workspace_id, operation_id=operation.id, edition="curve.scoped-prd/v1-candidate"
+    ).exists() and operation.command_type.startswith("SCOPED_PRD_V1_")

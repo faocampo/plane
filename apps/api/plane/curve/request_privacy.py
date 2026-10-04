@@ -9,6 +9,10 @@ import re
 PRD_COMMAND_MAX_BYTES = 65536
 _CURVE = re.compile(r"^/api/v1/workspaces/[^/]+/curve(?:/|$)")
 _PRD = re.compile(r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/prd/(submit|approve|return-for-revision)/?$")
+_SCOPED_PRD = re.compile(
+    r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/scoped-prd/v1/"
+    r"(observations|submit|approve|return-for-revision)/?$"
+)
 
 
 def is_curve_request(request):
@@ -16,7 +20,7 @@ def is_curve_request(request):
 
 
 def is_prd_command_request(request):
-    return bool(_PRD.fullmatch(request.path_info))
+    return bool(_PRD.fullmatch(request.path_info) or _SCOPED_PRD.fullmatch(request.path_info))
 
 
 SCOPE_PROPOSAL_MAX_BYTES = 65536

@@ -11,6 +11,11 @@ from plane.curve.project_association_views import (
 )
 from plane.curve.prd_views import CurvePrdCommandEndpoint
 from plane.curve.prd_read_views import CurvePrdReviewContextEndpoint
+from plane.curve.scoped_prd_views import (
+    CurveScopedPrdCommandEndpoint,
+    CurveScopedPrdObservationEndpoint,
+    CurveScopedPrdSubjectEndpoint,
+)
 
 from plane.curve.views import (
     CurveEventStreamEndpoint,
@@ -34,6 +39,41 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/observations",
+        CurveScopedPrdCommandEndpoint.as_view(route="observe"),
+        name="curve-scoped-prd-observe",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/observations/<uuid:observation_id>",
+        CurveScopedPrdObservationEndpoint.as_view(),
+        name="curve-scoped-prd-observation",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/subjects/current",
+        CurveScopedPrdSubjectEndpoint.as_view(),
+        name="curve-scoped-prd-subject-current",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/subjects/<uuid:scoped_subject_id>",
+        CurveScopedPrdSubjectEndpoint.as_view(),
+        name="curve-scoped-prd-subject",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/submit",
+        CurveScopedPrdCommandEndpoint.as_view(route="submit"),
+        name="curve-scoped-prd-submit",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/approve",
+        CurveScopedPrdCommandEndpoint.as_view(route="approve"),
+        name="curve-scoped-prd-approve",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/return-for-revision",
+        CurveScopedPrdCommandEndpoint.as_view(route="return-for-revision"),
+        name="curve-scoped-prd-return-for-revision",
+    ),
     path(
         "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-proposal/",
         CurveScopeProposalEndpoint.as_view(),

@@ -1439,3 +1439,11 @@ from .prd_readiness_models import PrdReadinessRecord  # noqa: E402,F401
 from .project_association_models import ProjectAssociation, ProjectAssociationState  # noqa: E402,F401
 
 from .scope_proposal_models import ScopeProposal, ScopeProposalRevision, ScopeProposalItem, ScopePurpose  # noqa: E402,F401
+
+from .scoped_prd_models import (  # noqa: E402,F401
+    ScopedPrdAcceptedCommand,
+    ScopedPrdObservation,
+    ScopedPrdReadiness,
+    ScopedPrdSubject,
+    ScopedPrdDecision,
+)

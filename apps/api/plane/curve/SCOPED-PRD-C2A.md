@@ -158,15 +158,18 @@ Approve requires current PRD_REVIEW and reaches PLANNING only. Return for revisi
 uses PRD_REVIEW -> ALIGNING. There is no post-DRAFT scope-reopen action and no
 Gate 2, plan, controlling row, execution, completion credit or association END.
 
-Lock hierarchy follows existing ordinary policy and C1 native scope paths:
-workspace/current human memberships -> Initiative -> assignments -> Product ->
-C1 head/revision/items -> sorted associations -> sorted projects/memberships ->
-sorted Issues -> States, with Operation locked inside the existing authorized
+Lock hierarchy follows the existing ordinary policy receipt, then the scoped
+current guard: workspace -> current human memberships -> Initiative -> assignments
+-> Product -> current users/memberships -> C1 head/revision/items -> sorted
+associations -> sorted projects/memberships -> sorted Issues -> States. The
+workspace row is a coarse fence serializing Curve policy and lifecycle commands;
+native source rows are separately locked because native edits do not acquire that
+Curve workspace fence. Operation locks stay inside the existing authorized
 callback. Repeat native predicates after all source locks. Reads/commands and
-settlement must not acquire the same subjects in conflicting order. Scope head,
-association and source lifecycle mutations must either precede validation and
-fail the command or follow its commit. C1 DRAFT-only mutation cannot race past a
-completed refinement/submission under the Initiative lock.
+settlement must follow the same hierarchy. Scope head, association and source
+lifecycle mutations must either precede validation and fail the command or follow
+its commit. C1 DRAFT-only mutation cannot race past a completed refinement or
+submission under the Initiative lock.
 
 `scope_prd_guard.py` (always-on legacy delivery-scope fence) remains active at all
 legacy acceptance, repository and completion paths independent of C1/C2 flags.

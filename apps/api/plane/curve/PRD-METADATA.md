@@ -613,3 +613,45 @@ adds metadata tables without rewriting existing Initiative/provider/Plane rows.
 Reverse migration locks the new tables and fails atomically if any contains
 metadata. Retained use requires a preserving migration or governed retention
 operation. These tests perform no live deployment or protected-copy erasure.
+
+## Local C2a exact existing-work edition
+
+The [C2a packet](SCOPED-PRD-C2A.md) (frozen C1 selection, explicit observations and
+ordinary Gate 1 through PLANNING) defines a separate local scoped edition. The
+[closed contracts](scoped_prd_candidate/) (commands, observation, readiness,
+checkpoint subject and decision metadata) do not widen legacy PRD schemas or
+change their digests. The [scoped records](scoped_prd_models.py) (independent
+accepted commands and immutable typed sidecars) require same-transaction base
+record provenance through the [migration](migrations/0022_scoped_prd.py)
+(composite workspace references, immutable graph and atomic audit/outbox guards).
+
+An authorized observation capture after refinement freezes only current reviewed
+identity/lifecycle metadata for the already-selected finite membership. Source
+changes require a new observation and submission; they never reopen selection or
+rewrite old evidence. The PRD remains the source of remaining outcomes and
+acceptance criteria. Native task titles, descriptions and acceptance text are
+not copied into scoped metadata. Protected task-body evidence, when required,
+needs the existing separately authorized artifact capture.
+
+The [scoped API](scoped_prd_views.py) (session-authenticated capture/commands and
+exact protected reads) uses its own explicit edition. The [source fence](scoped_prd_policy.py) (each current human's native per-item access and all three
+reviewers) is repeated at preparation, acceptance, completion and replay. The
+[completion service](scoped_prd_completion.py) (durable recovery and safe
+cancellation/failure settlement) commits a scoped readiness/checkpoint subject
+or exact review decision atomically. A successful replay cannot bypass revoked
+native or ordinary PRD permissions. The [legacy fence](scope_prd_guard.py)
+(always-on rejection of legacy submission/approval on delivery scope) remains
+unchanged, regardless of either feature flag.
+
+The [scoped relay](temporal/scoped_prd_relay.py) (bounded metadata-only delivery)
+uses separate workflow/activity names and destination. Worker and history-replay
+registration share the [additive registry](temporal/registry.py) (all original
+workflow types plus the scoped edition). The ordinary Operation kernel accepts a
+scoped workflow ID only for the exact durable scoped command identity and
+workspace/Operation coordinates.
+
+All new commands and delivery remain default-off and LOCAL-only. Fake local
+provider/storage adapters in tests prove only the bounded backend contract.
+These files do not qualify a live provider, protected storage, human visual
+review or production activation. Gate 2, plans, controlling task bindings,
+execution, post-DRAFT reopening and association END remain outside this edition.
