@@ -44,6 +44,36 @@ Desktop file-sharing settings. Do not relocate the source or change permissions
 automatically to bypass the denial. Retry this exact isolated baseline only after
 that access is authorized.
 
+### Minimum access and supported operator flow
+
+The container only needs read access to the restored repository's `apps/api`
+(application source) directory. Keep its existing bind mount read-only. No host
+database folder, home-directory mount, elevated container privilege or Full Disk
+Access grant is required by this test design.
+
+After operator approval, check **System Settings > Privacy & Security > Files &
+Folders > Docker**, and enable **Documents Folder** if that control is present.
+macOS exposes this permission at the Documents-folder level, not at a single
+repository level. This is distinct from Full Disk Access. Follow the normal
+macOS consent prompt if Docker requests that permission during the authorized
+retry. See [Apple's file-access instructions](https://support.apple.com/guide/mac-help/control-access-to-files-and-folders-on-mac-mchld5a35146/mac)
+(per-application access to protected folders).
+
+In **Docker Desktop > Settings > Resources > File sharing**, verify that the
+existing sharing configuration covers the restored `apps/api` (source directory)
+path. Docker documents `/Users` as a default shared root, so adding a broader
+root is normally unnecessary. If sharing is absent, approve only the needed
+source directory through Docker's normal UI; preserve other projects' settings.
+See [Docker's settings documentation](https://docs.docker.com/desktop/settings-and-maintenance/settings/#file-sharing)
+(host directories available to Linux containers).
+
+The observed error is consistent with a protected-folder access denial, but the
+exact macOS/Docker permission state has not been inspected. If the normal control
+is absent or the same mount still fails after an authorized retry, stop and report
+the fresh diagnostic. Do not use `tccutil`, alternate source copies, ownership
+changes or broader privileges to work around it. No permission was changed while
+preparing these instructions.
+
 Cleanup is scoped to this project:
 
 ```sh

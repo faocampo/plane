@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/scope-editor-read-v2/scope-editor-precondition-v2.schema.json",
+  "title": "Minimal eight-field current scope discovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "workspace_id",
+    "product_id",
+    "initiative_id",
+    "initiative_version",
+    "scope_status",
+    "expected_scope_revision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.scope-editor-precondition/v2-candidate"
+    },
+    "policy_edition": {
+      "const": "LOCAL_SCOPE_EDITOR_PRECONDITION_RECONSTRUCTION_V2"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "initiative_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "initiative_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "scope_status": {
+      "type": "string",
+      "enum": [
+        "ABSENT",
+        "PRESENT"
+      ]
+    },
+    "expected_scope_revision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope_status": {
+            "const": "ABSENT"
+          }
+        },
+        "required": [
+          "scope_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "expected_scope_revision": {
+            "const": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "expected_scope_revision": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        }
+      }
+    }
+  ]
+}
