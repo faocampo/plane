@@ -530,6 +530,33 @@ and outbox rollback) exercise report persistence through the real lifecycle
 service. Live protected-storage runtime activation and user-facing submission
 wiring remain subsequent integration work.
 
+## Git retention references: checkpoint and artifact persistence
+
+The [v2 schema bundle](prd_candidate_schemas_v2/git-retention-policy-reference-v1.schema.json)
+(full-commit retention identities and versioned metadata) is copied byte-for-byte
+from [Curve commit](https://github.com/faocampo/curve/commit/e8b1d4b032df6b33933c2be56fa76140a05b17f4)
+(candidate Git retention wire contracts). A separate digest inventory preserves
+all existing v1 schema pins.
+
+The [migration](migrations/0017_prd_git_retention.py) (explicit record editions,
+commit-capable retention columns and rollback preservation) adds an explicit
+metadata schema version to artifact versions and checkpoints. Existing records
+and default writes remain v1 with canonical UUID retention references. New v2
+records use full lowercase Git commit IDs. The database enforces this pairing;
+readers never infer an edition from identifier length. Legacy serialized records
+remain unchanged through forward/reverse migration. Reversal refuses retained
+commit-based records before attempting UUID casts or dropping edition metadata.
+
+The [migration tests](tests/test_prd_git_retention.py) (legacy/v2 round trips,
+format rejection, direct-database enforcement and retained rollback) accompany
+existing checkpoint graph, concurrency and scope tests. Current authorization
+must still resolve the exact policy through trusted workspace configuration.
+Schema acceptance grants no policy approval or storage activation.
+
+This increment covers artifact versions and checkpoints. Evidence persistence,
+approval-rationale metadata and accepted-command service adoption of commit
+references remain pending. Their immutable legacy records retain UUID behavior.
+
 ## Regression commands
 
 [Database tests](tests/test_prd_metadata_models.py) (empty/material evidence,
@@ -553,6 +580,7 @@ pytest plane/curve/tests/test_prd_accepted_commands.py
 pytest plane/curve/tests/test_prd_acceptance_api.py
 pytest plane/curve/tests/test_prd_completion.py
 pytest plane/curve/tests/test_prd_readiness.py plane/curve/tests/test_prd_readiness_models.py
+pytest plane/curve/tests/test_prd_git_retention.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```

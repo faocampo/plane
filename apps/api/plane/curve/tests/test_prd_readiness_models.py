@@ -243,12 +243,15 @@ def test_raw_report_history_cannot_be_changed(fixture, verb):
 @pytest.mark.django_db(transaction=True)
 def test_readiness_migration_reverses_empty_and_preserves_retained_history(fixture):
     executor = MigrationExecutor(connection)
-    executor.migrate([("curve", "0015_prd_accepted_command")])
-    executor = MigrationExecutor(connection)
-    executor.migrate([("curve", "0016_prd_readiness_record")])
-    record = append(fixture, report_for(fixture))
-    with pytest.raises(DatabaseError):
-        MigrationExecutor(connection).migrate([("curve", "0015_prd_accepted_command")])
+    latest = executor.loader.graph.leaf_nodes("curve")
+    try:
+        executor.migrate([("curve", "0015_prd_accepted_command")])
+        MigrationExecutor(connection).migrate(latest)
+        record = append(fixture, report_for(fixture))
+        with pytest.raises(DatabaseError):
+            MigrationExecutor(connection).migrate([("curve", "0015_prd_accepted_command")])
+    finally:
+        MigrationExecutor(connection).migrate(latest)
     assert PrdReadinessRecord.objects.filter(id=record.id).exists()
 
 

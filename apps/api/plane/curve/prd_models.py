@@ -191,6 +191,9 @@ class PrdEvidenceSnapshot(PrdImmutableModel):
 
 
 class PrdArtifactVersion(PrdImmutableModel):
+    metadata_schema_version = models.CharField(
+        max_length=32, default="1.0-candidate", db_default="1.0-candidate", editable=False
+    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace_id = models.UUIDField(editable=False)
     initiative = models.ForeignKey("curve.Initiative", on_delete=models.PROTECT)
@@ -204,13 +207,25 @@ class PrdArtifactVersion(PrdImmutableModel):
     body_schema_id = models.CharField(max_length=512, editable=False)
     body_schema_version = models.PositiveBigIntegerField(editable=False)
     access_envelope_id = models.UUIDField(editable=False)
-    retention_policy_version_id = models.UUIDField(editable=False)
+    retention_policy_version_id = models.CharField(max_length=40, editable=False)
     created_by = models.JSONField(editable=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     class Meta:
         db_table = "curve_prd_artifact_version"
         constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        metadata_schema_version="1.0-candidate",
+                        retention_policy_version_id__regex=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    )
+                    | models.Q(
+                        metadata_schema_version="2.0-candidate", retention_policy_version_id__regex=r"^[0-9a-f]{40}$"
+                    )
+                ),
+                name="curve_prd_retention_ver_ck",
+            ),
             models.UniqueConstraint(fields=["workspace_id", "artifact", "version_number"], name="curve_prd_art_ver_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "initiative", "artifact", "id"], name="curve_prd_ver_art_scope_uq"
@@ -236,7 +251,7 @@ class PrdArtifactVersion(PrdImmutableModel):
 
     def as_record(self):
         return dict(
-            schema_version="1.0-candidate",
+            schema_version=self.metadata_schema_version,
             id=str(self.id),
             workspace_id=str(self.workspace_id),
             initiative_id=str(self.initiative_id),
