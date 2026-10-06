@@ -16,3 +16,4 @@ export * from "./existing-work-read-state";
 export * from "./scope-reopening-preconditions.service";
 
 export * from "./project-association-preconditions.service";
+export * from "./manual-plan-draft.service";
