@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-array-sort -- These are fresh arrays; keep ES2022 browser compatibility. */
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
@@ -53,6 +54,16 @@ const inputClass =
 const focus = "focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2";
 
 /** Render only behind the independent local UI switch; every API also reauthorizes. */
+export function ManualControlEntry({ state, ...props }: Props & { state: string }) {
+  if (
+    process.env.VITE_CURVE_MANUAL_PLAN_V2_ENABLED !== "true" ||
+    !props.viewerId ||
+    !["PLANNING", "PAUSED", "CANCELLED"].includes(state)
+  )
+    return null;
+  return <ManualControlPanel {...props} />;
+}
+
 export function ManualControlPanel(props: Props) {
   const key = JSON.stringify([props.target, props.viewerId, props.initiativeVersion]);
   return <ManualControlSession key={key} {...props} />;
@@ -226,7 +237,7 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
                 ? activeClaims
                     .filter((c) => selection.includes(c.claim_id))
                     .map((c) => ({ claim_id: c.claim_id, generation: c.generation }))
-                    .toSorted((a, b) => a.claim_id.localeCompare(b.claim_id))
+                    .sort((a, b) => a.claim_id.localeCompare(b.claim_id))
                 : [],
               reconciliation_ref:
                 action === "RELEASE" && reconciliation

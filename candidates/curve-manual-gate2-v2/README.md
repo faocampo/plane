@@ -1,7 +1,8 @@
 # Manual Gate 2 local reconstruction
 
-Status: prospective successor passed all 23 final PostgreSQL/API gates;
-installation and installed-source regression follow. No runtime activation.
+Status: one qualified successor is installed in local source after 23 prospective
+PostgreSQL/API tests. Installed-source regression is in progress. All flags remain
+off; this is not runtime activation.
 This is new reconstruction, not recovered backend evidence. The implementation
 extends the qualified manual draft and scope reader without changing old pins.
 
@@ -33,7 +34,7 @@ A later owner increments the generation; old command replay never reacquires it.
 
 ## Trust and persistence
 
-The [prospective proof](qualification/proposed-successor.json) (closed additive
+The [installed proof](../../apps/api/plane/curve/manual_gate2_reconstruction_qualification_v2.json) (closed additive
 writer inventory) adds four models, nine runtime modules and migration 0025. Only
 model registration/policy identity and routes replace previous runtime sources.
 The trusted loader explicitly validates the delta; it does not accept observed
@@ -46,6 +47,11 @@ query adds a deterministic constraint-name tie break for multiple composite
 foreign keys; no integrity relation is removed. Empty reversal restores the exact
 0024 catalog. Retained Gate2 evidence, including isolated NO_EFFECT audit, blocks
 reversal. Feature disablement retains the records instead of rolling them back.
+
+The runtime lives in [manual_gate2_v2](../../apps/api/plane/curve/manual_gate2_v2/)
+(nine installed modules and pinned schemas); no second candidate runtime remains.
+The complete prospective assembler is preserved at local commit
+`8fc8e15fb36fa0a8aa7890b40971c8df814c0753`.
 
 Every successful command commits Initiative version, control, immutable record,
 claim/history changes, policy, audit, event, outbox and idempotency as one graph.
@@ -62,6 +68,11 @@ from the saved draft being approved. The client verifies closed shapes, scope,
 ETag, material bytes/digest and returned command identity; server authority remains
 mandatory. Focus, identity change and failures clear previously displayed material.
 An uncertain POST keeps one in-memory command for deliberate identical retry.
+The entry is mounted only with `VITE_CURVE_MANUAL_PLAN_V2_ENABLED=true`, a signed-in
+viewer and PLANNING/PAUSED/CANCELLED lifecycle. The independent API flag
+`CURVE_MANUAL_GATE2_V2_ENABLED` is explicitly false by default, with the existing
+workspace allowlist and draft flag still required. No environment activates the API
+flag. Local operator configuration and protected catalog provisioning remain explicit.
 
 Definitions/rationales must already exist in the owner-only synthetic catalog,
 with explicit grants for the actor and original owners/reviewers. Preparation lists

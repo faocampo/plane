@@ -7,7 +7,7 @@ related_targets: []
 
 # Manual plan draft panel
 
-Scope: local extension of the Initiative workspace; Operate mode. The user reviews saved draft metadata and saves an already prepared protected definition. This candidate is not mounted in a live route; server qualification and the protected preparation flow remain release gates.
+Scope: local extension of the Initiative workspace; Operate mode. The user reviews saved draft metadata and saves an already prepared protected definition. This panel is mounted through the default-off manual control entry when current protected preparation is available; enabling requires the independent UI flag, an authenticated viewer and a PLANNING, PAUSED or CANCELLED Initiative. Integrated browser/backend qualification remains a release gate.
 
 ## Direction contract
 
@@ -25,4 +25,4 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Constraints
 
-Use synthetic preview data. Saving is manual and never starts execution, reserves tasks or grants approval. Do not mount or enable the candidate until backend qualification. Client checks never substitute for server authority. No browser storage of protected data or commands.
+Use synthetic preview data. Saving is manual and never starts execution, reserves tasks or grants approval. Keep the mounted entry disabled by default until final integrated qualification. Client checks never substitute for server authority. No browser storage of protected data or commands.

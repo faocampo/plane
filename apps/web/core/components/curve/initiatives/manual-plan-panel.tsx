@@ -28,7 +28,7 @@ type View =
   | { state: "ready"; status: ManualPlanStatus; revisions: ManualPlanRevision[] };
 const focus = "focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2";
 
-/** Not mounted until the backend and protected definition producer are qualified. */
+/** Mounted by the default-off manual control entry with freshly prepared protected references. */
 export function ManualPlanPanel(props: Props) {
   // Identity changes remount synchronously: no frame can display the previous user's metadata.
   const { workspaceSlug, workspaceId, productId, initiativeId } = props.target;

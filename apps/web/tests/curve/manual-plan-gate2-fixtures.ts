@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-array-sort -- These are fresh arrays; keep ES2022 browser compatibility. */
 import { createHash } from "node:crypto";
 import { target, revision } from "./manual-plan-fixtures";
 import type {
@@ -15,7 +16,7 @@ export const canonical = (v: unknown): string =>
     ? `[${v.map(canonical).join(",")}]`
     : v && typeof v === "object"
       ? `{${Object.keys(v)
-          .toSorted()
+          .sort()
           .map((k) => `${JSON.stringify(k)}:${canonical((v as Record<string, unknown>)[k])}`)
           .join(",")}}`
       : JSON.stringify(v);

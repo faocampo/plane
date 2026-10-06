@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.curve.manual_gate2_v2.views import Gate2CommandEndpoint, Gate2StatusEndpoint, Gate2MaterialEndpoint
 from plane.curve.scope_editor_read_views_v2 import CurveScopeEditorPreconditionsV2Endpoint
 from plane.curve.manual_plan_v2.views import ManualPlanSaveEndpoint, ManualPlanReadEndpoint
 from plane.curve.project_association_read_views import CurveProjectAssociationPreconditionsEndpoint
@@ -43,6 +44,26 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/materials/<uuid:object_id>/",
+        Gate2MaterialEndpoint.as_view(),
+        name="curve-manual-gate2-material-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/commands/",
+        Gate2CommandEndpoint.as_view(),
+        name="curve-manual-gate2-command-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/status/",
+        Gate2StatusEndpoint.as_view(),
+        name="curve-manual-gate2-status-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/preparation/",
+        Gate2StatusEndpoint.as_view(preparation=True),
+        name="curve-manual-plan-preparation-v2",
+    ),
     path(
         "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-editor/v2/preconditions/",
         CurveScopeEditorPreconditionsV2Endpoint.as_view(),

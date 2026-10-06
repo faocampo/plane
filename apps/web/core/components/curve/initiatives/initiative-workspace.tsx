@@ -25,6 +25,7 @@ import { useUser } from "@/hooks/store/user";
 import { useCurveInitiatives } from "@/hooks/use-curve-initiatives";
 import { InitiativeCreateDrawer } from "./initiative-create-drawer";
 import { PrdReviewPanel } from "./prd-review-panel";
+import { ManualControlEntry } from "./manual-control-panel";
 import {
   InitiativeAvatar,
   InitiativeRiskBadge,
@@ -270,6 +271,17 @@ function InitiativeDetail({
           </p>
         </section>
         <PrdReviewPanel workspaceSlug={workspaceSlug} initiative={initiative} viewerId={viewerId} />
+        <ManualControlEntry
+          target={{
+            workspaceSlug,
+            workspaceId: initiative.workspace_id,
+            productId: initiative.product_id,
+            initiativeId: initiative.id,
+          }}
+          initiativeVersion={initiative.version}
+          viewerId={viewerId}
+          state={initiative.state}
+        />
         <section aria-labelledby="curve-initiative-gates-title" className="border-t border-subtle pt-5">
           <h3 id="curve-initiative-gates-title" className="text-13 font-semibold text-primary">
             Review responsibilities

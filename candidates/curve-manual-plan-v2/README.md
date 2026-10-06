@@ -1,5 +1,11 @@
 # Manual draft v2: integrated local source
 
+Current Gate2 integration supersedes the historical pending items below. See the
+[Gate2 implementation](../curve-manual-gate2-v2/README.md) (separate pinned writer,
+exclusive claims and default-off UI) and [current evidence](../curve-manual-gate2-v2/VERIFICATION.md)
+(prospective and installed-source verification). The pure kernel now lives in the
+single installed runtime; original draft/scope proof bytes remain unchanged.
+
 Status: qualified source promoted into the restored Plane application, 2026-10-06.
 The feature remains explicitly disabled by default. No workspace, provider,
 shared deployment, plan approval or automatic execution is activated.
@@ -23,7 +29,7 @@ The [verification record](VERIFICATION.md) (executed evidence and limits),
 [adapter definitions](ADAPTERS.md) (native observations and protected local files),
 [promotion checklist](PROMOTION.md) (remaining scope-reader, UI, Gate 2 and pilot
 work), and [qualification history](qualification/README.md) (prospective proposal
-and current reproduction) describe the boundary. The pure [Gate 2 kernel](gate2/domain.py)
+and current reproduction) describe the boundary. The pure [Gate 2 kernel](../../apps/api/plane/curve/manual_gate2_v2/domain.py)
 (uninstalled reservation transitions) remains separate and has no ORM or writer.
 
 ## Verification commands

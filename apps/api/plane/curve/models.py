@@ -1383,6 +1383,11 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_version=2,
                         policy_manifest_digest="sha256:cd960f017b8209b5e4a26a624cfb3549577f946c5a9682c593dec5908d6ab2f0",
                     )
+                    | models.Q(
+                        policy_key="CURVE.LOCAL_MANUAL_GATE2_RECONSTRUCTION_V2",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:b77e1c16465b9ebdea65ffa37915bee9239a616f667a72f8e6ad978df8833514",
+                    )
                 ),
                 name="curve_policy_identity_ck",
             ),
@@ -1462,3 +1467,10 @@ from .scoped_prd_models import (  # noqa: E402,F401
 from .scope_reopening_models import ScopeReopening  # noqa: E402,F401
 
 from .manual_plan_v2.models import ManualPlanDraftV2, ManualPlanRevisionV2  # noqa: E402,F401
+
+from .manual_gate2_v2.models import (
+    ManualGate2ControlV2,
+    ManualGate2RecordV2,
+    ManualTaskClaimV2,
+    ManualTaskClaimHistoryV2,
+)  # noqa: F401,E402

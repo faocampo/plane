@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-array-sort -- These are fresh arrays; keep ES2022 browser compatibility. */
 import { ManualPlanClientError } from "./manual-plan-draft.service";
 import type { ManualPlanTarget } from "./manual-plan-draft.types";
 import type {
@@ -37,7 +38,7 @@ const canonical = (value: unknown): string =>
     ? `[${value.map(canonical).join(",")}]`
     : value !== null && typeof value === "object"
       ? `{${Object.keys(value)
-          .toSorted()
+          .sort()
           .map((k) => `${JSON.stringify(k)}:${canonical((value as Record<string, unknown>)[k])}`)
           .join(",")}}`
       : JSON.stringify(value);

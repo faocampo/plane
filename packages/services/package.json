@@ -12,16 +12,17 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "node generate-prd-read-validator.mjs && node generate-existing-work-validators.mjs && tsdown",
-    "dev": "node generate-prd-read-validator.mjs && node generate-existing-work-validators.mjs && tsdown --watch --no-clean",
+    "build": "node check-manual-gate2-contracts.mjs && node generate-prd-read-validator.mjs && node generate-existing-work-validators.mjs && tsdown",
+    "dev": "node check-manual-gate2-contracts.mjs && node generate-prd-read-validator.mjs && node generate-existing-work-validators.mjs && tsdown --watch --no-clean",
     "check:lint": "oxlint --max-warnings=6 .",
-    "check:types": "node generate-prd-read-validator.mjs && node generate-existing-work-validators.mjs && tsc --noEmit",
+    "check:types": "node check-manual-gate2-contracts.mjs && node generate-prd-read-validator.mjs && node generate-existing-work-validators.mjs && tsc --noEmit",
     "check:format": "oxfmt --check .",
     "fix:lint": "oxlint --fix .",
     "fix:format": "oxfmt .",
     "clean": "rm -rf .turbo && rm -rf .next && rm -rf node_modules && rm -rf dist",
     "generate:prd-validator": "node generate-prd-read-validator.mjs",
-    "generate:existing-work-validators": "node generate-existing-work-validators.mjs"
+    "generate:existing-work-validators": "node generate-existing-work-validators.mjs",
+    "check:manual-gate2-contracts": "node check-manual-gate2-contracts.mjs"
   },
   "dependencies": {
     "@plane/constants": "workspace:*",

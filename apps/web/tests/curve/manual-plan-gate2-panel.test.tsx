@@ -1,8 +1,8 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { ManualControlPanel } from "../../core/components/curve/initiatives/manual-control-panel";
-import { ManualPlanClientError } from "../../../../packages/services/src/curve/manual-plan-draft.service";
+import { ManualControlEntry, ManualControlPanel } from "../../core/components/curve/initiatives/manual-control-panel";
+import { ManualPlanClientError } from "@plane/services";
 import { definitionRef, material, rationaleRef, record, result, status, target } from "./manual-plan-gate2-fixtures";
 import { payload as draftPayload } from "./manual-plan-fixtures";
 const api = () => ({
@@ -28,6 +28,24 @@ async function review() {
   fireEvent.click(screen.getByRole("checkbox"));
 }
 describe("manual control panel", () => {
+  it("mounts only for an explicit UI switch, signed-in viewer and manual lifecycle", async () => {
+    const p = props();
+    vi.stubEnv("VITE_CURVE_MANUAL_PLAN_V2_ENABLED", "");
+    try {
+      const view = render(<ManualControlEntry {...p} state="PLANNING" />);
+      expect(p.api.status).not.toHaveBeenCalled();
+      vi.stubEnv("VITE_CURVE_MANUAL_PLAN_V2_ENABLED", "true");
+      view.rerender(<ManualControlEntry {...p} state="PRD_REVIEW" />);
+      expect(p.api.status).not.toHaveBeenCalled();
+      view.rerender(<ManualControlEntry {...p} viewerId={undefined} state="PLANNING" />);
+      expect(p.api.status).not.toHaveBeenCalled();
+      view.rerender(<ManualControlEntry {...p} state="PLANNING" />);
+      await screen.findByText("Plan awaiting review");
+      expect(p.api.status).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it("reading a prepared replacement cannot approve the older saved draft", async () => {
     const p = props();
     const replacement = { ...definitionRef, object_id: "50000000-0000-4000-8000-000000000001" };

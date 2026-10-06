@@ -1,5 +1,11 @@
 # Promotion and remaining integration gates
 
+Current Gate2 integration supersedes the historical pending items below. See the
+[Gate2 implementation](../curve-manual-gate2-v2/README.md) (separate pinned writer,
+exclusive claims and default-off UI) and [current evidence](../curve-manual-gate2-v2/VERIFICATION.md)
+(prospective and installed-source verification). The pure kernel now lives in the
+single installed runtime; original draft/scope proof bytes remain unchanged.
+
 Status: one implementation promoted into local Plane source after complete
 prospective PostgreSQL/API qualification at `27a16ae`. The manual successor and
 migration are installed; workspace activation remains off. Installed-source
@@ -24,23 +30,23 @@ limits), and [UI review](UI_REVIEW.md) (bounded visual handoff).
 
 ## Exact release checklist
 
-| Order | Deliverable / required evidence | State |
-| --- | --- | --- |
-| 1 | Recovered 0023 baseline on actual PostgreSQL; all historical migration/proof bytes intact | 186 baseline tests passed; bytes preserved |
-| 2 | Frozen shape functions, Linux worker, declared DDL delta and exact empty reversal | 14 SQL, 6 Linux and 1 DDL-experiment test passed |
-| 3 | Real ORM positive fixture from the exact scoped PRD bridge, retaining its approved normalized PRD/evidence bytes and current grants for actor, every owner and all reviewers | 13 actual ORM tests pass, including selected evidence body and excerpt |
-| 4 | Operator-side catalog producer and consumer in actual native transactions; refreshed observation counters, revocation, stale catalog and final-fence rollback | Actual producer/consumer refresh, native/object revocations and final native/file rollback pass |
-| 5 | Independently review expected DDL delta and proposed literal catalog pin, then execute complete forward migration and exact empty reversal | Reviewed prospective pin; complete forward/reverse and retained-evidence refusal pass |
-| 6 | Real save/append/history/replay graph: revision, head, Initiative version, policy, audit, event, outbox and idempotency commit once; current ETag on original replay | Real proposed application passes exact graph and original replay/history checks |
-| 7 | Independent-connection concurrent saves, first-head races, access/source changes before final fence and zero partial records | Distinct-key and same-key races, final native/file changes and zero-partial assertions pass |
-| 8 | Raw-SQL omission/substitution of every graph component, immutable rewrite/delete/truncate, catalog/seal tampering, retained-evidence reversal refusal including NO_EFFECT audit | 16 raw graph attacks, retained mutations, exact seals and standalone NO_EFFECT reversal refusal pass |
-| 9 | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions | Exact tested proof installed; 23 historical migrations and both old proofs preserved |
-| 10 | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences | 23 PostgreSQL/API and 31 host tests passed; exact successor installed, all 80 combined runtime tests pass |
-| 11 | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior | Manual prospective checks and 186 regressions pass; 80 combined installed runtime and 138 host tests pass; 186 historical regressions also pass with the reader successor |
-| 12 | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey | Typed client/panel: 27 tests and bounded visual ship; preparation and integration required |
-| 13 | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph | Pure kernel: 12 host tests; persistence and successor required |
-| 14 | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Pure transition tests passed; real DB/race/API evidence required |
-| 15 | Synthetic local seed, disablement, backup/restore, observable failures and complete manual pilot acceptance | Pending after qualified runtime and UI |
+| Order | Deliverable / required evidence                                                                                                                                                          | State                                                                                                                                                                     |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Recovered 0023 baseline on actual PostgreSQL; all historical migration/proof bytes intact                                                                                                | 186 baseline tests passed; bytes preserved                                                                                                                                |
+| 2     | Frozen shape functions, Linux worker, declared DDL delta and exact empty reversal                                                                                                        | 14 SQL, 6 Linux and 1 DDL-experiment test passed                                                                                                                          |
+| 3     | Real ORM positive fixture from the exact scoped PRD bridge, retaining its approved normalized PRD/evidence bytes and current grants for actor, every owner and all reviewers             | 13 actual ORM tests pass, including selected evidence body and excerpt                                                                                                    |
+| 4     | Operator-side catalog producer and consumer in actual native transactions; refreshed observation counters, revocation, stale catalog and final-fence rollback                            | Actual producer/consumer refresh, native/object revocations and final native/file rollback pass                                                                           |
+| 5     | Independently review expected DDL delta and proposed literal catalog pin, then execute complete forward migration and exact empty reversal                                               | Reviewed prospective pin; complete forward/reverse and retained-evidence refusal pass                                                                                     |
+| 6     | Real save/append/history/replay graph: revision, head, Initiative version, policy, audit, event, outbox and idempotency commit once; current ETag on original replay                     | Real proposed application passes exact graph and original replay/history checks                                                                                           |
+| 7     | Independent-connection concurrent saves, first-head races, access/source changes before final fence and zero partial records                                                             | Distinct-key and same-key races, final native/file changes and zero-partial assertions pass                                                                               |
+| 8     | Raw-SQL omission/substitution of every graph component, immutable rewrite/delete/truncate, catalog/seal tampering, retained-evidence reversal refusal including NO_EFFECT audit          | 16 raw graph attacks, retained mutations, exact seals and standalone NO_EFFECT reversal refusal pass                                                                      |
+| 9     | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions                                     | Exact tested proof installed; 23 historical migrations and both old proofs preserved                                                                                      |
+| 10    | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences                                                              | 23 PostgreSQL/API and 31 host tests passed; exact successor installed, all 80 combined runtime tests pass                                                                 |
+| 11    | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior                                           | Manual prospective checks and 186 regressions pass; 80 combined installed runtime and 138 host tests pass; 186 historical regressions also pass with the reader successor |
+| 12    | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey                                                    | Typed client/panel: 27 tests and bounded visual ship; preparation and integration required                                                                                |
+| 13    | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph                                                    | Pure kernel: 12 host tests; persistence and successor required                                                                                                            |
+| 14    | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Pure transition tests passed; real DB/race/API evidence required                                                                                                          |
+| 15    | Synthetic local seed, disablement, backup/restore, observable failures and complete manual pilot acceptance                                                                              | Pending after qualified runtime and UI                                                                                                                                    |
 
 Abrupt API-parent death during real validation, container resource pressure and
 multi-container concurrency need explicit operational acceptance. Current file
@@ -81,7 +87,7 @@ hashes. Qualify URL edits for the scope reader under its separate exact successo
 
 The [draft delta](../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/qualification-delta-v2.json)
 (draft-only writer inventory) excludes plan approval and controlling task bindings.
-The [Gate 2 kernel](gate2/domain.py) (immutable exact subject, assigned approver,
+The [Gate 2 kernel](../../apps/api/plane/curve/manual_gate2_v2/domain.py) (immutable exact subject, assigned approver,
 exclusive claims, retained holds and reconciled release) has no ORM, route, grant
 resolver or persistence. Its internal current-authority value must be supplied by
 an actual validated adapter, never directly from request JSON.

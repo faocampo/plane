@@ -26,10 +26,90 @@ _READ_REPLACED_MODULES = frozenset({"urls.py"})
 
 
 # Unapproved successor pins: these remain unset until real PostgreSQL review.
-MANUAL_SUCCESSOR_DIGEST = 'sha256:b4f16de1a78f0ffb7f62df770f6fe2e50636da3961e22bb193ba5e914b87215b'
+MANUAL_SUCCESSOR_DIGEST = "sha256:b4f16de1a78f0ffb7f62df770f6fe2e50636da3961e22bb193ba5e914b87215b"
 MANUAL_SUCCESSOR_PATH = Path(__file__).parent / "manual_plan_draft_reconstruction_qualification_v2.json"
-SCOPE_EDITOR_SUCCESSOR_DIGEST = 'sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e'
+SCOPE_EDITOR_SUCCESSOR_DIGEST = "sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e"
 SCOPE_EDITOR_SUCCESSOR_PATH = Path(__file__).parent / "scope_editor_read_reconstruction_qualification_v2.json"
+GATE2_SUCCESSOR_DIGEST = "sha256:34661219609b64ae715466aa7a20f756eb85a17365f30a3ab0d25a926f28c8ec"
+GATE2_SUCCESSOR_PATH = Path(__file__).parent / "manual_gate2_reconstruction_qualification_v2.json"
+_GATE2_ADDED_MODULES = frozenset(
+    [
+        "manual_gate2_v2/__init__.py",
+        "manual_gate2_v2/contracts.py",
+        "manual_gate2_v2/domain.py",
+        "manual_gate2_v2/models.py",
+        "manual_gate2_v2/policy.py",
+        "manual_gate2_v2/reads.py",
+        "manual_gate2_v2/repository.py",
+        "manual_gate2_v2/services.py",
+        "manual_gate2_v2/views.py",
+    ]
+)
+_GATE2_ADDED_MODELS = [
+    {
+        "model_name": "manualgate2controlv2",
+        "db_table": "curve_manual_gate2_control_v2",
+        "columns": [
+            "approved_record_id",
+            "current_record_id",
+            "id",
+            "initiative_id",
+            "product_id",
+            "state",
+            "subject_id",
+            "version",
+            "workspace_id",
+        ],
+    },
+    {
+        "model_name": "manualgate2recordv2",
+        "db_table": "curve_manual_gate2_record_v2",
+        "columns": [
+            "action",
+            "command_receipt_id",
+            "control_id",
+            "created_by",
+            "digest",
+            "draft_revision_id",
+            "id",
+            "initiative_id",
+            "initiative_version",
+            "payload",
+            "policy_decision_id",
+            "predecessor_id",
+            "product_id",
+            "recorded_at",
+            "request_digest",
+            "request_payload",
+            "subject_digest",
+            "subject_id",
+            "version",
+            "workspace_id",
+        ],
+    },
+    {
+        "model_name": "manualtaskclaimhistoryv2",
+        "db_table": "curve_manual_task_claim_history_v2",
+        "columns": ["claim_id", "generation", "id", "initiative_id", "payload", "record_id", "state", "workspace_id"],
+    },
+    {
+        "model_name": "manualtaskclaimv2",
+        "db_table": "curve_manual_task_claim_v2",
+        "columns": [
+            "current_history_id",
+            "current_record_id",
+            "generation",
+            "id",
+            "initiative_id",
+            "installation_id",
+            "issue_id",
+            "state",
+            "subject_id",
+            "workspace_id",
+        ],
+    },
+]
+
 _MANUAL_EDITION = "CURVE_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2"
 _MANUAL_WRITER = "MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2"
 _MANUAL_MIGRATION = "0024_manual_draft_reconstruction.py"
@@ -166,6 +246,53 @@ def validate_scope_editor_successor(predecessor, successor, manual_proof_digest)
     return qualified
 
 
+def validate_gate2_successor(predecessor, successor):
+    if (
+        type(successor) is not dict
+        or set(successor) != {"schema_version", "predecessor_digest", "writer_edition", "qualification"}
+        or successor["schema_version"] != "curve.manual-gate2-reconstruction-qualification/v2-candidate"
+        or successor["predecessor_digest"] != SCOPE_EDITOR_SUCCESSOR_DIGEST
+        or successor["writer_edition"] != "MANUAL_GATE2_RECONSTRUCTION_V2"
+    ):
+        raise ValueError("Wrong manual Gate 2 successor")
+    q = successor["qualification"]
+    if (
+        type(q) is not dict
+        or set(q) != set(predecessor)
+        or q["schema_version"] != predecessor["schema_version"]
+        or q["model_edition"] != "CURVE_MANUAL_GATE2_RECONSTRUCTION_V2"
+        or q["runtime_writer_inventory"] != predecessor["runtime_writer_inventory"] + ["MANUAL_GATE2_RECONSTRUCTION_V2"]
+        or predecessor["excluded_writers"]
+        != ["PLAN_APPROVAL", "CONTROLLING_WORK_BINDING", "EXECUTION", "COMPLETION_CREDIT"]
+        or q["excluded_writers"] != ["EXECUTION", "COMPLETION_CREDIT"]
+        or q["models"] != sorted(predecessor["models"] + _GATE2_ADDED_MODELS, key=lambda row: row["model_name"])
+    ):
+        raise ValueError("Wrong manual Gate 2 storage/writer delta")
+    old, new = predecessor["migration_digests"], q["migration_digests"]
+    if (
+        not _hashes(new)
+        or set(new) - set(old) != {"0025_manual_gate2_reconstruction.py"}
+        or any(new.get(k) != v for k, v in old.items())
+    ):
+        raise ValueError("Historical migration changed")
+    _validate_source_delta(
+        predecessor["runtime_sources"], q["runtime_sources"], _GATE2_ADDED_MODULES, frozenset({"models.py", "urls.py"})
+    )
+    if (
+        type(q["physical_catalog_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", q["physical_catalog_digest"]) is None
+        or q["physical_catalog_digest"] == predecessor["physical_catalog_digest"]
+    ):
+        raise ValueError("Reviewed Gate 2 catalog required")
+    return q
+
+
+def require_manual_gate2_v2_qualification():
+    require_scope_editor_read_v2_qualification()
+    if not GATE2_SUCCESSOR_PATH.exists() or GATE2_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("MANUAL_GATE2_EDITION_UNAVAILABLE", 503)
+
+
 def _read_pinned_successor(path, expected_digest):
     if (
         type(expected_digest) is not str
@@ -195,6 +322,13 @@ def _current_qualification(predecessor):
             _read_pinned_successor(SCOPE_EDITOR_SUCCESSOR_PATH, SCOPE_EDITOR_SUCCESSOR_DIGEST),
             MANUAL_SUCCESSOR_DIGEST,
         )
+    if GATE2_SUCCESSOR_PATH.exists():
+        qualified = validate_gate2_successor(
+            qualified, _read_pinned_successor(GATE2_SUCCESSOR_PATH, GATE2_SUCCESSOR_DIGEST)
+        )
+        from .manual_gate2_v2.contracts import validate_manifest
+
+        validate_manifest()
     return qualified
 
 
@@ -339,7 +473,10 @@ def require_reopening_qualification():
                 raise ValueError
             # Independently compare the physical catalog to the reviewed source
             # pin, rather than trusting a possibly changed DB verifier or seal.
-            catalog_sql = import_module("plane.curve.migrations.0023_scope_reopening").CATALOG_SQL
+            catalog_sql = import_module(
+                "plane.curve.migrations."
+                + ("0025_manual_gate2_reconstruction" if GATE2_SUCCESSOR_PATH.exists() else "0023_scope_reopening")
+            ).CATALOG_SQL
             cursor.execute("SHOW search_path")
             previous_path = cursor.fetchone()[0]
             cursor.execute("SET LOCAL search_path = pg_catalog, public")

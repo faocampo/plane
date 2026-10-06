@@ -3,14 +3,19 @@
 # ruff: noqa: E402
 from dataclasses import replace
 import sys
+import os
 import unittest
+from unittest.mock import patch
 import uuid
 
 import bootstrap
 
 bootstrap.install()
-sys.path.insert(0, str(bootstrap.REPOSITORY / "candidates/curve-manual-plan-v2"))
-from gate2 import domain as g
+sys.path.insert(0, str(bootstrap.RUNTIME_ROOT.parents[1]))
+# The installed pure kernel needs no Celery bootstrap. Use the same explicit
+# no-Celery import profile as the bounded validator worker; host settings stay local.
+with patch.dict(os.environ, {"DJANGO_SETTINGS_MODULE": "plane.settings.curve_worker"}):
+    from plane.curve.manual_gate2_v2 import domain as g
 from manual_plan_v2.validation import ROOT, canonical_json, digest, metadata_digest, validate_definition
 from test_draft_core import fixture
 

@@ -18,8 +18,11 @@ Installed-source verification follows; no pending result is a pass.
   existing draft client, strict response/material validation, explicit review,
   stale/unknown results, same-command retry, authority clearing and prepared
   replacement isolation. These are component/client tests with synthetic transports.
-- Targeted TypeScript and Python Ruff checks pass. Full application checks and
-  authenticated browser-to-backend pilot acceptance are distinct evidence.
+- Full application TypeScript and all **380 web tests across 33 files** pass through
+  the normal Turbo dependency build. The manual client/panel subset now contains
+  45 cases including the default-off mount. The installed pure host suites pass
+  **107 manual plus 31 scope-reader tests**. Python Ruff checks pass.
+  Authenticated browser-to-backend pilot acceptance remains separate evidence.
 
 The [visual review](../../apps/web/.impeccable/review/manual-gate2/review.md)
 (bounded desktop/mobile review) and its verdict record cover synthetic rendering,
@@ -41,12 +44,27 @@ production activation record. Superseded DDL experiment pins are historical only
 
 ## Reproduction
 
-The prospective assembly is captured in the pre-promotion local commit.
-Run its [assembler](qualification/assemble_prospective.py) (closed source overlay)
-using a Python environment with Ruff, then the [test runner](qualification/run_isolated.py)
-(isolated disposable database). The assembler asserts the exact old source hashes
-and reviewed unpinned migration digest. Never feed it a hash observed from a changed
-runtime as a replacement approval.
+The complete prospective assembly is preserved at local commit
+`8fc8e15fb36fa0a8aa7890b40971c8df814c0753`. The executable overlay was removed on
+promotion so only the installed runtime remains. The [integration record](qualification/reviewed-integration.json)
+(exact candidate, proof, migration and catalog pins) records that transition.
+
+Run the [installed test runner](qualification/run_isolated.py) (original read-only
+source mount and disposable database) from the repository root:
+
+```sh
+python3 candidates/curve-manual-gate2-v2/qualification/run_isolated.py all
+python3 candidates/curve-manual-gate2-v2/qualification/run_isolated.py regression
+pnpm exec turbo run check:types test --filter=web
+node packages/services/check-manual-gate2-contracts.mjs
+```
+
+The complete web typecheck includes the existing test sources. Its no-emit project
+uses `composite: false` because those tests import cross-package implementation
+sources; strict checking and coverage are unchanged. ES2022 browser compatibility
+is retained when sorting newly allocated arrays. Panel test errors come from the
+same public service package as the rendered app, so uncertain-command behavior is
+verified with the actual class identity.
 
 Database phases run sequentially. Tests restore teardown-only truncate guards
 around Django fixture cleanup, then independently verify the physical catalog.
