@@ -2,6 +2,7 @@
 
 # ruff: noqa: F401,F811 -- imported pytest fixtures are collected here.
 from importlib import import_module
+from contextlib import contextmanager
 import uuid
 
 import pytest
@@ -33,7 +34,30 @@ def catalog():
         return MIGRATION._catalog(cursor)
 
 
+@contextmanager
+def historical_manual_catalog():
+    """Exercise the immutable historical step, then restore all installed successors.
+
+    No qualification check is bypassed: current-source checks run only after the
+    full installed leaf is restored, and each historical physical pin is exact.
+    """
+    executor = MigrationExecutor(connection)
+    leaves = executor.loader.graph.leaf_nodes("curve")
+    try:
+        executor.migrate(CURRENT)
+        yield
+    finally:
+        MigrationExecutor(connection).migrate(leaves)
+    with transaction.atomic():
+        require_manual_plan_v2_qualification()
+
+
 def test_complete_empty_reverse_and_forward_preserve_exact_catalogs():
+    with historical_manual_catalog():
+        _empty_reverse_and_forward()
+
+
+def _empty_reverse_and_forward():
     assert not ManualPlanRevisionV2.objects.exists() and not ManualPlanDraftV2.objects.exists()
     assert catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
     try:
@@ -47,8 +71,6 @@ def test_complete_empty_reverse_and_forward_preserve_exact_catalogs():
     finally:
         MigrationExecutor(connection).migrate(CURRENT)
     assert catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
-    with transaction.atomic():
-        require_manual_plan_v2_qualification()
 
 
 def test_complete_reverse_refuses_saved_and_replayed_evidence_without_changing_it(native):
@@ -56,13 +78,12 @@ def test_complete_reverse_refuses_saved_and_replayed_evidence_without_changing_i
     first = save(native, value)
     save(native, value)
     before = counts()
-    with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-        MigrationExecutor(connection).migrate(PREVIOUS)
-    assert counts() == before
-    assert ManualPlanRevisionV2.objects.get(id=first.data["id"]).as_record() == first.data
-    assert catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
-    with transaction.atomic():
-        require_manual_plan_v2_qualification()
+    with historical_manual_catalog():
+        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+            MigrationExecutor(connection).migrate(PREVIOUS)
+        assert counts() == before
+        assert ManualPlanRevisionV2.objects.get(id=first.data["id"]).as_record() == first.data
+        assert catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
 
 
 def test_no_effect_audit_alone_prevents_reverse(native):
@@ -83,7 +104,8 @@ def test_no_effect_audit_alone_prevents_reverse(native):
             correlation_id="synthetic-retained-audit",
         )
     before = counts()
-    with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-        MigrationExecutor(connection).migrate(PREVIOUS)
-    assert AuditEvent.objects.filter(id=audit.id, outcome="NO_EFFECT").exists()
-    assert counts() == before and catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
+    with historical_manual_catalog():
+        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+            MigrationExecutor(connection).migrate(PREVIOUS)
+        assert AuditEvent.objects.filter(id=audit.id, outcome="NO_EFFECT").exists()
+        assert counts() == before and catalog() == MIGRATION.CURRENT_CATALOG_DIGEST

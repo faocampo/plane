@@ -1,7 +1,7 @@
-import f0 from "../../../../candidates/curve-manual-plan-v2/overlay/manual_plan_v2/contract_snapshot/fixtures/revision.valid.json";
-import f1 from "../../../../candidates/curve-manual-plan-v2/overlay/manual_plan_v2/contract_snapshot/fixtures/save.valid.json";
-import f2 from "../../../../candidates/curve-manual-plan-v2/overlay/manual_plan_v2/contract_snapshot/fixtures/status-current.valid.json";
-import f3 from "../../../../candidates/curve-manual-plan-v2/overlay/manual_plan_v2/contract_snapshot/fixtures/status-absent.valid.json";
+import f0 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/revision.valid.json";
+import f1 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/save.valid.json";
+import f2 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/status-current.valid.json";
+import f3 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/status-absent.valid.json";
 import type {
   ManualPlanRevision,
   ManualPlanSave,

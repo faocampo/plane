@@ -17,3 +17,5 @@ export * from "./scope-reopening-preconditions.service";
 
 export * from "./project-association-preconditions.service";
 export * from "./manual-plan-draft.service";
+
+export * from "./manual-gate2.service";

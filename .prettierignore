@@ -14,3 +14,9 @@ apps/api/plane/curve/contracts/schemas/semantic-fixtures/*.json
 
 # Raw backend schema mirrors: validated by exact-byte parity, never reformatted.
 packages/services/src/curve/existing-work-contracts/*.schema.json
+
+# Immutable reviewed contract/proof bytes; hashes and schema tests own validation.
+apps/api/plane/curve/*/contract_snapshot/**/*.json
+apps/api/plane/curve/*qualification*.json
+candidates/curve-manual-gate2-v2/overlay/manual_gate2_v2/contract_snapshot/*.json
+candidates/curve-manual-gate2-v2/qualification/proposed-successor.json

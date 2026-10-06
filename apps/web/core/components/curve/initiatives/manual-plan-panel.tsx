@@ -16,6 +16,7 @@ import type {
 } from "@plane/services";
 
 type Props = {
+  onSaved?: () => void;
   api: ManualPlanApi;
   target: ManualPlanTarget;
   viewerId?: string;
@@ -38,7 +39,7 @@ export function ManualPlanPanel(props: Props) {
   const key = JSON.stringify([props.viewerId, target, props.initiativeVersion, props.prepared]);
   return <ManualPlanSession key={key} {...props} target={target} />;
 }
-function ManualPlanSession({ api, target, viewerId, prepared }: Props) {
+function ManualPlanSession({ api, target, viewerId, prepared, onSaved }: Props) {
   const titleId = useId();
   const [view, setView] = useState<View>({ state: "loading" });
   const [revision, setRevision] = useState(0);
@@ -141,6 +142,7 @@ function ManualPlanSession({ api, target, viewerId, prepared }: Props) {
       pending.current = null;
       setActivity("idle");
       setNotice("Draft saved. Refreshing its current status.");
+      onSaved?.();
       setRevision((value) => value + 1);
     } catch (error) {
       if (!mounted.current) return;
