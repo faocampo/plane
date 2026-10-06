@@ -1,6 +1,6 @@
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Candidate session-only, fixed-denial HTTP scope discovery."""
+"""Session-only, fixed-denial HTTP scope discovery."""
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated

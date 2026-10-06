@@ -1,50 +1,47 @@
-# Scope editor v2 candidate verification
+# Scope editor v2 verification
 
-Date: 2026-10-06. Scope: local source preparation only.
+Date: 2026-10-06. The host suite passed **31 tests** and the real PostgreSQL/API
+suite passed **23 tests** against the reviewed disposable application. The reader
+is not yet promoted or enabled in a workspace.
 
-## Executed
+## Completed evidence
 
-- Host Python 3.14.7 with Django 5.2.15, DRF 3.17.1 and jsonschema 4.26.0:
-  **31 unittest methods passed**, with additional adversarial subcases. No database
-  was configured or contacted by this suite.
-- Full metadata lineage: absent/orphan distinction, saved empty scope, 1,000/1,001
-  boundary, every historical row's identity, broken links, duplicate IDs, sequence,
-  chronology, safe integers, unknown editions and valid Initiative-version gaps.
-- Query-spy checks: head limit two, initial revision limit 1,001, and inclusive
-  Initiative/proposal/current-pointer lookup without hiding cross-workspace rows.
-- Mocked current-ORM authority: creator/admin success; inactive/bot/unknown-role,
-  non-DRAFT/non-STANDALONE and inactive-Product rejection; LOCAL, installation and
-  separate default-off gates; current authority and older-lineage change rejection.
-- Actual DRF view dispatch with mocked service: exact eight-field success and typed
-  ETag; session-only behavior; fixed 404 for queries, anonymous/API-key-only requests,
-  unsupported methods and private exceptions; `no-store` on success and denial.
-- Contract pin checks reject changed manifest or schema/policy bytes. The absent
-  successor qualification entry point cannot fall back to the historical proof.
-- Ruff 0.15.12 lint and formatting checks passed using the repository's backend
-  configuration. All three Python files comply. `pip check` passed.
-- Five contract snapshot files match the original Curve candidate byte-for-byte.
-- Diff against restored Plane `7d4225d` for the installed Curve app is empty.
-  Historical source, all 23 migrations, existing routes and proof bytes are intact.
-- Whitespace and changed-document Markdown lint passed.
+- **31 host tests passed again** after the reader's current source was frozen.
+  They cover complete metadata lineage, the 1,000/1,001 boundary, cross-identity
+  rows, broken links, duplicate IDs, chronology, safe integers, unknown editions,
+  valid Initiative-version gaps, query bounds and simulated fresh authority.
+- Host DRF dispatch covers exact fields/ETag, session-only authentication, fixed
+  denial and `no-store`. These service collaborators are doubles.
+- The five contract snapshot files retain their original Curve bytes.
+- The reviewed delta adds only two reader modules and replaces the URL module.
+  The manual proof remains
+  `sha256:b4f16de1a78f0ffb7f62df770f6fe2e50636da3961e22bb193ba5e914b87215b`.
+  The proposed reader proof is
+  `sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e`.
+- Every model, migration, physical catalog row, writer and excluded authority
+  remains the manual predecessor's qualification. No database migration is added.
 
-The reproducible commands are in [candidate instructions](README.md)
-(source placement, test invocation and integration prerequisites). Raw host test
-output is retained locally in `.curve-local/verification/scope-editor-unit.log`
-(ignored execution log).
+The [runtime suite](postgres_tests/test_scope_reader.py) (actual database/API
+qualification) exercises intact absence and three saved-empty revisions, a real
+session's GET/HEAD, every feature gate, creator/admin separation, revoked native
+source access, final-fence rollback, bounded-history admission, immutable SQL
+mutation denial, missing/tampered proof and two read/write serialization orders.
+It checks zero domain writes and the current ETag after a competing scope save.
+All 23 cases passed with the actual qualified loader and active SQL guards.
+An initial fixture attempted a bulk Product update that the model forbids; it was
+corrected to use valid native model fixtures and immutable-mode creation. No
+production guard or qualification was relaxed.
 
-## Not executed or established
+## Limits
 
-No PostgreSQL migration, transaction, row lock, concurrent insert, rollback,
-direct-SQL corruption guard, authenticated application API or browser/E2E test ran.
-Query spies and simulated authority changes are not evidence of these properties.
-The Docker application container remains blocked before startup by the source
-bind-mount denial documented in the [test profile](../../deployments/curve-local-pilot/README.md)
-(isolated PostgreSQL setup and minimum operator access).
+The lineage admission test lowers the bound to exercise rejection on actual
+stored rows; the full 1,000/1,001 boundary uses host fixtures. Neither is described
+as a thousand real database writes. Concurrency tests use independent PostgreSQL
+connections and inspect actual blocking where the reader holds the row lock.
 
-This reader is not installed or routed. Its database/catalog/source qualification
-function deliberately does not exist yet. Persistent manual-plan storage and its
-successor proof remain prerequisites. Gate 2, exclusive task reservation, native
-UI integration, Today/decisions, roadmap and full pilot acceptance remain pending.
+The [reproduction instructions](README.md) (commands and source boundaries)
+distinguish host doubles from the actual application. Raw logs stay in
+`.curve-local/verification` (private ignored execution evidence).
 
-No new push, release, provider activation, merge or deployment occurred. No Docker
-permissions, sharing settings or source mount paths were changed.
+No browser journey, Gate 2 persistence, exclusive reservation, pilot operations,
+publication, release or deployment is established by this reader qualification.

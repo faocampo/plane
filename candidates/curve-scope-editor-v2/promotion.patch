@@ -1,0 +1,22 @@
+--- a/apps/api/plane/curve/urls.py
++++ b/apps/api/plane/curve/urls.py
+@@ -3,6 +3,7 @@
+ # See the LICENSE file for details.
+ 
+ from django.urls import path
++from plane.curve.scope_editor_read_views_v2 import CurveScopeEditorPreconditionsV2Endpoint
+ from plane.curve.manual_plan_v2.views import ManualPlanSaveEndpoint, ManualPlanReadEndpoint
+ from plane.curve.project_association_read_views import CurveProjectAssociationPreconditionsEndpoint
+ from plane.curve.scope_reopening_views import CurveScopeReopeningEndpoint, CurveScopeReopeningPreconditionsEndpoint
+@@ -43,6 +44,11 @@
+ 
+ urlpatterns = [
+     path(
++        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-editor/v2/preconditions/",
++        CurveScopeEditorPreconditionsV2Endpoint.as_view(),
++        name="curve-scope-editor-preconditions-v2",
++    ),
++    path(
+         "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/",
+         ManualPlanSaveEndpoint.as_view(),
+         name="curve-manual-plan-v2-save",

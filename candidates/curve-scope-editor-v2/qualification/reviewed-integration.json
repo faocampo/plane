@@ -1,0 +1,18 @@
+{
+  "baseline_loader_digest": "sha256:c37fdfc829a80eb631451ae4ac08763a1adeb3e33f80b15dcba3cb535c5686b0",
+  "manual_proof_digest": "sha256:b4f16de1a78f0ffb7f62df770f6fe2e50636da3961e22bb193ba5e914b87215b",
+  "proof_digest": "sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e",
+  "prospective_loader_digest": "sha256:a0136da724b50f6b5eccf91f67d04fb982cbd99fcec89834490d045e43322f9b",
+  "prospective_url_digest": "sha256:52486999d459dc253c6ef82bd123a7806b52604091f89108080a911bf5572f76",
+  "source_files": {
+    "overlay/scope_editor_read_v2.py": "sha256:2d919f94707557dd209caabece0cb4a8bb3659dbf16b2dc7c8ff3dd9213ee8d4",
+    "overlay/scope_editor_read_v2_candidate/manifest-v2.json": "sha256:8957c74f0999aa101021f96afe7e91090308469c977d704709f64418dec20209",
+    "overlay/scope_editor_read_v2_candidate/openapi-v2.json": "sha256:7d5eaf0b6da6f7abd20f3ddbc3b54d210b5263fed48da27ef3b5e034a6c96c4f",
+    "overlay/scope_editor_read_v2_candidate/policy-v2.json": "sha256:01dfbad4b73decb707e14b7c12d65928c8869ba64b0e1b1ccc6a972058a33a05",
+    "overlay/scope_editor_read_v2_candidate/scope-editor-error-v2.schema.json": "sha256:6438c2f9583164a60e14ea8d04e73181b43be998feb7de5fd9bbc666500f18fa",
+    "overlay/scope_editor_read_v2_candidate/scope-editor-precondition-v2.schema.json": "sha256:5f5c1cd2b8e0b0511bb9d755f35dc657431ba730897bf10ee3953ef19e2122ae",
+    "overlay/scope_editor_read_views_v2.py": "sha256:f727dcde10573e84bf9d0d5e06a7eb359a7abbc1db2b483d21068a0e485cc840",
+    "promotion.patch": "sha256:280481d3d23fcfbb70664f186707b1d5e65bd9a561084363607ae3eb7f783dab"
+  },
+  "status": "PROSPECTIVE_QUALIFICATION_ONLY"
+}

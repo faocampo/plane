@@ -1,10 +1,9 @@
 # Copyright (c) 2023-present Plane Software, Inc. and contributors
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Candidate metadata-only scope discovery; activation requires a successor proof.
+"""Metadata-only scope discovery requiring the exact manual and read successors.
 
-This source is staged outside the installed Curve app until the manual-draft
-predecessor and this read successor pass PostgreSQL qualification. No fallback
-to the historical pre-plan proof is permitted.
+Native task visibility is not a metadata grant. Every historical revision is
+bounded and checked; no task body or write authority is returned.
 """
 
 import hashlib
@@ -259,8 +258,8 @@ def _authorize(*, request, workspace_slug, initiative_id):
 
 
 def _require_qualified_successor():
-    # Deliberately absent in the recovered trusted loader. Installing this source
-    # alone cannot activate it or silently accept the unrelated predecessor seal.
+    # This distinct reader requires its own exact proof after the manual writer;
+    # the predecessor seal alone cannot authorize the added runtime sources.
     from .scope_reopening_qualification import require_scope_editor_read_v2_qualification
 
     require_scope_editor_read_v2_qualification()
