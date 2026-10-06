@@ -2,8 +2,8 @@
 
 Status: one qualified reader moved into the restored Plane runtime with an
 explicit default-off setting. The prospective checkpoint `90996fb` passed 23
-PostgreSQL/API tests and 31 host tests. The combined installed-source suite passed **80 tests**. The 186-test historical
-regression has not yet been repeated after this reader addition.
+PostgreSQL/API tests and 31 host tests. The combined installed-source suite passed **80 tests**. The **186-test historical
+regression also passed** after this reader addition.
 
 ## Behavior and boundary
 

@@ -131,5 +131,5 @@ Only two modules and the route closure change; all manual proof, model, migratio
 catalog, writer and exclusion bytes remain intact. The reader and draft settings
 are explicitly false outside test overrides. The combined installed suite passed
 **80 tests**, and **107 manual plus 31 reader host tests** passed after promotion.
-The historical 186-test regression has not yet been repeated for this reader
-successor; its prior manual-only qualification remains accurately scoped.
+The **186-test historical regression also passed** for the integrated reader
+successor at Plane `ebbd330`, with both new feature switches disabled.

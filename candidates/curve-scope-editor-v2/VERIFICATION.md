@@ -4,8 +4,8 @@ Date: 2026-10-06. The host suite passed **31 tests** and the real PostgreSQL/API
 suite passed **23 tests** against the reviewed disposable application. The reader
 is now integrated in local source and remains disabled. The combined installed-source
 suite passed **80 tests** (57 manual and all 23 reader cases), with **31 reader
-and 107 manual host tests** also passing after promotion. The historical 186-test
-regression remains to be repeated after this separate source successor.
+and 107 manual host tests** also passing after promotion. The **186-test historical
+regression passed** after this separate source successor (320.25 seconds).
 
 ## Completed evidence
 
