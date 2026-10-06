@@ -256,7 +256,12 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
     assert {key for key in old["runtime_sources"] if old["runtime_sources"][key] != new["runtime_sources"][key]} == {
         "urls.py"
     }
-    assert qualification.current_runtime_sources() == new["runtime_sources"]
+    # The reader proof remains immutable when a separately qualified writer follows it.
+    # Validate that exact successor before comparing against the installed inventory.
+    gate2_raw = qualification.GATE2_SUCCESSOR_PATH.read_bytes()
+    assert "sha256:" + hashlib.sha256(gate2_raw).hexdigest() == qualification.GATE2_SUCCESSOR_DIGEST
+    installed = qualification.validate_gate2_successor(new, json.loads(gate2_raw))
+    assert qualification.current_runtime_sources() == installed["runtime_sources"]
 
 
 @pytest.mark.parametrize("missing", [False, True])
