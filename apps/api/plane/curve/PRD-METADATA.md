@@ -564,8 +564,19 @@ checkpoint body's retention reference.
 The [rationale retention tests](tests/test_prd_rationale_git_retention.py)
 (all terminal decisions, exact reconstruction, database enforcement and rollback)
 exercise both editions alongside existing scope, actor and concurrency tests.
-Evidence persistence and accepted-command service adoption of commit references
-remain pending. Their immutable legacy records retain UUID behavior.
+The [evidence migration](migrations/0019_prd_evidence_git_retention.py)
+(v2 envelope insert validation and rollback preservation) accepts the explicit
+edition already stored in evidence JSON. Its v2 database guard requires matching
+full-commit retention references, matching principal/classification/redaction,
+and inclusion of the evidence source in the envelope. Retention references are
+closed metadata; additional fields are rejected. Historical evidence JSON and
+snapshot envelope digests remain unchanged. Reversal refuses retained v2 evidence
+before restoring the original v1 insert guard.
+
+The [evidence retention tests](tests/test_prd_evidence_git_retention.py)
+(successor snapshots, direct-insert rejection and exact historical preservation)
+exercise the new graph alongside existing metadata immutability and scope checks.
+Accepted-command service adoption of commit references remains pending.
 
 ## Regression commands
 
@@ -592,6 +603,7 @@ pytest plane/curve/tests/test_prd_completion.py
 pytest plane/curve/tests/test_prd_readiness.py plane/curve/tests/test_prd_readiness_models.py
 pytest plane/curve/tests/test_prd_git_retention.py
 pytest plane/curve/tests/test_prd_rationale_git_retention.py
+pytest plane/curve/tests/test_prd_evidence_git_retention.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```

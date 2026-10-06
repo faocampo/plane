@@ -94,7 +94,11 @@ def test_reverse_preserves_retained_v2_rationale():
     decision, _ = prepared()
     decision.save()
     original = decision.as_metadata()
-    with pytest.raises(DatabaseError, match="preservation migration"):
-        MigrationExecutor(connection).migrate([("curve", "0017_prd_git_retention")])
+    latest = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    try:
+        with pytest.raises(DatabaseError, match="preservation migration"):
+            MigrationExecutor(connection).migrate([("curve", "0017_prd_git_retention")])
+    finally:
+        MigrationExecutor(connection).migrate(latest)
     decision.refresh_from_db()
     assert decision.as_metadata() == original
