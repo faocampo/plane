@@ -368,6 +368,108 @@ def validate_definition(raw, identity, facts):
     return receipt
 
 
+def _normalized_prd_facts(value, identity):
+    """Conservative local subset of the incumbent approved normalized PRD.
+
+    Only one plain-text tab is admitted here. Tables, nested tabs and non-text
+    elements fail closed instead of silently dropping possible requirements.
+    Native immutable PRD metadata supplies workspace/Initiative ownership.
+    """
+    require(
+        set(value) == {"normalization_version", "complete", "unsupported_nodes", "document_properties", "tabs"}
+        and value["normalization_version"] == "curve.google-docs.normalized/v1-candidate"
+        and value["complete"] is True
+        and type(value["unsupported_nodes"]) is int
+        and value["unsupported_nodes"] == 0
+        and type(value["document_properties"]) is dict
+        and type(value["document_properties"].get("documentId")) is str
+        and type(value["tabs"]) is list
+        and len(value["tabs"]) == 1,
+        "NORMALIZED_PRD_SUBSET_UNAVAILABLE",
+    )
+    tab = value["tabs"][0]
+    require(
+        type(tab) is dict and set(tab) <= {"tabProperties", "documentTab", "childTabs"} and not tab.get("childTabs"),
+        "NORMALIZED_PRD_SUBSET_UNAVAILABLE",
+    )
+    document = tab.get("documentTab", {})
+    require(type(document) is dict and set(document) == {"body"}, "NORMALIZED_PRD_SUBSET_UNAVAILABLE")
+    body = document["body"]
+    require(type(body) is dict and set(body) == {"content"}, "NORMALIZED_PRD_SUBSET_UNAVAILABLE")
+    nodes = body["content"]
+    require(type(nodes) is list, "NORMALIZED_PRD_SUBSET_UNAVAILABLE")
+    sections, active = {}, None
+    for node in nodes:
+        require(
+            type(node) is dict and set(node) <= {"paragraph", "startIndex", "endIndex"},
+            "NORMALIZED_PRD_SUBSET_UNAVAILABLE",
+        )
+        paragraph = node.get("paragraph")
+        require(
+            type(paragraph) is dict
+            and set(paragraph) <= {"elements", "paragraphStyle"}
+            and type(paragraph.get("elements")) is list,
+            "NORMALIZED_PRD_SUBSET_UNAVAILABLE",
+        )
+        chunks = []
+        for element in paragraph["elements"]:
+            require(
+                type(element) is dict
+                and set(element) <= {"textRun", "startIndex", "endIndex"}
+                and type(element.get("textRun")) is dict
+                and set(element["textRun"]) <= {"content", "textStyle"}
+                and type(element["textRun"].get("content")) is str,
+                "NORMALIZED_PRD_SUBSET_UNAVAILABLE",
+            )
+            chunks.append(element["textRun"]["content"])
+        text = "".join(chunks)
+        style = paragraph.get("paragraphStyle", {})
+        require(type(style) is dict, "NORMALIZED_PRD_SUBSET_UNAVAILABLE")
+        heading = style.get("namedStyleType", "")
+        if type(heading) is str and re.fullmatch(r"HEADING_[1-6]", heading):
+            label, level = re.sub(r"[^a-z0-9]+", " ", text.lower()).strip(), int(heading[-1])
+            if label in {"requirements", "acceptance"}:
+                require(label not in sections, "PRD_SECTION_DUPLICATE")
+                sections[label], active = [], (label, level)
+            elif active and level <= active[1]:
+                active = None
+            elif active:
+                sections[active[0]].append(text)
+        elif active:
+            sections[active[0]].append(text)
+    require(set(sections) == {"requirements", "acceptance"}, "PRD_SECTION_REQUIRED")
+
+    def declarations(label, pattern):
+        entries = []
+        for line in "\n".join(sections[label]).splitlines():
+            match = re.fullmatch(pattern, line.strip())
+            if match:
+                entries.append([match[1], match[2]])
+            elif line.strip():
+                require(entries and not re.match(r"\s*(?:FR|AC|REQ)-[0-9]+\b", line), "PRD_DECLARATION_INVALID")
+                entries[-1][1] += "\n" + line
+        require(entries and len({item[0] for item in entries}) == len(entries), "PRD_DECLARATION_INVALID")
+        require(all(item[1].strip() for item in entries), "PRD_DECLARATION_INVALID")
+        return sorted(entries)
+
+    requirements = declarations("requirements", r"(FR-[0-9]+)\s*:\s*(.*)")
+    acceptances = declarations("acceptance", r"(AC-[0-9]+)\s*:\s*(.*)")
+    links = {key: [] for key, _ in requirements}
+    for key, text in acceptances:
+        refs = set(re.findall(r"\b(?:FR|REQ)-[0-9]+\b", text))
+        require(refs and refs <= set(links), "PRD_ACCEPTANCE_TRACE_INVALID")
+        for ref in refs:
+            links[ref].append(key)
+    require(all(links.values()), "PRD_ACCEPTANCE_TRACE_INVALID")
+    return dict(
+        schema_version="curve.synthetic-prd-body/v2",
+        workspace_id=identity["workspace_id"],
+        initiative_id=identity["initiative_id"],
+        requirements=[dict(id=key, text=text, acceptance_ids=links[key]) for key, text in requirements],
+        acceptances=[dict(id=key, text=text) for key, text in acceptances],
+    )
+
+
 def derive_semantic_facts(identity, sources, materials, native_facts):
     """Fixed synthetic-body adapter. No editable facts list can weaken these facts.
 
@@ -408,6 +510,9 @@ def derive_semantic_facts(identity, sources, materials, native_facts):
             "SEMANTIC_SOURCE_IDENTITY_MISMATCH",
         )
         value = parse_strict_json(raw, max_bytes=MAX_DEFINITION)
+        require(type(value) is dict, "SEMANTIC_SOURCE_INVALID")
+        if edition == "curve.synthetic-prd-body/v2" and value.get("normalization_version"):
+            value = _normalized_prd_facts(value, identity)
         closed(value, {"schema_version", "workspace_id", *keys})
         require(
             value["schema_version"] == edition and value["workspace_id"] == identity["workspace_id"],

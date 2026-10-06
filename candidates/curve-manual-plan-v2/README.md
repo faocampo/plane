@@ -1,7 +1,8 @@
 # Manual plan v2 persistence candidate
 
-Status: **staged; baseline, SQL/DDL experiment and Linux tested; not installed or
-qualified as a complete writer**, 2026-10-06.
+Status: **staged; native authority and prospective PostgreSQL/API graph tested;
+host runtime not installed**, 2026-10-06. All 186 historical regressions pass in the
+proposed application; final host promotion remains a separate step.
 
 This is the single Python implementation intended for Plane. Its module layout
 matches the proposed runtime delta. It reuses existing scoped PRD authority,
@@ -37,10 +38,10 @@ proof review and migration ordering) define the delivery boundary.
 - Current/history reads authorize original content again. The separate status
   action is metadata-only; it does not grant old-body access.
 
-These are implemented candidate paths, not claims of integrated backend behavior.
+These paths have real PostgreSQL/API evidence in a disposable proposed application.
 The [authority/semantic adapters](ADAPTERS.md) (native observations, local counters,
 protected bodies and catalog CAS) and structural successor loader are implemented.
-Real ORM producer/consumer integration and final proof qualification remain gates.
+Real ORM producer/consumer checks pass; final proof promotion remains a gate.
 Default feature switches remain off, there are no registered routes, and no
 migration or proof has been installed.
 
@@ -53,8 +54,8 @@ migration or proof has been installed.
 | `overlay/migrations/0024_manual_draft_reconstruction.py` (prepared SQL and model migration) | Stops before DDL while the reviewed current-catalog pin is absent |
 | `promotion.patch` (model registration, policy constraint and four routes) | Reviewable patch; checked for applicability but not applied |
 | `tests/` (host parser, model, resolver, HTTP and orchestration checks) | No database configured; ORM/service collaborators are doubled where needed |
-| `postgres_tests/` (SQL, DDL-experiment and installed-guard tests) | 14 SQL and 1 transactional DDL test pass; installed guards still require the reviewed successor |
-| `qualification/` (isolated Linux/test runner) | Six real worker checks; bounded test files delivered over stdin without changing the source mount |
+| `postgres_tests/` (authority, complete migration, graph/API and SQL tests) | Actual native bridge, selected evidence, save/replay/history, races, raw-SQL attacks, seals and reversal |
+| `qualification/` (reviewed prospective proof and isolated test runner) | Temporary complete application enforces exact expected code/catalog pins; original source mount stays read-only |
 | `overlay/trusted_root/` (successor loader candidate) | Exact additive draft and separate scope-reader deltas; no active pins |
 | `gate2/` (pure reservation transition kernel) | Twelve host tests; no ORM, route, authority resolver or persisted control |
 
@@ -83,7 +84,8 @@ Selected PRD evidence is bounded at 512 items; all selected bodies and excerpts
 are required conservatively, even when a snapshot item is not marked material.
 Native membership remains a necessary check, never a sufficient grant.
 
-SQL shape functions and declared empty DDL reversal have real PostgreSQL evidence.
-Populated transaction graphs, complete migration and concurrency still need it.
+SQL shape functions, complete migration/reversal, populated transaction graphs
+and first-head concurrency have real PostgreSQL evidence. Consult the exact
+[verification record](VERIFICATION.md) (run scope, proposal identity and remaining gates).
 Gate 2 approval, reservation, execution and completion credit remain excluded from
 this draft writer. No provider, AI/model spending or automatic execution is enabled.

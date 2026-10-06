@@ -1,14 +1,16 @@
-"""Post-promotion smoke tests, not executed and not sufficient for qualification.
+"""Prospective installed smoke tests, not sufficient alone for qualification.
 
 This file intentionally fails when the reviewed 0024/proof are missing. It never
 patches the proof, supplies observed hashes, or skips an unavailable edition.
 """
 
 from importlib import import_module
+from io import StringIO
 
 import pytest
 from django.db import DatabaseError, connection, transaction
 from django.db.migrations.recorder import MigrationRecorder
+from django.core.management import call_command
 
 pytestmark = [pytest.mark.contract, pytest.mark.django_db]
 
@@ -52,3 +54,7 @@ def test_direct_seal_rewrite_is_rejected(qualified_candidate):
     with pytest.raises(DatabaseError):
         with transaction.atomic(), connection.cursor() as cursor:
             cursor.execute("UPDATE curve_manual_plan_v2_coverage SET catalog_digest=%s", ["sha256:" + "0" * 64])
+
+
+def test_registered_models_match_migration_state(qualified_candidate):
+    call_command("makemigrations", "curve", dry_run=True, check=True, interactive=False, stdout=StringIO())

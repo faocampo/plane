@@ -201,8 +201,8 @@ def require_prd_materials(context, captured):
     require(version is not None and version.body_digest == identity["prd_content_digest"])
     version.validate_metadata()
     require(
-        version.body_schema_id == "curve.synthetic-prd-body/v2"
-        and version.body_schema_version == 2
+        (version.body_schema_id, version.body_schema_version)
+        in {("curve.synthetic-prd-body/v2", 2), ("curve.normalized-prd/v1-candidate", 1)}
         and version.as_record()["body"] == captured.semantic_sources["prd"]
     )
     require_retained_material(

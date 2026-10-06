@@ -1,7 +1,7 @@
 # Local authority and semantic adapters
 
-Status: implemented candidate adapters with host evidence; not an installed
-writer or an operational storage profile. The exact original input identity
+Status: candidate adapters verified with native ORM, protected evidence and real
+PostgreSQL transactions; not an installed writer or operational storage profile. The exact original input identity
 remains immutable and separate from every current authorization observation.
 
 ## Native authority and local generations
@@ -30,7 +30,9 @@ nonblocking exclusive lock, immutable retained material/plan/workspace identitie
 monotonic grant counters, and empty-action tombstones for revoked principals.
 It fsyncs a fresh bounded file and atomically replaces the catalog. This is a
 library adapter, not an installed management command or an automatic background
-permission synchronizer. Its real ORM producer/consumer transaction remains a gate.
+permission synchronizer. Thirteen actual ORM tests cover producer refresh, stale
+native observations, each actor/reviewer, original PRD and separate selected
+evidence body/excerpt grants. Membership cannot replace a protected-object grant.
 
 Consumers derive the native observations again and reject a stale ledger until
 the producer refreshes it. They separately check every current Initiative and
@@ -55,6 +57,7 @@ matching bytes, digest, length, material version and access envelope:
 | Edition | Bound facts |
 | --- | --- |
 | `curve.synthetic-prd-body/v2` | Workspace/Initiative, requirement IDs/text/acceptance coverage and acceptance IDs/text |
+| `curve.normalized-prd/v1-candidate` metadata with `curve.google-docs.normalized/v1-candidate` bytes | Existing approved PRD, conservative single plain-text tab with exact FR/AC traceability; native immutable metadata supplies ownership |
 | `curve.synthetic-workflow/v2` | Workspace/workflow identity, fixed condition vocabulary and dependency artifacts |
 | `curve.synthetic-quality-policy/v2` | Workspace/policy identity and required check IDs |
 | `curve.synthetic-repository/v2` | Workspace/repository identity, exact base branch/commit, policy and context refs |
@@ -64,9 +67,16 @@ Requirement coverage is derived from the PRD; required checks are the union of
 quality and repository policy requirements. The result must equal the catalog's
 closed fact snapshot. Editing only that snapshot cannot weaken validation. Native
 Initiative key, risk, code approver and proposed-delivery task set are independently
-bound by the policy adapter. Native PRD metadata must identify the v2 body and its
-original evidence snapshot; every selected evidence body and excerpt is retained
+bound by the policy adapter. Native PRD metadata must identify one exact supported
+schema/version pair and its original evidence snapshot; every selected evidence body and excerpt is retained
 and authorized. These local body editions are not new public wire-schema approvals.
+
+The normalized adapter consumes the retained approved bytes without rewriting
+them or substituting a readiness assertion. Nested tabs, tables, footnotes,
+non-text elements, unparsed declarations, duplicate sections/IDs, unknown references
+and uncovered requirements fail closed. Nested heading text inside a section is
+included, so it cannot silently discard a requirement. This narrow subset is an
+admission limit, not complete Google document support or a live provider adapter.
 
 ## Worker and successor boundaries
 
@@ -88,7 +98,10 @@ models, one migration, eleven new modules, the reviewed model/URL changes, and o
 new draft writer inventory entry. Approval, controlling bindings, execution and
 completion credit stay excluded. The scope-reader successor permits only its two
 read modules and URL change. Structural validation alone supplies no authority;
-both successor pins and the migration catalog pin remain unset.
+both host successor pins and the host migration catalog pin remain unset. The
+[prospective qualification](qualification/README.md) (reviewed source/DDL proposal
+and isolated complete-application tests) exercises literal proposed pins with the
+real loader in container temporary storage. It supplies no runtime activation.
 
 See the [promotion checklist](PROMOTION.md) (remaining database, proof and integrated
 UI gates) and [verification record](VERIFICATION.md) (executed evidence and limits).

@@ -55,3 +55,13 @@
          "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-association-preconditions/",
          CurveProjectAssociationPreconditionsEndpoint.as_view(),
          name="curve-project-association-preconditions",
+--- a/apps/api/plane/curve/tests/test_project_association_read_qualification.py
++++ b/apps/api/plane/curve/tests/test_project_association_read_qualification.py
+@@ -33,6 +33,6 @@
+     assert {key: value for key, value in predecessor.items() if key != "runtime_sources"} == {
+         key: value for key, value in updated.items() if key != "runtime_sources"
+     }
+-    assert qualification._qualified_runtime_sources(predecessor) == qualification.current_runtime_sources()
++    assert qualification._current_qualification(predecessor)["runtime_sources"] == qualification.current_runtime_sources()
+     with transaction.atomic():
+         qualification.require_reopening_qualification()

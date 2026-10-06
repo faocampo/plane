@@ -1,119 +1,100 @@
 """Protected local bodies, not asserted catalog facts, determine plan coverage."""
 
 # ruff: noqa: E402
-from copy import deepcopy
 import unittest
-import uuid
+from copy import deepcopy
 
 import bootstrap
 
 bootstrap.install()
 from manual_plan_v2.validation import (
     InvalidPlan,
-    canonical_json,
     derive_semantic_facts,
-    digest,
-    metadata_digest,
     validate_definition,
+    _normalized_prd_facts,
 )
-from test_draft_core import fixture
 
 
-def semantic_case():
-    definition, identity, facts = (
-        fixture(name) for name in ("definition.valid", "input-identity.valid", "immutable-semantic-facts")
-    )
-    materials = {}
+from semantic_fixture import semantic_case
 
-    def store(value):
-        raw = canonical_json(value)
-        ref = dict(object_id=str(uuid.uuid4()), digest=digest(raw), size_bytes=len(raw), media_type="application/json")
-        materials[ref["object_id"]] = raw
-        identity["protected_inputs"].append(
-            dict(
-                object_ref=ref,
-                material_version_id=str(uuid.uuid4()),
-                access_envelope_id=str(uuid.uuid4()),
-                classification="INTERNAL",
-                input_kind="ATTACHMENT",
+
+class NormalizedPrdTests(unittest.TestCase):
+    def setUp(self):
+        def paragraph(text, heading=False):
+            return dict(
+                paragraph=dict(
+                    elements=[dict(textRun=dict(content=text))],
+                    **({"paragraphStyle": {"namedStyleType": "HEADING_1"}} if heading else {}),
+                )
             )
-        )
-        return ref
 
-    def body(edition, **data):
-        return dict(schema_version=edition, workspace_id=identity["workspace_id"], **data)
-
-    context_ref = identity["protected_inputs"][0]["object_ref"]
-    materials[context_ref["object_id"]] = b"Synthetic context."
-    context_ref.update(
-        digest=digest(materials[context_ref["object_id"]]), size_bytes=len(materials[context_ref["object_id"]])
-    )
-    prd = store(
-        body(
-            "curve.synthetic-prd-body/v2",
-            initiative_id=identity["initiative_id"],
-            requirements=[
-                dict(id="FR-008", text="First requirement", acceptance_ids=["AC-10"]),
-                dict(id="FR-009", text="Second requirement", acceptance_ids=["AC-11"]),
+        self.value = dict(
+            normalization_version="curve.google-docs.normalized/v1-candidate",
+            complete=True,
+            unsupported_nodes=0,
+            document_properties={"documentId": "synthetic-document"},
+            tabs=[
+                dict(
+                    tabProperties={"title": "Definition"},
+                    documentTab=dict(
+                        body=dict(
+                            content=[
+                                paragraph("Requirements", True),
+                                paragraph("FR-1: First\nFR-2: Second"),
+                                paragraph("Acceptance", True),
+                                paragraph("AC-1: Verify FR-1 and FR-2"),
+                            ]
+                        )
+                    ),
+                )
             ],
-            acceptances=[dict(id="AC-10", text="First acceptance"), dict(id="AC-11", text="Second acceptance")],
         )
-    )
-    identity["prd_content_digest"] = prd["digest"]
-    workflow = store(
-        body(
-            "curve.synthetic-workflow/v2",
-            id=identity["workflow_ref"]["entity_id"],
-            allowed_conditions=facts["workflow_conditions"]["allowed_conditions"],
-            dependency_artifact_refs=[],
-        )
-    )
-    quality = store(
-        body(
-            "curve.synthetic-quality-policy/v2",
-            id=identity["quality_policy_ref"]["entity_id"],
-            required_check_ids=["lint", "unit"],
-        )
-    )
-    identity["workflow_ref"]["digest"] = workflow["digest"]
-    identity["quality_policy_ref"]["digest"] = quality["digest"]
-    repository = identity["repository_inputs"][0]
-    policy = store(
-        body(
-            "curve.synthetic-repository-policy/v2",
-            id=repository["repository_policy_ref"]["entity_id"],
-            repository_id=repository["repository_ref"]["entity_id"],
-            allowed_base_branches=["main"],
-            required_check_ids=["security"],
-        )
-    )
-    repository["repository_policy_ref"]["digest"] = policy["digest"]
-    repository["context_input_ref"] = deepcopy(context_ref)
-    repo = store(
-        body(
-            "curve.synthetic-repository/v2",
-            id=repository["repository_ref"]["entity_id"],
-            **{
-                key: deepcopy(repository[key])
-                for key in ("base_branch", "base_commit", "repository_policy_ref", "context_input_ref")
-            },
-        )
-    )
-    repository["repository_ref"]["digest"] = repo["digest"]
-    for key in ("workflow_ref", "quality_policy_ref"):
-        definition[key] = deepcopy(identity[key])
-        facts[key] = deepcopy(identity[key])
-    for edge in definition["dependencies"]:
-        edge["workflow_ref"] = deepcopy(identity["workflow_ref"])
-    definition["repositories"] = deepcopy(identity["repository_inputs"])
-    facts["repositories"] = deepcopy(identity["repository_inputs"])
-    facts["workflow_conditions"]["workflow_ref"] = deepcopy(identity["workflow_ref"])
-    facts["protected_object_refs"] = [deepcopy(item["object_ref"]) for item in identity["protected_inputs"]]
-    raw = canonical_json(definition)
-    identity["definition_ref"].update(digest=digest(raw), size_bytes=len(raw))
-    identity["digest"] = metadata_digest(identity)
-    sources = dict(prd=prd, workflow=workflow, quality=quality, repositories=[dict(repository=repo, policy=policy)])
-    return raw, identity, facts, sources, materials
+        self.identity = dict(workspace_id="synthetic-workspace", initiative_id="synthetic-initiative")
+
+    def test_existing_normalized_bytes_derive_complete_exact_traceability(self):
+        value = _normalized_prd_facts(self.value, self.identity)
+        self.assertEqual([item["id"] for item in value["requirements"]], ["FR-1", "FR-2"])
+        self.assertEqual([item["acceptance_ids"] for item in value["requirements"]], [["AC-1"], ["AC-1"]])
+
+    def test_unsupported_structures_and_duplicate_sections_fail_without_dropping_content(self):
+        mutations = [
+            lambda v: v["tabs"].append(deepcopy(v["tabs"][0])),
+            lambda v: v["tabs"][0].update(childTabs=[{}]),
+            lambda v: v["tabs"][0]["documentTab"].update(footnotes={"hidden": {}}),
+            lambda v: v["tabs"][0]["documentTab"].update(body=[]),
+            lambda v: v["tabs"][0]["documentTab"]["body"]["content"].append({"table": {}}),
+            lambda v: v["tabs"][0]["documentTab"]["body"]["content"].append(
+                deepcopy(v["tabs"][0]["documentTab"]["body"]["content"][0])
+            ),
+        ]
+        for mutate in mutations:
+            value = deepcopy(self.value)
+            mutate(value)
+            with self.subTest(mutate=mutate), self.assertRaises(InvalidPlan):
+                _normalized_prd_facts(value, self.identity)
+
+    def test_nested_requirement_heading_is_included_in_traceability(self):
+        nodes = self.value["tabs"][0]["documentTab"]["body"]["content"]
+        nodes[1]["paragraph"]["paragraphStyle"] = {"namedStyleType": "HEADING_2"}
+        result = _normalized_prd_facts(self.value, self.identity)
+        self.assertEqual([item["id"] for item in result["requirements"]], ["FR-1", "FR-2"])
+
+    def test_unparsed_declarations_cannot_be_silently_dropped(self):
+        for prefix in ("FR-3 - unparsed", "Unparsed requirement", "REQ-3: Unsupported"):
+            value = deepcopy(self.value)
+            run = value["tabs"][0]["documentTab"]["body"]["content"][1]["paragraph"]["elements"][0]["textRun"]
+            run["content"] = prefix + "\n" + run["content"]
+            with self.subTest(prefix=prefix), self.assertRaises(InvalidPlan):
+                _normalized_prd_facts(value, self.identity)
+
+    def test_uncovered_unknown_duplicate_and_empty_declarations_fail(self):
+        for text in ("AC-1: Verify FR-1", "AC-1: Verify FR-9", "AC-1: FR-1 FR-2\nAC-1: duplicate", "AC-1:"):
+            value = deepcopy(self.value)
+            value["tabs"][0]["documentTab"]["body"]["content"][3]["paragraph"]["elements"][0]["textRun"]["content"] = (
+                text
+            )
+            with self.subTest(text=text), self.assertRaises(InvalidPlan):
+                _normalized_prd_facts(value, self.identity)
 
 
 class SemanticSourcesTests(unittest.TestCase):
