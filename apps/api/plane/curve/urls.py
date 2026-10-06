@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.curve.manual_plan_v2.views import ManualPlanSaveEndpoint, ManualPlanReadEndpoint
 from plane.curve.project_association_read_views import CurveProjectAssociationPreconditionsEndpoint
 from plane.curve.scope_reopening_views import CurveScopeReopeningEndpoint, CurveScopeReopeningPreconditionsEndpoint
 from plane.curve.scope_proposal_views import CurveScopeProposalEndpoint, CurveScopeProposalRevisionEndpoint
@@ -41,6 +42,26 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/",
+        ManualPlanSaveEndpoint.as_view(),
+        name="curve-manual-plan-v2-save",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/current/",
+        ManualPlanReadEndpoint.as_view(action="READ_CURRENT"),
+        name="curve-manual-plan-v2-current",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/status/",
+        ManualPlanReadEndpoint.as_view(action="READ_STATUS"),
+        name="curve-manual-plan-v2-status",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/revisions/<uuid:revision_id>/",
+        ManualPlanReadEndpoint.as_view(action="READ_REVISION"),
+        name="curve-manual-plan-v2-revision",
+    ),
     path(
         "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-association-preconditions/",
         CurveProjectAssociationPreconditionsEndpoint.as_view(),

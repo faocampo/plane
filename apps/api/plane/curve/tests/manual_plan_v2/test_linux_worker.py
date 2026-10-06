@@ -11,9 +11,9 @@ import time
 
 import pytest
 
-from manual_plan_v2 import validator_worker as worker
-from manual_plan_v2.contracts import ManualPlanError
-from test_semantic_sources import semantic_case
+from plane.curve.manual_plan_v2 import validator_worker as worker
+from plane.curve.manual_plan_v2.contracts import ManualPlanError
+from semantic_fixture import semantic_case
 
 pytestmark = pytest.mark.unit
 OVERLAY = str(Path(worker.__file__).resolve().parent.parent)

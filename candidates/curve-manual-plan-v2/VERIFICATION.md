@@ -1,7 +1,8 @@
-# Manual persistence candidate verification
+# Manual persistence qualification and installed-source verification
 
 Recorded: 2026-10-06. Evidence covers the recovered baseline and a disposable
-complete proposed application. It does not establish host runtime activation,
+complete proposed application, followed by promotion of those exact bytes into
+the local source. It does not establish workspace runtime activation,
 Gate 2 or a completed manual pilot.
 
 ## Executed checks
@@ -23,7 +24,8 @@ Gate 2 or a completed manual pilot.
 | Visual acceptance | Five synthetic desktop/mobile captures, zero browser JS errors or horizontal overflow, detector findings empty; fresh reviewer disposition **ship** for the unmounted UI/client candidate |
 | Protected semantic facts | Derived from exact approved normalized PRD or fixed synthetic PRD and protected workflow/quality/repository bytes; altered fact snapshots rejected |
 | Trusted successor | Closed additive delta tests plus the actual complete-application loader; missing pins/proofs reject; no deployed-state rehash or permissive fallback |
-| Historical preservation | 23 migration byte pins and both historical proofs retained; host Curve runtime remains unchanged from recovered Plane `7d4225d594adf984de1451f16ad2c8ab741c58eb` |
+| Installed-source rerun | **57 passed** through the original read-only bind: 14 SQL, 6 installed-guard/model, 3 complete-migration, 15 graph/API, 13 native-authority and 6 Linux-worker tests; **107 host tests** also passed after the move |
+| Historical preservation | 23 migration byte pins and both historical proofs retained; the tested additive successor now governs the local Curve runtime |
 
 The host uses Python 3.14.7, Django 5.2.15, DRF 3.17.1, jsonschema 4.26.0 and
 Ruff 0.15.12. The existing Linux image uses Python 3.12.5, Django 5.2.15,
@@ -31,22 +33,23 @@ pytest 9.0.3, psycopg 3.3.4 and PostgreSQL 15.7. Frontend checks use React 18.3.
 TypeScript 5.8.3 and Vitest 4.1.8 in an isolated local test environment.
 
 The [host instructions](README.md) (unit environment and candidate boundaries),
-[isolated test runner](qualification/run_isolated.py) (bounded candidate material
-sent to container temporary storage), and [test profile](../../deployments/curve-local-pilot/README.md)
+[isolated test runner](qualification/run_isolated.py) (installed-source phase selection), and [test profile](../../deployments/curve-local-pilot/README.md)
 (original read-only source mount and disposable services) provide reproduction.
 
 ```sh
-python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py sql
-python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py worker
-python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py ddl
+python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py all
+python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py regression
 ```
 
-These three original phases leave the mounted baseline unchanged. The subsequent
-`authority` phase uses real baseline ORM transactions. The separate `installed`,
-`migration`, `persistence` and `regression` phases assemble a complete reviewed
-application under container temporary storage with its own test database. See
-[prospective qualification](qualification/README.md) (exact source, DDL and literal
-pin review, phase commands and fixture cleanup). No source mount is changed.
+Run database phases sequentially against this project's disposable database.
+At `27a16ae`, the original qualification runner separately exercised the baseline,
+SQL/worker/DDL experiment, native authority and a complete reviewed temporary
+application. See [qualification history](qualification/README.md) (exact source,
+DDL and literal pin review, phase commands and fixture cleanup).
+After promotion, `all` passed against the single installed source through the
+original read-only bind, without a prospective copy or alternate settings module.
+The historical DDL experiment and assembly code remain in Git at the qualification
+checkpoint; complete installed migration tests supersede them.
 
 ## Defects found by actual runtime tests
 
@@ -70,17 +73,17 @@ These failures were corrected in the candidate and the affected real suites pass
 
 ## Exact DDL evidence boundary
 
-The [DDL experiment](postgres_tests/test_ddl_experiment.py) (explicit DDL/state
+The [DDL experiment](qualification/README.md) (explicit DDL/state
 operations inside one rolled-back test transaction) leaves the migration's
-`CURRENT_CATALOG_DIGEST` unset. It verifies that the complete migration refuses
-before DDL, then separately exercises the declared DDL operations without
+`CURRENT_CATALOG_DIGEST` unset at its original checkpoint. It verified that the complete migration refused
+before DDL, then separately exercised the declared DDL operations without
 installing a seal value, successor proof, runtime module or recorder entry.
 
 The original catalog digest remains
 `sha256:e44c580ea214e03b315c2b14c038cb14ae5d99fa8a60115e82d6b5841ac177a7`.
 The experiment observed candidate digest
 `sha256:4f0c5e4b1ba7c5e00a3cf35fa55092cb71f571fa34a564f2859af7a46b0b67e8`.
-This is review evidence, **not a qualification pin**. Its delta has three tables,
+That observation alone was **not a qualification pin**. Its delta has three tables,
 26 columns, six new functions plus one replaced verifier, 12 indexes, 27 added
 constraints with one replaced policy constraint, and 33 added triggers including
 internal foreign-key triggers. All other original catalog rows are preserved.
@@ -89,7 +92,7 @@ Empty reversal restores the exact original catalog and coverage verifier.
 The experiment alone does not test a complete writer. The later prospective
 application separately executes the complete gated migration, populated graph,
 real API/save races and reversal checks listed above, using the reviewed literal
-catalog pin. The [installed guard suite](postgres_tests/test_installed_guards.py)
+catalog pin. The [installed guard suite](../../apps/api/plane/curve/tests/manual_plan_v2/test_installed_guards.py)
 (qualified loader, distinct seals, direct mutation rejection and model consistency)
 passes in that application and still fails when its reviewed successor is absent.
 

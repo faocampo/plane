@@ -3,6 +3,9 @@
 from pathlib import Path
 import sys
 
+RUNTIME_ROOT = Path(__file__).resolve().parents[3]
+REPOSITORY = RUNTIME_ROOT.parents[3]
+
 
 def install():
     from django.conf import settings
@@ -17,4 +20,4 @@ def install():
     import django
 
     django.setup()
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "overlay"))
+    sys.path.insert(0, str(RUNTIME_ROOT))

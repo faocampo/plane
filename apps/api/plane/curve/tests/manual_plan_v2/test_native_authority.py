@@ -11,9 +11,9 @@ from plane.curve.models import AuditEvent, DomainEvent, PolicyDecision
 from plane.curve.prd_commands import PrdCommandError
 from plane.curve.tests.test_scoped_prd_bridge import configuration, context, bridge
 
-from manual_plan_v2 import policy, synthetic
-from manual_plan_v2.contracts import ManualPlanError
-from manual_plan_v2.validator_worker import validate_in_worker
+from plane.curve.manual_plan_v2 import policy, synthetic
+from plane.curve.manual_plan_v2.contracts import ManualPlanError
+from plane.curve.manual_plan_v2.validator_worker import validate_in_worker
 from native_fixture import capture_native, current_contexts, prepare_native_fixture, publish_catalog
 
 pytestmark = [pytest.mark.contract, pytest.mark.django_db(transaction=True)]

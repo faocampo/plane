@@ -1,9 +1,10 @@
 # Promotion and remaining integration gates
 
-Status: staged candidate with real native authority and complete proposed
-PostgreSQL/API evidence. No host runtime promotion or workspace activation has
-occurred. The isolated proposed application runs the complete migration, exact
-successor and registered routes; this remains separate from publication or release.
+Status: one implementation promoted into local Plane source after complete
+prospective PostgreSQL/API qualification at `27a16ae`. The manual successor and
+migration are installed; workspace activation remains off. Installed-source
+verification passed: 57 actual runtime tests and 107 host tests. Publication and
+release remain separate.
 
 ## Completed preparation
 
@@ -13,7 +14,7 @@ successor and registered routes; this remains separate from publication or relea
 - Semantic facts are derived from exact protected PRD/workflow/quality/repository
   bodies and compared with the catalog, with independent native bindings.
 - The trusted successor loader implements the exact manual delta followed by a
-  separate scope-reader delta; the approval pins remain unset.
+  separate scope-reader delta; the manual pin is installed and the scope pin remains unset.
 - Linux process limits and cross-process slots have actual test evidence.
 - An unmounted typed client/panel and pure Gate 2 transition kernel are implemented.
 
@@ -33,9 +34,9 @@ limits), and [UI review](UI_REVIEW.md) (bounded visual handoff).
 | 6 | Real save/append/history/replay graph: revision, head, Initiative version, policy, audit, event, outbox and idempotency commit once; current ETag on original replay | Real proposed application passes exact graph and original replay/history checks |
 | 7 | Independent-connection concurrent saves, first-head races, access/source changes before final fence and zero partial records | Distinct-key and same-key races, final native/file changes and zero-partial assertions pass |
 | 8 | Raw-SQL omission/substitution of every graph component, immutable rewrite/delete/truncate, catalog/seal tampering, retained-evidence reversal refusal including NO_EFFECT audit | 16 raw graph attacks, retained mutations, exact seals and standalone NO_EFFECT reversal refusal pass |
-| 9 | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions | Reviewed proposal enforces exact source/DB pins in the temporary application; host promotion pending |
+| 9 | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions | Exact tested proof installed; 23 historical migrations and both old proofs preserved |
 | 10 | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences | 31 prior host tests; successor and DB integration required |
-| 11 | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior | Prospective model consistency, session/CSRF and 186 historical regressions pass; host patch unapplied |
+| 11 | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior | Prospective checks and 186 regressions pass; source promoted once; 57 installed-source runtime tests and 107 host tests pass |
 | 12 | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey | Typed client/panel: 27 tests and bounded visual ship; preparation and integration required |
 | 13 | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph | Pure kernel: 12 host tests; persistence and successor required |
 | 14 | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Pure transition tests passed; real DB/race/API evidence required |
@@ -50,7 +51,7 @@ slots cover API processes sharing one container's temporary directory only.
 Use the [isolated profile](../../deployments/curve-local-pilot/README.md) (internal
 network, disposable services, original read-only API source). The previous source
 mount denial is resolved. Keep all test data synthetic and preserve the original
-mount. The [DDL experiment](postgres_tests/test_ddl_experiment.py) (separate DDL
+mount. The [DDL experiment](qualification/README.md) (separate DDL
 operations with rollback) cannot populate the migration pin or qualify a deployed
 catalog. Do not add an environment bypass or monkeypatch the installed loader.
 
@@ -62,21 +63,23 @@ source/schema hashes, skip unavailable qualifications or activate a user's datab
 
 ## One implementation, one consumer
 
-The [candidate package](overlay/manual_plan_v2/) (eleven modules and pinned JSON)
-moves, once qualified, into the existing Plane Curve app. The [migration](overlay/migrations/0024_manual_draft_reconstruction.py)
-(two models, transaction graph guards and separate seal) moves into its migration
-package. Move the tests to the existing test package; retain review/evidence
-records here. Do not leave a second runnable implementation after promotion.
+The [runtime package](../../apps/api/plane/curve/manual_plan_v2/) (eleven modules and pinned JSON),
+[migration](../../apps/api/plane/curve/migrations/0024_manual_draft_reconstruction.py)
+(two models, transaction graph guards and separate seal), and
+[tests](../../apps/api/plane/curve/tests/manual_plan_v2/) (host and actual runtime
+verification) have moved into the existing Plane Curve app. This directory retains
+review/evidence records and the separate uninstalled Gate 2 kernel. There is no
+second runnable draft implementation.
 Curve remains the canonical source for the unchanged contract JSON snapshot.
 
 The [promotion patch](promotion.patch) (model registration, additive policy
-constraint and four routes) is reviewable and applicable but insufficient alone.
-Applying it now would invalidate the incumbent recursive proof. Reconcile shared
-URL edits once when installing the separately reviewed scope-reader successor.
+constraint, four routes and recursive source assertion) records the already
+applied changes. Do not apply it again or replace the installed proof with observed
+hashes. Qualify URL edits for the scope reader under its separate exact successor.
 
 ## Gate 2 stays a separate successor
 
-The [draft delta](overlay/manual_plan_v2/contract_snapshot/qualification-delta-v2.json)
+The [draft delta](../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/qualification-delta-v2.json)
 (draft-only writer inventory) excludes plan approval and controlling task bindings.
 The [Gate 2 kernel](gate2/domain.py) (immutable exact subject, assigned approver,
 exclusive claims, retained holds and reconciled release) has no ORM, route, grant

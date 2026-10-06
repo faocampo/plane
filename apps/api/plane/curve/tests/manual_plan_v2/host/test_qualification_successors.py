@@ -18,8 +18,8 @@ bootstrap.install()
 class SuccessorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.root = Path(__file__).resolve().parents[1]
-        source = cls.root / "overlay/trusted_root/scope_reopening_qualification.py"
+        cls.root = bootstrap.RUNTIME_ROOT
+        source = cls.root / "scope_reopening_qualification.py"
         spec = importlib.util.spec_from_file_location("plane.curve.successor_candidate", source)
         cls.module = importlib.util.module_from_spec(spec)
         modules = {
@@ -28,7 +28,7 @@ class SuccessorTests(unittest.TestCase):
         }
         with patch.dict(sys.modules, modules):
             spec.loader.exec_module(cls.module)
-        original = cls.root.parents[1] / "apps/api/plane/curve/project_association_read_qualification.json"
+        original = cls.root / "project_association_read_qualification.json"
         cls.predecessor = json.loads(original.read_text())["qualification"]
 
     def successor(self):
@@ -53,7 +53,7 @@ class SuccessorTests(unittest.TestCase):
     def test_exact_declared_delta_is_structurally_accepted_without_approving_hashes(self):
         successor = self.successor()
         self.assertEqual(self.module.validate_manual_successor(self.predecessor, successor), successor["qualification"])
-        self.assertIsNone(self.module.MANUAL_SUCCESSOR_DIGEST)
+        self.assertRegex(self.module.MANUAL_SUCCESSOR_DIGEST, r"^sha256:[0-9a-f]{64}$")
         self.assertIsNone(self.module.SCOPE_EDITOR_SUCCESSOR_DIGEST)
 
     def test_missing_extra_or_changed_historical_source_is_rejected(self):

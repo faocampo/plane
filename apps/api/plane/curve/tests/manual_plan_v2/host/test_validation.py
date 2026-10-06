@@ -1,5 +1,7 @@
 """Cross-language, boundary and adversarial checks against frozen v2 inputs."""
 
+# ruff: noqa: E402 -- host-only bootstrap precedes runtime module imports.
+
 import base64
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
@@ -8,9 +10,10 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "overlay"))
+import bootstrap
+
+bootstrap.install()
 
 from manual_plan_v2.validation import (
     InvalidPlan,
@@ -98,7 +101,7 @@ console.log(JSON.stringify(out));"""
             text=True,
             capture_output=True,
             check=True,
-            cwd=Path(__file__).resolve().parents[3].parent / "curve",
+            cwd=bootstrap.REPOSITORY.parent / "curve",
             timeout=20,
         )
         return json.loads(result.stdout)
@@ -324,7 +327,7 @@ console.log(JSON.stringify(cases.map(value=>{
             text=True,
             capture_output=True,
             check=True,
-            cwd=Path(__file__).resolve().parents[3].parent / "curve",
+            cwd=bootstrap.REPOSITORY.parent / "curve",
             timeout=20,
         )
         expected = json.loads(result.stdout)

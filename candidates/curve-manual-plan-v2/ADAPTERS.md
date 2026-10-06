@@ -1,12 +1,13 @@
 # Local authority and semantic adapters
 
-Status: candidate adapters verified with native ORM, protected evidence and real
-PostgreSQL transactions; not an installed writer or operational storage profile. The exact original input identity
+Status: adapters integrated into the local Plane source after native ORM, protected
+evidence and PostgreSQL qualification. The feature remains disabled; the local
+file profile is not operationally qualified storage. The exact original input identity
 remains immutable and separate from every current authorization observation.
 
 ## Native authority and local generations
 
-The [policy adapter](overlay/manual_plan_v2/policy.py) (native checks and transient
+The [policy adapter](../../apps/api/plane/curve/manual_plan_v2/policy.py) (native checks and transient
 authority projection) calls the incumbent scoped reader independently for the
 actor, every human owner and all three assigned reviewers while holding its
 native locks. It checks the exact approved scoped PRD and controlling decision,
@@ -14,7 +15,7 @@ current Product/Initiative, risk, assignments, memberships and source observatio
 The creator or an explicitly granted technical contributor may save. Native
 membership alone never authorizes protected content or a save.
 
-The [catalog adapter](overlay/manual_plan_v2/synthetic.py) (owner-only material
+The [catalog adapter](../../apps/api/plane/curve/manual_plan_v2/synthetic.py) (owner-only material
 capture, generations and atomic publication) persists a local observation ledger.
 Each principal has a membership observation digest and a positive counter. A
 separate source counter covers the aggregate of each principal's native source
@@ -49,7 +50,7 @@ cross-container grant store.
 
 ## Protected semantic bodies
 
-The [semantic adapter](overlay/manual_plan_v2/validation.py) (strict parser,
+The [semantic adapter](../../apps/api/plane/curve/manual_plan_v2/validation.py) (strict parser,
 body-derived facts and inert plan validation) derives facts from these closed local
 synthetic JSON editions. Each body is an exact original protected ObjectRef with
 matching bytes, digest, length, material version and access envelope:
@@ -80,7 +81,7 @@ admission limit, not complete Google document support or a live provider adapter
 
 ## Worker and successor boundaries
 
-The [Linux worker](overlay/manual_plan_v2/validator_worker.py) (fixed child process
+The [Linux worker](../../apps/api/plane/curve/manual_plan_v2/validator_worker.py) (fixed child process
 and closed receipt) has a 32 MiB encoded-job ceiling, 16 MiB material ceiling,
 15 CPU seconds, 30-second parent wait, 512 MiB virtual address space, 32 descriptors,
 16 KiB output-file ceiling and no core dumps. Bytecode writes are disabled before
@@ -91,17 +92,20 @@ and invalid jobs, parser bounds, limits, competing processes and release of a sl
 after killing its holder. Abrupt death of the API parent during a real validation
 job and container-wide memory pressure remain operational acceptance cases.
 
-The [successor loader](overlay/trusted_root/scope_reopening_qualification.py)
+The [successor loader](../../apps/api/plane/curve/scope_reopening_qualification.py)
 (exact additive manual writer, then separate scope reader) preserves both historic
 proofs and all 23 migration pins. The manual successor allows exactly two added
 models, one migration, eleven new modules, the reviewed model/URL changes, and one
 new draft writer inventory entry. Approval, controlling bindings, execution and
 completion credit stay excluded. The scope-reader successor permits only its two
 read modules and URL change. Structural validation alone supplies no authority;
-both host successor pins and the host migration catalog pin remain unset. The
+the manual successor and migration catalog pins are installed with their exact
+tested values; the separate scope-reader pin remains unset. The
 [prospective qualification](qualification/README.md) (reviewed source/DDL proposal
-and isolated complete-application tests) exercises literal proposed pins with the
-real loader in container temporary storage. It supplies no runtime activation.
+and isolated complete-application tests) records the literal pins exercised with
+the real loader before promotion. The installed test runner verifies the same
+single implementation through the original read-only source bind. Neither code
+promotion nor a successful test activates a workspace.
 
 See the [promotion checklist](PROMOTION.md) (remaining database, proof and integrated
 UI gates) and [verification record](VERIFICATION.md) (executed evidence and limits).

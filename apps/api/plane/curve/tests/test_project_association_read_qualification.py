@@ -29,7 +29,7 @@ def test_predecessor_is_immutable_and_successor_changes_only_reviewed_read_sourc
     assert {key: value for key, value in predecessor.items() if key != "runtime_sources"} == {
         key: value for key, value in updated.items() if key != "runtime_sources"
     }
-    assert qualification._qualified_runtime_sources(predecessor) == qualification.current_runtime_sources()
+    assert qualification._current_qualification(predecessor)["runtime_sources"] == qualification.current_runtime_sources()
     with transaction.atomic():
         qualification.require_reopening_qualification()
 

@@ -1,91 +1,59 @@
-# Manual plan v2 persistence candidate
+# Manual draft v2: integrated local source
 
-Status: **staged; native authority and prospective PostgreSQL/API graph tested;
-host runtime not installed**, 2026-10-06. All 186 historical regressions pass in the
-proposed application; final host promotion remains a separate step.
+Status: qualified source promoted into the restored Plane application, 2026-10-06.
+The feature remains explicitly disabled by default. No workspace, provider,
+shared deployment, plan approval or automatic execution is activated.
 
-This is the single Python implementation intended for Plane. Its module layout
-matches the proposed runtime delta. It reuses existing scoped PRD authority,
-Initiative locking, policy decisions, idempotency, audit, event and outbox services.
-It is staged outside the installed application because its recursive source proof
-rejects any unreviewed new module, including a default-off writer.
+The single implementation is now [manual_plan_v2](../../apps/api/plane/curve/manual_plan_v2/)
+(eleven modules and unchanged canonical contract JSON). It retains immutable draft
+revisions, exact protected input identities, native/object authority, bounded Linux
+validation, atomic policy/audit/event/outbox/idempotency, original replay with a
+current ETag, protected current/history reads and separate metadata-only status.
+Four registered session/CSRF routes remain unavailable when the feature is off.
 
-The [verification record](VERIFICATION.md) (executed host, PostgreSQL, Linux and UI
-checks with remaining runtime gates) and [promotion plan](PROMOTION.md) (remaining integration work,
-proof review and migration ordering) define the delivery boundary.
+The [migration](../../apps/api/plane/curve/migrations/0024_manual_draft_reconstruction.py)
+(two models, closed SQL graph guards and a separate seal) and
+[manual successor proof](../../apps/api/plane/curve/manual_plan_draft_reconstruction_qualification_v2.json)
+(exact additive source/model/catalog qualification) are the exact bytes exercised
+in the disposable application. Both earlier proof files and all 23 historical
+migrations remain byte-identical. No second runnable draft implementation remains
+in this candidate directory.
 
-## Prepared behavior
+The [verification record](VERIFICATION.md) (executed evidence and limits),
+[adapter definitions](ADAPTERS.md) (native observations and protected local files),
+[promotion checklist](PROMOTION.md) (remaining scope-reader, UI, Gate 2 and pilot
+work), and [qualification history](qualification/README.md) (prospective proposal
+and current reproduction) describe the boundary. The pure [Gate 2 kernel](gate2/domain.py)
+(uninstalled reservation transitions) remains separate and has no ORM or writer.
 
-- Two guarded models retain an immutable revision and the current draft head.
-  Public revision metadata excludes protected bodies, private identity and receipt.
-- A strict closed command binds the typed Initiative ETag, expected draft revision,
-  original definition bytes and idempotency identity. New saves produce 201;
-  authorized replay returns the original revision with a current ETag and 200.
-- The writer prepares one atomic graph: head/revision, Initiative version,
-  policy, audit, domain event, local outbox and completed idempotency record.
-  A final authority and file observation is required before leaving the transaction.
-- The exact local resolver reads bounded owner-only files by opaque UUID. Current
-  Initiative grants and per-object grants are required for the actor, all reviewers
-  and named owners. Original material/envelope/classification substitutions fail.
-- Native PRD and evidence metadata must bind to retained, authorized original
-  material. Missing body, selected evidence or excerpt references deny the read/save.
-- Validation is inert and isolated before database locks. The proposed Linux worker
-  has CPU, wall time, memory, descriptor and concurrency limits. Six real Linux
-  checks pass, including valid/invalid jobs and competing processes. The Mac path
-  fails closed; slots cover processes sharing one container, not separate containers.
-- Session authentication uses normal Django CSRF on the original request so DRF
-  does not consume JSON before strict parsing. Every response is `no-store`.
-- Current/history reads authorize original content again. The separate status
-  action is metadata-only; it does not grant old-body access.
+## Verification commands
 
-These paths have real PostgreSQL/API evidence in a disposable proposed application.
-The [authority/semantic adapters](ADAPTERS.md) (native observations, local counters,
-protected bodies and catalog CAS) and structural successor loader are implemented.
-Real ORM producer/consumer checks pass; final proof promotion remains a gate.
-Default feature switches remain off, there are no registered routes, and no
-migration or proof has been installed.
-
-## Contents and tests
-
-| Location | Purpose |
-| --- | --- |
-| `overlay/manual_plan_v2/` (eleven runtime modules) | Intended destination: the same package under Plane's Curve app |
-| `overlay/manual_plan_v2/contract_snapshot/` (immutable JSON contract snapshot) | Exact consumer copy; canonical source remains in Curve |
-| `overlay/migrations/0024_manual_draft_reconstruction.py` (prepared SQL and model migration) | Stops before DDL while the reviewed current-catalog pin is absent |
-| `promotion.patch` (model registration, policy constraint and four routes) | Reviewable patch; checked for applicability but not applied |
-| `tests/` (host parser, model, resolver, HTTP and orchestration checks) | No database configured; ORM/service collaborators are doubled where needed |
-| `postgres_tests/` (authority, complete migration, graph/API and SQL tests) | Actual native bridge, selected evidence, save/replay/history, races, raw-SQL attacks, seals and reversal |
-| `qualification/` (reviewed prospective proof and isolated test runner) | Temporary complete application enforces exact expected code/catalog pins; original source mount stays read-only |
-| `overlay/trusted_root/` (successor loader candidate) | Exact additive draft and separate scope-reader deltas; no active pins |
-| `gate2/` (pure reservation transition kernel) | Twelve host tests; no ORM, route, authority resolver or persisted control |
-
-Use the existing isolated unit environment, from the Plane repository root:
+Run from the Plane repository root using the existing isolated unit environment:
 
 ```sh
 .curve-local/unit-venv/bin/python -m unittest discover \
-  -s candidates/curve-manual-plan-v2/tests -v
-.curve-local/unit-venv/bin/ruff check --config apps/api/pyproject.toml \
-  candidates/curve-manual-plan-v2 \
-  candidates/curve-manual-plan-v2/overlay/migrations/0024_manual_draft_reconstruction.py
+  -s apps/api/plane/curve/tests/manual_plan_v2/host -v
+python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py all
+python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py regression
 ```
 
-The [unit requirements](requirements-unit.txt) (host-only dependency pins) reproduce
-that environment. Node.js and the sibling Curve checkout are needed by the exact
-JavaScript parity and contract-byte tests. The earlier Python experiment in Curve
-has been retired; its historical evidence remains there without a second copy of
-the implementation.
+The [runtime tests](../../apps/api/plane/curve/tests/manual_plan_v2/)
+(actual native authority, migration, graph/API, SQL and Linux tests) use the
+original read-only source bind and disposable PostgreSQL profile. Run database
+phases sequentially. Host doubles run only with the separate unittest command;
+they are deliberately outside pytest collection and cannot qualify database behavior.
+Node.js and the sibling Curve checkout support exact JavaScript/contract parity.
+The [unit requirements](requirements-unit.txt) (local dependency pins) reproduce
+that host environment.
 
-## Deliberate limits
+## Remaining operational limits
 
-This admission profile caps the local catalog at 1 MiB, 128 Initiatives, 128 plans,
-512 objects and 16 MiB of total protected input per capture. It is more restrictive
-than the contract's individual object maxima and is not production storage.
-Selected PRD evidence is bounded at 512 items; all selected bodies and excerpts
-are required conservatively, even when a snapshot item is not marked material.
-Native membership remains a necessary check, never a sufficient grant.
-
-SQL shape functions, complete migration/reversal, populated transaction graphs
-and first-head concurrency have real PostgreSQL evidence. Consult the exact
-[verification record](VERIFICATION.md) (run scope, proposal identity and remaining gates).
-Gate 2 approval, reservation, execution and completion credit remain excluded from
-this draft writer. No provider, AI/model spending or automatic execution is enabled.
+The local protected catalog is bounded at 1 MiB, 128 Initiatives, 128 plans,
+512 objects and 16 MiB captured material. Native membership never substitutes for
+per-object grants. Every selected PRD body and excerpt is retained conservatively.
+Only a restricted plain-text subset of the original normalized PRD is admitted.
+The validator requires Linux; the Mac path fails closed. Its two file-lock slots
+cover API processes in one container, not distributed container concurrency.
+Abrupt API-parent death and aggregate resource pressure still need operational
+acceptance. Protected definition preparation, a mounted authenticated browser
+journey, Gate 2 persistence and complete pilot operations remain work.

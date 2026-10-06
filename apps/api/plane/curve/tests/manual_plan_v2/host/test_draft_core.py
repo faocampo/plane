@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import importlib.util
 import json
 import re
-from pathlib import Path
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
@@ -252,14 +251,17 @@ class ModelGuardTests(unittest.TestCase):
 class MigrationPreparationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        location = Path(__file__).resolve().parents[1] / "overlay/migrations/0024_manual_draft_reconstruction.py"
+        location = bootstrap.RUNTIME_ROOT / "migrations/0024_manual_draft_reconstruction.py"
         spec = importlib.util.spec_from_file_location("candidate_migration", location)
         cls.migration = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.migration)
 
     def test_unqualified_migration_stops_before_any_sql(self):
         schema_editor = Mock()
-        with self.assertRaisesRegex(RuntimeError, "POSTGRESQL_QUALIFICATION_REQUIRED"):
+        with (
+            patch.object(self.migration, "CURRENT_CATALOG_DIGEST", None),
+            self.assertRaisesRegex(RuntimeError, "POSTGRESQL_QUALIFICATION_REQUIRED"),
+        ):
             self.migration.verify_predecessor(None, schema_editor)
         schema_editor.connection.cursor.assert_not_called()
 
@@ -296,7 +298,7 @@ class MigrationPreparationTests(unittest.TestCase):
             self.assertEqual(json.loads(literals[key].replace("''", "'")), expected)
 
     def test_snapshot_matches_canonical_curve_contract_bytes(self):
-        source = Path(__file__).resolve().parents[4] / "curve/contracts/candidates/manual-planning-v2"
+        source = bootstrap.REPOSITORY.parent / "curve/contracts/candidates/manual-planning-v2"
         for path in ROOT.rglob("*.json"):
             self.assertEqual(path.read_bytes(), (source / path.relative_to(ROOT)).read_bytes(), path.name)
 
@@ -333,7 +335,7 @@ class MigrationPreparationTests(unittest.TestCase):
     def test_all_23_predecessor_byte_pins_match_restored_source(self):
         import hashlib
 
-        root = Path(__file__).resolve().parents[3] / "apps/api/plane/curve/migrations"
+        root = bootstrap.RUNTIME_ROOT / "migrations"
         self.assertEqual(len(self.migration.PREDECESSOR_MIGRATIONS), 23)
         for name, expected in self.migration.PREDECESSOR_MIGRATIONS.items():
             self.assertEqual("sha256:" + hashlib.sha256((root / name).read_bytes()).hexdigest(), expected)

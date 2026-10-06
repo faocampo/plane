@@ -1378,6 +1378,11 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_version=1,
                         policy_manifest_digest="sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c",
                     )
+                    | models.Q(
+                        policy_key="CURVE_MANUAL_PLAN_DRAFT_POLICY_V2",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:cd960f017b8209b5e4a26a624cfb3549577f946c5a9682c593dec5908d6ab2f0",
+                    )
                 ),
                 name="curve_policy_identity_ck",
             ),
@@ -1455,3 +1460,5 @@ from .scoped_prd_models import (  # noqa: E402,F401
 )
 
 from .scope_reopening_models import ScopeReopening  # noqa: E402,F401
+
+from .manual_plan_v2.models import ManualPlanDraftV2, ManualPlanRevisionV2  # noqa: E402,F401

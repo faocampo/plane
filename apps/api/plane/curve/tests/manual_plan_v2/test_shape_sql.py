@@ -1,37 +1,33 @@
 """PostgreSQL function tests; not graph qualification.
 
 Run only in the isolated disposable test database after the Docker access gate.
-The test transaction rolls back these two candidate functions on the 0023 base.
+The tests exercise the actual installed functions with the complete successor gate.
 """
 
 from copy import deepcopy
-import importlib.util
 import json
 from pathlib import Path
 
 import pytest
 from django.db import connection
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2] / "manual_plan_v2"
 pytestmark = [pytest.mark.contract, pytest.mark.django_db]
 
 
 @pytest.fixture
 def shape_cursor():
     assert connection.vendor == "postgresql", "Real PostgreSQL is required; SQLite is not a substitute"
-    spec = importlib.util.spec_from_file_location(
-        "manual_candidate_migration", ROOT / "overlay/migrations/0024_manual_draft_reconstruction.py"
-    )
-    migration = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(migration)
+    from plane.curve.scope_reopening_qualification import require_manual_plan_v2_qualification
+
+    require_manual_plan_v2_qualification()
     with connection.cursor() as cursor:
         cursor.execute("SET LOCAL standard_conforming_strings = on")
-        cursor.execute(migration.SHAPE_SQL + migration.SCHEMA_SQL)
         yield cursor
 
 
 def fixture(name):
-    return json.loads((ROOT / "overlay/manual_plan_v2/contract_snapshot/fixtures" / (name + ".valid.json")).read_text())
+    return json.loads((ROOT / "contract_snapshot/fixtures" / (name + ".valid.json")).read_text())
 
 
 def accepts(cursor, kind, payload):

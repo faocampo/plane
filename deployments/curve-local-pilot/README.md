@@ -1,7 +1,9 @@
 # Isolated local Curve test profile
 
 Status: original source mount restored; **186 baseline PostgreSQL/API tests passed**
-on 2026-10-06 after the operator-authorized retry.
+on 2026-10-06 after the operator-authorized retry. The qualified manual draft
+source is now integrated with its switch disabled; **57 installed-source runtime
+tests and 107 host tests passed** after promotion.
 
 [Compose test profile](compose.test.yml) (disposable PostgreSQL/Valkey and the
 existing local test image) has an internal Docker network, no published ports,
@@ -45,11 +47,18 @@ filesystem preparation was creating the two empty ignored directories for the
 existing logs and collected-static tmpfs mount points. No alternate API copy/mount,
 ownership change, Full Disk Access change or permission bypass was used.
 
-The recovered baseline passed 186 tests. The separately staged manual candidate
-also passed 14 SQL function tests, six actual Linux worker tests and one explicit
-DDL/empty-reversal experiment. See [candidate verification](../../candidates/curve-manual-plan-v2/VERIFICATION.md)
-(exact evidence and unqualified runtime boundary). Docker access is no longer the
-blocker; actual draft graph/concurrency/proof qualification remains work.
+The recovered baseline passed 186 tests. Complete prospective qualification then
+passed native authority, migration, save/API graph, races and all 186 historical
+regressions before promotion. The installed-source rerun passed 57 actual runtime
+tests through the same original read-only bind. See [candidate verification](../../candidates/curve-manual-plan-v2/VERIFICATION.md)
+(exact evidence and remaining scope-reader, UI, Gate 2 and operational limits).
+Workspace activation remains disabled. To reproduce the installed runtime suite:
+
+```sh
+python3 candidates/curve-manual-plan-v2/qualification/run_isolated.py all
+```
+
+Run database phases sequentially; they share this project’s disposable database.
 
 ### Minimum access and supported operator flow (historical instructions)
 

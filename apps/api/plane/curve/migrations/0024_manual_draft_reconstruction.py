@@ -17,7 +17,7 @@ from django.db import migrations, models
 # Frozen independent of runtime loaders. The predecessor migration is immutable.
 # ruff: noqa: E501
 BASELINE_CATALOG_DIGEST = "sha256:e44c580ea214e03b315c2b14c038cb14ae5d99fa8a60115e82d6b5841ac177a7"
-CURRENT_CATALOG_DIGEST = None
+CURRENT_CATALOG_DIGEST = 'sha256:4f0c5e4b1ba7c5e00a3cf35fa55092cb71f571fa34a564f2859af7a46b0b67e8'
 POLICY_DIGEST = "sha256:cd960f017b8209b5e4a26a624cfb3549577f946c5a9682c593dec5908d6ab2f0"
 PREDECESSOR_MIGRATIONS = {
     "0001_initial.py": "sha256:0bf82e2cc24d37052d6f6afabc4b75d93e3c343490a4a6d30b39d21defe79341",

@@ -2,7 +2,6 @@
 
 # ruff: noqa: E402
 from dataclasses import replace
-from pathlib import Path
 import sys
 import unittest
 import uuid
@@ -10,7 +9,7 @@ import uuid
 import bootstrap
 
 bootstrap.install()
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(bootstrap.REPOSITORY / "candidates/curve-manual-plan-v2"))
 from gate2 import domain as g
 from manual_plan_v2.validation import ROOT, canonical_json, digest, metadata_digest, validate_definition
 from test_draft_core import fixture
