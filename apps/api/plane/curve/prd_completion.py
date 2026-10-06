@@ -34,6 +34,8 @@ from .prd_lifecycle_repository import record_prd_decision_transition, record_prd
 from .prd_metadata_validation import instant
 from .prd_policy_context import build_prd_policy_context
 from .prd_review_validation import validate_review_subject
+from .prd_readiness import ReadinessReport, require_current_prd_readiness
+from .prd_readiness_repository import record_prd_readiness_metadata
 from .services import _append_audit_event, sha256_digest
 
 
@@ -59,6 +61,10 @@ class PrdCompletionPreparation:
     # Unsaved (EvidenceSnapshot, ArtifactVersion, DocumentCheckpoint) from the
     # approved capture adapter. The repository validates their complete graph.
     submission: tuple | None = field(default=None, repr=False)
+    readiness_report: ReadinessReport | None = field(default=None, repr=False)
+    # Independently resolved current subject; revalidate_completion must refresh
+    # its Idea Brief/evidence/inventory ownership and identity under current policy.
+    readiness_subject: dict | None = field(default=None, repr=False)
     committed_operation_id: uuid.UUID | None = None
 
 
@@ -238,7 +244,7 @@ def _review(record, prepared, initiative, actor):
     )
 
 
-def _submit(record, prepared, initiative, actor):
+def _submit(record, prepared, initiative, actor, receipt):
     record.verified_payload(rationale_bytes=prepared.rationale_bytes)
     _require(type(prepared.submission) is tuple and len(prepared.submission) == 3)
     snapshot, version, checkpoint = prepared.submission
@@ -253,6 +259,23 @@ def _submit(record, prepared, initiative, actor):
         and str(checkpoint.completeness_check_id) == record.subject["completeness_check_id"]
         and prepared.valid_from <= checkpoint.recorded_at <= timezone.now()
     )
+    _require(type(prepared.readiness_report) is ReadinessReport)
+    report = prepared.readiness_report.as_dict()
+    require_current_prd_readiness(report, prepared.readiness_subject)
+    expected = {
+        "id": str(checkpoint.completeness_check_id),
+        "workspace_id": str(record.workspace_id),
+        "initiative_id": str(initiative.id),
+        "initiative_version": initiative.version,
+        "prd_binding_id": str(checkpoint.external_document_binding_id),
+        "provider_file_id": checkpoint.provider_file_id,
+        "provider_version": checkpoint.provider_version,
+        "content_digest": checkpoint.content_digest,
+        "evidence_snapshot_id": str(snapshot.id),
+    }
+    _require(all(report[key] == value and type(report[key]) is type(value) for key, value in expected.items()))
+    _require(record.accepted_at <= datetime.fromisoformat(report["checked_at"]) <= checkpoint.recorded_at)
+    record_prd_readiness_metadata(authorization_receipt=receipt, report=prepared.readiness_report)
     return record_prd_submission_transition(
         workspace_id=record.workspace_id,
         initiative_id=initiative.id,
@@ -369,8 +392,10 @@ def complete_prd_operation(*, workspace_id, operation_id, execution_guard=None):
                         initiative = Initiative.objects.find_by_id(
                             workspace_id=workspace_id, record_id=record.initiative_id, for_update=True
                         )
-                        initiative = (_submit if record.action == "CURVE.PRD.SUBMIT" else _review)(
-                            record, prepared, initiative, actor
+                        initiative = (
+                            _submit(record, prepared, initiative, actor, receipt)
+                            if record.action == "CURVE.PRD.SUBMIT"
+                            else _review(record, prepared, initiative, actor)
                         )
                         result_ref = {
                             "resource_type": "INITIATIVE",

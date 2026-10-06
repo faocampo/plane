@@ -3,10 +3,12 @@
 # See the LICENSE file for details.
 
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import timedelta
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 import uuid
+import json
 
 import pytest
 from django.db import transaction, connections
@@ -42,6 +44,7 @@ class SyntheticCompletionRuntime(SyntheticRuntime):
         self.local_hook = None
         self.service_active = True
         self.capture = None
+        self.body = BODY
 
     def worker_authorization(self, *, workspace_id, operation_id):
         now = timezone.now()
@@ -68,10 +71,51 @@ class SyntheticCompletionRuntime(SyntheticRuntime):
         self.preparations += 1
         now = timezone.now()
         checkpoint = self.records[2]
+        readiness = None
         if self.capture is not None:
             snapshot, version, capture = self.capture
+            from plane.curve.tests.test_prd_readiness import scenario, mutate
+            from plane.curve.prd_readiness import evaluate_prd_readiness
+            from plane.curve.prd_metadata_validation import instant
+
+            args = scenario.__wrapped__()
+            args.update(
+                id=str(capture.completeness_check_id),
+                workspace_id=str(command.workspace_id),
+                initiative_id=str(command.initiative_id),
+                initiative_version=command.expected_version,
+                evidence_snapshot_id=str(snapshot.id),
+                checked_at=instant(timezone.now()),
+            )
+            for kind in ("prd", "idea_brief"):
+                args[kind] = replace(
+                    args[kind], workspace_id=str(command.workspace_id), initiative_id=str(command.initiative_id)
+                )
+            args["prd"] = replace(
+                args["prd"],
+                binding_id=str(capture.external_document_binding_id),
+                provider_file_id=capture.provider_file_id,
+                provider_version=capture.provider_version,
+            )
+            args["idea_brief"] = replace(args["idea_brief"], artifact_version_id=str(uuid.uuid4()))
+            mutate(
+                args,
+                "prd",
+                lambda content: content["document_properties"].__setitem__("documentId", capture.provider_file_id),
+            )
+            args["inventory"].update(
+                workspace_id=str(command.workspace_id),
+                initiative_id=str(command.initiative_id),
+                checked_at=args["checked_at"],
+            )
+            readiness = evaluate_prd_readiness(**args)
+            self.body = args["prd"].content_bytes
+            version.body_digest = capture.content_digest = sha256_digest(self.body)
+            version.body_size_bytes = capture.body_size_bytes = len(self.body)
+            now = timezone.now()
             snapshot.created_at = version.created_at = capture.recorded_at = now
             snapshot.digest = snapshot.compute_digest()
+            checkpoint = capture
         proof = PrdCompletionPreparation(
             operation_id=command.operation_id,
             request_digest=command.request_digest,
@@ -89,13 +133,23 @@ class SyntheticCompletionRuntime(SyntheticRuntime):
                 )
             },
             rationale_bytes=None if command.action == "CURVE.PRD.SUBMIT" else b"Synthetic sensitive rationale sentinel",
-            normalized_bytes=BODY,
+            normalized_bytes=self.body,
             provider_version=checkpoint.provider_version,
             content_digest=checkpoint.content_digest,
             provider_validation_cutoff=now,
             access_evaluation_id=uuid.uuid4(),
             policy_version_ids=[str(uuid.uuid4())],
             submission=self.capture,
+            readiness_report=readiness,
+            readiness_subject=(
+                {
+                    key: value
+                    for key, value in readiness.as_dict().items()
+                    if key not in {"schema_version", "profile_digest", "status", "reasons"}
+                }
+                if readiness
+                else None
+            ),
         )
         try:
             if self.hook:
@@ -300,7 +354,13 @@ def test_two_accepted_reviews_racing_have_one_winner(setup):
     assert PrdReviewDecision.objects.count() == 1
 
 
-def test_submission_commits_new_checkpoint_and_operation_together(setup):
+@pytest.mark.parametrize(
+    "failure", [None, "missing", "blocked", "subject", "document", "evidence", "version", "outbox"]
+)
+def test_submission_commits_new_checkpoint_and_operation_together(setup, monkeypatch, failure):
+    from plane.curve.models import PrdReadinessRecord, DocumentCheckpoint
+    from plane.curve.prd_readiness import ReadinessReport
+
     binding, initiative, old, _, actor, _ = setup[0]
     artifact = PrdArtifact.objects.get(id=old.artifact_version.artifact_id)
     snapshot, version, checkpoint = capture_records(binding, artifact, old.id)
@@ -315,11 +375,55 @@ def test_submission_commits_new_checkpoint_and_operation_together(setup):
             completeness_check_id=str(checkpoint.completeness_check_id),
         ),
     )
-    assert complete(setup, operation_id)["status"] == "SUCCEEDED"
+
+    def alter(proof, _):
+        if failure == "missing":
+            proof.readiness_report = None
+        elif failure == "subject":
+            proof.readiness_subject["inventory_digest"] = "sha256:" + "0" * 64
+        elif failure in {"blocked", "document", "evidence", "version"}:
+            payload = proof.readiness_report.as_dict()
+            if failure == "blocked":
+                payload.update(status="BLOCKED", reasons=["BLOCKERS_UNRESOLVED"])
+            else:
+                field = {
+                    "document": "content_digest",
+                    "evidence": "evidence_snapshot_id",
+                    "version": "initiative_version",
+                }[failure]
+                value = {"document": "sha256:" + "0" * 64, "evidence": str(uuid.uuid4()), "version": 99}[failure]
+                payload[field] = proof.readiness_subject[field] = value
+            proof.readiness_report = ReadinessReport(json.dumps(payload).encode())
+
+    setup[1].hook = alter
+    if failure == "outbox":
+        from plane.curve import services
+
+        original = services._append_operation_event
+
+        def fail_success(**kwargs):
+            if kwargs["operation"].status == "SUCCEEDED":
+                raise RuntimeError("synthetic atomic commit failure")
+            return original(**kwargs)
+
+        monkeypatch.setattr(services, "_append_operation_event", fail_success)
+    result = complete(setup, operation_id)
+    if failure:
+        assert result["status"] == "FAILED"
+        assert not PrdReadinessRecord.objects.exists()
+        assert not DocumentCheckpoint.objects.filter(id=checkpoint.id).exists()
+        initiative.refresh_from_db()
+        assert initiative.version == 2 and initiative.current_prd_checkpoint_id == old.id
+        return
+    assert result["status"] == "SUCCEEDED"
     initiative.refresh_from_db()
     assert initiative.version == 3 and initiative.state == "PRD_REVIEW"
     assert initiative.current_prd_checkpoint_id == checkpoint.id and checkpoint.predecessor_id == old.id
     assert PrdAcceptedCommand.objects.count() == 1
+    report = PrdReadinessRecord.objects.get(id=checkpoint.completeness_check_id)
+    assert report.payload["content_digest"] == checkpoint.content_digest
+    assert report.policy_decision.subject["actor_id"] == str(actor.id)
+    assert AuditEvent.objects.filter(policy_decision_ref__resource_id=str(report.policy_decision_id)).count() == 1
 
 
 def test_return_resubmit_and_approve_completes_the_exact_successor(setup):
