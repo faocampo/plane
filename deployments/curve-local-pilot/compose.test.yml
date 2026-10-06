@@ -1,0 +1,57 @@
+# Disposable synthetic verification only; no host ports or external network.
+services:
+  db:
+    image: postgres:15.7-alpine
+    pull_policy: never
+    environment:
+      POSTGRES_USER: curve_test
+      POSTGRES_PASSWORD: curve_test
+      POSTGRES_DB: curve_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    networks: [isolated]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U curve_test -d curve_test]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  redis:
+    image: valkey/valkey:7.2.11-alpine
+    pull_policy: never
+    tmpfs: [/data]
+    networks: [isolated]
+    healthcheck:
+      test: [CMD, valkey-cli, ping]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  api-tests:
+    image: ${CURVE_TEST_IMAGE:-curve-temporal-compat-test:20260905}
+    pull_policy: never
+    working_dir: /code
+    entrypoint: []
+    command: [pytest, -q, --tb=short, -o, addopts=--reuse-db --migrations, -o, cache_dir=/tmp/pytest-cache, plane/curve/tests]
+    environment:
+      DJANGO_SETTINGS_MODULE: plane.settings.test
+      DATABASE_URL: postgresql://curve_test:curve_test@db:5432/curve_test
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: synthetic-local-curve-test-only-no-real-identities
+      EMAIL_HOST: smtp.example.invalid
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ../../apps/api:/code:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /code/plane/logs
+      - /code/plane/static-assets/collected-static
+    networks: [isolated]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+networks:
+  isolated:
+    internal: true
