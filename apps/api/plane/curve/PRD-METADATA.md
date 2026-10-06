@@ -23,7 +23,7 @@ This backend implementation adds four PRD/evidence metadata tables, one external
 DocumentCheckpoint table, one review-decision table and internal transaction
 helpers. Candidate authenticated command acceptance routes are available behind
 explicit runtime configuration. Provider transport, protected-body storage and
-asynchronous lifecycle completion remain subsequent work. Synthetic tests use fabricated object
+worker transport activation remain subsequent work. Synthetic tests use fabricated object
 references; references and digests alone do not prove that stored bytes exist.
 Policy values, identities and deployment configuration are excluded from source.
 
@@ -259,7 +259,8 @@ decision. Standard and High risk require three distinct people. Failures expose
 fixed error codes without rationale, document content or schema diagnostics.
 
 These checks consume trusted server records, return no permission grant and
-perform no database mutation. They are not yet wired to command handlers.
+perform no database mutation. The completion service consumes the exact-review
+checks inside its final authorization transaction.
 Current membership, policy, access and cancellation must be independently loaded
 and revalidated at the commit fence. Approval also requires stable live source
 validation; a negative outcome may review the exact immutable submission after
@@ -275,8 +276,8 @@ Provider work stays outside the final database transaction.
 
 Stored access/provenance metadata is historical evidence, never a reusable
 permission grant. Excerpt derivation and current envelope validity must be
-verified at capture and review. Authenticated exact-checkpoint command handlers,
-Operation completion and the Planning UI remain subsequent integration work.
+verified at capture and review. Worker transport, live runtime activation and
+the Planning UI remain subsequent integration work.
 Live storage/provider activation remains subject to its existing approval and
 infrastructure evidence.
 
@@ -314,6 +315,48 @@ authorization races, replay, expiration and request-log privacy) use a synthetic
 runtime and prove acceptance only. Live provider, protected-copy lifecycle and
 worker completion require separate integration evidence.
 
+## PRD completion application service
+
+The [completion service](prd_completion.py) (accepted-command execution and atomic
+lifecycle settlement) consumes workspace/Operation IDs from a trusted internal
+caller. It reloads the immutable accepted command and rechecks the original
+human's current membership, action ACL, gate assignment, risk and exact subject.
+Current worker authorization separately controls Operation transitions. An absent
+effective-principal override retains the accepted human actor as its subject.
+
+The configured runtime supplies fresh, bounded provider/storage preparation
+outside database transactions and local final revalidation. It must verify
+current body/source/evidence access, current policy version references, stable
+source capture, readiness and approved storage. Preparation has an exact
+Operation/request-digest binding and expiry, rechecked after local validation.
+The service reproduces retained body and original rationale digests. Approval
+additionally compares current source version/content; negative review continues
+to address the immutable submitted checkpoint after live edits.
+
+Under the final locks, submission appends the native version/snapshot/checkpoint
+and enters PRD Review. Approval enters Planning; changes requested or rejection
+returns to Aligning. The Initiative pointer/version, immutable decision when
+applicable, Operation result/success, policy audits and existing Operation event
+outbox commit atomically. No new public event schema is introduced. An outbox
+failure rolls back the domain effect; current worker authority records a safe
+terminal failure when persistence remains available. A cancellation request
+settles to Cancelled without applying the PRD effect.
+
+Concurrent delivery of one Operation has one domain effect. Distinct accepted
+commands racing on an Initiative version have one winner. Unused prepared
+objects remain the approved runtime's cleanup/reconciliation responsibility;
+the preparation context observes the committed Operation only after commit.
+Policy loss or infrastructure failure that prevents safe settlement raises a
+fixed unavailable error, retaining authoritative state for worker recovery.
+
+No completion runtime, provider credentials, protected storage, queue consumer,
+Temporal workflow or live activation is installed by this increment. The
+[completion tests](tests/test_prd_completion.py) (authenticated acceptance through
+submission/review settlement, full return-resubmit-approve chain, duplicate
+delivery, concurrent review, revocation, cancellation and rollback) use synthetic
+runtime observations and real PostgreSQL transactions. They prove the application
+service, while transport and live-provider end-to-end verification remain open.
+
 ## Regression commands
 
 [Database tests](tests/test_prd_metadata_models.py) (empty/material evidence,
@@ -335,6 +378,7 @@ pytest plane/curve/tests/test_prd_policy.py plane/curve/tests/test_prd_policy_co
 pytest plane/curve/tests/test_prd_commands.py
 pytest plane/curve/tests/test_prd_accepted_commands.py
 pytest plane/curve/tests/test_prd_acceptance_api.py
+pytest plane/curve/tests/test_prd_completion.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
