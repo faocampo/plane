@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.curve.prd_views import CurvePrdCommandEndpoint
 
 from plane.curve.views import (
     CurveEventStreamEndpoint,
@@ -26,6 +27,21 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/submit",
+        CurvePrdCommandEndpoint.as_view(route="submit"),
+        name="curve-prd-submit",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/approve",
+        CurvePrdCommandEndpoint.as_view(route="approve"),
+        name="curve-prd-approve",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/return-for-revision",
+        CurvePrdCommandEndpoint.as_view(route="return-for-revision"),
+        name="curve-prd-return-for-revision",
+    ),
     path(
         "workspaces/<str:slug>/curve/",
         CurveWorkspaceShellEndpoint.as_view(),

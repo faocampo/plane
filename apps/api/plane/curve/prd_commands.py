@@ -19,9 +19,10 @@ from django.core.exceptions import ValidationError
 
 from .prd_metadata_validation import MAX_SAFE_INTEGER, validate_external_record
 from .prd_review_rationale import encode_review_rationale
+from .request_privacy import PRD_COMMAND_MAX_BYTES
 
 
-MAX_COMMAND_BYTES = 65536
+MAX_COMMAND_BYTES = PRD_COMMAND_MAX_BYTES
 _SCHEMAS = {"submit": "Submit", "approve": "Approve", "return-for-revision": "ReturnForRevision"}
 
 

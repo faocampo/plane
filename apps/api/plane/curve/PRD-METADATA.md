@@ -21,8 +21,9 @@ common, gate-assignment and Product schemas. The
 
 This backend implementation adds four PRD/evidence metadata tables, one external
 DocumentCheckpoint table, one review-decision table and internal transaction
-helpers. API routes, provider transport, protected-body storage and authenticated
-lifecycle commands remain subsequent work. Synthetic tests use fabricated object
+helpers. Candidate authenticated command acceptance routes are available behind
+explicit runtime configuration. Provider transport, protected-body storage and
+asynchronous lifecycle completion remain subsequent work. Synthetic tests use fabricated object
 references; references and digests alone do not prove that stored bytes exist.
 Policy values, identities and deployment configuration are excluded from source.
 
@@ -279,7 +280,41 @@ Operation completion and the Planning UI remain subsequent integration work.
 Live storage/provider activation remains subject to its existing approval and
 infrastructure evidence.
 
-## Tests and rollback
+## Candidate authenticated acceptance
+
+The [acceptance service](prd_acceptance.py) (two-phase authorization and durable
+Operation acceptance) authorizes before external preparation and reauthorizes
+under database locks before committing. Exact-payload replays recheck current
+authority and return the existing Operation without repeating storage preparation.
+Stale versions, revoked membership, expired preparation and unavailable authority
+fail with bounded error responses.
+
+The [command endpoints](prd_views.py) (session-authenticated submit, approve and
+return-for-revision routes) require CSRF protection, conditional version and
+idempotency headers. Responses contain safe Operation metadata. Acceptance queues
+work; it does not itself complete a PRD lifecycle transition.
+
+Activation requires exact boolean command enablement and a trusted runtime with
+action-specific ACL resolution, a preparation context and local final revalidation.
+Preparation must prove provider capability, storage policy, current source/evidence
+access, readiness and worker availability. The context reconciles unused protected
+objects under its approved policy and retains those referenced by a committed
+Operation. No provider/storage adapter or worker activation is supplied here.
+Requests must run outside an enclosing database transaction so provider work stays
+outside database locks.
+
+The [request classifier](request_privacy.py) (early Curve privacy boundary) applies
+before authentication. PRD request bodies are bounded to 64 KiB and preserved for
+strict duplicate-key validation after session CSRF checks. Curve API-token logs
+omit bodies, responses, query strings and freeform headers; ordinary request logs
+omit Curve query strings. Infrastructure logging requires equivalent controls.
+
+The [acceptance tests](tests/test_prd_acceptance_api.py) (real-session CSRF,
+authorization races, replay, expiration and request-log privacy) use a synthetic
+runtime and prove acceptance only. Live provider, protected-copy lifecycle and
+worker completion require separate integration evidence.
+
+## Regression commands
 
 [Database tests](tests/test_prd_metadata_models.py) (empty/material evidence,
 successor history, incomplete writes, injection, tenant substitution, concurrent
@@ -299,6 +334,7 @@ pytest plane/curve/tests/test_prd_lifecycle_repository.py
 pytest plane/curve/tests/test_prd_policy.py plane/curve/tests/test_prd_policy_context.py
 pytest plane/curve/tests/test_prd_commands.py
 pytest plane/curve/tests/test_prd_accepted_commands.py
+pytest plane/curve/tests/test_prd_acceptance_api.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
