@@ -204,10 +204,41 @@ risk tier and Product Approver assignment. Apply these checks after current
 authorization and repeat them under the final Initiative lock. Resolve all
 completeness/evidence IDs independently; supplied IDs do not establish readiness.
 
-This boundary is ready for handler integration. Durable acceptance still needs
-an immutable scoped command record and protected rationale reference so a worker
-can resume after restart. A digest-only Operation cannot reconstruct the command.
-No route or provider/storage activation is introduced by these helpers.
+This boundary is ready for handler integration. No route or provider/storage
+activation is introduced by these helpers.
+
+## Durable accepted PRD commands
+
+The [accepted command model](prd_command_models.py) (immutable per-Operation
+command metadata) retains the actor, workspace, Initiative, accepted version,
+complete-request digest and closed subject fields. Review rationale uses a
+protected object ID, digest, byte length, AccessEnvelope and retention-policy
+reference. Verified reconstruction compares the supplied protected bytes and
+complete original request identity before returning transient rationale content.
+It performs no storage read and grants no content access.
+
+The [append repository](prd_command_repository.py) (policy-owned atomic command
+append) requires an active matching authorization receipt and the accepted
+Operation's exact idempotency identity. It locks and checks the current subject,
+then inserts the immutable record in the same transaction as the Operation,
+idempotency result, audit and outbox. The Operation ID identifies the durable
+command for a future worker. Current-authorized replay returns the existing
+record; it must never call append again.
+
+The [command migration](migrations/0015_prd_accepted_command.py) (tenant foreign
+keys, closed-subject guards and history preservation) checks Operation scope,
+human attribution, target, action and recorded PRD policy identity. It binds
+review to the current checkpoint and assigned Product Approver, and rejects
+inline rationale, mismatched fields, raw updates and deletion. Reverse migration
+requires an empty command table; retained commands need a preserving migration.
+
+This establishes durable metadata and transactional append, with synthetic tests
+using fabricated protected-object references. The consuming HTTP handler must
+independently authorize storage promotion and current source/evidence/readiness
+before acceptance. Submission readiness references still require trusted scoped
+resolution. Worker execution, current-authorized replay orchestration, final
+lifecycle completion, safe failure/cancellation and cleanup remain integration
+work. Metadata persistence alone does not prove that protected bytes exist.
 
 ## Remaining runtime integration
 
@@ -267,6 +298,7 @@ pytest plane/curve/tests/test_prd_review_models.py plane/curve/tests/test_prd_re
 pytest plane/curve/tests/test_prd_lifecycle_repository.py
 pytest plane/curve/tests/test_prd_policy.py plane/curve/tests/test_prd_policy_context.py
 pytest plane/curve/tests/test_prd_commands.py
+pytest plane/curve/tests/test_prd_accepted_commands.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
