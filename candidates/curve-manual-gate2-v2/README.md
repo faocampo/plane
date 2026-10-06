@@ -1,7 +1,8 @@
 # Manual Gate 2 local reconstruction
 
 Status: one qualified successor is installed in local source after 23 prospective
-PostgreSQL/API tests. Installed-source regression is in progress. All flags remain
+PostgreSQL/API tests and 100 combined installed-source tests. All 186 historical
+regressions also pass. Product defaults remain
 off; this is not runtime activation.
 This is new reconstruction, not recovered backend evidence. The implementation
 extends the qualified manual draft and scope reader without changing old pins.
@@ -88,4 +89,6 @@ The [verification record](VERIFICATION.md) (executed gates and limits) separates
 prospective tests, installed-source checks and synthetic visual evidence.
 The [isolated test profile](../../deployments/curve-local-pilot/README.md)
 (disposable PostgreSQL/Valkey with no published ports) is the only test target.
-No production, existing checkout, remote branch or deployed service is changed.
+Qualification changes no production service or pre-existing checkout. Publication
+and a separately configured synthetic localhost review instance are distinct
+operator-authorized delivery actions.

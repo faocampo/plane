@@ -12,7 +12,7 @@ migration are installed; workspace activation remains off. Installed-source
 verification passed: 57 actual runtime tests and 107 host tests. Publication and
 release remain separate.
 
-## Completed preparation
+## Historical draft preparation
 
 - Native current-authority projection and local observation ledger are implemented.
 - Atomic catalog CAS preserves retained material/plan identities, monotonic grant
@@ -28,7 +28,7 @@ See [adapter definitions](ADAPTERS.md) (concrete generations, local body formats
 operational bounds), [verification](VERIFICATION.md) (executed tests and their
 limits), and [UI review](UI_REVIEW.md) (bounded visual handoff).
 
-## Exact release checklist
+## Release checklist with current Gate 2 evidence
 
 | Order | Deliverable / required evidence                                                                                                                                                          | State                                                                                                                                                                     |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -43,9 +43,9 @@ limits), and [UI review](UI_REVIEW.md) (bounded visual handoff).
 | 9     | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions                                     | Exact tested proof installed; 23 historical migrations and both old proofs preserved                                                                                      |
 | 10    | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences                                                              | 23 PostgreSQL/API and 31 host tests passed; exact successor installed, all 80 combined runtime tests pass                                                                 |
 | 11    | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior                                           | Manual prospective checks and 186 regressions pass; 80 combined installed runtime and 138 host tests pass; 186 historical regressions also pass with the reader successor |
-| 12    | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey                                                    | Typed client/panel: 27 tests and bounded visual ship; preparation and integration required                                                                                |
-| 13    | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph                                                    | Pure kernel: 12 host tests; persistence and successor required                                                                                                            |
-| 14    | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Pure transition tests passed; real DB/race/API evidence required                                                                                                          |
+| 12    | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey                                                    | Preparation and default-off mount installed; full web types and 380 tests pass; real browser/API acceptance pending                                                       |
+| 13    | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph                                                    | Separate pinned successor installed after 23 prospective native tests; 100 combined native and 186 historical tests pass                                                  |
+| 14    | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Actual overlap/reacquisition, holds, project movement and release tests pass prospectively; operational acceptance remains                                                |
 | 15    | Synthetic local seed, disablement, backup/restore, observable failures and complete manual pilot acceptance                                                                              | Pending after qualified runtime and UI                                                                                                                                    |
 
 Abrupt API-parent death during real validation, container resource pressure and
@@ -74,8 +74,8 @@ The [runtime package](../../apps/api/plane/curve/manual_plan_v2/) (eleven module
 (two models, transaction graph guards and separate seal), and
 [tests](../../apps/api/plane/curve/tests/manual_plan_v2/) (host and actual runtime
 verification) have moved into the existing Plane Curve app. This directory retains
-review/evidence records and the separate uninstalled Gate 2 kernel. There is no
-second runnable draft implementation.
+review/evidence records. Both the draft and Gate 2 kernels have one installed
+implementation; the removed prospective assemblies remain in Git history.
 Curve remains the canonical source for the unchanged contract JSON snapshot.
 
 The [promotion patch](promotion.patch) (model registration, additive policy
@@ -92,6 +92,9 @@ exclusive claims, retained holds and reconciled release) has no ORM, route, gran
 resolver or persistence. Its internal current-authority value must be supplied by
 an actual validated adapter, never directly from request JSON.
 
-Implement Gate 2 under its own reviewed successor after draft qualification.
+Gate 2 is now installed under its own reviewed successor; see the current
+[Gate 2 verification](../curve-manual-gate2-v2/VERIFICATION.md) (native persistence,
+UI checks and outstanding acceptance). The pure kernel remains independent of IO,
+while its separate installed adapter enforces actual authority and persistence.
 Saving a draft or entering a generic execution state cannot authorize agents,
 providers, repository changes, model calls, spending or completion credit.

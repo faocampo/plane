@@ -5,6 +5,17 @@ on 2026-10-06 after the operator-authorized retry. The qualified manual draft
 source is now integrated with its switch disabled; **57 installed-source runtime
 tests and 107 host tests passed** after promotion.
 
+Current installed verification includes the separate Gate 2 successor and default-off
+UI. Its [verification record](../../candidates/curve-manual-gate2-v2/VERIFICATION.md)
+(exact native, host, frontend results and remaining browser acceptance) supersedes
+the historical draft-only counts below. The installed suite passes 100 tests; the
+sequential historical phase passes 186 at `8aede16b4aee1aa66eb0b9469c4c849b34250f6e`. Both use this same disposable project.
+
+```sh
+python3 candidates/curve-manual-gate2-v2/qualification/run_isolated.py all
+python3 candidates/curve-manual-gate2-v2/qualification/run_isolated.py regression
+```
+
 [Compose test profile](compose.test.yml) (disposable PostgreSQL/Valkey and the
 existing local test image) has an internal Docker network, no published ports,
 synthetic test credentials, read-only source mount and ephemeral database storage.

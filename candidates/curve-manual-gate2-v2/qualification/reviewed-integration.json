@@ -1,5 +1,5 @@
 {
-  "status": "INSTALLED_SOURCE_PENDING_REGRESSION",
+  "status": "VERIFIED_INSTALLED_SOURCE_DEFAULT_OFF",
   "prospective_commit": "8fc8e15fb36fa0a8aa7890b40971c8df814c0753",
   "prospective_tests": {
     "passed": 23,
@@ -10,5 +10,26 @@
   "migration_digest": "sha256:29f2864ec4f3670da8798ba5154d8591aecd8b7897de862e724a2901e67cbd13",
   "runtime_modules": 144,
   "historical_migrations_preserved": 24,
-  "activation": false
+  "activation": false,
+  "installed_commit": "8aede16b4aee1aa66eb0b9469c4c849b34250f6e",
+  "installed_tests": {
+    "passed": 100,
+    "seconds": 1417.36,
+    "manual": 57,
+    "scope": 23,
+    "gate2": 20
+  },
+  "historical_tests": {
+    "passed": 186,
+    "seconds": 525.07
+  },
+  "web_tests": {
+    "passed": 380,
+    "files": 33,
+    "full_application_types": true
+  },
+  "host_tests": {
+    "manual": 107,
+    "scope": 31
+  }
 }

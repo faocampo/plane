@@ -2,7 +2,15 @@
 
 All evidence is synthetic and local. The final prospective suite passed **23 tests
 in 359.34 seconds**: 20 Gate2 tests and three exact historical migration gates.
-Installed-source verification follows; no pending result is a pass.
+The installed-source suite passed **100 tests in 1417.36 seconds** at local commit
+`8aede16b4aee1aa66eb0b9469c4c849b34250f6e`: 57 manual, 23 scope and 20 Gate 2
+cases. All **186 historical regressions pass in 525.07 seconds** at that same commit,
+with the new product feature defaults disabled and the complete successor enforced.
+Integration is `a69559f990c995f0d2c930306544979afd005d93`. An initial combined
+run passed 69 tests then stopped at a historical assertion requiring the older
+scope-reader inventory. The test now validates the unchanged reader proof followed
+by the exact pinned Gate 2 successor before comparing all installed source hashes.
+No runtime, schema, migration or proof byte changed for this test correction.
 
 - The initial expanded suite passed 15 native PostgreSQL/API cases in 269.67 s.
   It includes complete PREPARE/APPROVE/RECONCILE/RELEASE and original replay,
@@ -14,7 +22,7 @@ Installed-source verification follows; no pending result is a pass.
   release/reacquisition generation, original approval retry, loss of membership,
   unassociated native project movement, replacement definition read and resubmit.
   The final suite also checks newly associated project movement and proof/seal gates.
-- The typed browser-client/component suite passed 44 cases. They include the
+- Before mounting, the typed browser-client/component suite passed 44 cases. They include the
   existing draft client, strict response/material validation, explicit review,
   stale/unknown results, same-command retry, authority clearing and prepared
   replacement isolation. These are component/client tests with synthetic transports.
