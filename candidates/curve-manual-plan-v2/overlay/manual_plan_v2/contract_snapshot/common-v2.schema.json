@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json",
+  "title": "New manual planning candidate shared types",
+  "$defs": {
+    "OpaqueId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "Version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "ExpectedVersion": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "Instant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,6})?Z$"
+    },
+    "DigestVersionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_id",
+        "digest"
+      ],
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "NumberVersionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entity_id",
+        "version"
+      ],
+      "properties": {
+        "entity_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "VersionRef": {
+      "oneOf": [
+        {
+          "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+        },
+        {
+          "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/NumberVersionRef"
+        }
+      ]
+    },
+    "ObjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "object_id",
+        "digest",
+        "size_bytes",
+        "media_type"
+      ],
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 524288000
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        }
+      }
+    },
+    "DefinitionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "object_id",
+        "digest",
+        "size_bytes",
+        "media_type"
+      ],
+      "properties": {
+        "object_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "media_type": {
+          "const": "application/json"
+        }
+      }
+    },
+    "HumanRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_type",
+        "actor_id"
+      ],
+      "properties": {
+        "actor_type": {
+          "const": "HUMAN"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "StableIssueRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_installation_id",
+        "source_issue_id"
+      ],
+      "properties": {
+        "provider_installation_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "source_issue_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "CommitRef": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "algorithm",
+            "value"
+          ],
+          "properties": {
+            "algorithm": {
+              "const": "sha1"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "algorithm",
+            "value"
+          ],
+          "properties": {
+            "algorithm": {
+              "const": "sha256"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      ]
+    },
+    "SliceKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "RequirementId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^FR-[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "AcceptanceId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^AC-[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "RiskTier": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "STANDARD",
+        "HIGH"
+      ]
+    },
+    "GateType": {
+      "type": "string",
+      "enum": [
+        "PRD_APPROVAL",
+        "PLAN_APPROVAL",
+        "CODE_READINESS"
+      ]
+    },
+    "Classification": {
+      "type": "string",
+      "enum": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ]
+    }
+  }
+}

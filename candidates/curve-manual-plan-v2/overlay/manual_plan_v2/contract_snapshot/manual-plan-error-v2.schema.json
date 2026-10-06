@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json",
+  "title": "Closed safe manual draft error",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "type": "string",
+      "enum": [
+        "MANUAL_PLAN_DRAFT_REQUEST_INVALID",
+        "MANUAL_PLAN_DRAFT_PRECONDITION_REQUIRED",
+        "MANUAL_PLAN_DRAFT_PRECONDITION_FAILED",
+        "MANUAL_PLAN_DRAFT_REQUEST_TOO_LARGE",
+        "MANUAL_PLAN_DRAFT_COMMAND_CONFLICT",
+        "MANUAL_PLAN_DRAFT_UNAVAILABLE",
+        "MANUAL_PLAN_DRAFT_EDITION_UNAVAILABLE",
+        "MANUAL_PLAN_DRAFT_VALIDATION_UNAVAILABLE",
+        "MANUAL_PLAN_DRAFT_VALIDATION_FAILED"
+      ]
+    }
+  }
+}

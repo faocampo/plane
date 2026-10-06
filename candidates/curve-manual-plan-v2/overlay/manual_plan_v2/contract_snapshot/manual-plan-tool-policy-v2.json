@@ -1,0 +1,10 @@
+{
+  "schema_version": "curve.manual-plan-tool-policy/v2-candidate",
+  "id": "20000000-0000-4000-8000-000000000203",
+  "version": 1,
+  "policy_kind": "TOOL",
+  "automatic_tool_calls": "DENIED",
+  "agent_dispatch": "DENIED",
+  "controller_execution": "DENIED",
+  "allowed_capabilities": []
+}
