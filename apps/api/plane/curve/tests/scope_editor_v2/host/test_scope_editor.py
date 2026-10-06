@@ -28,7 +28,9 @@ import django
 
 django.setup()
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+package = ModuleType("overlay")
+package.__path__ = [str(Path(__file__).resolve().parents[3])]
+sys.modules["overlay"] = package
 reader = import_module("overlay.scope_editor_read_v2")
 views = import_module("overlay.scope_editor_read_views_v2")
 override_settings = import_module("django.test").override_settings

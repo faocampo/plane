@@ -28,7 +28,7 @@ _READ_REPLACED_MODULES = frozenset({"urls.py"})
 # Unapproved successor pins: these remain unset until real PostgreSQL review.
 MANUAL_SUCCESSOR_DIGEST = 'sha256:b4f16de1a78f0ffb7f62df770f6fe2e50636da3961e22bb193ba5e914b87215b'
 MANUAL_SUCCESSOR_PATH = Path(__file__).parent / "manual_plan_draft_reconstruction_qualification_v2.json"
-SCOPE_EDITOR_SUCCESSOR_DIGEST = None
+SCOPE_EDITOR_SUCCESSOR_DIGEST = 'sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e'
 SCOPE_EDITOR_SUCCESSOR_PATH = Path(__file__).parent / "scope_editor_read_reconstruction_qualification_v2.json"
 _MANUAL_EDITION = "CURVE_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2"
 _MANUAL_WRITER = "MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2"

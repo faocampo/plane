@@ -100,7 +100,8 @@ new draft writer inventory entry. Approval, controlling bindings, execution and
 completion credit stay excluded. The scope-reader successor permits only its two
 read modules and URL change. Structural validation alone supplies no authority;
 the manual successor and migration catalog pins are installed with their exact
-tested values; the separate scope-reader pin remains unset. The
+tested values; the separate scope-reader successor is also installed after 23 real database/API
+tests. Both features remain explicitly disabled by default. The
 [prospective qualification](qualification/README.md) (reviewed source/DDL proposal
 and isolated complete-application tests) records the literal pins exercised with
 the real loader before promotion. The installed test runner verifies the same

@@ -54,7 +54,7 @@ class SuccessorTests(unittest.TestCase):
         successor = self.successor()
         self.assertEqual(self.module.validate_manual_successor(self.predecessor, successor), successor["qualification"])
         self.assertRegex(self.module.MANUAL_SUCCESSOR_DIGEST, r"^sha256:[0-9a-f]{64}$")
-        self.assertIsNone(self.module.SCOPE_EDITOR_SUCCESSOR_DIGEST)
+        self.assertRegex(self.module.SCOPE_EDITOR_SUCCESSOR_DIGEST, r"^sha256:[0-9a-f]{64}$")
 
     def test_missing_extra_or_changed_historical_source_is_rejected(self):
         for change in (

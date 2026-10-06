@@ -14,7 +14,7 @@ release remain separate.
 - Semantic facts are derived from exact protected PRD/workflow/quality/repository
   bodies and compared with the catalog, with independent native bindings.
 - The trusted successor loader implements the exact manual delta followed by a
-  separate scope-reader delta; the manual pin is installed and the scope pin remains unset.
+  separate scope-reader delta; the manual and separate scope-reader pins are installed.
 - Linux process limits and cross-process slots have actual test evidence.
 - An unmounted typed client/panel and pure Gate 2 transition kernel are implemented.
 
@@ -35,8 +35,8 @@ limits), and [UI review](UI_REVIEW.md) (bounded visual handoff).
 | 7 | Independent-connection concurrent saves, first-head races, access/source changes before final fence and zero partial records | Distinct-key and same-key races, final native/file changes and zero-partial assertions pass |
 | 8 | Raw-SQL omission/substitution of every graph component, immutable rewrite/delete/truncate, catalog/seal tampering, retained-evidence reversal refusal including NO_EFFECT audit | 16 raw graph attacks, retained mutations, exact seals and standalone NO_EFFECT reversal refusal pass |
 | 9 | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions | Exact tested proof installed; 23 historical migrations and both old proofs preserved |
-| 10 | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences | 31 prior host tests; successor and DB integration required |
-| 11 | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior | Prospective checks and 186 regressions pass; source promoted once; 57 installed-source runtime tests and 107 host tests pass |
+| 10 | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences | 23 PostgreSQL/API and 31 host tests passed; exact successor installed, all 80 combined runtime tests pass |
+| 11 | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior | Manual prospective checks and 186 regressions pass; 80 combined installed runtime and 138 host tests pass; repeat historical regression for the reader successor |
 | 12 | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey | Typed client/panel: 27 tests and bounded visual ship; preparation and integration required |
 | 13 | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph | Pure kernel: 12 host tests; persistence and successor required |
 | 14 | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Pure transition tests passed; real DB/race/API evidence required |

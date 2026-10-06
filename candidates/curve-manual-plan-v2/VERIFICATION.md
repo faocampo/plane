@@ -3,7 +3,8 @@
 Recorded: 2026-10-06. Evidence covers the recovered baseline and a disposable
 complete proposed application, followed by promotion of those exact bytes into
 the local source. It does not establish workspace runtime activation,
-Gate 2 or a completed manual pilot.
+Gate 2 or a completed manual pilot. The separate scope-reader successor follows
+the same manual proof without changing storage or writers.
 
 ## Executed checks
 
@@ -119,3 +120,16 @@ provider call, model spending, push, PR, merge or deployment was performed.
 The [release checklist](PROMOTION.md) (exact remaining implementation and acceptance
 gates) remains authoritative for promotion. Passing these checks does not activate
 any writer or approve a plan.
+
+## Separate scope-reader successor
+
+The [reader verification](../curve-scope-editor-v2/VERIFICATION.md) (23 prospective
+database/API tests and 31 host tests) records the independently qualified
+metadata-only addition at `90996fb`. Its exact proof is
+`sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e`.
+Only two modules and the route closure change; all manual proof, model, migration,
+catalog, writer and exclusion bytes remain intact. The reader and draft settings
+are explicitly false outside test overrides. The combined installed suite passed
+**80 tests**, and **107 manual plus 31 reader host tests** passed after promotion.
+The historical 186-test regression has not yet been repeated for this reader
+successor; its prior manual-only qualification remains accurately scoped.

@@ -2,7 +2,10 @@
 
 Date: 2026-10-06. The host suite passed **31 tests** and the real PostgreSQL/API
 suite passed **23 tests** against the reviewed disposable application. The reader
-is not yet promoted or enabled in a workspace.
+is now integrated in local source and remains disabled. The combined installed-source
+suite passed **80 tests** (57 manual and all 23 reader cases), with **31 reader
+and 107 manual host tests** also passing after promotion. The historical 186-test
+regression remains to be repeated after this separate source successor.
 
 ## Completed evidence
 
@@ -16,12 +19,12 @@ is not yet promoted or enabled in a workspace.
 - The reviewed delta adds only two reader modules and replaces the URL module.
   The manual proof remains
   `sha256:b4f16de1a78f0ffb7f62df770f6fe2e50636da3961e22bb193ba5e914b87215b`.
-  The proposed reader proof is
+  The installed reader proof is
   `sha256:c2e37caa561e943bf4f2883c62d8ed889c74a55809fa1f5ffc93aed5d4ce093e`.
 - Every model, migration, physical catalog row, writer and excluded authority
   remains the manual predecessor's qualification. No database migration is added.
 
-The [runtime suite](postgres_tests/test_scope_reader.py) (actual database/API
+The [runtime suite](../../apps/api/plane/curve/tests/scope_editor_v2/test_scope_reader.py) (actual database/API
 qualification) exercises intact absence and three saved-empty revisions, a real
 session's GET/HEAD, every feature gate, creator/admin separation, revoked native
 source access, final-fence rollback, bounded-history admission, immutable SQL

@@ -17,12 +17,14 @@ TESTS = "plane/curve/tests/manual_plan_v2/"
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "phase", choices=["all", "sql", "worker", "authority", "installed", "persistence", "migration", "regression"]
+        "phase",
+        choices=["all", "sql", "worker", "authority", "installed", "persistence", "migration", "regression", "scope"],
     )
     parser.add_argument("--fresh-db", action="store_true", help="Recreate only the disposable test database")
     args = parser.parse_args()
     targets = {
-        "all": [TESTS],
+        "all": [TESTS, "plane/curve/tests/scope_editor_v2/"],
+        "scope": ["plane/curve/tests/scope_editor_v2/"],
         "sql": [TESTS + "test_shape_sql.py"],
         "worker": [TESTS + "test_linux_worker.py"],
         "authority": [TESTS + "test_native_authority.py"],
@@ -41,12 +43,14 @@ def main():
         ],
     }[args.phase]
     proof = REPOSITORY / "apps/api/plane/curve/manual_plan_draft_reconstruction_qualification_v2.json"
+    scope_proof = proof.with_name("scope_editor_read_reconstruction_qualification_v2.json")
     print(
         json.dumps(
             {
                 "phase": args.phase,
                 "application": "INSTALLED_LOCAL_SOURCE",
                 "manual_proof_digest": "sha256:" + hashlib.sha256(proof.read_bytes()).hexdigest(),
+                "scope_proof_digest": "sha256:" + hashlib.sha256(scope_proof.read_bytes()).hexdigest(),
                 "fresh_test_database": args.fresh_db,
             }
         ),
