@@ -1,6 +1,7 @@
 # Isolated local Curve test profile
 
-Status: prepared; first database run blocked before application startup.
+Status: original source mount restored; **186 baseline PostgreSQL/API tests passed**
+on 2026-10-06 after the operator-authorized retry.
 
 [Compose test profile](compose.test.yml) (disposable PostgreSQL/Valkey and the
 existing local test image) has an internal Docker network, no published ports,
@@ -30,7 +31,7 @@ docker compose -p curve-manual-pilot-20261006 \
   plane/curve/tests/test_scope_reopening_races.py
 ```
 
-## Observed blocker and cleanup
+## Resolved source-mount blocker and cleanup
 
 On 2026-10-06, PostgreSQL and Valkey reached healthy state, but Docker Desktop
 denied the bind mount of the restored API source under the operator's Documents
@@ -38,13 +39,19 @@ directory: `operation not permitted`. The application container did not start;
 no migrations or database/API tests ran. This is an OS/filesharing access blocker,
 not a test pass and not an automated approval-review rejection.
 
-Required operator action: allow Docker Desktop to read the restored API directory
-through the applicable macOS Files and Folders/Documents permission and Docker
-Desktop file-sharing settings. Do not relocate the source or change permissions
-automatically to bypass the denial. Retry this exact isolated baseline only after
-that access is authorized.
+The operator subsequently authorized the normal minimum-access flow and reported
+it completed. Retrying the original read-only mount then succeeded. The only local
+filesystem preparation was creating the two empty ignored directories for the
+existing logs and collected-static tmpfs mount points. No alternate API copy/mount,
+ownership change, Full Disk Access change or permission bypass was used.
 
-### Minimum access and supported operator flow
+The recovered baseline passed 186 tests. The separately staged manual candidate
+also passed 14 SQL function tests, six actual Linux worker tests and one explicit
+DDL/empty-reversal experiment. See [candidate verification](../../candidates/curve-manual-plan-v2/VERIFICATION.md)
+(exact evidence and unqualified runtime boundary). Docker access is no longer the
+blocker; actual draft graph/concurrency/proof qualification remains work.
+
+### Minimum access and supported operator flow (historical instructions)
 
 The container only needs read access to the restored repository's `apps/api`
 (application source) directory. Keep its existing bind mount read-only. No host
@@ -67,8 +74,8 @@ source directory through Docker's normal UI; preserve other projects' settings.
 See [Docker's settings documentation](https://docs.docker.com/desktop/settings-and-maintenance/settings/#file-sharing)
 (host directories available to Linux containers).
 
-The observed error is consistent with a protected-folder access denial, but the
-exact macOS/Docker permission state has not been inspected. If the normal control
+The original error was consistent with a protected-folder access denial; the
+exact permission toggle changed by the operator was not independently observed. If the normal control
 is absent or the same mount still fails after an authorized retry, stop and report
 the fresh diagnostic. Do not use `tccutil`, alternate source copies, ownership
 changes or broader privileges to work around it. No permission was changed while

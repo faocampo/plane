@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+import uuid
 from unittest.mock import patch
 
 import bootstrap
@@ -36,7 +37,7 @@ def synthetic_inputs():
     return raw, identity, facts, context
 
 
-class SyntheticResolverTests(unittest.TestCase):
+class SyntheticFixtures:
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
@@ -50,6 +51,13 @@ class SyntheticResolverTests(unittest.TestCase):
         self.entry = dict(
             workspace_id=self.identity["workspace_id"],
             technical_contributor_ids=self.identity["human_owner_ids"],
+            native_authority=synthetic.advance_native_authority(
+                None,
+                dict(
+                    memberships={principal: "sha256:" + "0" * 64 for principal in self.principals},
+                    sources={principal: "sha256:" + "0" * 64 for principal in self.principals},
+                ),
+            ),
             grants=[
                 dict(
                     principal_id=item, actions=sorted(synthetic.ACTIONS), acl_generation=1, classification_generation=1
@@ -61,7 +69,13 @@ class SyntheticResolverTests(unittest.TestCase):
             schema_version="curve.synthetic-manual-plan-catalog/v2-candidate",
             generation=1,
             initiatives={self.identity["initiative_id"]: self.entry},
-            plans={self.identity["definition_ref"]["object_id"]: dict(identity=self.identity, facts=self.facts)},
+            plans={
+                self.identity["definition_ref"]["object_id"]: dict(
+                    identity=self.identity,
+                    facts=self.facts,
+                    semantic_sources=dict(prd={}, workflow={}, quality={}, repositories=[]),
+                )
+            },
             objects={},
         )
         for original in [
@@ -99,6 +113,8 @@ class SyntheticResolverTests(unittest.TestCase):
             action=action,
         )
 
+
+class SyntheticResolverTests(SyntheticFixtures, unittest.TestCase):
     def test_exact_local_catalog_and_bytes_validate(self):
         with synthetic.SyntheticManualPlanResolverV2(str(self.root)) as resolver:
             captured = self.capture(resolver)
@@ -262,3 +278,69 @@ class SyntheticResolverTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CatalogProducerTests(SyntheticFixtures, unittest.TestCase):
+    def test_catalog_cas_preserves_original_data_and_requires_generation_advance(self):
+        before = digest(canonical_json(self.catalog))
+        replacement = deepcopy(self.catalog)
+        replacement["generation"] += 1
+        with synthetic.SyntheticManualPlanResolverV2(str(self.root)) as resolver:
+            written = resolver.publish_catalog(expected_digest=before, replacement=replacement)
+            self.assertEqual(written, digest(canonical_json(replacement)))
+            self.assertEqual(self.capture(resolver).catalog_generation, 2)
+            with self.assertRaises(contracts.ManualPlanError) as error:
+                resolver.publish_catalog(expected_digest=before, replacement=replacement)
+            self.assertEqual(error.exception.code, "MANUAL_PLAN_DRAFT_COMMAND_CONFLICT")
+
+    def test_catalog_cannot_rewrite_retained_plan_or_material(self):
+        for section in ("plans", "objects"):
+            replacement = deepcopy(self.catalog)
+            replacement["generation"] += 1
+            del replacement[section][self.identity["definition_ref"]["object_id"]]
+            with self.subTest(section=section), synthetic.SyntheticManualPlanResolverV2(str(self.root)) as resolver:
+                with self.assertRaises(contracts.ManualPlanError):
+                    resolver.publish_catalog(
+                        expected_digest=digest(canonical_json(self.catalog)), replacement=replacement
+                    )
+
+    def test_revoke_requires_new_acl_generation_and_immediately_denies_capture(self):
+        replacement = deepcopy(self.catalog)
+        replacement["generation"] += 1
+        entry = replacement["objects"][self.identity["protected_inputs"][0]["object_ref"]["object_id"]]
+        entry["grants"][0]["actions"] = []
+        with synthetic.SyntheticManualPlanResolverV2(str(self.root)) as resolver:
+            with self.assertRaises(contracts.ManualPlanError):
+                resolver.publish_catalog(expected_digest=digest(canonical_json(self.catalog)), replacement=replacement)
+            entry["grants"][0]["acl_generation"] += 1
+            resolver.publish_catalog(expected_digest=digest(canonical_json(self.catalog)), replacement=replacement)
+            with self.assertRaises(contracts.ManualPlanError):
+                self.capture(resolver)
+
+    def test_catalog_cannot_move_retained_initiative_to_another_workspace(self):
+        replacement = deepcopy(self.catalog)
+        replacement["generation"] += 1
+        replacement["initiatives"][self.identity["initiative_id"]]["workspace_id"] = str(uuid.uuid4())
+        with synthetic.SyntheticManualPlanResolverV2(str(self.root)) as resolver:
+            with self.assertRaises(contracts.ManualPlanError):
+                resolver.publish_catalog(expected_digest=digest(canonical_json(self.catalog)), replacement=replacement)
+
+    def test_removed_grant_cannot_reset_its_counter_and_busy_publisher_fails_promptly(self):
+        import fcntl
+
+        replacement = deepcopy(self.catalog)
+        replacement["generation"] += 1
+        replacement["initiatives"][self.identity["initiative_id"]]["grants"].pop()
+        with synthetic.SyntheticManualPlanResolverV2(str(self.root)) as resolver:
+            with self.assertRaises(contracts.ManualPlanError):
+                resolver.publish_catalog(expected_digest=digest(canonical_json(self.catalog)), replacement=replacement)
+            fd = os.open(self.root / "catalog.lock", os.O_RDWR)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                with self.assertRaises(contracts.ManualPlanError) as error:
+                    resolver.publish_catalog(
+                        expected_digest=digest(canonical_json(self.catalog)), replacement=replacement
+                    )
+                self.assertEqual(error.exception.code, "MANUAL_PLAN_DRAFT_COMMAND_CONFLICT")
+            finally:
+                os.close(fd)

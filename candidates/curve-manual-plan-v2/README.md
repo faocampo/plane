@@ -1,6 +1,7 @@
 # Manual plan v2 persistence candidate
 
-Status: **prepared, not installed or PostgreSQL-qualified**, 2026-10-06.
+Status: **staged; baseline, SQL/DDL experiment and Linux tested; not installed or
+qualified as a complete writer**, 2026-10-06.
 
 This is the single Python implementation intended for Plane. Its module layout
 matches the proposed runtime delta. It reuses existing scoped PRD authority,
@@ -8,8 +9,8 @@ Initiative locking, policy decisions, idempotency, audit, event and outbox servi
 It is staged outside the installed application because its recursive source proof
 rejects any unreviewed new module, including a default-off writer.
 
-The [verification record](VERIFICATION.md) (executed host checks and unexecuted
-runtime gates) and [promotion plan](PROMOTION.md) (remaining integration work,
+The [verification record](VERIFICATION.md) (executed host, PostgreSQL, Linux and UI
+checks with remaining runtime gates) and [promotion plan](PROMOTION.md) (remaining integration work,
 proof review and migration ordering) define the delivery boundary.
 
 ## Prepared behavior
@@ -28,15 +29,18 @@ proof review and migration ordering) define the delivery boundary.
 - Native PRD and evidence metadata must bind to retained, authorized original
   material. Missing body, selected evidence or excerpt references deny the read/save.
 - Validation is inert and isolated before database locks. The proposed Linux worker
-  has CPU, wall time, memory, descriptor and concurrency limits. The Mac path fails
-  closed; Linux resource enforcement has not been executed in this checkpoint.
+  has CPU, wall time, memory, descriptor and concurrency limits. Six real Linux
+  checks pass, including valid/invalid jobs and competing processes. The Mac path
+  fails closed; slots cover processes sharing one container, not separate containers.
 - Session authentication uses normal Django CSRF on the original request so DRF
   does not consume JSON before strict parsing. Every response is `no-store`.
 - Current/history reads authorize original content again. The separate status
   action is metadata-only; it does not grant old-body access.
 
 These are implemented candidate paths, not claims of integrated backend behavior.
-The current-authority projection and reviewed successor loader remain incomplete.
+The [authority/semantic adapters](ADAPTERS.md) (native observations, local counters,
+protected bodies and catalog CAS) and structural successor loader are implemented.
+Real ORM producer/consumer integration and final proof qualification remain gates.
 Default feature switches remain off, there are no registered routes, and no
 migration or proof has been installed.
 
@@ -49,7 +53,10 @@ migration or proof has been installed.
 | `overlay/migrations/0024_manual_draft_reconstruction.py` (prepared SQL and model migration) | Stops before DDL while the reviewed current-catalog pin is absent |
 | `promotion.patch` (model registration, policy constraint and four routes) | Reviewable patch; checked for applicability but not applied |
 | `tests/` (host parser, model, resolver, HTTP and orchestration checks) | No database configured; ORM/service collaborators are doubled where needed |
-| `postgres_tests/` (queued SQL and installed-guard tests) | Not executed; function tests target the 0023 baseline, installed tests require a reviewed successor |
+| `postgres_tests/` (SQL, DDL-experiment and installed-guard tests) | 14 SQL and 1 transactional DDL test pass; installed guards still require the reviewed successor |
+| `qualification/` (isolated Linux/test runner) | Six real worker checks; bounded test files delivered over stdin without changing the source mount |
+| `overlay/trusted_root/` (successor loader candidate) | Exact additive draft and separate scope-reader deltas; no active pins |
+| `gate2/` (pure reservation transition kernel) | Twelve host tests; no ORM, route, authority resolver or persisted control |
 
 Use the existing isolated unit environment, from the Plane repository root:
 
@@ -76,6 +83,7 @@ Selected PRD evidence is bounded at 512 items; all selected bodies and excerpts
 are required conservatively, even when a snapshot item is not marked material.
 Native membership remains a necessary check, never a sufficient grant.
 
-The SQL functions, constraint timing and rollback behavior require real PostgreSQL.
+SQL shape functions and declared empty DDL reversal have real PostgreSQL evidence.
+Populated transaction graphs, complete migration and concurrency still need it.
 Gate 2 approval, reservation, execution and completion credit remain excluded from
 this draft writer. No provider, AI/model spending or automatic execution is enabled.

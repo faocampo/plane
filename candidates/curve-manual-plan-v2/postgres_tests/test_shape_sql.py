@@ -1,4 +1,4 @@
-"""Prepared PostgreSQL function tests. NOT RUN on the Mac; not graph qualification.
+"""PostgreSQL function tests; not graph qualification.
 
 Run only in the isolated disposable test database after the Docker access gate.
 The test transaction rolls back these two candidate functions on the 0023 base.

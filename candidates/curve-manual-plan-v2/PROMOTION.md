@@ -1,111 +1,88 @@
 # Promotion and remaining integration gates
 
-Status: review plan only. No runtime promotion or migration has occurred.
+Status: staged candidate with real baseline, SQL, DDL-experiment and Linux evidence.
+No runtime promotion, installed successor, registered draft route or qualified
+complete migration has occurred. Local development and disposable tests are
+separate from publication, release and runtime activation.
+
+## Completed preparation
+
+- Native current-authority projection and local observation ledger are implemented.
+- Atomic catalog CAS preserves retained material/plan identities, monotonic grant
+  counters and revoked-principal tombstones.
+- Semantic facts are derived from exact protected PRD/workflow/quality/repository
+  bodies and compared with the catalog, with independent native bindings.
+- The trusted successor loader implements the exact manual delta followed by a
+  separate scope-reader delta; the approval pins remain unset.
+- Linux process limits and cross-process slots have actual test evidence.
+- An unmounted typed client/panel and pure Gate 2 transition kernel are implemented.
+
+See [adapter definitions](ADAPTERS.md) (concrete generations, local body formats and
+operational bounds), [verification](VERIFICATION.md) (executed tests and their
+limits), and [UI review](UI_REVIEW.md) (bounded visual handoff).
+
+## Exact release checklist
+
+| Order | Deliverable / required evidence | State |
+| --- | --- | --- |
+| 1 | Recovered 0023 baseline on actual PostgreSQL; all historical migration/proof bytes intact | 186 baseline tests passed; bytes preserved |
+| 2 | Frozen shape functions, Linux worker, declared DDL delta and exact empty reversal | 14 SQL, 6 Linux and 1 DDL-experiment test passed |
+| 3 | Real ORM positive fixture from the exact scoped PRD bridge, with v2 protected PRD/evidence bytes and current grants for actor, every owner and all reviewers | Required; host material/native doubles do not qualify it |
+| 4 | Operator-side catalog producer and consumer in actual native transactions; refreshed observation counters, revocation, stale catalog and final-fence rollback | Adapters implemented; real ORM integration required |
+| 5 | Independently review expected DDL delta and proposed literal catalog pin, then execute complete forward migration and exact empty reversal | DDL experiment passed; catalog pin remains unset; complete migration not run |
+| 6 | Real save/append/history/replay graph: revision, head, Initiative version, policy, audit, event, outbox and idempotency commit once; current ETag on original replay | Required; host ordering tests only |
+| 7 | Independent-connection concurrent saves, first-head races, access/source changes before final fence and zero partial records | Required for draft writer; baseline reopening races do not substitute |
+| 8 | Raw-SQL omission/substitution of every graph component, immutable rewrite/delete/truncate, catalog/seal tampering, retained-evidence reversal refusal including NO_EFFECT audit | Empty-table DDL/truncate checks passed; populated graph matrix required |
+| 9 | Final exact manual successor proof with two models, one migration, eleven modules, declared model/URL replacements and unchanged historic exclusions | Loader implemented; no proof or pin installed |
+| 10 | Separate scope-reader successor, two modules and URL change only; actual complete-lineage read and permission/change fences | 31 prior host tests; successor and DB integration required |
+| 11 | One installed implementation; model/migration consistency, all historical gates with feature disabled, enabled authenticated CSRF/API behavior | Not installed; promotion patch remains unapplied |
+| 12 | Protected-definition preparation UI, mount draft panel, full app checks and authenticated save/current/history/unknown-result journey | Typed client/panel: 27 tests and bounded visual ship; preparation and integration required |
+| 13 | Gate 2 ORM authority adapter, exact review/decision/reservation/history models and atomic policy/audit/event/outbox/idempotency graph | Pure kernel: 12 host tests; persistence and successor required |
+| 14 | Existing native task-row locks plus exclusive DB ownership; overlapping/disjoint Initiative races; retained holds; current-approver reconciliation/release and reacquisition generations | Pure transition tests passed; real DB/race/API evidence required |
+| 15 | Synthetic local seed, disablement, backup/restore, observable failures and complete manual pilot acceptance | Pending after qualified runtime and UI |
+
+Abrupt API-parent death during real validation, container resource pressure and
+multi-container concurrency need explicit operational acceptance. Current file
+slots cover API processes sharing one container's temporary directory only.
+
+## Database sequence
+
+Use the [isolated profile](../../deployments/curve-local-pilot/README.md) (internal
+network, disposable services, original read-only API source). The previous source
+mount denial is resolved. Keep all test data synthetic and preserve the original
+mount. The [DDL experiment](postgres_tests/test_ddl_experiment.py) (separate DDL
+operations with rollback) cannot populate the migration pin or qualify a deployed
+catalog. Do not add an environment bypass or monkeypatch the installed loader.
+
+A reviewed candidate may be exercised in an explicitly disposable qualification
+application after its expected code/DDL delta and prospective pins are reviewed.
+That test application must preserve the predecessor bytes and enforce the same
+proof checks as the intended runtime. It cannot silently accept arbitrary observed
+source/schema hashes, skip unavailable qualifications or activate a user's database.
 
 ## One implementation, one consumer
 
 The [candidate package](overlay/manual_plan_v2/) (eleven modules and pinned JSON)
-should be moved, once ready, to the Curve package within the existing Plane API.
-The [migration](overlay/migrations/0024_manual_draft_reconstruction.py) (new models,
-transaction graph guards and separate seal) moves to its existing migration
-package. Do not retain a runnable second implementation in this directory after
-promotion. Preserve these review/evidence documents and move tests into the
-existing Curve test package. Keep the contract JSON as its normal pinned consumer
-snapshot; Curve remains the canonical contract repository.
+moves, once qualified, into the existing Plane Curve app. The [migration](overlay/migrations/0024_manual_draft_reconstruction.py)
+(two models, transaction graph guards and separate seal) moves into its migration
+package. Move the tests to the existing test package; retain review/evidence
+records here. Do not leave a second runnable implementation after promotion.
+Curve remains the canonical source for the unchanged contract JSON snapshot.
 
-The [promotion patch](promotion.patch) (model imports, exact additive policy
-constraint and four routes) is prepared against Plane's recovered app. It passed
-`git apply --check`; it has not been applied. It is insufficient by itself: applying
-it or copying modules now would invalidate the incumbent recursive runtime proof.
-There is intentionally no script that installs code, fills hashes or enables flags.
+The [promotion patch](promotion.patch) (model registration, additive policy
+constraint and four routes) is reviewable and applicable but insufficient alone.
+Applying it now would invalidate the incumbent recursive proof. Reconcile shared
+URL edits once when installing the separately reviewed scope-reader successor.
 
-## Integration work still required before qualification
+## Gate 2 stays a separate successor
 
-1. Implement the transient current-authority contract from real current native
-   observations and the fixed catalog. The candidate currently compares native
-   row/source fences, all current object grants and file observations, but it does
-   **not** construct the required authority DTO with membership/source generations.
-   Native role/active observations are not monotonic generation counters. Do not
-   invent counters from hashes, timestamps or fixture values. Define and test the
-   exact generation source and its revocation/change protocol before promotion.
-2. Qualify the producer of the synthetic catalog. It must bind immutable semantic
-   facts to the actual approved PRD body, exact workflow/quality/repository policy
-   catalogs and original protected inventory. Current code validates closed facts,
-   native subject/scope/gates, workflow identity, material versions and bytes; it
-   does not yet derive all requirement/acceptance/quality facts from those bodies.
-   A hand-edited catalog is test input, not evidence of that semantic binding.
-3. Qualify the Linux worker's actual resource limits, parser isolation, interruption
-   cleanup and two-worker ceiling. Host tests only prove fail-closed Mac behavior
-   and orchestration order with doubles.
-4. Review and implement the trusted successor loader. It must preserve the two
-   historical proof files byte-for-byte, accept only the declared additive model/
-   migration/runtime delta, and independently compare the reviewed physical
-   catalog. Keep execution, approval and controlling bindings excluded. The current
-   missing loader yields 503 and cannot be replaced with a permissive fallback.
-5. Integrate the separate scope-reader candidate as its own reviewed successor,
-   after the draft successor. Reconcile shared route edits once; do not repin an
-   arbitrary combined application directory.
+The [draft delta](overlay/manual_plan_v2/contract_snapshot/qualification-delta-v2.json)
+(draft-only writer inventory) excludes plan approval and controlling task bindings.
+The [Gate 2 kernel](gate2/domain.py) (immutable exact subject, assigned approver,
+exclusive claims, retained holds and reconciled release) has no ORM, route, grant
+resolver or persistence. Its internal current-authority value must be supplied by
+an actual validated adapter, never directly from request JSON.
 
-These are concrete remaining implementation gates in addition to Docker access.
-Passing host tests is not sufficient to remove them.
-
-## PostgreSQL sequence after access approval
-
-Use the [isolated test profile](../../deployments/curve-local-pilot/README.md)
-(synthetic disposable services and the existing read-only source mount). The
-source-mount denial remains unresolved; do not retry Docker, change permissions,
-copy the source to another mount or alter sharing without the pending approval.
-
-1. Execute the recovered 0023 baseline and its existing PRD/scope/reopening races.
-   Record exact image, PostgreSQL version, source HEAD and catalog. Preserve the
-   23 predecessor migration bytes and both historical proof files.
-2. Run the [SQL function tests](postgres_tests/test_shape_sql.py) (closed schema
-   validation and canonical digest behavior) in a disposable transaction on that
-   baseline. They create only the two candidate validation functions and roll them
-   back. Do not mistake these tests for application-graph or migration tests.
-3. Complete the integration gaps above, then exercise the additive migration in
-   an explicitly reviewed qualification harness. The candidate's unset
-   `CURRENT_CATALOG_DIGEST` rejects execution before SQL. Do not populate it by
-   observing a deployed database, monkeypatching the installed runtime or adding
-   an environment bypass. Review the expected source/DDL delta and experimental
-   evidence before proposing the literal pin and separate immutable seal.
-4. Exercise the real service with synthetic fixtures built from the existing
-   scoped PRD bridge. A valid fixture needs actual retained PRD/evidence bytes,
-   exact semantic facts and grants for every actor/reviewer/owner; the canonical
-   contract fixtures alone are not an executable positive integration fixture.
-5. Review the candidate's exact migration/source/proof hashes, then run the
-   [installed guard tests](postgres_tests/test_installed_guards.py) (distinct seals,
-   qualified loader and direct truncation/seal-rewrite rejection) plus the full
-   acceptance matrix below. These tests fail rather than skip missing qualification.
-6. Check Django migration state versus models, all historical gates with the new
-   feature disabled, enabled route behavior, and the authenticated native UI.
-   Only then consider a local runtime promotion. Public delivery remains separate.
-
-## Required real-database acceptance matrix
-
-| Scenario | Required evidence | Current state |
-| --- | --- | --- |
-| Forward migration and exact catalog | All prior hashes preserved; two models, new seal and precise permitted SQL delta | Not run |
-| New save | Revision/head/version/policy/audit/event/outbox/idempotency all commit once | Not run; host ordering only |
-| Revision append and historical read | Immutable predecessor retained; original private identity and current permissions | Not run |
-| Replay after a later revision | Original response reference, current ETag, no new domain effect; current authority rechecked | Not run; host orchestration only |
-| Two concurrent saves | Independent connections/barrier; one winner for the same expected versions; no orphan graph | Not prepared as executable integration fixture |
-| Lost access or source changes | Revoke each actor/reviewer/owner; change source/catalog/object before final fence; zero partial graph | Host doubles only |
-| Missing/forged graph component | Raw SQL omits or substitutes each policy, revision, head, event, outbox, audit or idempotency link | Not run; must be added with positive fixture |
-| SQL mutability and seal attacks | Update/delete/truncate, predecessor/workspace substitution, seal/catalog tampering | Smoke tests prepared; full graph tests pending |
-| Reversal with evidence | Refused under locks for draft or related retained records, including NO_EFFECT audit | Host gate only; real DB pending |
-| Empty reversal | Exact original coverage function/catalog restored, no historical row deleted | Not run |
-| Disablement and edition mismatch | Uniform unavailable responses, no private paths/bodies, no false ABSENT status | Host HTTP/gate tests only |
-| Normal CSRF and authentication | Real session middleware plus token/origin checks and closed JSON bodies | Host HTTP dispatch tested; authenticated stack pending |
-
-The proposed empty-reversal check holds exclusive table locks until its enclosing
-atomic migration completes, preventing new evidence between the emptiness check
-and destructive DDL. Its actual locking/deadlock behavior also requires PostgreSQL.
-
-## Gate 2 follows a separate successor
-
-The [qualification delta](overlay/manual_plan_v2/contract_snapshot/qualification-delta-v2.json)
-(explicit draft-only writer inventory) excludes plan approval and controlling task
-bindings. Do not add those writers to this migration, reuse a draft receipt as a
-Gate 2 grant, or treat a saved plan as execution authority. The separate design in
-Curve defines the proposed approval/reservation transaction and its required races.
+Implement Gate 2 under its own reviewed successor after draft qualification.
+Saving a draft or entering a generic execution state cannot authorize agents,
+providers, repository changes, model calls, spending or completion credit.

@@ -75,6 +75,8 @@ class PolicyTests(unittest.TestCase):
             id=original["material_version_id"],
             body_digest=self.identity["prd_content_digest"],
             access_envelope_id=original["access_envelope_id"],
+            body_schema_id="curve.synthetic-prd-body/v2",
+            body_schema_version=2,
             validate_metadata=Mock(),
             as_record=lambda: {"body": original["object_ref"]},
         )
@@ -117,17 +119,24 @@ class PolicyTests(unittest.TestCase):
             initiative=SimpleNamespace(id=self.identity["initiative_id"]),
         )
         with patch.dict(sys.modules, {"plane.curve.prd_models": module}):
-            policy.require_prd_materials(context, SimpleNamespace(identity=self.identity))
+            policy.require_prd_materials(
+                context, SimpleNamespace(identity=self.identity, semantic_sources={"prd": original["object_ref"]})
+            )
             snapshot.validate_metadata.assert_called_once()
             for field, value in (("source_version", "changed"), ("content", None), ("classification", "RESTRICTED")):
                 previous = item.record[field]
                 item.record[field] = value
                 with self.subTest(field=field), self.assertRaises(contracts.ManualPlanError):
-                    policy.require_prd_materials(context, SimpleNamespace(identity=self.identity))
+                    policy.require_prd_materials(
+                        context,
+                        SimpleNamespace(identity=self.identity, semantic_sources={"prd": original["object_ref"]}),
+                    )
                 item.record[field] = previous
             member["selected_excerpt_ref"] = dict(original["object_ref"], object_id="other-id")
             with self.assertRaises(contracts.ManualPlanError):
-                policy.require_prd_materials(context, SimpleNamespace(identity=self.identity))
+                policy.require_prd_materials(
+                    context, SimpleNamespace(identity=self.identity, semantic_sources={"prd": original["object_ref"]})
+                )
 
 
 if __name__ == "__main__":

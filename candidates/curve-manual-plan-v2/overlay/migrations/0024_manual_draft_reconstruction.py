@@ -57,8 +57,8 @@ BEGIN
    IF NOT curve_mpd2_shape(p,v) THEN RETURN false; END IF;
   END LOOP;
  END IF;
- IF s ? 'anyOf' AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(s->'anyOf') v WHERE curve_mpd2_shape(p,v)) THEN RETURN false; END IF;
- IF s ? 'oneOf' AND (SELECT count(*) FROM jsonb_array_elements(s->'oneOf') v WHERE curve_mpd2_shape(p,v))<>1 THEN RETURN false; END IF;
+ IF s ? 'anyOf' AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(s->'anyOf') AS alternatives(schema) WHERE curve_mpd2_shape(p,alternatives.schema)) THEN RETURN false; END IF;
+ IF s ? 'oneOf' AND (SELECT count(*) FROM jsonb_array_elements(s->'oneOf') AS alternatives(schema) WHERE curve_mpd2_shape(p,alternatives.schema))<>1 THEN RETURN false; END IF;
  IF s ? 'if' THEN
   IF curve_mpd2_shape(p,s->'if') THEN
    IF s ? 'then' AND NOT curve_mpd2_shape(p,s->'then') THEN RETURN false; END IF;
@@ -94,7 +94,9 @@ BEGIN
   IF (s ? 'minLength' AND length(p #>> '{}')<(s->>'minLength')::int)
    OR (s ? 'maxLength' AND length(p #>> '{}')>(s->>'maxLength')::int)
    OR (s ? 'pattern' AND (p #>> '{}') !~ (s->>'pattern')) THEN RETURN false; END IF;
-  IF s->>'format'='date-time' AND (NOT isfinite((p #>> '{}')::timestamptz)) THEN RETURN false; END IF;
+  IF s->>'format'='date-time' THEN
+   IF NOT isfinite((p #>> '{}')::timestamptz) THEN RETURN false; END IF;
+  END IF;
   IF s->>'format'='uuid' THEN PERFORM (p #>> '{}')::uuid; END IF;
  END IF;
  RETURN true;
@@ -301,8 +303,13 @@ REVERSE_SQL = "DROP TRIGGER curve_mpr2_commit ON curve_manual_plan_revision_v2;\
 
 def _catalog(cursor):
     sql = import_module("plane.curve.migrations.0023_scope_reopening").CATALOG_SQL
+    cursor.execute("SHOW search_path")
+    previous_path = cursor.fetchone()[0]
+    cursor.execute("SET LOCAL search_path = pg_catalog, public")
     cursor.execute("SELECT 'sha256:' || encode(sha256(convert_to((" + sql + ")::text, 'UTF8')), 'hex')")
-    return cursor.fetchone()[0]
+    result = cursor.fetchone()[0]
+    cursor.execute("SELECT set_config('search_path', %s, true)", [previous_path])
+    return result
 
 
 def verify_predecessor(apps, schema_editor):
@@ -313,7 +320,6 @@ def verify_predecessor(apps, schema_editor):
         if "sha256:" + hashlib.sha256((directory / name).read_bytes()).hexdigest() != expected:
             raise RuntimeError("MANUAL_PLAN_DRAFT_PREDECESSOR_BYTES_CHANGED")
     with schema_editor.connection.cursor() as cursor:
-        cursor.execute("SET LOCAL search_path = pg_catalog, public")
         cursor.execute("SELECT name FROM django_migrations WHERE app='curve' ORDER BY name")
         if [row[0] + ".py" for row in cursor.fetchall()] != sorted(PREDECESSOR_MIGRATIONS):
             raise RuntimeError("MANUAL_PLAN_DRAFT_PREDECESSOR_MIGRATIONS_CHANGED")

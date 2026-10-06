@@ -13,8 +13,8 @@ from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
-from .contracts import require, validate
-from .validation import digest, metadata_digest, parse_strict_json
+from .contracts import ManualPlanError, require, validate
+from .validation import canonical_json, digest, metadata_digest, parse_strict_json
 
 EDITION = "FIXED_SYNTHETIC_LOCAL_MANUAL_PLAN_V2"
 CATALOG_LIMIT = 1024 * 1024
@@ -81,6 +81,10 @@ class CapturedPlan:
     catalog_generation: int
     grants: tuple
     file_fence: tuple
+    native_authority: dict
+    semantic_sources: dict
+    materials: dict
+    authority: dict | None = None
 
 
 class SyntheticManualPlanResolverV2:
@@ -150,6 +154,10 @@ class SyntheticManualPlanResolverV2:
 
     def _catalog(self):
         raw, fence = self._read("catalog.json", CATALOG_LIMIT)
+        return self._decode_catalog(raw), fence
+
+    @staticmethod
+    def _decode_catalog(raw):
         catalog = parse_strict_json(raw, max_bytes=CATALOG_LIMIT)
         _closed(catalog, ("schema_version", "generation", "initiatives", "plans", "objects"))
         require(catalog["schema_version"] == "curve.synthetic-manual-plan-catalog/v2-candidate")
@@ -159,12 +167,13 @@ class SyntheticManualPlanResolverV2:
         require(type(catalog["objects"]) is dict and len(catalog["objects"]) <= 512)
         for key, entry in catalog["initiatives"].items():
             _id(key)
-            _closed(entry, ("workspace_id", "technical_contributor_ids", "grants"))
+            _closed(entry, ("workspace_id", "technical_contributor_ids", "grants", "native_authority"))
             _id(entry["workspace_id"])
             contributors = entry["technical_contributor_ids"]
             require(type(contributors) is list and len(contributors) <= 256)
             require(contributors == sorted({_id(item) for item in contributors}))
             _validate_grants(entry["grants"])
+            validate_native_authority(entry["native_authority"])
         for key, entry in catalog["objects"].items():
             _id(key)
             _closed(
@@ -188,7 +197,8 @@ class SyntheticManualPlanResolverV2:
             _validate_grants(entry["grants"])
         for key, plan in catalog["plans"].items():
             _id(key)
-            _closed(plan, ("identity", "facts"))
+            _closed(plan, ("identity", "facts", "semantic_sources"))
+            _closed(plan["semantic_sources"], ("prd", "workflow", "quality", "repositories"))
             validate("manual-plan-input-identity-v2", plan["identity"])
             require(
                 plan["identity"]["digest"] == metadata_digest(plan["identity"])
@@ -219,7 +229,7 @@ class SyntheticManualPlanResolverV2:
                     "workflow_conditions",
                 ),
             )
-        return catalog, fence
+        return catalog
 
     def authorize(self, *, workspace_id, initiative_id, principals, action):
         require(action in ACTIONS)
@@ -260,6 +270,7 @@ class SyntheticManualPlanResolverV2:
         require(len({ref["object_id"] for ref in refs}) == len(refs))
         require(sum(ref["size_bytes"] for ref in refs) <= TOTAL_INPUT_LIMIT)
         fences, definition, all_grants = [catalog_fence], None, list(grants)
+        materials = {}
         originals = {item["object_ref"]["object_id"]: item for item in identity["protected_inputs"]}
         for index, ref in enumerate(refs):
             raw, fence, object_grants = self.read_material(
@@ -272,6 +283,7 @@ class SyntheticManualPlanResolverV2:
             )
             all_grants.extend(object_grants)
             fences.append(fence)
+            materials[ref["object_id"]] = raw
             if index == 0:
                 definition = raw
         self.recheck(tuple(fences))
@@ -283,7 +295,101 @@ class SyntheticManualPlanResolverV2:
             catalog["generation"],
             tuple(all_grants),
             tuple(fences),
+            deepcopy(entry["native_authority"]),
+            deepcopy(plan["semantic_sources"]),
+            materials,
         )
+
+    def publish_catalog(self, *, expected_digest, replacement):
+        """Operator-side CAS for typed local data; never called from an API route.
+
+        Stable lock inode serializes cooperating producers. Files and original
+        object/plan identities remain immutable; only current grants/observations
+        may change. A revoked permission is not revived by a counter.
+        """
+        import fcntl
+        from .validation import canonical_json
+
+        raw = canonical_json(replacement)
+        proposed = self._decode_catalog(raw)
+        lock_fd = os.open("catalog.lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600, dir_fd=self.root_fd)
+        temporary = None
+        try:
+            info = os.fstat(lock_fd)
+            require(
+                stat.S_ISREG(info.st_mode)
+                and info.st_uid == os.getuid()
+                and stat.S_IMODE(info.st_mode) & 0o077 == 0
+                and info.st_nlink == 1
+            )
+            try:
+                fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise ManualPlanError("COMMAND_CONFLICT") from None
+            old, _ = self._catalog()
+            require(digest(canonical_json(old)) == expected_digest, "COMMAND_CONFLICT")
+            require(proposed["generation"] == old["generation"] + 1 and _positive(proposed["generation"]))
+            for object_id, original in old["objects"].items():
+                current = proposed["objects"].get(object_id)
+                require(
+                    current is not None
+                    and {k: v for k, v in original.items() if k != "grants"}
+                    == {k: v for k, v in current.items() if k != "grants"}
+                )
+            for object_id, original in old["plans"].items():
+                require(proposed["plans"].get(object_id) == original)
+            for section in ("objects", "initiatives"):
+                for key, original in old[section].items():
+                    current = proposed[section].get(key)
+                    require(current is not None)
+                    before = {item["principal_id"]: item for item in original["grants"]}
+                    # Keep revoked entries as empty-action tombstones so removing
+                    # and re-adding a principal cannot reset its generations.
+                    require(set(before) <= {item["principal_id"] for item in current["grants"]})
+                    for grant in current["grants"]:
+                        prior = before.get(grant["principal_id"])
+                        if prior is not None:
+                            require(
+                                grant["acl_generation"] >= prior["acl_generation"]
+                                and grant["classification_generation"] >= prior["classification_generation"]
+                            )
+                            if grant["actions"] != prior["actions"]:
+                                require(grant["acl_generation"] > prior["acl_generation"])
+            for key, original in old["initiatives"].items():
+                require(proposed["initiatives"][key]["workspace_id"] == original["workspace_id"])
+                ledger = proposed["initiatives"][key]["native_authority"]
+                observations = dict(
+                    memberships={k: v["observation_digest"] for k, v in ledger["memberships"].items()},
+                    sources=ledger["sources"],
+                )
+                require(advance_native_authority(original["native_authority"], observations) == ledger)
+            temporary = ".catalog-" + str(uuid.uuid4())
+            fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=self.root_fd)
+            try:
+                pending = memoryview(raw)
+                while pending:
+                    pending = pending[os.write(fd, pending) :]
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            # A renamed/replaced root cannot redirect the producer to another store.
+            current_root = self._open_root(self.root)
+            try:
+                require(
+                    (os.fstat(current_root).st_dev, os.fstat(current_root).st_ino)
+                    == (os.fstat(self.root_fd).st_dev, os.fstat(self.root_fd).st_ino)
+                )
+            finally:
+                os.close(current_root)
+            os.replace(temporary, "catalog.json", src_dir_fd=self.root_fd, dst_dir_fd=self.root_fd)
+            temporary = None
+            os.fsync(self.root_fd)
+            self.root_stamp = _stamp(os.fstat(self.root_fd))
+            return digest(raw)
+        finally:
+            if temporary is not None:
+                os.unlink(temporary, dir_fd=self.root_fd)
+            os.close(lock_fd)
 
     def recheck(self, fence):
         require(_stamp(os.fstat(self.root_fd)) == self.root_stamp)
@@ -297,3 +403,53 @@ class SyntheticManualPlanResolverV2:
             # like the original object. It is not a privileged-tampering proof.
             current = os.stat(name, dir_fd=self.root_fd, follow_symlinks=False)
             require(stat.S_ISREG(current.st_mode) and _stamp(current) == expected)
+
+
+def advance_native_authority(previous, observations):
+    """Server-produced local generations, never a native timestamp/hash as counter.
+
+    Observations come from locked native checks. The owner-only catalog producer
+    persists this result with its next catalog generation; consumers deny a stale
+    observation. This does not grant access: every consumer checks native ACLs.
+    """
+    _closed(observations, ("memberships", "sources"))
+    require(type(observations["memberships"]) is dict and 1 <= len(observations["memberships"]) <= 260)
+    require(type(observations["sources"]) is dict and set(observations["sources"]) == set(observations["memberships"]))
+    if previous is not None:
+        validate_native_authority(previous)
+
+    def next_entry(old, observed):
+        require(type(observed) is str and re.fullmatch(r"sha256:[0-9a-f]{64}", observed) is not None)
+        generation = 1 if old is None else old["generation"] + (old["observation_digest"] != observed)
+        require(_positive(generation))
+        return dict(generation=generation, observation_digest=observed)
+
+    memberships = {} if previous is None else deepcopy(previous["memberships"])
+    sources = {} if previous is None else deepcopy(previous["sources"])
+    for key, observed in observations["memberships"].items():
+        memberships[_id(key)] = next_entry(memberships.get(key), observed)
+        sources[key] = observations["sources"][key]
+    value = dict(
+        memberships=memberships,
+        sources=sources,
+        source=next_entry(None if previous is None else previous["source"], digest(canonical_json(sources))),
+    )
+    validate_native_authority(value)
+    return value
+
+
+def validate_native_authority(value):
+    _closed(value, ("memberships", "source", "sources"))
+    require(type(value["memberships"]) is dict and len(value["memberships"]) <= 260)
+    require(type(value["sources"]) is dict and set(value["sources"]) == set(value["memberships"]))
+    require(all(type(v) is str and re.fullmatch(r"sha256:[0-9a-f]{64}", v) for v in value["sources"].values()))
+    for principal in value["memberships"]:
+        _id(principal)
+    for entry in [value["source"], *value["memberships"].values()]:
+        _closed(entry, ("generation", "observation_digest"))
+        require(
+            _positive(entry["generation"])
+            and type(entry["observation_digest"]) is str
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", entry["observation_digest"]) is not None
+        )
+    require(value["source"]["observation_digest"] == digest(canonical_json(value["sources"])))

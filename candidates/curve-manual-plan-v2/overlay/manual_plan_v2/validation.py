@@ -366,3 +366,163 @@ def validate_definition(raw, identity, facts):
     receipt["digest"] = metadata_digest(receipt)
     validate_schema("manual-plan-validation-receipt-v2.schema.json", receipt, schemas)
     return receipt
+
+
+def derive_semantic_facts(identity, sources, materials, native_facts):
+    """Fixed synthetic-body adapter. No editable facts list can weaken these facts.
+
+    All source bodies must be in the retained protected inventory and byte-bound.
+    Native fields are independently bound to locked scoped PRD data by policy.
+    Only these explicit local body editions are accepted; no provider parser.
+    """
+    from copy import deepcopy
+
+    def closed(value, keys):
+        require(type(value) is dict and set(value) == set(keys), "SEMANTIC_SOURCE_INVALID")
+
+    def ordered(values, pattern, *, maximum=1024, nonempty=True):
+        require(
+            type(values) is list
+            and (1 if nonempty else 0) <= len(values) <= maximum
+            and all(type(item) is str and re.fullmatch(pattern, item) for item in values)
+            and sorted_unique(values),
+            "SEMANTIC_SOURCE_INVALID",
+        )
+        return values
+
+    retained = {item["object_ref"]["object_id"]: item["object_ref"] for item in identity["protected_inputs"]}
+    require(len(retained) == len(identity["protected_inputs"]), "INPUT_OBJECT_REUSED")
+    closed(sources, ("prd", "workflow", "quality", "repositories"))
+
+    def body(reference, edition, keys, pin=None):
+        require(
+            type(reference) is dict and retained.get(reference.get("object_id")) == reference,
+            "SEMANTIC_SOURCE_NOT_RETAINED",
+        )
+        raw = materials.get(reference["object_id"])
+        require(
+            type(raw) is bytes
+            and len(raw) == reference["size_bytes"]
+            and digest(raw) == reference["digest"]
+            and reference["media_type"] == "application/json",
+            "SEMANTIC_SOURCE_IDENTITY_MISMATCH",
+        )
+        value = parse_strict_json(raw, max_bytes=MAX_DEFINITION)
+        closed(value, {"schema_version", "workspace_id", *keys})
+        require(
+            value["schema_version"] == edition and value["workspace_id"] == identity["workspace_id"],
+            "SEMANTIC_SOURCE_EDITION_MISMATCH",
+        )
+        if pin is not None:
+            require(value["id"] == pin["entity_id"] and digest(raw) == pin["digest"], "SEMANTIC_SOURCE_PIN_MISMATCH")
+        return value
+
+    prd = body(sources["prd"], "curve.synthetic-prd-body/v2", {"initiative_id", "requirements", "acceptances"})
+    require(
+        prd["initiative_id"] == identity["initiative_id"]
+        and sources["prd"]["digest"] == identity["prd_content_digest"],
+        "PRD_BODY_IDENTITY_MISMATCH",
+    )
+    requirement_ids, acceptance_ids, traces = [], [], set()
+    require(
+        type(prd["requirements"]) is list
+        and type(prd["acceptances"]) is list
+        and len(prd["requirements"]) <= 1024
+        and len(prd["acceptances"]) <= 1024,
+        "SEMANTIC_SOURCE_INVALID",
+    )
+    for item in prd["requirements"]:
+        closed(item, ("id", "text", "acceptance_ids"))
+        require(type(item["text"]) is str and 1 <= len(item["text"]) <= 8000, "SEMANTIC_SOURCE_INVALID")
+        requirement_ids.append(item["id"])
+        traces.update(ordered(item["acceptance_ids"], r"AC-[A-Za-z0-9][A-Za-z0-9._-]{0,96}"))
+    for item in prd["acceptances"]:
+        closed(item, ("id", "text"))
+        require(type(item["text"]) is str and 1 <= len(item["text"]) <= 8000, "SEMANTIC_SOURCE_INVALID")
+        acceptance_ids.append(item["id"])
+    ordered(requirement_ids, r"FR-[A-Za-z0-9][A-Za-z0-9._-]{0,96}")
+    ordered(acceptance_ids, r"AC-[A-Za-z0-9][A-Za-z0-9._-]{0,96}")
+    require(traces == set(acceptance_ids), "PRD_ACCEPTANCE_TRACE_INVALID")
+    workflow = body(
+        sources["workflow"],
+        "curve.synthetic-workflow/v2",
+        {"id", "allowed_conditions", "dependency_artifact_refs"},
+        identity["workflow_ref"],
+    )
+    allowed = parse_strict_json((ROOT / "workflow-condition-subset-v2.json").read_bytes())["allowed_conditions"]
+    require(workflow["allowed_conditions"] == allowed, "WORKFLOW_CONDITION_EDITION_MISMATCH")
+    quality = body(
+        sources["quality"],
+        "curve.synthetic-quality-policy/v2",
+        {"id", "required_check_ids"},
+        identity["quality_policy_ref"],
+    )
+    checks = set(ordered(quality["required_check_ids"], r"[a-z][a-z0-9-]{0,79}"))
+    require(
+        type(sources["repositories"]) is list and len(sources["repositories"]) == len(identity["repository_inputs"]),
+        "REPOSITORY_INPUT_MISMATCH",
+    )
+    repositories = []
+    for input_ref, source in zip(identity["repository_inputs"], sources["repositories"]):
+        closed(source, ("repository", "policy"))
+        repository = body(
+            source["repository"],
+            "curve.synthetic-repository/v2",
+            {"id", "base_branch", "base_commit", "repository_policy_ref", "context_input_ref"},
+            input_ref["repository_ref"],
+        )
+        policy = body(
+            source["policy"],
+            "curve.synthetic-repository-policy/v2",
+            {"id", "repository_id", "allowed_base_branches", "required_check_ids"},
+            input_ref["repository_policy_ref"],
+        )
+        require(policy["repository_id"] == repository["id"], "REPOSITORY_INPUT_MISMATCH")
+        branches = ordered(policy["allowed_base_branches"], r"[^\x00-\x20\x7f]{1,255}", maximum=128)
+        require(repository["base_branch"] in branches, "REPOSITORY_BASE_NOT_ALLOWED")
+        checks.update(ordered(policy["required_check_ids"], r"[a-z][a-z0-9-]{0,79}"))
+        derived = dict(
+            repository_ref=deepcopy(input_ref["repository_ref"]),
+            **{
+                key: deepcopy(repository[key])
+                for key in ("base_branch", "base_commit", "repository_policy_ref", "context_input_ref")
+            },
+        )
+        require(derived == input_ref, "REPOSITORY_INPUT_MISMATCH")
+        repositories.append(derived)
+    # Every other fact is bound to immutable identity or rechecked native records.
+    result = deepcopy(native_facts)
+    for key in (
+        "workspace_id",
+        "initiative_id",
+        "approved_subject_ref",
+        "scope_revision_ref",
+        "manual_profile_ref",
+        "workflow_ref",
+        "quality_policy_ref",
+    ):
+        result[key] = deepcopy(identity[key])
+    result.update(
+        requirement_ids=requirement_ids,
+        acceptance_ids=acceptance_ids,
+        required_check_ids=sorted(checks),
+        repositories=repositories,
+        dependency_artifact_refs=deepcopy(workflow["dependency_artifact_refs"]),
+        owner_ids=deepcopy(identity["human_owner_ids"]),
+        code_approver_id=next(
+            item["approver_user_id"] for item in identity["gate_assignments"] if item["gate_type"] == "CODE_READINESS"
+        ),
+        protected_object_refs=[deepcopy(item["object_ref"]) for item in identity["protected_inputs"]],
+        workflow_conditions=dict(workflow_ref=deepcopy(identity["workflow_ref"]), allowed_conditions=allowed),
+    )
+    budget = parse_strict_json((ROOT / "manual-plan-profile-v2.json").read_bytes())["budget_policy_ref"]
+    result["budget_policy_ref"] = budget
+    # Dependency artifacts need explicit retained objects, not asserted future outcomes.
+    require(
+        type(result["dependency_artifact_refs"]) is list
+        and len(result["dependency_artifact_refs"]) <= 1024
+        and all(ref in result["protected_object_refs"] for ref in result["dependency_artifact_refs"]),
+        "DEPENDENCY_ARTIFACT_UNAVAILABLE",
+    )
+    require(result == native_facts, "SEMANTIC_FACTS_MISMATCH")
+    return result
