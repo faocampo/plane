@@ -179,6 +179,7 @@ def _meaningful(text):
 def _sections(content, expected, prefix):
     def key(text):
         return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+
     lookup = {key(label): identifier for identifier, label in expected.items()}
     found, duplicates = {}, set()
 
@@ -398,14 +399,39 @@ def evaluate_prd_readiness(
     return ReadinessReport(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode())
 
 
-def require_current_prd_readiness(report, expected):
-    _require(_closed(report, REPORT_FIELDS) and _closed(expected, SUBJECT_FIELDS), "PRD_READINESS_REQUIRED")
+def validate_prd_readiness_report(report):
+    _require(_closed(report, REPORT_FIELDS), "PRD_READINESS_REQUIRED")
+    profile = readiness_profile()
+    allowed_reasons = {
+        f"{prefix}_SECTION_{mode}:{identifier}"
+        for prefix, sections in (("PRD", profile["prd_sections"]), ("IDEA_BRIEF", profile["idea_brief_sections"]))
+        for mode in ("MISSING", "EMPTY", "DUPLICATE")
+        for identifier in sections
+    } | {
+        "PRD_REQUIREMENT_ID_REQUIRED",
+        "PRD_REQUIREMENT_DUPLICATE",
+        "PRD_REQUIREMENT_EMPTY",
+        "PRD_ACCEPTANCE_ID_REQUIRED",
+        "PRD_ACCEPTANCE_DUPLICATE",
+        "PRD_ACCEPTANCE_EMPTY",
+        "PRD_ACCEPTANCE_TRACE_REQUIRED",
+        "PRD_ACCEPTANCE_UNKNOWN_REQUIREMENT",
+        "PRD_REQUIREMENT_UNCOVERED",
+        "READINESS_INVENTORY_STALE",
+        "READINESS_INVENTORY_INVALID",
+        "BLOCKERS_UNRESOLVED",
+        "ASSUMPTION_PLAN_REQUIRED",
+    }
     _require(
         report["schema_version"] == "curve.prd-readiness/v1-candidate"
-        and report["status"] == "READY"
+        and type(report["status"]) is str
+        and report["status"] in {"READY", "BLOCKED"}
         and type(report["reasons"]) is list
-        and not report["reasons"]
-        and report["profile_digest"] == metadata_digest(readiness_profile())
+        and len(report["reasons"]) <= len(allowed_reasons)
+        and all(type(reason) is str and reason in allowed_reasons for reason in report["reasons"])
+        and len(set(report["reasons"])) == len(report["reasons"])
+        and bool(report["reasons"]) == (report["status"] == "BLOCKED")
+        and report["profile_digest"] == metadata_digest(profile)
         and _time(report["checked_at"]),
         "PRD_READINESS_REQUIRED",
     )
@@ -424,6 +450,12 @@ def require_current_prd_readiness(report, expected):
             ),
             "PRD_READINESS_REQUIRED",
         )
+    return True
+
+
+def require_current_prd_readiness(report, expected):
+    validate_prd_readiness_report(report)
+    _require(_closed(expected, SUBJECT_FIELDS) and report["status"] == "READY", "PRD_READINESS_REQUIRED")
     _require(
         all(
             type(report[field]) is type(expected[field]) and report[field] == expected[field]

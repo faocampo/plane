@@ -480,8 +480,37 @@ scope/digest substitution, stale inventory/reports, immutable output, byte limit
 and malformed input) use the backend normalizer and fabricated content. Four
 cross-language report comparisons matched the published reference for supported
 ready, missing-section, unresolved-blocker and stale-inventory cases. Semantic
-business review, inventory/report persistence and checkpoint-runtime wiring remain
+business review, inventory persistence and checkpoint-runtime wiring remain
 required before live submission activation.
+
+## Readiness report persistence
+
+The [readiness record](prd_readiness_models.py) (append-only assessment metadata)
+stores READY and BLOCKED reports under an existing workspace, Initiative,
+document binding and current human submission policy decision. The
+[repository](prd_readiness_repository.py) (active-receipt transactional append)
+provides a standalone audited append and a metadata-only helper for composition
+inside an owning command's single linked audit transaction.
+
+The [migration](migrations/0016_prd_readiness_record.py) (database scope, shape,
+profile and immutability guards) rejects extra payload fields, invalid reason
+codes, subject substitution, stale Initiative versions and incompatible policy
+decisions. Updates and deletion are refused; reversal requires an empty table
+or a separately governed preservation migration. Report bodies, provider
+responses, approval rationale and deployment retention values are excluded.
+
+Assessments can precede creation of the final native checkpoint. Idea Brief
+version and evidence snapshot IDs are historical metadata references in this
+record. Before consuming a report, the trusted runtime must resolve their
+same-workspace immutable owners, current complete inventory and exact protected
+body subjects. Existing checkpoint completeness references are preserved without
+fabricated backfills. Persistence grants no provider or storage permission.
+
+The [persistence tests](tests/test_prd_readiness_models.py) (READY/BLOCKED round
+trips, tenant and Initiative isolation, direct-SQL guards, atomic audit rollback,
+duplicate identity and retained migration preservation) run against PostgreSQL.
+This increment leaves live runtime activation and user-facing submission wiring
+for subsequent integration.
 
 ## Regression commands
 
@@ -505,6 +534,7 @@ pytest plane/curve/tests/test_prd_commands.py
 pytest plane/curve/tests/test_prd_accepted_commands.py
 pytest plane/curve/tests/test_prd_acceptance_api.py
 pytest plane/curve/tests/test_prd_completion.py
+pytest plane/curve/tests/test_prd_readiness.py plane/curve/tests/test_prd_readiness_models.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
