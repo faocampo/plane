@@ -349,13 +349,57 @@ the preparation context observes the committed Operation only after commit.
 Policy loss or infrastructure failure that prevents safe settlement raises a
 fixed unavailable error, retaining authoritative state for worker recovery.
 
-No completion runtime, provider credentials, protected storage, queue consumer,
-Temporal workflow or live activation is installed by this increment. The
+No completion runtime, provider credentials, protected storage or live activation
+is installed. Candidate worker transport is described below. The
 [completion tests](tests/test_prd_completion.py) (authenticated acceptance through
 submission/review settlement, full return-resubmit-approve chain, duplicate
 delivery, concurrent review, revocation, cancellation and rollback) use synthetic
 runtime observations and real PostgreSQL transactions. They prove the application
-service, while transport and live-provider end-to-end verification remain open.
+service; live-provider end-to-end verification remains open.
+
+## Candidate durable PRD delivery
+
+The [PRD relay](temporal/prd_relay.py) (bounded outbox delivery) binds each accepted
+Operation to its stable workspace/Operation workflow ID. The additive
+`CurvePrdOperationWorkflowV1` type runs on the existing worker queue; prior workflow
+types and histories retain their contracts. Ambiguous startup retries use the
+same ID and verify the existing execution's type before acknowledging delivery.
+Transport RPCs have a ten-second timeout; three failed dispatch attempts retain
+a safe dead-letter record for recovery. Existing workspace lease recovery applies.
+
+Delivery requires exact boolean `CURVE_PRD_DELIVERY_ENABLED`, command enablement,
+workspace enablement and a configured trusted completion runtime. Acceptance's
+worker-readiness proof must independently establish that this delivery path is
+available. Source registration alone establishes no live readiness or storage
+approval. Default deployment configuration remains unchanged.
+
+The [PRD activities](temporal/prd_activities.py) (scoped execution and settlement)
+check actual Temporal workflow identity and the authoritative Operation binding.
+Workflow history carries metadata-only input/results and fixed sanitized failures.
+Protected bodies and rationale remain inside the approved runtime's activity
+preparation. Completion has a two-minute activity attempt, five-minute total
+schedule bound, twenty-second heartbeat bound and at most three attempts. These
+are candidate execution bounds, independent of protected-record retention policy.
+
+The completion service checks an execution fence before preparation and at final
+commit. Cancellation or deadline expiry fences late thread results. Runtime
+provider calls must themselves be bounded and support interruption where available;
+a database cancellation does not guarantee an immediate provider-read abort.
+Exhausted activity failures use a separate settlement activity that cannot apply
+a PRD effect or retrieve protected bodies. Lost worker authority or unavailable
+persistence retains authoritative state for authorized recovery.
+
+Authenticated cancellation routes PRD Operations to this destination using the
+persisted accepted-command relationship. Pending PRD work can be cancelled before
+workflow startup; settlement also works after dispatch failure. A workflow signal
+provides no cancellation authority. Final completion rechecks database state,
+so an already-recorded cancellation prevents a subsequent PRD effect.
+
+The [delivery tests](tests/test_prd_temporal.py) (isolated Temporal execution,
+deterministic replay, duplicate dispatch, bounded failures, cancellation and late
+result fences) combine real PostgreSQL/Temporal with synthetic runtime observations.
+They establish backend delivery behavior; live provider/storage and UI activation
+remain separate work.
 
 ## Regression commands
 

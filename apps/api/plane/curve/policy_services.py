@@ -961,8 +961,15 @@ def request_operation_cancellation(
 
     def mutation_callback(receipt, observation):
         from plane.curve.services import _request_operation_cancellation_authorized
+        from plane.curve.models import PrdAcceptedCommand
+        from plane.curve.temporal.prd_contracts import PRD_DESTINATION
 
         actor = _human_actor(request.user)
+        resolved_destination = (
+            PRD_DESTINATION
+            if PrdAcceptedCommand.objects.filter(workspace_id=receipt.workspace_id, operation_id=operation_id).exists()
+            else destination
+        )
         try:
             return _request_operation_cancellation_authorized(
                 authorization_receipt=receipt,
@@ -977,7 +984,7 @@ def request_operation_cancellation(
                 effective_principal=dict(actor),
                 correlation_id=correlation_id,
                 causation_id=f"cancel:{operation_id}",
-                destination=destination,
+                destination=resolved_destination,
                 traceparent=observation.traceparent(),
             )
         except Exception:

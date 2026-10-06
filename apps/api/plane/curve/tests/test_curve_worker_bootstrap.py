@@ -14,6 +14,7 @@ def test_curve_worker_registers_operation_parent_and_child_workflows():
         "CurveOperationWorkflowV1",
         "CurveInitiativeOrchestrationWorkflowV1",
         "CurveSliceAttemptWorkflowV1",
+        "CurvePrdOperationWorkflowV1",
     )
 
 

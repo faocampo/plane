@@ -30,6 +30,7 @@ from plane.curve.models import (
     Operation,
     OperationStatus,
     OperationType,
+    PrdAcceptedCommand,
     OutboxEvent,
     OutboxState,
 )
@@ -886,7 +887,13 @@ def _request_operation_cancellation_authorized(
                 policy_decision_ref=policy_decision_ref,
             )
             version_conflict = True
-        elif operation.status not in {OperationStatus.QUEUED, OperationStatus.RUNNING} or not operation.workflow_id:
+        elif not (
+            operation.status in {OperationStatus.QUEUED, OperationStatus.RUNNING}
+            and operation.workflow_id
+            or operation.status in {OperationStatus.PENDING, OperationStatus.QUEUED, OperationStatus.RUNNING}
+            and operation.operation_type == OperationType.WORKFLOW_COMMAND
+            and PrdAcceptedCommand.objects.filter(workspace_id=workspace_id, operation_id=operation.id).exists()
+        ):
             _append_audit_event(
                 workspace_id=workspace_id,
                 action="CURVE.OPERATION.INVALID_CANCEL_STATE",
