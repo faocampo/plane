@@ -401,6 +401,44 @@ result fences) combine real PostgreSQL/Temporal with synthetic runtime observati
 They establish backend delivery behavior; live provider/storage and UI activation
 remain separate work.
 
+## Google Docs response normalization
+
+The [backend normalizer](providers/google_docs_normalization.py) (bounded raw
+response parsing and supported all-tab content capture) implements the structural
+behavior of the published [Google Docs normalization reference](https://github.com/faocampo/curve/blob/6049d229e13e0384d0d3e4c88229720da5f296c1/scripts/lib/google-docs-normalization.mjs)
+(nested tabs, supported elements, suggestions and image-byte substitution).
+It consumes the full original UTF-8 response, the expected document identity,
+explicit all-tab inline-suggestion read options and trusted image captures.
+Duplicate keys, malformed JSON, unsupported nodes and unresolved references
+produce fixed errors. Unknown metadata remains in the normalized content.
+
+The runtime must supply positive document-byte and combined-image-byte limits.
+Traversal is bounded by depth and node count; strings must be valid UTF-8,
+numbers finite, and integer tokens within the interoperable safe-integer range.
+The backend also rejects empty referenced image/list definitions. These stricter
+checks prevent an incomplete provider response from claiming supported capture.
+
+Authorized image bytes replace temporary content URLs with SHA-256 and byte
+length. Rotated URLs with identical bytes normalize identically. The image
+capture type carries a trusted-runtime observation; constructing it establishes
+no authorization. The consuming runtime must independently check current actor,
+workspace, connection, source/evidence access, safe image destinations, response
+limits and deadlines before invoking this function. It must request an unmasked
+response itself rather than accepting browser-supplied read options.
+
+Revision provenance is returned separately. Normalized content remains protected
+in memory; result/image representations omit payload fields. The module performs
+no network fetch, storage write, lifecycle transition or live activation. Body
+serialization/digest identity and current exact-subject readiness remain duties
+of the consuming checkpoint runtime. Comments and unsupported drawings/linked
+content require their own reviewed capture contracts.
+
+The [normalization tests](tests/test_google_docs_normalization.py) (synthetic
+provider-shaped content, suggestions, images, malformed JSON, limits and unresolved
+references) exercise this boundary without Google access. Three isolated
+cross-language comparisons also matched the published reference's normalized
+values for supported nested content, unknown metadata and images.
+
 ## Regression commands
 
 [Database tests](tests/test_prd_metadata_models.py) (empty/material evidence,
