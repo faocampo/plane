@@ -110,7 +110,11 @@ def test_reverse_refuses_retained_commit_records_without_altering_them():
     artifact, snapshot, version, checkpoint = prepared()
     persist_capture(artifact, snapshot, version, checkpoint)
     original = checkpoint.as_record()
-    with pytest.raises(DatabaseError, match="preservation migration"):
-        MigrationExecutor(connection).migrate([("curve", "0016_prd_readiness_record")])
+    latest = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    try:
+        with pytest.raises(DatabaseError, match="preservation migration"):
+            MigrationExecutor(connection).migrate([("curve", "0016_prd_readiness_record")])
+    finally:
+        MigrationExecutor(connection).migrate(latest)
     checkpoint.refresh_from_db()
     assert checkpoint.as_record() == original

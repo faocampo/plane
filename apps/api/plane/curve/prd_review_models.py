@@ -17,6 +17,9 @@ from .prd_review_rationale import RATIONALE_MEDIA_TYPE, review_decision_metadata
 
 
 class PrdReviewDecision(PrdImmutableModel):
+    metadata_schema_version = models.CharField(
+        max_length=32, default="1.0-candidate", db_default="1.0-candidate", editable=False
+    )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace_id = models.UUIDField(editable=False)
     initiative = models.ForeignKey("curve.Initiative", on_delete=models.PROTECT)
@@ -37,11 +40,24 @@ class PrdReviewDecision(PrdImmutableModel):
     rationale_digest = models.CharField(max_length=71, editable=False)
     rationale_size_bytes = models.PositiveIntegerField(editable=False)
     rationale_access_envelope_id = models.UUIDField(editable=False)
-    rationale_retention_policy_version_id = models.UUIDField(editable=False)
+    rationale_retention_policy_version_id = models.CharField(max_length=40, editable=False)
 
     class Meta:
         db_table = "curve_prd_review_decision"
         constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        metadata_schema_version="1.0-candidate",
+                        rationale_retention_policy_version_id__regex=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                    )
+                    | models.Q(
+                        metadata_schema_version="2.0-candidate",
+                        rationale_retention_policy_version_id__regex=r"^[0-9a-f]{40}$",
+                    )
+                ),
+                name="curve_prd_rationale_edition_ck",
+            ),
             models.UniqueConstraint(fields=["workspace_id", "initiative", "id"], name="curve_prd_decision_scope_uq"),
             models.UniqueConstraint(fields=["workspace_id", "checkpoint"], name="curve_prd_decision_cp_uq"),
             models.CheckConstraint(
@@ -70,7 +86,7 @@ class PrdReviewDecision(PrdImmutableModel):
 
     def as_metadata(self):
         return dict(
-            schema_version="1.0-candidate",
+            schema_version=self.metadata_schema_version,
             id=str(self.id),
             workspace_id=str(self.workspace_id),
             initiative_id=str(self.initiative_id),
@@ -128,10 +144,10 @@ class PrdReviewDecision(PrdImmutableModel):
             "evidence_snapshot_id",
             "access_evaluation_id",
             "rationale_access_envelope_id",
-            "rationale_retention_policy_version_id",
         ):
             values[name] = uuid.UUID(values[name])
         values.update(
+            metadata_schema_version=record["schema_version"],
             rationale_object_id=uuid.UUID(record["rationale_ref"]["object_id"]),
             rationale_digest=record["rationale_ref"]["digest"],
             rationale_size_bytes=record["rationale_ref"]["size_bytes"],
