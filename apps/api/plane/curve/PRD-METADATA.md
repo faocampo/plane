@@ -181,6 +181,34 @@ The [policy migration](migrations/0014_prd_policy_identity.py) (exact PRD policy
 identity constraint and retained-decision rollback protection) accepts only the
 pinned version and digest. Retained decisions require a preserving migration.
 
+## Command input and subject preconditions
+
+The [command boundary](prd_commands.py) (raw JSON validation, immutable input and
+current-subject checks) consumes the pinned Submit, Approve and ReturnForRevision
+schemas. It rejects duplicate JSON keys, unknown authority fields, invalid UTF-8,
+oversized input and malformed precondition/idempotency headers. The candidate
+external PRD API uses quoted numeric Initiative ETags as published; existing
+Initiative routes retain their separate ETag representation.
+
+The canonical request digest binds the action, expected version and every payload
+field, including original rationale bytes. Reordered JSON keys do not change the
+identity. Rationale whitespace and Unicode are preserved. The immutable command
+keeps rationale and the idempotency key out of its representation; the Operation
+request-identity envelope contains only action, expected version and digest.
+Callers must never log or serialize the transient command's protected fields.
+
+Current-subject checks require the allowed state, exact aggregate version and
+same-workspace binding for submission. Review additionally binds the current
+checkpoint, artifact version, content digest, provider version, evidence snapshot,
+risk tier and Product Approver assignment. Apply these checks after current
+authorization and repeat them under the final Initiative lock. Resolve all
+completeness/evidence IDs independently; supplied IDs do not establish readiness.
+
+This boundary is ready for handler integration. Durable acceptance still needs
+an immutable scoped command record and protected rationale reference so a worker
+can resume after restart. A digest-only Operation cannot reconstruct the command.
+No route or provider/storage activation is introduced by these helpers.
+
 ## Remaining runtime integration
 
 The [review validator](prd_review_validation.py) (pure exact-subject and gate
@@ -238,6 +266,7 @@ pytest plane/curve/tests/test_prd_review_validation.py
 pytest plane/curve/tests/test_prd_review_models.py plane/curve/tests/test_prd_review_rationale.py
 pytest plane/curve/tests/test_prd_lifecycle_repository.py
 pytest plane/curve/tests/test_prd_policy.py plane/curve/tests/test_prd_policy_context.py
+pytest plane/curve/tests/test_prd_commands.py
 pytest
 python manage.py makemigrations --check --dry-run
 ```
