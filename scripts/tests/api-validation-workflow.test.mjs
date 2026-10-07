@@ -10,6 +10,7 @@ const workflow = readFileSync(
   new URL("../../.github/workflows/pull-request-build-lint-api.yml", import.meta.url),
   "utf8"
 );
+const runner = readFileSync(new URL("../../apps/api/plane/curve/tests/run_ci_suite.py", import.meta.url), "utf8");
 
 test("Curve CI starts its complete service set before a dependency-bounded run", () => {
   const start = workflow.indexOf("up -d --wait test-db test-redis test-mq");
@@ -19,8 +20,11 @@ test("Curve CI starts its complete service set before a dependency-bounded run",
 });
 
 test("Curve CI preserves the full backend suite, app initialization and migration check", () => {
-  assert.match(workflow, /import plane,pytest/);
-  assert.ok(workflow.includes('pytest.main([\\"plane/curve/tests\\", \\"-q\\"])'));
+  assert.match(runner, /import plane/);
+  assert.match(runner, /pytest\.main/);
+  assert.match(workflow, /python plane\/curve\/tests\/run_ci_suite\.py/);
+  assert.match(workflow, /test-group: \[core, manual-planning, scope-regression\]/);
+  assert.match(workflow, /fail-fast: false/);
   assert.match(workflow, /python manage\.py makemigrations --check --dry-run/);
   assert.doesNotMatch(workflow, /--ignore|--deselect|continue-on-error/);
   assert.match(workflow, /PYTHONPATH=\/code:\/code\/plane\/curve:/);

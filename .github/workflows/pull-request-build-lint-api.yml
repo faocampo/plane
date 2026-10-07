@@ -48,9 +48,13 @@ jobs:
         run: ruff check apps/api
 
   test-curve:
-    name: Test Curve
+    name: Test Curve (${{ matrix.test-group }})
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        test-group: [core, manual-planning, scope-regression]
     if: |
       github.event_name == 'workflow_dispatch' ||
       (
@@ -78,7 +82,7 @@ jobs:
           docker compose -f docker-compose-test.yml up -d --wait test-db test-redis test-mq
           docker compose -f docker-compose-test.yml run --no-deps --rm --build \
             -e PYTHONPATH=/code:/code/plane/curve:/code/plane/curve/tests/manual_plan_v2:/code/plane/curve/tests/manual_plan_v2/host api-tests \
-            sh -c 'python -c "import plane,pytest; raise SystemExit(pytest.main([\"plane/curve/tests\", \"-q\"]))" && python manage.py makemigrations --check --dry-run'
+            sh -c 'python plane/curve/tests/run_ci_suite.py "${{ matrix.test-group }}" && python manage.py makemigrations --check --dry-run'
 
       - name: Clean disposable Plane test environment
         if: always()
