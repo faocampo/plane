@@ -38,7 +38,11 @@ function requireValue(value: unknown): asserts value {
 function closed(value: unknown, fields: string): Record<string, unknown> {
   requireValue(value && typeof value === "object" && !Array.isArray(value));
   const result = value as Record<string, unknown>;
-  requireValue(Object.keys(result).toSorted().join(",") === fields.split(",").toSorted().join(","));
+  const actualFields = Object.keys(result);
+  const expectedFields = fields.split(",");
+  actualFields.sort();
+  expectedFields.sort();
+  requireValue(actualFields.join(",") === expectedFields.join(","));
   return result;
 }
 function ref(value: unknown) {
@@ -123,11 +127,11 @@ export function decodeManualPlanStatus(
 }
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
-  if (value !== null && typeof value === "object")
-    return `{${Object.entries(value)
-      .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-      .map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`)
-      .join(",")}}`;
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value);
+    entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`;
+  }
   return JSON.stringify(value);
 }
 export async function decodeManualPlanRevision(
