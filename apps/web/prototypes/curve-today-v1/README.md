@@ -12,16 +12,16 @@ contract acceptance) remain pending.
 
 ## Proposed screen contract
 
-| Element | Production authority and behavior |
-| --- | --- |
-| Workspace and principal | Active session and selected workspace; clear all previous actor/workspace cache on switch or revocation. A displayed role label cannot authorize an action. |
-| Assigned queue | Only Initiatives the current principal can access and whose native current `allowed_actions` includes the relevant decision. Gate 2 technical review is the first bounded slice; do not extrapolate to all gates. |
-| Pending row | Exact Initiative, gate, manual state, source revision and current version. A direct route preserves the queue context; its destination revalidates actor, access, evidence and version. |
-| Count | Confirmed complete results only, covering every cursor page. Partial or failed sources have an unknown total. Never count another user's or workspace's pending decisions. |
-| Plan and evidence | Read through the existing protected reader. Summaries cannot substitute for reading the exact material. The prototype bodies and identifiers are explicitly fictional. |
-| Decision write | Remains in the Initiative's existing explicit confirmation flow with current version, allowed action, protected rationale, idempotency and native checks. No auto-approval, title inference or queue write shortcut. |
-| Refresh | Revalidate current principal and source facts. Retained stale data is labelled and cannot grant action. Retry must not replay a decision. |
-| Roadmap and personal work | This queue does not invent Roadmap Item bindings. My work and Inbox retain task and notification ownership. |
+| Element                   | Production authority and behavior                                                                                                                                                                                    |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workspace and principal   | Active session and selected workspace; clear all previous actor/workspace cache on switch or revocation. A displayed role label cannot authorize an action.                                                          |
+| Assigned queue            | Only Initiatives the current principal can access and whose native current `allowed_actions` includes the relevant decision. Gate 2 technical review is the first bounded slice; do not extrapolate to all gates.    |
+| Pending row               | Exact Initiative, gate, manual state, source revision and current version. A direct route preserves the queue context; its destination revalidates actor, access, evidence and version.                              |
+| Count                     | Confirmed complete results only, covering every cursor page. Partial or failed sources have an unknown total. Never count another user's or workspace's pending decisions.                                           |
+| Plan and evidence         | Read through the existing protected reader. Summaries cannot substitute for reading the exact material. The prototype bodies and identifiers are explicitly fictional.                                               |
+| Decision write            | Remains in the Initiative's existing explicit confirmation flow with current version, allowed action, protected rationale, idempotency and native checks. No auto-approval, title inference or queue write shortcut. |
+| Refresh                   | Revalidate current principal and source facts. Retained stale data is labelled and cannot grant action. Retry must not replay a decision.                                                                            |
+| Roadmap and personal work | This queue does not invent Roadmap Item bindings. My work and Inbox retain task and notification ownership.                                                                                                          |
 
 The backend queue transport and bounded aggregation strategy are **not yet
 selected or implemented**. Do not ship an unbounded per-Initiative fan-out, a

@@ -38,7 +38,7 @@ function requireValue(value: unknown): asserts value {
 function closed(value: unknown, fields: string): Record<string, unknown> {
   requireValue(value && typeof value === "object" && !Array.isArray(value));
   const result = value as Record<string, unknown>;
-  requireValue(Object.keys(result).sort().join(",") === fields.split(",").sort().join(","));
+  requireValue(Object.keys(result).toSorted().join(",") === fields.split(",").toSorted().join(","));
   return result;
 }
 function ref(value: unknown) {
@@ -125,7 +125,7 @@ function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
   if (value !== null && typeof value === "object")
     return `{${Object.entries(value)
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`)
       .join(",")}}`;
   return JSON.stringify(value);
@@ -203,6 +203,8 @@ export class ManualPlanDraftService implements ManualPlanApi {
     const chunks: Uint8Array[] = [];
     try {
       for (;;) {
+        // Each read consumes the same stream; the byte bound must precede the next read.
+        // eslint-disable-next-line no-await-in-loop
         const { done, value } = await reader.read();
         if (done) break;
         size += value.length;

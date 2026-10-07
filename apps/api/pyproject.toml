@@ -68,6 +68,9 @@ classmethod-decorators = ["classmethod", "validator", "root_validator"]
 "tests/*" = ["E402", "F401", "F811"]
 # Ignore imported but unused in __init__.py files
 "__init__.py" = ["F401"]
+# This byte-pinned registration facade imports model modules after shared models.
+# Keep deliberate late/re-export imports without changing its qualification hash.
+"plane/curve/models.py" = ["E402", "F401"]
 
 [tool.ruff.lint.mccabe]
 # Unlike Flake8, default to a complexity level of 10.
