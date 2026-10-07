@@ -101,7 +101,7 @@ console.log(JSON.stringify(out));"""
             text=True,
             capture_output=True,
             check=True,
-            cwd=bootstrap.REPOSITORY.parent / "curve",
+            cwd=bootstrap.CURVE_REFERENCE_ROOT,
             timeout=20,
         )
         return json.loads(result.stdout)
@@ -327,7 +327,7 @@ console.log(JSON.stringify(cases.map(value=>{
             text=True,
             capture_output=True,
             check=True,
-            cwd=bootstrap.REPOSITORY.parent / "curve",
+            cwd=bootstrap.CURVE_REFERENCE_ROOT,
             timeout=20,
         )
         expected = json.loads(result.stdout)

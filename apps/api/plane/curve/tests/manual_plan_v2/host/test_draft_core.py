@@ -298,7 +298,7 @@ class MigrationPreparationTests(unittest.TestCase):
             self.assertEqual(json.loads(literals[key].replace("''", "'")), expected)
 
     def test_snapshot_matches_canonical_curve_contract_bytes(self):
-        source = bootstrap.REPOSITORY.parent / "curve/contracts/candidates/manual-planning-v2"
+        source = bootstrap.CURVE_REFERENCE_ROOT / "contracts/candidates/manual-planning-v2"
         for path in ROOT.rglob("*.json"):
             self.assertEqual(path.read_bytes(), (source / path.relative_to(ROOT)).read_bytes(), path.name)
 

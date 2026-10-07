@@ -87,3 +87,44 @@ jobs:
       - name: Clean disposable Plane test environment
         if: always()
         run: docker compose -f docker-compose-test.yml down -v --remove-orphans
+
+  test-host-doubles:
+    name: Test Curve host doubles
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.pull_request.draft == false &&
+        github.event.pull_request.requested_reviewers != null
+      )
+    steps:
+      - uses: actions/checkout@v6
+      - name: Checkout pinned public contract reference
+        uses: actions/checkout@v6
+        with:
+          repository: faocampo/curve
+          ref: e2428ae627c0022fda7a91d8e950b921b6a668c2
+          path: .curve-contracts
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.x"
+          cache: 'pip'
+          cache-dependency-path: 'apps/api/requirements.txt'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22.18.0'
+      - name: Install pinned contract reference dependencies
+        working-directory: .curve-contracts
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.3.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Install API dependencies
+        run: pip install -r apps/api/requirements.txt
+      - name: Run isolated host-only doubles
+        env:
+          PYTHONPATH: apps/api/plane/curve:apps/api/plane/curve/tests/manual_plan_v2/host
+          CURVE_REFERENCE_ROOT: ${{ github.workspace }}/.curve-contracts
+        run: python apps/api/plane/curve/tests/run_ci_suite.py host-doubles

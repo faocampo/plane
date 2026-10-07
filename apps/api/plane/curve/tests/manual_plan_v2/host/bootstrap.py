@@ -1,10 +1,12 @@
 """Host-only test bootstrap. No database backend or full Plane app is configured."""
 
 from pathlib import Path
+import os
 import sys
 
 RUNTIME_ROOT = Path(__file__).resolve().parents[3]
 REPOSITORY = RUNTIME_ROOT.parents[3]
+CURVE_REFERENCE_ROOT = Path(os.environ.get("CURVE_REFERENCE_ROOT", REPOSITORY.parent / "curve")).resolve()
 
 
 def install():

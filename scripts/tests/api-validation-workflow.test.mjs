@@ -25,6 +25,7 @@ test("Curve CI preserves the full backend suite, app initialization and migratio
   assert.match(workflow, /python plane\/curve\/tests\/run_ci_suite\.py/);
   assert.match(workflow, /test-group: \[core, manual-planning, scope-regression\]/);
   assert.match(workflow, /fail-fast: false/);
+  assert.match(workflow, /run_ci_suite\.py host-doubles/);
   assert.match(workflow, /python manage\.py makemigrations --check --dry-run/);
   assert.doesNotMatch(workflow, /--ignore|--deselect|continue-on-error/);
   assert.match(workflow, /PYTHONPATH=\/code:\/code\/plane\/curve:/);

@@ -23,11 +23,17 @@ def test_native_group_boundaries_and_coverage_guard_are_preserved():
     assert {path.relative_to(ROOT).parts[0] for path in groups["manual-planning"]} == MANUAL_DIRECTORIES
     assert {path.name for path in groups["scope-regression"]} == SCOPE_FILES
     assert ROOT / "test_ci_suite_partition.py" in groups["core"]
+    assert {path.parent for path in groups["host-doubles"]} == {
+        ROOT / "manual_plan_v2" / "host",
+        ROOT / "scope_editor_v2" / "host",
+    }
 
 
 def test_new_test_files_default_to_core(tmp_path):
     (tmp_path / "manual_plan_v2").mkdir()
     (tmp_path / "manual_plan_v2" / "test_manual.py").touch()
+    (tmp_path / "manual_plan_v2" / "host").mkdir()
+    (tmp_path / "manual_plan_v2" / "host" / "test_double.py").touch()
     (tmp_path / "test_scope_proposal_api.py").touch()
     new_test = tmp_path / "test_future_feature.py"
     new_test.touch()
