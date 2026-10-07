@@ -524,8 +524,115 @@ def cleanup_owned(name, token):
         run(["docker", "rm", "-f", name])
 
 
+def read_profile(args):
+    values = [
+        getattr(args, key, None)
+        for key in ("operator_settings", "access_file", "target_file")
+    ]
+    require(
+        not any(values) or all(values),
+        "Restored API verification requires all three private profile inputs",
+    )
+    if not all(values):
+        return None
+    result = []
+    for value in values:
+        path = Path(value).absolute()
+        require(
+            path.is_file() and not path.is_symlink(), "Invalid private profile input"
+        )
+        result.append(path)
+    require(result[1].stat().st_mode & 0o077 == 0, "Credential file must be owner-only")
+    return result
+
+
+def check_restored_api(args, source, manifest, name, profile):
+    api_name = name + "-api-read"
+    argv = [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "--pull=never",
+        "--name",
+        api_name,
+        "--label",
+        f"io.curve.synthetic-recovery={name}",
+        "--network",
+        f"container:{name}",
+        "--read-only",
+        "--memory",
+        "1g",
+        "--cpus",
+        "1",
+        "--workdir",
+        "/code",
+        "--mount",
+        f"type=bind,src={source / 'apps/api'},dst=/code,readonly",
+        "--mount",
+        f"type=bind,src={Path(__file__).with_name('http_probe.py').resolve()},dst=/probe.py,readonly",
+        "--tmpfs",
+        "/tmp:rw",
+        "--tmpfs",
+        "/demo-data:rw",
+        "--tmpfs",
+        "/code/plane/logs:rw",
+        "--tmpfs",
+        "/code/plane/static-assets/collected-static:rw",
+        "-e",
+        "DATABASE_URL=postgresql://curve_recovery@127.0.0.1:5432/curve_recovery",
+        "-e",
+        "REDIS_URL=redis://127.0.0.1:1/0",
+        "-e",
+        "DJANGO_SETTINGS_MODULE=recovery_probe_settings",
+        "-e",
+        "PYTHONPATH=/inputs:/tmp:/code",
+        "-e",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "-e",
+        "SECRET_KEY=synthetic-local-recovery-only",
+    ]
+    for path, filename in zip(
+        profile, ("recovery_operator_settings.py", "access.json", "target.json")
+    ):
+        argv.extend(
+            ["--mount", f"type=bind,src={path},dst=/inputs/{filename},readonly"]
+        )
+    argv.extend(
+        [
+            "--entrypoint",
+            "python",
+            manifest["api_image_id"],
+            "/probe.py",
+            manifest["catalog_sha256"],
+        ]
+    )
+    try:
+        with (Path(args.backup) / "protected.tar").open("rb") as stream:
+            process = subprocess.run(
+                argv,
+                stdin=stream,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=120,
+            )
+        require(
+            process.returncode == 0,
+            "Restored API read failed; no runtime acceptance recorded",
+        )
+        result = json.loads(process.stdout)
+        require(
+            result.get("result") == "RESTORED_HTTP_READ_PASSED",
+            "Restored API result missing",
+        )
+        return result
+    finally:
+        cleanup_owned(api_name, name)
+
+
 def exercise(args):
     manifest, members = verify(args.backup)
+    profile = read_profile(args)
     source = verify_source(args.source, manifest["source_commit"])
     require(
         manifest["postgres_version_num"] == "150007",
@@ -692,7 +799,7 @@ def exercise(args):
                 ),
                 "Protected restore did not preserve bytes",
             )
-            return {
+            result = {
                 "result": "RESTORE_EXERCISE_PASSED",
                 "source_commit": manifest["source_commit"],
                 "tables_verified": len(manifest["tables"]),
@@ -700,8 +807,14 @@ def exercise(args):
                 "schema_verified": True,
                 "native_catalog_seal_verified": True,
                 "restore_seconds": round(time.monotonic() - started, 3),
-                "scope": "Schema DDL, full public-schema row fingerprints and protected bytes; no runtime activation or RPO/RTO certification",
+                "scope": "Schema DDL, full public-schema row fingerprints and protected bytes; no production activation or RPO/RTO certification",
             }
+            if profile:
+                result["restored_api"] = check_restored_api(
+                    args, source, manifest, name, profile
+                )
+                result["exercise_seconds"] = round(time.monotonic() - started, 3)
+            return result
         finally:
             # Labels bind cleanup to this run, including a failed container start.
             cleanup_owned(migration_name, name)
@@ -729,6 +842,8 @@ def main():
     restore_parser = commands.add_parser("exercise")
     restore_parser.add_argument("backup")
     restore_parser.add_argument("--source", required=True)
+    for flag in ("operator-settings", "access-file", "target-file"):
+        restore_parser.add_argument("--" + flag)
     args = parser.parse_args()
     if args.command == "capture":
         result = capture(args)

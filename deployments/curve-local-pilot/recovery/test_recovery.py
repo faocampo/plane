@@ -142,6 +142,24 @@ class RecoveryValidationTests(unittest.TestCase):
             recovery.cleanup_owned("synthetic-target", "this-run")
             remove.assert_not_called()
 
+    def test_http_probe_rejects_partial_operator_profile(self):
+        with self.assertRaisesRegex(recovery.RecoveryError, "all three"):
+            recovery.read_profile(SimpleNamespace(operator_settings="profile.py"))
+
+    def test_http_probe_rejects_group_readable_credentials(self):
+        settings = self.root / "operator.py"
+        access = self.root / "access.json"
+        target = self.root / "target.json"
+        for path in (settings, access, target):
+            path.write_text("synthetic input")
+        access.chmod(0o640)
+        with self.assertRaisesRegex(recovery.RecoveryError, "owner-only"):
+            recovery.read_profile(
+                SimpleNamespace(
+                    operator_settings=settings, access_file=access, target_file=target
+                )
+            )
+
     def test_isolated_restore_failure_removes_only_created_target(self):
         names = []
 

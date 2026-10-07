@@ -86,11 +86,38 @@ Random psql restrict tokens are excluded from schema comparison; owners and gran
 are intentionally omitted by the capture profile. Object files are restored into
 a private temporary directory with owner-only permissions and removed afterward.
 
-The restore does not start an API against the copy. Runtime activation requires
-the exact source revision, operator configuration, identities and source-access
-checks to be re-established separately. Original permissions are not inferred
-from a backup. Redis queues, Temporal, providers, object stores beyond this fixed
-catalog, operator configuration and plaintext login credentials are not captured.
+The default exercise does not start an API against the copy. An optional HTTP
+read check re-establishes the exact source revision, current operator profile,
+existing synthetic account and source access inside the isolated namespace:
+
+```sh
+python3 deployments/curve-local-pilot/recovery/recovery.py exercise PRIVATE_BACKUP_DIRECTORY \
+  --source ORIGINAL_SOURCE_CHECKOUT \
+  --operator-settings PRIVATE_SETTINGS_FILE \
+  --access-file PRIVATE_SYNTHETIC_ACCESS_FILE \
+  --target-file PRIVATE_SYNTHETIC_TARGET_FILE
+```
+
+All three private inputs are required together. The credential file must be
+owner-only and contain the existing `approver` (synthetic email) and `password`
+(local login secret) keys. The target contains `workspace` (slug), `initiative_id`
+(UUID) and `state` (expected manual state). The settings are trusted operator
+Python configuration; do not supply untrusted files. Inputs are mounted read-only
+and never copied into the repository or returned in results.
+
+[HTTP probe](http_probe.py) (isolated login and protected read verification) starts
+the original WSGI application on an ephemeral loopback port in the copy's network
+namespace. No port is published to the host. It restores the catalog under native
+owner-only permissions, logs in through the normal session endpoint and verifies
+the authenticated principal, manual state, version ETag and exact definition digest.
+It sends no Gate2 command. It is an HTTP acceptance check, not browser acceptance;
+the original demo's real browser journey has separate evidence.
+
+The temporary API and database are removed afterward. This supplies no rollout
+or production activation approval. Original permissions are not inferred from a
+backup: the unchanged API checks the restored actor and current native authority.
+Redis queues, Temporal, providers, object stores beyond this fixed catalog,
+operator configuration and plaintext login credentials are not captured.
 
 ## Validation
 
@@ -98,10 +125,11 @@ catalog, operator configuration and plaintext login credentials are not captured
 python3 -m unittest discover -s deployments/curve-local-pilot/recovery -p 'test_*.py' -v
 ```
 
-The nine focused tests cover valid material, database corruption before any
+The eleven focused tests cover valid material, database corruption before any
 restore process, object digest mismatch, missing objects, unsafe paths and links,
 duplicate members, manifest path boundaries, cleanup after a failed startup and
-refusal to remove a container carrying another run's ownership label.
+refusal to remove a container carrying another run's ownership label, incomplete
+operator inputs and overly broad credential-file permissions.
 The real restore exercise is separate evidence; unit tests do not substitute for it.
 
 An observed synthetic run is a bounded qualification result, not a production
