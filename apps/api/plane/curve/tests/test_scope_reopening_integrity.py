@@ -288,9 +288,11 @@ def test_application_independently_rejects_compromised_database_coverage_proof(r
                 "SELECT 'sha256:' || encode(sha256(convert_to(curve_scope_reopening_catalog()::text, 'UTF8')), 'hex')"
             )
             forged_digest = cursor.fetchone()[0]
-            cursor.execute("ALTER TABLE curve_scope_reopening_coverage DISABLE TRIGGER curve_reopen_coverage_immutable")
-            cursor.execute("UPDATE curve_scope_reopening_coverage SET catalog_digest=%s", [forged_digest])
-            cursor.execute("ALTER TABLE curve_scope_reopening_coverage ENABLE TRIGGER curve_reopen_coverage_immutable")
+            # Forge the installed successor's active seal. Historical predecessor
+            # seals are separately pinned by the current database verifier.
+            cursor.execute("ALTER TABLE curve_manual_gate2_v2_coverage DISABLE TRIGGER curve_mg2_coverage_immutable")
+            cursor.execute("UPDATE curve_manual_gate2_v2_coverage SET catalog_digest=%s", [forged_digest])
+            cursor.execute("ALTER TABLE curve_manual_gate2_v2_coverage ENABLE TRIGGER curve_mg2_coverage_immutable")
         cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
         require_reopening_qualification()
     with transaction.atomic():
@@ -374,7 +376,13 @@ def test_reverse_migration_refuses_retained_reopening_and_preserves_exact_histor
     before_revisions = list(ScopeProposalRevision.objects.order_by("pk").values())
     before_history = history()
     latest = ("curve", "0023_scope_reopening")
+    executor = MigrationExecutor(connection)
+    installed_leaves = executor.loader.graph.leaf_nodes("curve")
+    before_migrations = set(MigrationRecorder(connection).applied_migrations())
     try:
+        # Exercise the historical reopening step without its empty successors.
+        # Current-source qualification resumes only after all leaves are restored.
+        executor.migrate([latest])
         with pytest.raises(DatabaseError, match="preservation migration"):
             MigrationExecutor(connection).migrate([("curve", "0022_scoped_prd")])
         assert latest in MigrationRecorder(connection).applied_migrations()
@@ -383,8 +391,9 @@ def test_reverse_migration_refuses_retained_reopening_and_preserves_exact_histor
         assert ScopeProposal.objects.filter(initiative_id=reopening.initiative.id).values().get() == before_head
         assert list(ScopeProposalRevision.objects.order_by("pk").values()) == before_revisions
         assert history() == before_history
-        with transaction.atomic():
-            require_reopening_qualification()
     finally:
-        if latest not in MigrationRecorder(connection).applied_migrations():
-            MigrationExecutor(connection).migrate([latest])
+        MigrationExecutor(connection).migrate(installed_leaves)
+    assert set(MigrationRecorder(connection).applied_migrations()) == before_migrations
+    assert history() == before_history
+    with transaction.atomic():
+        require_reopening_qualification()
