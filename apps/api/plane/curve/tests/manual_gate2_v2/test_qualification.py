@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Reviewed Gate2 delta stays exact; no setting can grant a different writer."""
 
 from copy import deepcopy

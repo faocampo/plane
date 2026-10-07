@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Verify the single installed local implementation through its original read-only bind.
 
 Only this project's disposable test database is used. No host service is activated.

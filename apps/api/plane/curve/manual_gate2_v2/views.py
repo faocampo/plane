@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Session and CSRF endpoints, independently gated by the default-off local switch."""
 
 from django.core.exceptions import RequestDataTooBig

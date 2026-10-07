@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Real qualified metadata reads, session authentication and native row fences."""
 
 # ruff: noqa: F401,F811 -- imported pytest fixtures are intentional.

@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Current manual-draft authority, exact scoped PRD binding and private receipts."""
 
 import uuid

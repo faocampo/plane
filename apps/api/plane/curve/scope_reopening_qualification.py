@@ -32,6 +32,13 @@ SCOPE_EDITOR_SUCCESSOR_DIGEST = "sha256:c2e37caa561e943bf4f2883c62d8ed889c74a558
 SCOPE_EDITOR_SUCCESSOR_PATH = Path(__file__).parent / "scope_editor_read_reconstruction_qualification_v2.json"
 GATE2_SUCCESSOR_DIGEST = "sha256:34661219609b64ae715466aa7a20f756eb85a17365f30a3ab0d25a926f28c8ec"
 GATE2_SUCCESSOR_PATH = Path(__file__).parent / "manual_gate2_reconstruction_qualification_v2.json"
+HEADER_SUCCESSOR_DIGEST = "sha256:a4086b8d08f918b187b623e56b9d810f2d0834ce723fe120297710db02d6352d"
+HEADER_SUCCESSOR_PATH = Path(__file__).parent / "source_header_qualification_v1.json"
+SOURCE_HEADER = (
+    b"# Copyright (c) 2023-present Plane Software, Inc. and contributors\n"
+    b"# SPDX-License-Identifier: AGPL-3.0-only\n"
+    b"# See the LICENSE file for details.\n"
+)
 _GATE2_ADDED_MODULES = frozenset(
     [
         "manual_gate2_v2/__init__.py",
@@ -329,7 +336,48 @@ def _current_qualification(predecessor):
         from .manual_gate2_v2.contracts import validate_manifest
 
         validate_manifest()
+        qualified = validate_source_header_successor(
+            qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
+        )
     return qualified
+
+
+def validate_source_header_successor(predecessor, successor):
+    """Permit exactly one fixed comment prefix on the twenty reconstructed modules.
+
+    The historical qualification remains byte-immutable. Model, migration,
+    physical-catalog and writer authority are inherited without modification.
+    The complete old source bytes must still match after removing the prefix.
+    """
+    historical = _read_pinned_successor(GATE2_SUCCESSOR_PATH, GATE2_SUCCESSOR_DIGEST)["qualification"]
+    modules = _MANUAL_ADDED_MODULES | _GATE2_ADDED_MODULES
+    if (
+        predecessor != historical
+        or type(successor) is not dict
+        or set(successor) != {"schema_version", "predecessor_digest", "header_digest", "replacements"}
+        or successor["schema_version"] != "curve.source-header-qualification/v1"
+        or successor["predecessor_digest"] != GATE2_SUCCESSOR_DIGEST
+        or successor["header_digest"] != "sha256:" + hashlib.sha256(SOURCE_HEADER).hexdigest()
+        or type(successor["replacements"]) is not dict
+        or set(successor["replacements"]) != modules
+    ):
+        raise ValueError("Exact header-only successor required")
+    sources = dict(predecessor["runtime_sources"])
+    for name in sorted(modules):
+        record = successor["replacements"][name]
+        path = Path(__file__).parent / name
+        if type(record) is not dict or set(record) != {"before", "after"} or path.is_symlink():
+            raise ValueError("Exact regular source required")
+        raw = path.read_bytes()
+        if (
+            record["before"] != sources[name]
+            or not raw.startswith(SOURCE_HEADER)
+            or "sha256:" + hashlib.sha256(raw[len(SOURCE_HEADER) :]).hexdigest() != record["before"]
+            or "sha256:" + hashlib.sha256(raw).hexdigest() != record["after"]
+        ):
+            raise ValueError("Source delta exceeds the fixed copyright header")
+        sources[name] = record["after"]
+    return dict(predecessor, runtime_sources=sources)
 
 
 def require_manual_plan_v2_qualification():

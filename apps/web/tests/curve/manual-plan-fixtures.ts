@@ -1,3 +1,6 @@
+// Copyright (c) 2023-present Plane Software, Inc. and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+// See the LICENSE file for details.
 import f0 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/revision.valid.json";
 import f1 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/save.valid.json";
 import f2 from "../../../../apps/api/plane/curve/manual_plan_v2/contract_snapshot/fixtures/status-current.valid.json";

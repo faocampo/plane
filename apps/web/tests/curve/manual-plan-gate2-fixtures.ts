@@ -1,3 +1,6 @@
+// Copyright (c) 2023-present Plane Software, Inc. and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+// See the LICENSE file for details.
 /* eslint-disable unicorn/no-array-sort -- These are fresh arrays; keep ES2022 browser compatibility. */
 import { createHash } from "node:crypto";
 import { target, revision } from "./manual-plan-fixtures";

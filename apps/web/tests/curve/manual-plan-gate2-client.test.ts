@@ -1,3 +1,6 @@
+// Copyright (c) 2023-present Plane Software, Inc. and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+// See the LICENSE file for details.
 import { describe, it, expect, vi } from "vitest";
 import { ManualGate2Service } from "../../../../packages/services/src/curve/manual-gate2.service";
 import { command, completed, definitionRef, material, response, status, target } from "./manual-plan-gate2-fixtures";

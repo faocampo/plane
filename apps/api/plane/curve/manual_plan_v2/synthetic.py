@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Fixed local-only input resolver. Configuration and object names are not API input.
 
 The runtime accepts this exact class only. The catalog is a bounded, owner-only

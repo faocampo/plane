@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Complete migration reversal and retained-evidence refusal on real PostgreSQL."""
 
 # ruff: noqa: F401,F811 -- imported pytest fixtures are collected here.

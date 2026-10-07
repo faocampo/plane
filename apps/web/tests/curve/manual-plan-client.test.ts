@@ -1,3 +1,6 @@
+// Copyright (c) 2023-present Plane Software, Inc. and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+// See the LICENSE file for details.
 import { describe, it, expect, vi } from "vitest";
 import {
   decodeManualPlanRevision,
@@ -33,14 +36,14 @@ describe("closed manual draft transport", () => {
     expect(() => decodeManualPlanStatus({ ...status, draft_status: "ABSENT" }, target, 10)).toThrow();
   });
   it("uses current typed ETag and never normalizes weak or foreign validators", async () => {
-    for (const etag of [
-      "W/" + result(null).etag,
-      '"10"',
-      '"curve-initiative:30000000-0000-4000-8000-000000000999:v10"',
-    ]) {
-      const send = vi.fn().mockResolvedValue(response(status, 200, { ETag: etag }));
-      await expect(new ManualPlanDraftService(send).status(target)).rejects.toThrow();
-    }
+    await Promise.all(
+      ["W/" + result(null).etag, '"10"', '"curve-initiative:30000000-0000-4000-8000-000000000999:v10"'].map(
+        async (etag) => {
+          const send = vi.fn().mockResolvedValue(response(status, 200, { ETag: etag }));
+          await expect(new ManualPlanDraftService(send).status(target)).rejects.toThrow();
+        }
+      )
+    );
   });
   it("sends exact save with fresh CSRF, session cookie policy and typed precondition", async () => {
     const send = vi

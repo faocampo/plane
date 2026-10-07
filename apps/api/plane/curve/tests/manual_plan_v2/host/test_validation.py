@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Cross-language, boundary and adversarial checks against frozen v2 inputs."""
 
 # ruff: noqa: E402 -- host-only bootstrap precedes runtime module imports.

@@ -1,3 +1,6 @@
+// Copyright (c) 2023-present Plane Software, Inc. and contributors
+// SPDX-License-Identifier: AGPL-3.0-only
+// See the LICENSE file for details.
 import type { ManualPlanSave, ManualPlanTarget } from "./manual-plan-draft.types";
 export type ManualGate2Action = "PREPARE" | "APPROVE" | "REQUEST_CHANGES" | "RECONCILE" | "RELEASE";
 export type ManualGate2Reference = { entity_id: string; digest: string };

@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Session/CSRF-only manual draft HTTP candidates; no registered live routes."""
 
 from urllib.parse import quote

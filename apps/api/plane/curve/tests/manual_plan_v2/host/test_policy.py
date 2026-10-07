@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Host checks of immutable binding and policy gates; ORM results are test doubles."""
 
 # ruff: noqa: E402 -- Django settings must be configured before candidate imports.

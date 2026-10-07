@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Closed manual Gate 2 wire identities and immutable metadata projections."""
 
 from dataclasses import dataclass

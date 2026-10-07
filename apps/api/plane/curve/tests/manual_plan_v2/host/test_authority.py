@@ -1,3 +1,6 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Current observations and local counters; native ORM locking remains a DB gate."""
 
 # ruff: noqa: E402

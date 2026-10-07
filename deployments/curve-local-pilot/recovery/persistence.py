@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
 """Qualify persistent storage in a disposable synthetic installation only.
 
 No host ports, external network, source mutation, live migration or data retention
