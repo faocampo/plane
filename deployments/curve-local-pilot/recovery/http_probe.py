@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
 import sys
 import tarfile
 import threading
@@ -52,15 +53,11 @@ def restore_objects(stream, expected_catalog):
                 item.isfile()
                 and (
                     item.name == "catalog.json"
-                    or re.fullmatch(
-                        r"[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}", item.name
-                    )
+                    or re.fullmatch(r"[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}", item.name)
                 ),
                 "Unsafe protected member",
             )
-            require(
-                item.name not in seen and len(seen) <= 512, "Repeated protected member"
-            )
+            require(item.name not in seen and len(seen) <= 512, "Repeated protected member")
             total += item.size
             require(
                 0 <= item.size <= 33554432 and total <= 128 * 1024 * 1024,
@@ -72,10 +69,80 @@ def restore_objects(stream, expected_catalog):
                 out.write(archive.extractfile(item).read())
     require("catalog.json" in seen, "Missing catalog")
     require(
-        "sha256:" + hashlib.sha256((root / "catalog.json").read_bytes()).hexdigest()
-        == expected_catalog,
+        "sha256:" + hashlib.sha256((root / "catalog.json").read_bytes()).hexdigest() == expected_catalog,
         "Catalog changed after backup verification",
     )
+
+
+def verify_existing_objects(expected_catalog, root=Path("/demo-data/protected")):
+    """Validate the complete owner-only store without replacing persistent bytes."""
+    fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        info = os.fstat(fd)
+        require(info.st_uid == os.getuid() and info.st_mode & 0o077 == 0, "Unsafe protected root")
+
+        def read(name, limit):
+            child = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+            try:
+                before = os.fstat(child)
+                require(
+                    stat.S_ISREG(before.st_mode)
+                    and before.st_uid == os.getuid()
+                    and before.st_mode & 0o077 == 0
+                    and before.st_nlink == 1
+                    and before.st_size <= limit,
+                    "Unsafe protected object",
+                )
+                with os.fdopen(os.dup(child), "rb") as stream:
+                    raw = stream.read(limit + 1)
+                after = os.fstat(child)
+
+                def stamp(item):
+                    return (
+                        item.st_dev,
+                        item.st_ino,
+                        item.st_mode,
+                        item.st_uid,
+                        item.st_gid,
+                        item.st_nlink,
+                        item.st_size,
+                        item.st_mtime_ns,
+                        item.st_ctime_ns,
+                    )
+
+                require(
+                    len(raw) == before.st_size and stamp(before) == stamp(after), "Protected object changed during read"
+                )
+                return raw
+            finally:
+                os.close(child)
+
+        raw = read("catalog.json", 1048576)
+        require("sha256:" + hashlib.sha256(raw).hexdigest() == expected_catalog, "Persistent catalog mismatch")
+        catalog = json.loads(raw)
+        require(
+            catalog.get("schema_version") == "curve.synthetic-manual-plan-catalog/v2-candidate"
+            and isinstance(catalog.get("objects"), dict)
+            and len(catalog["objects"]) <= 512,
+            "Invalid persistent catalog",
+        )
+        require(set(os.listdir(fd)) == {"catalog.json", *catalog["objects"]}, "Persistent inventory mismatch")
+        total = len(raw)
+        for name, item in catalog["objects"].items():
+            require(re.fullmatch(r"[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}", name), "Unsafe persistent object name")
+            body = read(name, 33554432)
+            total += len(body)
+            ref = item["object_ref"]
+            require(
+                total <= 128 * 1024 * 1024
+                and ref["object_id"] == name
+                and ref["size_bytes"] == len(body)
+                and ref["digest"] == "sha256:" + hashlib.sha256(body).hexdigest(),
+                "Persistent body mismatch",
+            )
+        return len(catalog["objects"])
+    finally:
+        os.close(fd)
 
 
 def pilot_controls(request, access, plan, path, reference):
@@ -96,11 +163,7 @@ def pilot_controls(request, access, plan, path, reference):
     from plane.curve.manual_gate2_v2.contracts import parse_command
 
     def graph():
-        values = {
-            "initiative": list(
-                Initiative.objects.filter(id=plan["initiative_id"]).values()
-            )
-        }
+        values = {"initiative": list(Initiative.objects.filter(id=plan["initiative_id"]).values())}
         for model in (
             ManualGate2ControlV2,
             ManualGate2RecordV2,
@@ -110,13 +173,9 @@ def pilot_controls(request, access, plan, path, reference):
             ManualPlanRevisionV2,
         ):
             values[model.__name__] = list(
-                model.objects.filter(initiative_id=plan["initiative_id"])
-                .order_by("id")
-                .values()
+                model.objects.filter(initiative_id=plan["initiative_id"]).order_by("id").values()
             )
-        return hashlib.sha256(
-            json.dumps(values, sort_keys=True, default=str).encode()
-        ).hexdigest()
+        return hashlib.sha256(json.dumps(values, sort_keys=True, default=str).encode()).hexdigest()
 
     before = graph()
     cases = []
@@ -161,9 +220,7 @@ def pilot_controls(request, access, plan, path, reference):
     )
     denied(path + "status/", invalid)
     cases.append("invalid_password_did_not_create_authenticated_session")
-    rationale = next(
-        x["reference"] for x in plan["rationales"] if x["intent"] == "APPROVE"
-    )
+    rationale = next(x["reference"] for x in plan["rationales"] if x["intent"] == "APPROVE")
     payload = {
         "schema_version": "curve.manual-gate2.command/v2-candidate",
         "action": "APPROVE",
@@ -264,9 +321,7 @@ def pilot_controls(request, access, plan, path, reference):
     finally:
         WorkspaceMember.objects.filter(id=membership.id).update(is_active=was_active)
     cases.append("membership_revocation_fences_existing_session")
-    require(
-        graph() == before, "Denied operations changed the controlling business graph"
-    )
+    require(graph() == before, "Denied operations changed the controlling business graph")
     cases.append("initiative_draft_control_history_and_claims_preserved")
     return {
         "result": "PILOT_CONTROL_CHECKS_PASSED",
@@ -274,7 +329,9 @@ def pilot_controls(request, access, plan, path, reference):
         "gate2_commands_sent": 2,
         "gate2_commands_allowed": 0,
         "operational_acceptance": False,
-        "scope": "Synthetic copy only; role checks, revocation and injected local faults do not approve an operational pilot",
+        "scope": (
+            "Synthetic copy only; role checks, revocation and injected local faults do not approve an operational pilot"
+        ),
     }
 
 
@@ -282,14 +339,15 @@ def probe():
     output = sys.stdout
     sys.stdout = sys.stderr  # Application diagnostics must not mix with the result.
     os.umask(0o077)
-    restore_objects(sys.stdin.buffer, sys.argv[1])
+    if "--existing-objects" in sys.argv[2:]:
+        verify_existing_objects(sys.argv[1])
+    else:
+        restore_objects(sys.stdin.buffer, sys.argv[1])
     target = json.loads(Path("/inputs/target.json").read_text())
     access = json.loads(Path("/inputs/access.json").read_text())
     workspace = target["workspace"]
     initiative = str(uuid.UUID(target["initiative_id"]))
-    require(
-        re.fullmatch(r"[A-Za-z0-9_-]{1,255}", workspace), "Invalid target workspace"
-    )
+    require(re.fullmatch(r"[A-Za-z0-9_-]{1,255}", workspace), "Invalid target workspace")
     server = make_server("127.0.0.1", 0, None, handler_class=QuietHandler)
     base = f"http://127.0.0.1:{server.server_port}"
     os.environ["WEB_URL"] = base
@@ -313,13 +371,7 @@ def probe():
     client = build_opener(HTTPCookieProcessor(CookieJar()), NoRedirect())
 
     def request(path, data=None, *, session=None, headers=None):
-        body = (
-            data
-            if isinstance(data, bytes)
-            else None
-            if data is None
-            else urlencode(data).encode()
-        )
+        body = data if isinstance(data, bytes) else None if data is None else urlencode(data).encode()
         req = Request(
             base + path,
             data=body,
@@ -359,14 +411,11 @@ def probe():
             "Restored plan state mismatch",
         )
         require(
-            headers["ETag"]
-            == f'"curve-initiative:{initiative}:v{plan["initiative_version"]}"',
+            headers["ETag"] == f'"curve-initiative:{initiative}:v{plan["initiative_version"]}"',
             "Restored version ETag mismatch",
         )
         reference = plan["definition_ref"]
-        status, _, body = request(
-            path + "materials/" + str(uuid.UUID(reference["object_id"])) + "/"
-        )
+        status, _, body = request(path + "materials/" + str(uuid.UUID(reference["object_id"])) + "/")
         require(status == 200, "Restored definition unavailable")
         material = json.loads(body)
         raw = material["content"].encode()
@@ -386,12 +435,8 @@ def probe():
             "gate2_commands_sent": 0,
         }
         if "--pilot-controls" in sys.argv[2:]:
-            result["pilot_controls"] = pilot_controls(
-                request, access, plan, path, reference
-            )
-            result["gate2_commands_sent"] = result["pilot_controls"][
-                "gate2_commands_sent"
-            ]
+            result["pilot_controls"] = pilot_controls(request, access, plan, path, reference)
+            result["gate2_commands_sent"] = result["pilot_controls"]["gate2_commands_sent"]
         print(json.dumps(result), file=output)
     finally:
         server.shutdown()

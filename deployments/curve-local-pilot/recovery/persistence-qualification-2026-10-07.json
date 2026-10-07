@@ -1,0 +1,72 @@
+{
+  "qualified_at_utc": "2026-10-07T01:12:46.730878+00:00",
+  "local_base_commit": "45bd773922aedcadf1256174b3104f939dba83d6",
+  "native": {
+    "result": "RESTORE_EXERCISE_PASSED",
+    "source_commit": "8aede16b4aee1aa66eb0b9469c4c849b34250f6e",
+    "tables_verified": 151,
+    "objects_verified": 24,
+    "schema_verified": true,
+    "native_catalog_seal_verified": true,
+    "restore_seconds": 149.625,
+    "scope": "Schema DDL, full public-schema row fingerprints and protected bytes; no production activation or RPO/RTO certification",
+    "persistence": {
+      "result": "SYNTHETIC_PERSISTENCE_QUALIFIED",
+      "cases": [
+        "read_only_storage_refuses_initialization",
+        "existing_protected_store_cannot_be_overwritten",
+        "session_login_and_protected_read_on_persistent_stores",
+        "graceful_resume_preserves_all_rows_schema_objects_and_access",
+        "container_replacement_preserves_committed_rows_and_rolls_back_open_transaction",
+        "unsafe_catalog_permissions_fence_readiness",
+        "corrupt_persistent_body_fences_readiness",
+        "exact_storage_repair_restores_authenticated_read"
+      ],
+      "tables_per_boundary": 151,
+      "objects_per_boundary": 24,
+      "durability_settings_verified": true,
+      "protected_api_mount_read_only": true,
+      "initial_http": {
+        "result": "RESTORED_HTTP_READ_PASSED",
+        "login": "normal_session_http",
+        "principal_verified": true,
+        "manual_state": "PLAN_REVIEW",
+        "initiative_version": 7,
+        "definition_digest_verified": true,
+        "gate2_commands_sent": 0
+      },
+      "live_demo_modified": false,
+      "operational_acceptance": false,
+      "scope": "Container stop, PostgreSQL crash and replacement only; no host power-loss, real identity, retention or production certification",
+      "owned_resources_removed": true
+    },
+    "exercise_seconds": 299.306
+  },
+  "ownership": {
+    "result": "OWNERSHIP_COLLISION_QUALIFIED",
+    "cases": [
+      "preexisting_same_label_volume_preserved_through_refusal_and_cleanup",
+      "preexisting_same_label_container_preserved_through_refusal_and_cleanup"
+    ],
+    "setup_resources_removed": true,
+    "live_demo_modified": false
+  },
+  "cleanup": {
+    "result": "OWNED_VOLUME_CLEANUP_QUALIFIED",
+    "managed_volumes": 2,
+    "cleanup_idempotent": true,
+    "resources_removed": true
+  },
+  "unit_tests_passed": 25,
+  "ruff": "passed",
+  "source_sha256": {
+    "recovery.py": "60b047e737db990ddaa3e814b1eeca9b5ce093ba137f86f078dfc501bd1b0bc6",
+    "http_probe.py": "670013fbe675d99624f273599cf1e6b786e3aa614e75acf2bfcba2cf9a5d80b4",
+    "persistence.py": "205fbeebdc55622644de34d63c0fa914d6b2dcbedc20d1ac55cb9267370866d6",
+    "test_persistence.py": "56e8471ff6f3e58ace7a0cc4bae7a1b7cd845f213f60fa97f1962d570bface54",
+    "test_recovery.py": "456cec6d885c1148d4ecf5ba16e7ed54d17a1e1be229dc1a1d2b7807cb7ead4a"
+  },
+  "human_ux_acceptance": false,
+  "operational_acceptance": false,
+  "new_publication": false
+}

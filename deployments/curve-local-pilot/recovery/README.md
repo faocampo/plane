@@ -151,6 +151,11 @@ operator inputs, overly broad credential-file permissions and refusal to run
 pilot controls without the complete private HTTP profile.
 The real restore exercise is separate evidence; unit tests do not substitute for it.
 
+The separate [persistence profile](PERSISTENCE.md) (named-volume stop/resume,
+container-loss recovery, readiness and ownership-safe cleanup) adds thirteen tests,
+bringing this directory's discovery command to twenty-five. Its synthetic volumes
+are removed after qualification; the running demo remains unchanged.
+
 An observed synthetic run is a bounded qualification result, not a production
 backup service, retention policy, RPO/RTO commitment or full R1 disaster-recovery
 approval. Keep exact run results in the operator's private evidence directory.

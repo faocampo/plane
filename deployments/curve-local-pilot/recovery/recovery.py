@@ -74,8 +74,7 @@ def inspect_container(name, project, service):
     labels = info["Config"].get("Labels") or {}
     require(info["State"]["Running"], "Source container is not running")
     require(
-        labels.get("com.docker.compose.project") == project
-        and labels.get("com.docker.compose.service") == service,
+        labels.get("com.docker.compose.project") == project and labels.get("com.docker.compose.service") == service,
         "Source Compose identity mismatch",
     )
     return info
@@ -84,20 +83,14 @@ def inspect_container(name, project, service):
 @contextmanager
 def held(argv, script=None, expected=None):
     """Hold a bounded lock process; release it even if capture fails."""
-    process = subprocess.Popen(
-        argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
-    )
+    process = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     try:
         if script:
             process.stdin.write(script.encode())
             process.stdin.flush()
-        require(
-            select.select([process.stdout], [], [], 12)[0], "Lock acquisition timed out"
-        )
+        require(select.select([process.stdout], [], [], 12)[0], "Lock acquisition timed out")
         token = process.stdout.readline().decode().strip()
-        require(
-            token and (expected is None or token == expected), "Lock was not acquired"
-        )
+        require(token and (expected is None or token == expected), "Lock was not acquired")
         yield process, token
         require(process.poll() is None, "Lock expired; discard this capture")
     finally:
@@ -231,11 +224,7 @@ def schema_fingerprint(container, user, database):
         ]
     )
     # Newer pg_dump clients add a random psql restrict token. It is not DDL.
-    lines = [
-        line
-        for line in raw.splitlines(keepends=True)
-        if not line.startswith((b"\\restrict ", b"\\unrestrict "))
-    ]
+    lines = [line for line in raw.splitlines(keepends=True) if not line.startswith((b"\\restrict ", b"\\unrestrict "))]
     return sha(b"".join(lines))
 
 
@@ -244,9 +233,7 @@ def verify_source(path, expected):
     head = run(["git", "-C", str(source), "rev-parse", "HEAD"]).decode().strip()
     require(head == expected, "Source commit mismatch")
     require(
-        not run(
-            ["git", "-C", str(source), "status", "--porcelain", "--untracked-files=no"]
-        ),
+        not run(["git", "-C", str(source), "status", "--porcelain", "--untracked-files=no"]),
         "Source has tracked modifications",
     )
     return source
@@ -254,17 +241,14 @@ def verify_source(path, expected):
 
 def catalog_members(path):
     require(
-        path.is_file()
-        and not path.is_symlink()
-        and path.stat().st_size <= LIMIT + 1048576,
+        path.is_file() and not path.is_symlink() and path.stat().st_size <= LIMIT + 1048576,
         "Invalid protected archive",
     )
     members, total = {}, 0
     with tarfile.open(path, "r:") as archive:
         for item in archive:
             require(
-                item.isfile()
-                and (item.name == "catalog.json" or UUID.fullmatch(item.name)),
+                item.isfile() and (item.name == "catalog.json" or UUID.fullmatch(item.name)),
                 "Protected archive contains an unsafe member",
             )
             require(
@@ -280,8 +264,7 @@ def catalog_members(path):
     require("catalog.json" in members, "Protected catalog is missing")
     catalog = json.loads(members["catalog.json"])
     require(
-        catalog.get("schema_version")
-        == "curve.synthetic-manual-plan-catalog/v2-candidate",
+        catalog.get("schema_version") == "curve.synthetic-manual-plan-catalog/v2-candidate",
         "Unsupported catalog edition",
     )
     require(
@@ -291,9 +274,7 @@ def catalog_members(path):
     for name, item in catalog["objects"].items():
         ref, body = item["object_ref"], members[name]
         require(
-            ref["object_id"] == name
-            and ref["size_bytes"] == len(body)
-            and ref["digest"] == sha(body),
+            ref["object_id"] == name and ref["size_bytes"] == len(body) and ref["digest"] == sha(body),
             "Protected object integrity failed",
         )
     return members
@@ -303,9 +284,7 @@ def verify(backup):
     backup = Path(backup)
     manifest_path = backup / "manifest.json"
     require(
-        manifest_path.is_file()
-        and not manifest_path.is_symlink()
-        and manifest_path.stat().st_size <= 1048576,
+        manifest_path.is_file() and not manifest_path.is_symlink() and manifest_path.stat().st_size <= 1048576,
         "Invalid backup manifest",
     )
     manifest = json.loads(manifest_path.read_text())
@@ -327,8 +306,7 @@ def verify(backup):
     )
     require(
         all(
-            re.fullmatch(r"sha256:[0-9a-f]{64}", manifest.get(key, ""))
-            for key in ("api_image_id", "postgres_image_id")
+            re.fullmatch(r"sha256:[0-9a-f]{64}", manifest.get(key, "")) for key in ("api_image_id", "postgres_image_id")
         ),
         "Missing immutable image identity",
     )
@@ -338,12 +316,9 @@ def verify(backup):
     )
     for name, expected in manifest["files"].items():
         path = backup / name
+        require(path.is_file() and not path.is_symlink(), "Missing or unsafe backup file")
         require(
-            path.is_file() and not path.is_symlink(), "Missing or unsafe backup file"
-        )
-        require(
-            path.stat().st_size == expected["bytes"]
-            and file_sha(path) == expected["sha256"],
+            path.stat().st_size == expected["bytes"] and file_sha(path) == expected["sha256"],
             "Backup checksum mismatch",
         )
     members = catalog_members(backup / "protected.tar")
@@ -444,14 +419,7 @@ def capture(args):
                         run(argv, output=stream)
                 inventory = fingerprints(db, args.user, args.database, snapshot)
                 schema = schema_fingerprint(db, args.user, args.database)
-                version = (
-                    run(
-                        psql(db, args.user, args.database)
-                        + ["-c", "SHOW server_version_num;"]
-                    )
-                    .decode()
-                    .strip()
-                )
+                version = run(psql(db, args.user, args.database) + ["-c", "SHOW server_version_num;"]).decode().strip()
                 require(
                     db_lock.poll() is None and catalog_lock.poll() is None,
                     "Capture lock expired",
@@ -478,9 +446,7 @@ def capture(args):
                 for name in ("database.dump", "protected.tar")
             },
         }
-        private_file(
-            temp / "manifest.json", (json.dumps(manifest, indent=2) + "\n").encode()
-        )
+        private_file(temp / "manifest.json", (json.dumps(manifest, indent=2) + "\n").encode())
         verify(temp)
         require(not destination.exists(), "Destination appeared during capture")
         temp.rename(destination)
@@ -525,10 +491,7 @@ def cleanup_owned(name, token):
 
 
 def read_profile(args):
-    values = [
-        getattr(args, key, None)
-        for key in ("operator_settings", "access_file", "target_file")
-    ]
+    values = [getattr(args, key, None) for key in ("operator_settings", "access_file", "target_file")]
     require(
         not any(values) or all(values),
         "Restored API verification requires all three private profile inputs",
@@ -538,12 +501,66 @@ def read_profile(args):
     result = []
     for value in values:
         path = Path(value).absolute()
-        require(
-            path.is_file() and not path.is_symlink(), "Invalid private profile input"
-        )
+        require(path.is_file() and not path.is_symlink(), "Invalid private profile input")
         result.append(path)
     require(result[1].stat().st_mode & 0o077 == 0, "Credential file must be owner-only")
     return result
+
+
+def database_argv(name, manifest, storage=None):
+    return [
+        "docker",
+        "run",
+        "-d",
+        "--pull=never",
+        "--name",
+        name,
+        "--network",
+        "none",
+        "--read-only",
+        "--label",
+        f"io.curve.synthetic-recovery={name}",
+        "--memory",
+        "512m",
+        "--cpus",
+        "1",
+        "--pids-limit",
+        "128",
+        "--log-driver",
+        "none",
+        *(storage or ["--tmpfs", "/var/lib/postgresql/data:rw"]),
+        "--tmpfs",
+        "/var/run/postgresql:rw",
+        "--tmpfs",
+        "/tmp:rw",
+        "-e",
+        "POSTGRES_USER=curve_recovery",
+        "-e",
+        "POSTGRES_DB=curve_recovery",
+        "-e",
+        "POSTGRES_HOST_AUTH_METHOD=trust",
+        manifest["postgres_image_id"],
+    ]
+
+
+def wait_database(name):
+    for _ in range(30):
+        ready = subprocess.run(
+            [
+                "docker",
+                "exec",
+                name,
+                "sh",
+                "-c",
+                'test "$(cat /proc/1/comm)" = postgres && pg_isready -U curve_recovery -d curve_recovery',
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if ready.returncode == 0:
+            return
+        time.sleep(0.5)
+    raise RecoveryError("Isolated PostgreSQL did not become ready")
 
 
 def check_restored_api(args, source, manifest, name, profile):
@@ -565,6 +582,10 @@ def check_restored_api(args, source, manifest, name, profile):
         "1g",
         "--cpus",
         "1",
+        "--pids-limit",
+        "128",
+        "--log-driver",
+        "none",
         "--workdir",
         "/code",
         "--mount",
@@ -573,8 +594,11 @@ def check_restored_api(args, source, manifest, name, profile):
         f"type=bind,src={Path(__file__).with_name('http_probe.py').resolve()},dst=/probe.py,readonly",
         "--tmpfs",
         "/tmp:rw",
-        "--tmpfs",
-        "/demo-data:rw",
+        *(
+            ["--mount", f"type=volume,src={args._protected_volume},dst=/demo-data,readonly"]
+            if getattr(args, "_protected_volume", None)
+            else ["--tmpfs", "/demo-data:rw"]
+        ),
         "--tmpfs",
         "/code/plane/logs:rw",
         "--tmpfs",
@@ -592,12 +616,8 @@ def check_restored_api(args, source, manifest, name, profile):
         "-e",
         "SECRET_KEY=synthetic-local-recovery-only",
     ]
-    for path, filename in zip(
-        profile, ("recovery_operator_settings.py", "access.json", "target.json")
-    ):
-        argv.extend(
-            ["--mount", f"type=bind,src={path},dst=/inputs/{filename},readonly"]
-        )
+    for path, filename in zip(profile, ("recovery_operator_settings.py", "access.json", "target.json")):
+        argv.extend(["--mount", f"type=bind,src={path},dst=/inputs/{filename},readonly"])
     argv.extend(
         [
             "--entrypoint",
@@ -608,12 +628,15 @@ def check_restored_api(args, source, manifest, name, profile):
         ]
     )
     if getattr(args, "pilot_controls", False):
+        require(not getattr(args, "_protected_volume", None), "Fault injection cannot target a persistent store")
         argv.append("--pilot-controls")
+    if getattr(args, "_protected_volume", None):
+        argv.append("--existing-objects")
     try:
         with (Path(args.backup) / "protected.tar").open("rb") as stream:
             process = subprocess.run(
                 argv,
-                stdin=stream,
+                stdin=subprocess.DEVNULL if getattr(args, "_protected_volume", None) else stream,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=120,
@@ -647,58 +670,12 @@ def exercise(args):
     name = "curve-recovery-check-" + uuid.uuid4().hex[:12]
     started = time.monotonic()
     migration_name = name + "-migrate"
+    lifecycle = getattr(args, "_lifecycle", None)
     with tempfile.TemporaryDirectory(prefix="curve-recovery-objects-") as extracted:
         try:
-            run(
-                [
-                    "docker",
-                    "run",
-                    "-d",
-                    "--pull=never",
-                    "--name",
-                    name,
-                    "--network",
-                    "none",
-                    "--read-only",
-                    "--label",
-                    f"io.curve.synthetic-recovery={name}",
-                    "--memory",
-                    "512m",
-                    "--cpus",
-                    "1",
-                    "--tmpfs",
-                    "/var/lib/postgresql/data:rw",
-                    "--tmpfs",
-                    "/var/run/postgresql:rw",
-                    "--tmpfs",
-                    "/tmp:rw",
-                    "-e",
-                    "POSTGRES_USER=curve_recovery",
-                    "-e",
-                    "POSTGRES_DB=curve_recovery",
-                    "-e",
-                    "POSTGRES_HOST_AUTH_METHOD=trust",
-                    manifest["postgres_image_id"],
-                ]
-            )
-            for _ in range(30):
-                ready = subprocess.run(
-                    [
-                        "docker",
-                        "exec",
-                        name,
-                        "sh",
-                        "-c",
-                        'test "$(cat /proc/1/comm)" = postgres && pg_isready -U curve_recovery -d curve_recovery',
-                    ],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                )
-                if ready.returncode == 0:
-                    break
-                time.sleep(0.5)
-            else:
-                raise RecoveryError("Isolated PostgreSQL did not become ready")
+            storage = lifecycle.prepare(name, manifest) if lifecycle else None
+            run(database_argv(name, manifest, storage))
+            wait_database(name)
             # Native migration DDL preserves the qualified catalog expression form.
             # Replaying deparsed pg_dump DDL can rewrite array casts in constraints.
             run(
@@ -746,17 +723,21 @@ def exercise(args):
                     "-c",
                     MIGRATE,
                 ],
-                timeout=180,
+                timeout=300 if lifecycle else 180,
             )
             require(
-                schema_fingerprint(name, "curve_recovery", "curve_recovery")
-                == manifest["schema_sha256"],
+                schema_fingerprint(name, "curve_recovery", "curve_recovery") == manifest["schema_sha256"],
                 "Migration-built schema does not match the captured schema",
             )
             # Offline restoration in this newly created target only. Session-local
             # replication mode permits replacing bootstrap rows protected by the
             # native immutable triggers; it never changes source or trigger DDL.
-            truncate = "SET session_replication_role=replica;\nSELECT 'TRUNCATE TABLE ' || string_agg(format('%I.%I',schemaname,tablename), ', ' ORDER BY tablename) || ' CASCADE;' FROM pg_tables WHERE schemaname='public'\n\\gexec\nSET session_replication_role=origin;\n"
+            truncate = (
+                "SET session_replication_role=replica;\nSELECT 'TRUNCATE TABLE ' || "
+                "string_agg(format('%I.%I',schemaname,tablename), ', ' ORDER BY tablename) || "
+                "' CASCADE;' FROM pg_tables WHERE schemaname='public'\n"
+                "\\gexec\nSET session_replication_role=origin;\n"
+            )
             run(psql(name, "curve_recovery", "curve_recovery"), data=truncate.encode())
             with (Path(args.backup) / "database.dump").open("rb") as stream:
                 restored = subprocess.run(
@@ -783,13 +764,11 @@ def exercise(args):
                 )
                 require(restored.returncode == 0, "Isolated database restore failed")
             require(
-                fingerprints(name, "curve_recovery", "curve_recovery")
-                == manifest["tables"],
+                fingerprints(name, "curve_recovery", "curve_recovery") == manifest["tables"],
                 "Restored database does not match the captured snapshot",
             )
             require(
-                schema_fingerprint(name, "curve_recovery", "curve_recovery")
-                == manifest["schema_sha256"],
+                schema_fingerprint(name, "curve_recovery", "curve_recovery") == manifest["schema_sha256"],
                 "Restored schema does not match the captured schema",
             )
             run(
@@ -799,10 +778,7 @@ def exercise(args):
             for filename, raw in members.items():
                 private_file(Path(extracted) / filename, raw)
             require(
-                all(
-                    (Path(extracted) / key).read_bytes() == value
-                    for key, value in members.items()
-                ),
+                all((Path(extracted) / key).read_bytes() == value for key, value in members.items()),
                 "Protected restore did not preserve bytes",
             )
             result = {
@@ -813,18 +789,23 @@ def exercise(args):
                 "schema_verified": True,
                 "native_catalog_seal_verified": True,
                 "restore_seconds": round(time.monotonic() - started, 3),
-                "scope": "Schema DDL, full public-schema row fingerprints and protected bytes; no production activation or RPO/RTO certification",
+                "scope": (
+                    "Schema DDL, full public-schema row fingerprints and protected bytes; "
+                    "no production activation or RPO/RTO certification"
+                ),
             }
-            if profile:
-                result["restored_api"] = check_restored_api(
-                    args, source, manifest, name, profile
-                )
+            if lifecycle:
+                result["persistence"] = lifecycle.qualify(args, source, manifest, members, name, profile)
+                result["exercise_seconds"] = round(time.monotonic() - started, 3)
+            elif profile:
+                result["restored_api"] = check_restored_api(args, source, manifest, name, profile)
                 result["exercise_seconds"] = round(time.monotonic() - started, 3)
             return result
         finally:
             # Labels bind cleanup to this run, including a failed container start.
-            cleanup_owned(migration_name, name)
-            cleanup_owned(name, name)
+            if lifecycle is None or lifecycle.container_names_reserved:
+                cleanup_owned(migration_name, name)
+                cleanup_owned(name, name)
 
 
 def main():

@@ -35,11 +35,23 @@ restore boundaries) and [qualification record](recovery/qualification-2026-10-07
 new CI approval; the last delivered-head checks had no reported check-runs,
 statuses or Actions runs.
 
+The [persistence profile](recovery/PERSISTENCE.md) (owned-volume lifecycle and
+failure handling) now qualifies synthetic stop/resume and crash/container
+replacement, including rollback of an open transaction, complete row/schema
+comparison, protected-store readiness and scoped disposal. Twenty-five focused
+tests and real Docker lifecycle/ownership checks support this engineering gate.
+This does not activate a persistent installation for the real cohort.
+
+The [human UX review](UX_REVIEW_TODAY.md) (visual evidence, exact UX-004/005
+decisions and recommended navigation alignment) is ready for Fede. The current
+prototype's inherited Home location differs from the Product/Home blueprint;
+that choice is explicit and remains pending. No Today integration has begun.
+
 ## Ordered gates
 
 | Gate | Available now | Remaining exit evidence | Decision owner |
 | --- | --- | --- | --- |
-| 1. Operable local installation | Fixed synthetic demo; private backup; exact isolated restore; disable/read fence | Persistent storage proposal; stop/resume on a separate disposable installation; resource limits; ownership, retention and safe diagnostics; operator recovery drill | Pilot operator and product owner |
+| 1. Operable local installation | Fixed demo; verified backup/restore; synthetic volume persistence across stop, crash and container loss; fault fencing and scoped cleanup | Actual persistent installation; operator and storage/retention decisions; host/VM failure, capacity and disk-pressure qualification; human recovery drill and activation | Pilot operator and product owner |
 | 2. Actual participant identity | Native session login, role denials, active-membership revocation on the copy | Named private cohort; individual accounts and Initiative assignments; current source grants; overlap/risk policy; departure and lost-access walkthrough | Workspace administrator and assigned approvers |
 | 3. Today and pending decisions | Isolated clickable queue prototype and proposed screen contract | Representative user task review; UX-004/005 acceptance; bounded authenticated queue design; coverage of partial pages, freshness and permissions; integrated implementation and checks | Product owner, participant and implementer |
 | 4. Roadmap visibility | Product and Initiative boundaries defined | Narrow read projection tied to real Roadmap Item work bindings; unavailable-source states; permission and pagination evidence | Product owner and technical owner |
