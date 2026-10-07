@@ -56,7 +56,7 @@ describe("Quicklink form", () => {
     await waitFor(() =>
       expect(linkOperations.create).toHaveBeenCalledWith({
         title: "Documentation",
-        url: "https://example.com/docs",
+        url: "http://example.com/docs",
       })
     );
     expect(handleOnClose).toHaveBeenCalledOnce();
@@ -78,7 +78,7 @@ describe("Quicklink form", () => {
     await waitFor(() =>
       expect(linkOperations.update).toHaveBeenCalledWith("link-1", {
         title: "Old title",
-        url: "https://example.com/new",
+        url: "http://example.com/new",
       })
     );
     expect(linkOperations.create).not.toHaveBeenCalled();

@@ -14,7 +14,7 @@ import { Button } from "@plane/propel/button";
 import type { TLinkEditableFields } from "@plane/types";
 import { Input, ModalCore } from "@plane/ui";
 import type { TLinkOperations } from "./use-links";
-import { normalizeQuickLinkUrl } from "./url";
+import { getQuickLinkUrlError, normalizeQuickLinkUrl } from "./url";
 
 export type TLinkOperationsModal = Omit<TLinkOperations, "remove">;
 
@@ -43,6 +43,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
     handleSubmit,
     control,
     reset,
+    setError,
   } = useForm<TLinkCreateFormFieldOptions>({
     defaultValues,
   });
@@ -54,12 +55,18 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
 
   const handleFormSubmit = async (formData: TLinkCreateFormFieldOptions) => {
     const parsedUrl = normalizeQuickLinkUrl(formData.url);
-    if (!parsedUrl) return;
+    if (!parsedUrl) {
+      setError("url", { message: t("link.modal.url.required"), type: "validate" }, { shouldFocus: true });
+      return;
+    }
+
     try {
       if (!formData || !formData.id) await linkOperations.create({ title: formData.title, url: parsedUrl });
       else await linkOperations.update(formData.id, { title: formData.title, url: parsedUrl });
       onClose();
     } catch (error) {
+      const urlError = getQuickLinkUrlError(error);
+      if (urlError) setError("url", { message: urlError, type: "server" }, { shouldFocus: true });
       console.error("error", error);
     }
   };
@@ -87,7 +94,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                 name="url"
                 rules={{
                   required: t("link.modal.url.required"),
-                  validate: (value) => !!normalizeQuickLinkUrl(value) || t("link.modal.url.required"),
+                  validate: (value) => Boolean(normalizeQuickLinkUrl(value)) || t("link.modal.url.required"),
                 }}
                 render={({ field: { value, onChange, ref } }) => (
                   <Input

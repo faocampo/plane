@@ -9,6 +9,7 @@ import { useTranslation } from "@plane/i18n";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import type { TProjectLink } from "@plane/types";
 import { useHome } from "@/hooks/store/use-home";
+import { getQuickLinkUrlError } from "./url";
 
 export type TLinkOperations = {
   create: (data: Partial<TProjectLink>) => Promise<void>;
@@ -48,9 +49,10 @@ export const useLinks = (workspaceSlug: string) => {
           });
           toggleLinkModal(false);
         } catch (error: any) {
-          console.error("error", error?.data?.error);
+          const errorMessage = getQuickLinkUrlError(error) ?? error?.data?.error;
+          console.error("error", errorMessage);
           setToast({
-            message: error?.data?.error ?? t("links.toasts.not_created.message"),
+            message: errorMessage ?? t("links.toasts.not_created.message"),
             type: TOAST_TYPE.ERROR,
             title: t("links.toasts.not_created.title"),
           });
@@ -68,8 +70,9 @@ export const useLinks = (workspaceSlug: string) => {
           });
           toggleLinkModal(false);
         } catch (error: any) {
+          const errorMessage = getQuickLinkUrlError(error) ?? error?.data?.error;
           setToast({
-            message: error?.data?.error ?? t("links.toasts.not_updated.message"),
+            message: errorMessage ?? t("links.toasts.not_updated.message"),
             type: TOAST_TYPE.ERROR,
             title: t("links.toasts.not_updated.title"),
           });
@@ -94,7 +97,7 @@ export const useLinks = (workspaceSlug: string) => {
         }
       },
     }),
-    [workspaceSlug]
+    [createLink, removeLink, t, toggleLinkModal, updateLink, workspaceSlug]
   );
 
   const handleOnClose = () => {

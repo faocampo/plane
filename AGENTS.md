@@ -1,5 +1,36 @@
 # Agent Development Guide
 
+## Repository delivery
+
+Follow the approved [repository delivery policy](https://github.com/faocampo/curve/blob/77dbfe5f50e0ac3e585dd2b57e687fa425e780e2/docs/technical/repository-delivery-policy.md)
+(PR scope, integration gates, evidence and safe remote-branch cleanup), approved
+2026-09-06 for human-directed Curve/Plane development. Plane integrates into
+`curve-integration` (the fork's default branch); verify the live base before starting.
+The fork's `preview` tracks `makeplane/plane`'s `preview` exactly. Keep Curve changes
+off that tracking branch. Bring upstream updates into `curve-integration` through
+a reviewed and tested PR. Record exact tips, preserve divergent work and use an
+exact-tip lease when synchronizing `preview`. Upstream synchronization has no
+deployment authority; the fork's upstream push-triggered publishing workflow
+remains disabled until separately authorized.
+
+- Use one cohesive outcome per PR and reuse it for rework. Check existing and
+  merged PRs for equivalent work before creating a branch or PR.
+- Allow at most two open dependent PRs per workstream, including the root.
+  Larger stacks require an explicit owner-approved, bounded exception.
+- Resolve the oldest integration gate first. During human review, prioritize
+  the reviewable flow or independent work; freeze additional dependent PRs.
+- Finish validation, review, authorized merge, integration verification, handoff
+  update and remote-branch retirement. Preserve exact-head evidence and approvals.
+- Routine delivery and verified remote cleanup within the user's authorized scope
+  need no repeated confirmation. Human UX/security gates and repository protections
+  remain binding; production deployment and activation require separate authority.
+- Delete only verified merged/superseded remote tips without unique work, open
+  dependents or active use. Preserve local worktrees, changes, stashes and history.
+
+The existing Initiative-shell stack remains held for owner UX acceptance of
+document handling, reviewer responsibilities and operational-flow simplification.
+These development instructions leave Curve-dispatched runtime authority unchanged.
+
 ## Commands
 
 - `pnpm dev` - Start all dev servers (web:3000, admin:3001)
