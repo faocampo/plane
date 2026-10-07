@@ -146,6 +146,16 @@ class RecoveryValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(recovery.RecoveryError, "all three"):
             recovery.read_profile(SimpleNamespace(operator_settings="profile.py"))
 
+    def test_pilot_controls_require_the_private_http_profile(self):
+        with patch.object(recovery, "run") as run:
+            with self.assertRaisesRegex(
+                recovery.RecoveryError, "complete private HTTP profile"
+            ):
+                recovery.exercise(
+                    SimpleNamespace(backup=self.root, pilot_controls=True)
+                )
+            run.assert_not_called()
+
     def test_http_probe_rejects_group_readable_credentials(self):
         settings = self.root / "operator.py"
         access = self.root / "access.json"

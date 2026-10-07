@@ -607,6 +607,8 @@ def check_restored_api(args, source, manifest, name, profile):
             manifest["catalog_sha256"],
         ]
     )
+    if getattr(args, "pilot_controls", False):
+        argv.append("--pilot-controls")
     try:
         with (Path(args.backup) / "protected.tar").open("rb") as stream:
             process = subprocess.run(
@@ -633,6 +635,10 @@ def check_restored_api(args, source, manifest, name, profile):
 def exercise(args):
     manifest, members = verify(args.backup)
     profile = read_profile(args)
+    require(
+        not getattr(args, "pilot_controls", False) or profile is not None,
+        "Pilot controls require the complete private HTTP profile",
+    )
     source = verify_source(args.source, manifest["source_commit"])
     require(
         manifest["postgres_version_num"] == "150007",
@@ -844,6 +850,7 @@ def main():
     restore_parser.add_argument("--source", required=True)
     for flag in ("operator-settings", "access-file", "target-file"):
         restore_parser.add_argument("--" + flag)
+    restore_parser.add_argument("--pilot-controls", action="store_true")
     args = parser.parse_args()
     if args.command == "capture":
         result = capture(args)

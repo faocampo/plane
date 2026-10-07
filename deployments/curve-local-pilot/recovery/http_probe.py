@@ -1,6 +1,8 @@
-"""Read-only plan acceptance against an isolated restored WSGI application.
+"""Plan reads and optional fault checks against an isolated restored application.
 
-Executed only inside the disposable recovery container. Credentials are read
+Executed only inside the disposable recovery container. Optional pilot controls
+mutate this copy's flags, objects and membership, and send denied commands.
+Credentials are read
 from a private operator mount; only aggregate results are emitted on stdout.
 """
 
@@ -76,6 +78,206 @@ def restore_objects(stream, expected_catalog):
     )
 
 
+def pilot_controls(request, access, plan, path, reference):
+    """Inject faults only in this disposable copy; keep business history intact."""
+    from django.conf import settings
+    from plane.db.models import WorkspaceMember
+    from plane.curve.models import Initiative
+    from plane.curve.manual_gate2_v2.models import (
+        ManualGate2ControlV2,
+        ManualGate2RecordV2,
+        ManualTaskClaimV2,
+        ManualTaskClaimHistoryV2,
+    )
+    from plane.curve.manual_plan_v2.models import (
+        ManualPlanDraftV2,
+        ManualPlanRevisionV2,
+    )
+    from plane.curve.manual_gate2_v2.contracts import parse_command
+
+    def graph():
+        values = {
+            "initiative": list(
+                Initiative.objects.filter(id=plan["initiative_id"]).values()
+            )
+        }
+        for model in (
+            ManualGate2ControlV2,
+            ManualGate2RecordV2,
+            ManualTaskClaimV2,
+            ManualTaskClaimHistoryV2,
+            ManualPlanDraftV2,
+            ManualPlanRevisionV2,
+        ):
+            values[model.__name__] = list(
+                model.objects.filter(initiative_id=plan["initiative_id"])
+                .order_by("id")
+                .values()
+            )
+        return hashlib.sha256(
+            json.dumps(values, sort_keys=True, default=str).encode()
+        ).hexdigest()
+
+    before = graph()
+    cases = []
+    missing_path = path.replace(plan["initiative_id"], str(uuid.uuid4())) + "status/"
+    denied_status, denied_headers, denied_body = request(missing_path)
+    require(
+        denied_status == 404 and "ETag" not in denied_headers,
+        "Unknown resource did not fail closed",
+    )
+
+    def denied(route, session=None, **kwargs):
+        status, headers, body = request(route, session=session, **kwargs)
+        require(
+            status == denied_status and body == denied_body and "ETag" not in headers,
+            "Protected denial leaked or differed from unknown resource",
+        )
+
+    def session_for(role, password=None):
+        client = build_opener(HTTPCookieProcessor(CookieJar()), NoRedirect())
+        status, _, body = request("/auth/get-csrf-token/", session=client)
+        require(status == 200, "Role CSRF endpoint unavailable")
+        token = json.loads(body)["csrf_token"]
+        status, _, _ = request(
+            "/auth/sign-in/",
+            session=client,
+            data={
+                "email": access[role],
+                "password": access["password"] if password is None else password,
+                "csrfmiddlewaretoken": token,
+            },
+        )
+        require(status == 302, "Role login did not complete")
+        return client
+
+    anonymous = build_opener(HTTPCookieProcessor(CookieJar()), NoRedirect())
+    denied(path + "status/", anonymous)
+    cases.append("anonymous_plan_read_denied")
+    invalid = session_for("approver", "incorrect-synthetic-password")
+    require(
+        request("/api/users/me/", session=invalid)[0] == 401,
+        "Invalid password authenticated",
+    )
+    denied(path + "status/", invalid)
+    cases.append("invalid_password_did_not_create_authenticated_session")
+    rationale = next(
+        x["reference"] for x in plan["rationales"] if x["intent"] == "APPROVE"
+    )
+    payload = {
+        "schema_version": "curve.manual-gate2.command/v2-candidate",
+        "action": "APPROVE",
+        "draft_revision_id": plan["draft_revision_id"],
+        "subject_ref": plan["subject_ref"],
+        "rationale_ref": rationale,
+        "claims": [],
+        "reconciliation_ref": None,
+    }
+    raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+    etag = f'"curve-initiative:{plan["initiative_id"]}:v{plan["initiative_version"]}"'
+    for role in ("owner", "code_reviewer"):
+        actor = session_for(role)
+        status, _, body = request("/api/users/me/", session=actor)
+        require(
+            status == 200 and json.loads(body)["email"] == access[role],
+            "Role identity mismatch",
+        )
+        status, _, body = request(path + "status/", session=actor)
+        require(
+            status == 200 and "APPROVE" not in json.loads(body)["allowed_actions"],
+            "Other role received technical approval authority",
+        )
+        status, _, body = request("/auth/get-csrf-token/", session=actor)
+        require(status == 200, "Decision CSRF endpoint unavailable")
+        key = str(uuid.uuid4())
+        parse_command(
+            initiative_id=uuid.UUID(plan["initiative_id"]),
+            raw=raw,
+            if_match=etag,
+            key=key,
+        )
+        denied(
+            path + "commands/",
+            actor,
+            data=raw,
+            headers={
+                "Content-Type": "application/json",
+                "X-CSRFTOKEN": json.loads(body)["csrf_token"],
+                "If-Match": etag,
+                "Idempotency-Key": key,
+            },
+        )
+        cases.append(role + "_cannot_approve_technical_plan")
+    status, _, body = request(path + "status/")
+    require(
+        status == 200 and "APPROVE" in json.loads(body)["allowed_actions"],
+        "Assigned technical approver lost valid authority",
+    )
+    cases.append("assigned_technical_approver_retains_current_authority")
+    workspace_path = path.replace(
+        "/workspaces/" + path.split("/workspaces/", 1)[1].split("/", 1)[0] + "/",
+        "/workspaces/unavailable-synthetic-workspace/",
+    )
+    denied(workspace_path + "status/")
+    cases.append("wrong_workspace_has_uniform_denial")
+    material_path = path + "materials/" + reference["object_id"] + "/"
+    enabled = settings.CURVE_MANUAL_GATE2_V2_ENABLED
+    try:
+        settings.CURVE_MANUAL_GATE2_V2_ENABLED = False
+        denied(path + "status/")
+        denied(material_path)
+    finally:
+        settings.CURVE_MANUAL_GATE2_V2_ENABLED = enabled
+    require(
+        request(path + "status/")[0] == 200,
+        "Read did not recover after restoring the local flag",
+    )
+    cases.append("operator_disable_fences_status_and_material_reads")
+    body_path = Path("/demo-data/protected") / reference["object_id"]
+    original = body_path.read_bytes()
+    try:
+        body_path.write_bytes(bytes([original[0] ^ 1]) + original[1:])
+        denied(material_path)
+        denied(path + "status/")
+    finally:
+        body_path.write_bytes(original)
+    require(
+        request(material_path)[0] == 200,
+        "Read did not recover after restoring exact protected bytes",
+    )
+    cases.append("corrupt_protected_object_is_not_served_or_used")
+    membership = WorkspaceMember.objects.get(
+        workspace_id=plan["workspace_id"],
+        member__email=access["approver"],
+        deleted_at__isnull=True,
+    )
+    was_active = membership.is_active
+    require(was_active, "Technical actor was not an active workspace member")
+    try:
+        WorkspaceMember.objects.filter(id=membership.id).update(is_active=False)
+        require(
+            request("/api/users/me/")[0] == 200,
+            "Revocation check lost the authenticated session",
+        )
+        denied(path + "status/")
+        denied(material_path)
+    finally:
+        WorkspaceMember.objects.filter(id=membership.id).update(is_active=was_active)
+    cases.append("membership_revocation_fences_existing_session")
+    require(
+        graph() == before, "Denied operations changed the controlling business graph"
+    )
+    cases.append("initiative_draft_control_history_and_claims_preserved")
+    return {
+        "result": "PILOT_CONTROL_CHECKS_PASSED",
+        "cases": cases,
+        "gate2_commands_sent": 2,
+        "gate2_commands_allowed": 0,
+        "operational_acceptance": False,
+        "scope": "Synthetic copy only; role checks, revocation and injected local faults do not approve an operational pilot",
+    }
+
+
 def probe():
     output = sys.stdout
     sys.stdout = sys.stderr  # Application diagnostics must not mix with the result.
@@ -110,11 +312,21 @@ def probe():
     worker.start()
     client = build_opener(HTTPCookieProcessor(CookieJar()), NoRedirect())
 
-    def request(path, data=None):
-        body = None if data is None else urlencode(data).encode()
-        req = Request(base + path, data=body, headers={"Accept-Encoding": "identity"})
+    def request(path, data=None, *, session=None, headers=None):
+        body = (
+            data
+            if isinstance(data, bytes)
+            else None
+            if data is None
+            else urlencode(data).encode()
+        )
+        req = Request(
+            base + path,
+            data=body,
+            headers={"Accept-Encoding": "identity", **(headers or {})},
+        )
         try:
-            response = client.open(req, timeout=30)
+            response = (session or client).open(req, timeout=30)
         except HTTPError as error:
             response = error
         with response:
@@ -164,20 +376,23 @@ def probe():
             and "sha256:" + hashlib.sha256(raw).hexdigest() == reference["digest"],
             "Restored definition mismatch",
         )
-        print(
-            json.dumps(
-                {
-                    "result": "RESTORED_HTTP_READ_PASSED",
-                    "login": "normal_session_http",
-                    "principal_verified": True,
-                    "manual_state": plan["state"],
-                    "initiative_version": plan["initiative_version"],
-                    "definition_digest_verified": True,
-                    "gate2_commands_sent": 0,
-                }
-            ),
-            file=output,
-        )
+        result = {
+            "result": "RESTORED_HTTP_READ_PASSED",
+            "login": "normal_session_http",
+            "principal_verified": True,
+            "manual_state": plan["state"],
+            "initiative_version": plan["initiative_version"],
+            "definition_digest_verified": True,
+            "gate2_commands_sent": 0,
+        }
+        if "--pilot-controls" in sys.argv[2:]:
+            result["pilot_controls"] = pilot_controls(
+                request, access, plan, path, reference
+            )
+            result["gate2_commands_sent"] = result["pilot_controls"][
+                "gate2_commands_sent"
+            ]
+        print(json.dumps(result), file=output)
     finally:
         server.shutdown()
         worker.join(timeout=5)

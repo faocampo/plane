@@ -2,7 +2,7 @@
 
 This operator tool captures the existing local review database and fixed synthetic
 protected catalog, then proves restoration into a new disposable target. It does
-not restore over an existing installation or activate recovered runtime services.
+not restore over an existing installation or activate an operational installation.
 The running review checkout and its source revision remain unchanged.
 
 [Recovery tool](recovery.py) (capture, integrity checks and isolated restore) and
@@ -110,8 +110,26 @@ the original WSGI application on an ephemeral loopback port in the copy's networ
 namespace. No port is published to the host. It restores the catalog under native
 owner-only permissions, logs in through the normal session endpoint and verifies
 the authenticated principal, manual state, version ETag and exact definition digest.
-It sends no Gate2 command. It is an HTTP acceptance check, not browser acceptance;
+By default it sends no Gate2 command. It is an HTTP check, not browser acceptance;
 the original demo's real browser journey has separate evidence.
+
+Add `--pilot-controls` (isolated identity and injected-fault profile) to the same
+exercise invocation to check anonymous access, an invalid password, role-bound
+approval, a different workspace, runtime disablement, protected-object corruption,
+and revocation of workspace membership while the session remains authenticated.
+The access input then also needs `owner` and `code_reviewer` (existing synthetic
+account emails). It sends two schema-valid APPROVE commands with valid session
+CSRF, version and idempotency headers: the owner and code reviewer must both be
+denied. The assigned technical approver's read must still offer APPROVE.
+
+Faults affect only the new disposable copy. Flags, bytes and membership are
+restored in finally blocks; the source demo is never modified. Protected denials
+must match an unknown resource's status and body without an ETag. The Initiative,
+draft, revision, control, decision and claim histories must remain unchanged.
+Authentication sessions and no-effect security records are outside that final
+business-graph comparison. This profile does not prove IdP integration, MFA,
+distinct real human identities, revocation of every possible object grant, or
+safe command behavior under every fault. Those remain separate qualifications.
 
 The temporary API and database are removed afterward. This supplies no rollout
 or production activation approval. Original permissions are not inferred from a
@@ -125,11 +143,12 @@ operator configuration and plaintext login credentials are not captured.
 python3 -m unittest discover -s deployments/curve-local-pilot/recovery -p 'test_*.py' -v
 ```
 
-The eleven focused tests cover valid material, database corruption before any
+The twelve focused tests cover valid material, database corruption before any
 restore process, object digest mismatch, missing objects, unsafe paths and links,
 duplicate members, manifest path boundaries, cleanup after a failed startup and
 refusal to remove a container carrying another run's ownership label, incomplete
-operator inputs and overly broad credential-file permissions.
+operator inputs, overly broad credential-file permissions and refusal to run
+pilot controls without the complete private HTTP profile.
 The real restore exercise is separate evidence; unit tests do not substitute for it.
 
 An observed synthetic run is a bounded qualification result, not a production
