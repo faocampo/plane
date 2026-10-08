@@ -1,0 +1,17 @@
+overlay: 1.0.0
+info:
+  title: Curve Initiative business-intent contract overlay
+  version: 1.1.0
+actions:
+  - target: $.paths['/workspaces/{workspace_slug}/curve/initiatives/'].post.requestBody.content['application/json'].schema
+    description: Use the v1.1 create request with optional Draft business intent.
+    update:
+      $ref: ../schemas/initiative-create-request-v1.1.schema.json
+  - target: $.paths['/workspaces/{workspace_slug}/curve/initiatives/{initiative_id}'].patch.requestBody.content['application/json'].schema
+    description: Allow business intent to be set while the Initiative remains in Draft.
+    update:
+      $ref: ../schemas/initiative-update-request-v1.1.schema.json
+  - target: $.components.responses.InitiativeMutation.content['application/json'].schema
+    description: Return the v1.1 Initiative representation for newly created or upgraded records.
+    update:
+      $ref: ../schemas/initiative-v1.1.schema.json

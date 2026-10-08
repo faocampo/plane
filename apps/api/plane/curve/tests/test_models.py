@@ -32,7 +32,7 @@ from plane.curve.models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 
-ACTOR = {"actor_type": "HUMAN", "actor_id": "federico"}
+ACTOR = {"actor_type": "HUMAN", "actor_id": "reviewer-alpha"}
 DIGEST = f"sha256:{'a' * 64}"
 OTHER_DIGEST = f"sha256:{'b' * 64}"
 SAFE_ERROR = {"code": "TEST_FAILURE", "retryable": False}
@@ -72,7 +72,7 @@ def domain_event_values(workspace_id=None, aggregate_id=None, sequence=1, **over
         "sequence": sequence,
         "actor": ACTOR,
         "correlation_id": "curve-test-correlation",
-        "payload_schema": "https://curve.x3m.internal/contracts/schemas/operation-event-v1.schema.json",
+        "payload_schema": "https://curve.example.invalid/contracts/schemas/operation-event-v1.schema.json",
         "payload": {"status": "PENDING"},
     }
     values.update(overrides)
@@ -99,7 +99,7 @@ def audit_event_values(workspace_id=None, target_id=None, sequence=1, **override
 def idempotency_values(workspace_id=None, **overrides):
     values = {
         "workspace_id": workspace_id or uuid.uuid4(),
-        "principal_scope": "HUMAN:federico",
+        "principal_scope": "HUMAN:reviewer-alpha",
         "command_scope": "CREATE_FOUNDATION_PROBE:workspace",
         "key_digest": DIGEST,
         "request_digest": OTHER_DIGEST,
@@ -161,25 +161,25 @@ def test_workspace_scoped_model_has_normative_common_fields():
     }
 
 
-def test_context_manifest_pins_approved_curve_and_plane_revisions():
+def test_public_context_has_no_transferred_human_authority():
     manifest_path = Path(__file__).parents[1] / "contracts" / "m0-s2-context.json"
     manifest = json.loads(manifest_path.read_text())
 
-    assert manifest["curve_revision"] == "ab2c81a33ede719c02ff0a2a6ab35eabcf304de1"
-    assert manifest["plane_base_revision"] == "7685bbc7cc5e1ab34f11e3912d9e47d31c365a9a"
-    assert manifest["context_digest"] == ("sha256:45c266e1ab0d096747d6493a828d689251584bad70a1570582478bfe1a91cedc")
-    assert manifest["human_owner"] == manifest["human_reviewer"] == "Federico Ocampo"
+    assert manifest["schema_version"] == "curve-public-reference/v1"
+    assert manifest["status"] == "PUBLIC_REFERENCE"
+    assert manifest["execution_authority"] == "NONE"
+    assert manifest["legacy_approval_transfer"] == "PROHIBITED"
+    assert "human_owner" not in manifest and "approval_evidence" not in manifest
 
 
-def test_m003_context_manifest_pins_contract_and_base_revisions():
+def test_m003_public_context_cannot_authorize_dispatch():
     manifest_path = Path(__file__).parents[1] / "contracts" / "m0-03-context.json"
     manifest = json.loads(manifest_path.read_text())
 
-    assert manifest["curve_revision"] == "097016ffe2eb259cc780ad2a6cd41ca3422366b2"
-    assert manifest["plane_base_revision"] == "eff8686a69aa112ea8fda79be0e1316dc1fd97d6"
-    assert manifest["context_digest"] == ("sha256:113fcd3cf9795585a5db5a59e5d21965dd4e6ba9525fe5ea9d3bd4b15e546359")
-    assert len(manifest["files"]) == len(manifest["paths"]) == 33
-    assert manifest["paths"] == sorted(manifest["paths"])
+    assert manifest["publication_edition"] == "curve-plane-public-contracts-v1"
+    assert manifest["execution_authority"] == "NONE"
+    assert manifest["legacy_approval_transfer"] == "PROHIBITED"
+    assert "dispatch" not in manifest
 
 
 @pytest.mark.parametrize("status", [OperationStatus.SUCCEEDED, OperationStatus.FAILED, OperationStatus.CANCELLED])
@@ -285,7 +285,7 @@ def test_policy_decision_sequence_is_unique_per_workspace_resource():
         {"reason_codes": {"reason": "POLICY_ALLOWED"}},
         {"policy_manifest_digest": "raw-digest"},
         {"input_digest": "raw-digest"},
-        {"recorded_by": {"actor_type": "HUMAN", "actor_id": "federico"}},
+        {"recorded_by": {"actor_type": "HUMAN", "actor_id": "reviewer-alpha"}},
         {"effect": PolicyEffect.DENY, "reason_codes": ["FEATURE_DISABLED"]},
         {"permitted_projection": []},
         {"permitted_projection": {"projection": "WORKSPACE_ID"}},

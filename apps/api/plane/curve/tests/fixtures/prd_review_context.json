@@ -1,0 +1,131 @@
+{
+  "workspace_id": "00000000-0000-4000-8000-000000000001",
+  "initiative_id": "00000000-0000-4000-8000-000000000002",
+  "snapshot_revision": "synthetic-revision-1",
+  "initiative_version": 7,
+  "state": "PRD_REVIEW",
+  "risk_tier": "STANDARD",
+  "current_checkpoint_id": "00000000-0000-4000-8000-000000000024",
+  "controlling_decision_id": null,
+  "current_readiness_report_id": "00000000-0000-4000-8000-000000000020",
+  "binding": {
+    "availability": "PRESENT",
+    "metadata": {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "workspace_id": "00000000-0000-4000-8000-000000000001",
+      "initiative_id": "00000000-0000-4000-8000-000000000002",
+      "metadata_schema_version": "1.0",
+      "version": 2,
+      "synchronization_status": "CURRENT",
+      "last_reconciled_at": "2026-10-02T11:00:00.000Z",
+      "provider_file_id": "synthetic-file",
+      "current_provider_version": "4"
+    }
+  },
+  "checkpoint": {
+    "availability": "PRESENT",
+    "metadata": {
+      "id": "00000000-0000-4000-8000-000000000024",
+      "workspace_id": "00000000-0000-4000-8000-000000000001",
+      "initiative_id": "00000000-0000-4000-8000-000000000002",
+      "metadata_schema_version": "2.0",
+      "checkpoint_number": 2,
+      "external_document_binding_id": "00000000-0000-4000-8000-000000000021",
+      "provider_file_id": "synthetic-file",
+      "artifact_version_id": "00000000-0000-4000-8000-000000000025",
+      "evidence_snapshot_id": "00000000-0000-4000-8000-000000000023",
+      "provider_version": "4",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "recorded_at": "2026-10-02T11:00:00.000Z",
+      "completeness_check_id": "00000000-0000-4000-8000-000000000020"
+    }
+  },
+  "decision": {
+    "availability": "ABSENT",
+    "metadata": null
+  },
+  "readiness": {
+    "availability": "PRESENT",
+    "metadata": {
+      "schema_version": "curve.prd-readiness/v1-candidate",
+      "id": "00000000-0000-4000-8000-000000000020",
+      "workspace_id": "00000000-0000-4000-8000-000000000001",
+      "initiative_id": "00000000-0000-4000-8000-000000000002",
+      "initiative_version": 7,
+      "prd_binding_id": "00000000-0000-4000-8000-000000000021",
+      "provider_file_id": "synthetic-file",
+      "provider_version": "4",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "idea_brief_version_id": "00000000-0000-4000-8000-000000000022",
+      "idea_brief_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "evidence_snapshot_id": "00000000-0000-4000-8000-000000000023",
+      "inventory_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "checked_at": "2026-10-02T11:00:00.000Z",
+      "profile_digest": "sha256:893116c9ad148748d096e07017002bf405a0bc892b423e59675458fafb6789dc",
+      "status": "READY",
+      "reasons": []
+    }
+  },
+  "current_readiness_subject": {
+    "id": "00000000-0000-4000-8000-000000000020",
+    "workspace_id": "00000000-0000-4000-8000-000000000001",
+    "initiative_id": "00000000-0000-4000-8000-000000000002",
+    "initiative_version": 7,
+    "prd_binding_id": "00000000-0000-4000-8000-000000000021",
+    "provider_file_id": "synthetic-file",
+    "provider_version": "4",
+    "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "idea_brief_version_id": "00000000-0000-4000-8000-000000000022",
+    "idea_brief_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "evidence_snapshot_id": "00000000-0000-4000-8000-000000000023",
+    "inventory_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "checked_at": "2026-10-02T11:00:00.000Z"
+  },
+  "current_profile_digest": "sha256:893116c9ad148748d096e07017002bf405a0bc892b423e59675458fafb6789dc",
+  "assignments": [
+    {
+      "id": "00000000-0000-4000-8000-000000000010",
+      "workspace_id": "00000000-0000-4000-8000-000000000001",
+      "initiative_id": "00000000-0000-4000-8000-000000000002",
+      "gate_type": "PRD_APPROVAL",
+      "approver": {
+        "actor_type": "HUMAN",
+        "actor_id": "00000000-0000-4000-8000-000000000003"
+      },
+      "display_name": "Fictional Reviewer 1",
+      "member_active": true,
+      "valid_from": "2026-10-01T00:00:00.000Z",
+      "valid_until": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000011",
+      "workspace_id": "00000000-0000-4000-8000-000000000001",
+      "initiative_id": "00000000-0000-4000-8000-000000000002",
+      "gate_type": "PLAN_APPROVAL",
+      "approver": {
+        "actor_type": "HUMAN",
+        "actor_id": "00000000-0000-4000-8000-000000000004"
+      },
+      "display_name": "Fictional Reviewer 2",
+      "member_active": true,
+      "valid_from": "2026-10-01T00:00:00.000Z",
+      "valid_until": null
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "workspace_id": "00000000-0000-4000-8000-000000000001",
+      "initiative_id": "00000000-0000-4000-8000-000000000002",
+      "gate_type": "CODE_READINESS",
+      "approver": {
+        "actor_type": "HUMAN",
+        "actor_id": "00000000-0000-4000-8000-000000000005"
+      },
+      "display_name": "Fictional Reviewer 3",
+      "member_active": true,
+      "valid_from": "2026-10-01T00:00:00.000Z",
+      "valid_until": null
+    }
+  ],
+  "decision_assignment": null,
+  "schema_version": "curve.prd-review-context-input/v1-candidate"
+}

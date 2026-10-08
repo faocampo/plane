@@ -55,7 +55,7 @@ describe("Curve Foundation status", () => {
   it("renders the ready state and starts the local verification", () => {
     const createProbe = vi.fn();
     useCurveFoundationMock.mockReturnValue({ ...defaultHookValue, createProbe });
-    render(<CurveFoundationStatus workspaceSlug="x3m" workspaceId="workspace-1" />);
+    render(<CurveFoundationStatus workspaceSlug="example-workspace" workspaceId="workspace-1" />);
 
     expect(screen.getByRole("heading", { name: "Foundation status" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run foundation probe" }));
@@ -68,13 +68,13 @@ describe("Curve Foundation status", () => {
       ...defaultHookValue,
       connectionState: "STALE",
       problem: {
-        type: "https://curve.x3m.internal/problems/curve-event-cursor-stale",
+        type: "https://curve.example.invalid/problems/curve-event-cursor-stale",
         title: "Live updates need to be resynchronized",
         status: 410,
       },
       resync,
     });
-    render(<CurveFoundationStatus workspaceSlug="x3m" workspaceId="workspace-1" />);
+    render(<CurveFoundationStatus workspaceSlug="example-workspace" workspaceId="workspace-1" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Resync status" }));
     expect(resync).toHaveBeenCalledOnce();
@@ -86,7 +86,7 @@ describe("Curve Foundation status", () => {
       operation: runningOperation,
       etag: '"curve-operation:operation-1:v3"',
     });
-    render(<CurveFoundationStatus workspaceSlug="x3m" workspaceId="workspace-1" />);
+    render(<CurveFoundationStatus workspaceSlug="example-workspace" workspaceId="workspace-1" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel probe" }));
     expect(screen.getByRole("heading", { name: "Cancel foundation probe?" })).toBeInTheDocument();

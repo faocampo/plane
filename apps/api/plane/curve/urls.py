@@ -3,6 +3,24 @@
 # See the LICENSE file for details.
 
 from django.urls import path
+from plane.curve.manual_gate2_v2.views import Gate2CommandEndpoint, Gate2StatusEndpoint, Gate2MaterialEndpoint
+from plane.curve.scope_editor_read_views_v2 import CurveScopeEditorPreconditionsV2Endpoint
+from plane.curve.manual_plan_v2.views import ManualPlanSaveEndpoint, ManualPlanReadEndpoint
+from plane.curve.project_association_read_views import CurveProjectAssociationPreconditionsEndpoint
+from plane.curve.scope_reopening_views import CurveScopeReopeningEndpoint, CurveScopeReopeningPreconditionsEndpoint
+from plane.curve.scope_proposal_views import CurveScopeProposalEndpoint, CurveScopeProposalRevisionEndpoint
+from plane.curve.project_association_views import (
+    CurveProjectAssociationCreateEndpoint,
+    CurveProjectAssociationDetailEndpoint,
+    CurveProjectAssociationEndEndpoint,
+)
+from plane.curve.prd_views import CurvePrdCommandEndpoint
+from plane.curve.prd_read_views import CurvePrdReviewContextEndpoint
+from plane.curve.scoped_prd_views import (
+    CurveScopedPrdCommandEndpoint,
+    CurveScopedPrdObservationEndpoint,
+    CurveScopedPrdSubjectEndpoint,
+)
 
 from plane.curve.views import (
     CurveEventStreamEndpoint,
@@ -26,6 +44,146 @@ from plane.curve.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/materials/<uuid:object_id>/",
+        Gate2MaterialEndpoint.as_view(),
+        name="curve-manual-gate2-material-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/commands/",
+        Gate2CommandEndpoint.as_view(),
+        name="curve-manual-gate2-command-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/status/",
+        Gate2StatusEndpoint.as_view(),
+        name="curve-manual-gate2-status-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-gate2/v2/preparation/",
+        Gate2StatusEndpoint.as_view(preparation=True),
+        name="curve-manual-plan-preparation-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-editor/v2/preconditions/",
+        CurveScopeEditorPreconditionsV2Endpoint.as_view(),
+        name="curve-scope-editor-preconditions-v2",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/",
+        ManualPlanSaveEndpoint.as_view(),
+        name="curve-manual-plan-v2-save",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/current/",
+        ManualPlanReadEndpoint.as_view(action="READ_CURRENT"),
+        name="curve-manual-plan-v2-current",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/status/",
+        ManualPlanReadEndpoint.as_view(action="READ_STATUS"),
+        name="curve-manual-plan-v2-status",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/revisions/<uuid:revision_id>/",
+        ManualPlanReadEndpoint.as_view(action="READ_REVISION"),
+        name="curve-manual-plan-v2-revision",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-association-preconditions/",
+        CurveProjectAssociationPreconditionsEndpoint.as_view(),
+        name="curve-project-association-preconditions",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-reopening/v1/preconditions/",
+        CurveScopeReopeningPreconditionsEndpoint.as_view(),
+        name="curve-scope-reopening-preconditions",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-reopening/v1/reopen-and-replace/",
+        CurveScopeReopeningEndpoint.as_view(),
+        name="curve-scope-reopening",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/observations",
+        CurveScopedPrdCommandEndpoint.as_view(route="observe"),
+        name="curve-scoped-prd-observe",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/observations/<uuid:observation_id>",
+        CurveScopedPrdObservationEndpoint.as_view(),
+        name="curve-scoped-prd-observation",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/subjects/current",
+        CurveScopedPrdSubjectEndpoint.as_view(),
+        name="curve-scoped-prd-subject-current",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/subjects/<uuid:scoped_subject_id>",
+        CurveScopedPrdSubjectEndpoint.as_view(),
+        name="curve-scoped-prd-subject",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/submit",
+        CurveScopedPrdCommandEndpoint.as_view(route="submit"),
+        name="curve-scoped-prd-submit",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/approve",
+        CurveScopedPrdCommandEndpoint.as_view(route="approve"),
+        name="curve-scoped-prd-approve",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scoped-prd/v1/return-for-revision",
+        CurveScopedPrdCommandEndpoint.as_view(route="return-for-revision"),
+        name="curve-scoped-prd-return-for-revision",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-proposal/",
+        CurveScopeProposalEndpoint.as_view(),
+        name="curve-scope-proposal",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/scope-proposal/revisions/<uuid:revision_id>/",
+        CurveScopeProposalRevisionEndpoint.as_view(),
+        name="curve-scope-proposal-revision",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-associations/",
+        CurveProjectAssociationCreateEndpoint.as_view(),
+        name="curve-project-association-create",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/project-associations/<uuid:association_id>/",
+        CurveProjectAssociationDetailEndpoint.as_view(),
+        name="curve-project-association-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/project-associations/<uuid:association_id>/end/",
+        CurveProjectAssociationEndEndpoint.as_view(),
+        name="curve-project-association-end",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/review-context/",
+        CurvePrdReviewContextEndpoint.as_view(),
+        name="curve-prd-review-context",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/submit",
+        CurvePrdCommandEndpoint.as_view(route="submit"),
+        name="curve-prd-submit",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/approve",
+        CurvePrdCommandEndpoint.as_view(route="approve"),
+        name="curve-prd-approve",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/prd/return-for-revision",
+        CurvePrdCommandEndpoint.as_view(route="return-for-revision"),
+        name="curve-prd-return-for-revision",
+    ),
     path(
         "workspaces/<str:slug>/curve/",
         CurveWorkspaceShellEndpoint.as_view(),

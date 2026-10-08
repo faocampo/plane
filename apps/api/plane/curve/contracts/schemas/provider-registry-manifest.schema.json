@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/provider-registry-manifest.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/provider-registry-manifest.schema.json",
   "title": "Curve M0-S9A local provider-registry manifest",
   "type": "object",
   "additionalProperties": false,
@@ -214,7 +214,7 @@
       "const": [
         {
           "aggregate_type": "PROVIDER_CONNECTION",
-          "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-connection-event-v1.schema.json",
+          "payload_schema": "https://curve.example.invalid/contracts/schemas/provider-connection-event-v1.schema.json",
           "event_types": [
             "curve.provider_connection.registered",
             "curve.provider_connection.validated",
@@ -228,7 +228,7 @@
         },
         {
           "aggregate_type": "OPERATION",
-          "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-reconciliation-event-v1.schema.json",
+          "payload_schema": "https://curve.example.invalid/contracts/schemas/provider-reconciliation-event-v1.schema.json",
           "event_types": [
             "curve.provider_reconciliation.completed",
             "curve.provider_reconciliation.failed"

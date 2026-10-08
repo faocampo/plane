@@ -1,0 +1,1035 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/schemas/prd-review-context-input-v1.schema.json",
+  "title": "PRD review context trusted metadata input v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_id",
+    "initiative_id",
+    "snapshot_revision",
+    "initiative_version",
+    "state",
+    "risk_tier",
+    "current_checkpoint_id",
+    "controlling_decision_id",
+    "current_readiness_report_id",
+    "binding",
+    "checkpoint",
+    "decision",
+    "readiness",
+    "current_readiness_subject",
+    "current_profile_digest",
+    "assignments",
+    "decision_assignment",
+    "schema_version"
+  ],
+  "properties": {
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "initiative_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "snapshot_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9._~-]+$"
+    },
+    "initiative_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "state": {
+      "enum": [
+        "DRAFT",
+        "ALIGNING",
+        "PRD_REVIEW",
+        "PLANNING",
+        "PLAN_REVIEW",
+        "EXECUTING",
+        "CODE_READINESS_REVIEW",
+        "READY_FOR_REPOSITORY_REVIEW",
+        "PAUSED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "risk_tier": {
+      "enum": [
+        "LOW",
+        "STANDARD",
+        "HIGH"
+      ]
+    },
+    "current_checkpoint_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "controlling_decision_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "current_readiness_report_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "binding": {
+      "$ref": "#/$defs/binding_envelope"
+    },
+    "checkpoint": {
+      "$ref": "#/$defs/checkpoint_envelope"
+    },
+    "decision": {
+      "$ref": "#/$defs/decision_envelope"
+    },
+    "readiness": {
+      "$ref": "#/$defs/report_envelope"
+    },
+    "current_readiness_subject": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/subject"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "current_profile_digest": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "assignments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assignment"
+      },
+      "maxItems": 20
+    },
+    "decision_assignment": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/assignment"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema_version": {
+      "const": "curve.prd-review-context-input/v1-candidate"
+    }
+  },
+  "$defs": {
+    "human": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor_type",
+        "actor_id"
+      ],
+      "properties": {
+        "actor_type": {
+          "const": "HUMAN"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "workspace_id",
+        "initiative_id",
+        "initiative_version",
+        "prd_binding_id",
+        "provider_file_id",
+        "provider_version",
+        "content_digest",
+        "idea_brief_version_id",
+        "idea_brief_digest",
+        "evidence_snapshot_id",
+        "inventory_digest",
+        "checked_at"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "prd_binding_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "idea_brief_version_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "idea_brief_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "evidence_snapshot_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "inventory_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+        }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "workspace_id",
+        "initiative_id",
+        "initiative_version",
+        "prd_binding_id",
+        "provider_file_id",
+        "provider_version",
+        "content_digest",
+        "idea_brief_version_id",
+        "idea_brief_digest",
+        "evidence_snapshot_id",
+        "inventory_digest",
+        "checked_at",
+        "schema_version",
+        "profile_digest",
+        "status",
+        "reasons"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "prd_binding_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "idea_brief_version_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "idea_brief_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "evidence_snapshot_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "inventory_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+        },
+        "schema_version": {
+          "const": "curve.prd-readiness/v1-candidate"
+        },
+        "profile_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "status": {
+          "enum": [
+            "READY",
+            "BLOCKED"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "PRD_SECTION_MISSING:executive_summary",
+              "PRD_SECTION_MISSING:problem_context",
+              "PRD_SECTION_MISSING:goals",
+              "PRD_SECTION_MISSING:non_goals",
+              "PRD_SECTION_MISSING:personas",
+              "PRD_SECTION_MISSING:workflow",
+              "PRD_SECTION_MISSING:requirements",
+              "PRD_SECTION_MISSING:gates",
+              "PRD_SECTION_MISSING:integrations",
+              "PRD_SECTION_MISSING:data_security",
+              "PRD_SECTION_MISSING:quality",
+              "PRD_SECTION_MISSING:rollout",
+              "PRD_SECTION_MISSING:kpis",
+              "PRD_SECTION_MISSING:acceptance",
+              "PRD_SECTION_MISSING:risks",
+              "PRD_SECTION_MISSING:assumptions",
+              "PRD_SECTION_MISSING:open_questions",
+              "PRD_SECTION_EMPTY:executive_summary",
+              "PRD_SECTION_EMPTY:problem_context",
+              "PRD_SECTION_EMPTY:goals",
+              "PRD_SECTION_EMPTY:non_goals",
+              "PRD_SECTION_EMPTY:personas",
+              "PRD_SECTION_EMPTY:workflow",
+              "PRD_SECTION_EMPTY:requirements",
+              "PRD_SECTION_EMPTY:gates",
+              "PRD_SECTION_EMPTY:integrations",
+              "PRD_SECTION_EMPTY:data_security",
+              "PRD_SECTION_EMPTY:quality",
+              "PRD_SECTION_EMPTY:rollout",
+              "PRD_SECTION_EMPTY:kpis",
+              "PRD_SECTION_EMPTY:acceptance",
+              "PRD_SECTION_EMPTY:risks",
+              "PRD_SECTION_EMPTY:assumptions",
+              "PRD_SECTION_EMPTY:open_questions",
+              "PRD_SECTION_DUPLICATE:executive_summary",
+              "PRD_SECTION_DUPLICATE:problem_context",
+              "PRD_SECTION_DUPLICATE:goals",
+              "PRD_SECTION_DUPLICATE:non_goals",
+              "PRD_SECTION_DUPLICATE:personas",
+              "PRD_SECTION_DUPLICATE:workflow",
+              "PRD_SECTION_DUPLICATE:requirements",
+              "PRD_SECTION_DUPLICATE:gates",
+              "PRD_SECTION_DUPLICATE:integrations",
+              "PRD_SECTION_DUPLICATE:data_security",
+              "PRD_SECTION_DUPLICATE:quality",
+              "PRD_SECTION_DUPLICATE:rollout",
+              "PRD_SECTION_DUPLICATE:kpis",
+              "PRD_SECTION_DUPLICATE:acceptance",
+              "PRD_SECTION_DUPLICATE:risks",
+              "PRD_SECTION_DUPLICATE:assumptions",
+              "PRD_SECTION_DUPLICATE:open_questions",
+              "IDEA_BRIEF_SECTION_MISSING:problem",
+              "IDEA_BRIEF_SECTION_MISSING:affected_users",
+              "IDEA_BRIEF_SECTION_MISSING:desired_outcomes",
+              "IDEA_BRIEF_SECTION_MISSING:non_goals",
+              "IDEA_BRIEF_SECTION_MISSING:constraints",
+              "IDEA_BRIEF_SECTION_MISSING:assumptions",
+              "IDEA_BRIEF_SECTION_MISSING:contradictions",
+              "IDEA_BRIEF_SECTION_MISSING:blockers",
+              "IDEA_BRIEF_SECTION_MISSING:unknowns",
+              "IDEA_BRIEF_SECTION_EMPTY:problem",
+              "IDEA_BRIEF_SECTION_EMPTY:affected_users",
+              "IDEA_BRIEF_SECTION_EMPTY:desired_outcomes",
+              "IDEA_BRIEF_SECTION_EMPTY:non_goals",
+              "IDEA_BRIEF_SECTION_EMPTY:constraints",
+              "IDEA_BRIEF_SECTION_EMPTY:assumptions",
+              "IDEA_BRIEF_SECTION_EMPTY:contradictions",
+              "IDEA_BRIEF_SECTION_EMPTY:blockers",
+              "IDEA_BRIEF_SECTION_EMPTY:unknowns",
+              "IDEA_BRIEF_SECTION_DUPLICATE:problem",
+              "IDEA_BRIEF_SECTION_DUPLICATE:affected_users",
+              "IDEA_BRIEF_SECTION_DUPLICATE:desired_outcomes",
+              "IDEA_BRIEF_SECTION_DUPLICATE:non_goals",
+              "IDEA_BRIEF_SECTION_DUPLICATE:constraints",
+              "IDEA_BRIEF_SECTION_DUPLICATE:assumptions",
+              "IDEA_BRIEF_SECTION_DUPLICATE:contradictions",
+              "IDEA_BRIEF_SECTION_DUPLICATE:blockers",
+              "IDEA_BRIEF_SECTION_DUPLICATE:unknowns",
+              "PRD_REQUIREMENT_ID_REQUIRED",
+              "PRD_REQUIREMENT_DUPLICATE",
+              "PRD_REQUIREMENT_EMPTY",
+              "PRD_ACCEPTANCE_ID_REQUIRED",
+              "PRD_ACCEPTANCE_DUPLICATE",
+              "PRD_ACCEPTANCE_EMPTY",
+              "PRD_ACCEPTANCE_TRACE_REQUIRED",
+              "PRD_ACCEPTANCE_UNKNOWN_REQUIREMENT",
+              "PRD_REQUIREMENT_UNCOVERED",
+              "READINESS_INVENTORY_STALE",
+              "READINESS_INVENTORY_INVALID",
+              "BLOCKERS_UNRESOLVED",
+              "ASSUMPTION_PLAN_REQUIRED"
+            ]
+          },
+          "maxItems": 91,
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "READY"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reasons": {
+                "type": "array",
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reasons": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "workspace_id",
+        "initiative_id",
+        "gate_type",
+        "approver",
+        "display_name",
+        "member_active",
+        "valid_from",
+        "valid_until"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "gate_type": {
+          "enum": [
+            "PRD_APPROVAL",
+            "PLAN_APPROVAL",
+            "CODE_READINESS"
+          ]
+        },
+        "approver": {
+          "$ref": "#/$defs/human"
+        },
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "member_active": {
+          "type": "boolean"
+        },
+        "valid_from": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "metadata_schema_version",
+        "version",
+        "synchronization_status",
+        "last_reconciled_at",
+        "workspace_id",
+        "initiative_id",
+        "provider_file_id",
+        "current_provider_version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "metadata_schema_version": {
+          "const": "1.0"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "synchronization_status": {
+          "enum": [
+            "CURRENT",
+            "CHANGED_SINCE_SUBMISSION",
+            "CHANGED_SINCE_APPROVAL",
+            "ACCESS_REVOKED",
+            "MOVED_OUTSIDE_POLICY",
+            "DELETED",
+            "PROVIDER_UNAVAILABLE",
+            "RECONCILIATION_REQUIRED"
+          ]
+        },
+        "last_reconciled_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "current_provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        }
+      }
+    },
+    "checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "metadata_schema_version",
+        "checkpoint_number",
+        "artifact_version_id",
+        "evidence_snapshot_id",
+        "provider_version",
+        "content_digest",
+        "recorded_at",
+        "workspace_id",
+        "initiative_id",
+        "external_document_binding_id",
+        "provider_file_id",
+        "completeness_check_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "metadata_schema_version": {
+          "enum": [
+            "1.0",
+            "2.0"
+          ]
+        },
+        "checkpoint_number": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "artifact_version_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "evidence_snapshot_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "external_document_binding_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "completeness_check_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "metadata_schema_version",
+        "state",
+        "gate_assignment_id",
+        "checkpoint_id",
+        "artifact_version_id",
+        "evidence_snapshot_id",
+        "provider_version",
+        "content_digest",
+        "confirmed_risk_tier",
+        "decided_by",
+        "decided_at",
+        "workspace_id",
+        "initiative_id",
+        "provider_validation_cutoff"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "metadata_schema_version": {
+          "enum": [
+            "1.0-candidate",
+            "2.0-candidate"
+          ]
+        },
+        "state": {
+          "enum": [
+            "APPROVED",
+            "CHANGES_REQUESTED",
+            "REJECTED"
+          ]
+        },
+        "gate_assignment_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "checkpoint_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "artifact_version_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "evidence_snapshot_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "confirmed_risk_tier": {
+          "enum": [
+            "LOW",
+            "STANDARD",
+            "HIGH"
+          ]
+        },
+        "decided_by": {
+          "$ref": "#/$defs/human"
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "initiative_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        },
+        "provider_validation_cutoff": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+        }
+      }
+    },
+    "binding_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "availability",
+        "metadata"
+      ],
+      "properties": {
+        "availability": {
+          "enum": [
+            "PRESENT",
+            "ABSENT",
+            "UNAVAILABLE"
+          ]
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/binding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "availability": {
+                "const": "PRESENT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "metadata": {
+                "$ref": "#/$defs/binding"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "metadata": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "checkpoint_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "availability",
+        "metadata"
+      ],
+      "properties": {
+        "availability": {
+          "enum": [
+            "PRESENT",
+            "ABSENT",
+            "UNAVAILABLE"
+          ]
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/checkpoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "availability": {
+                "const": "PRESENT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "metadata": {
+                "$ref": "#/$defs/checkpoint"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "metadata": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "decision_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "availability",
+        "metadata"
+      ],
+      "properties": {
+        "availability": {
+          "enum": [
+            "PRESENT",
+            "ABSENT",
+            "UNAVAILABLE"
+          ]
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/decision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "availability": {
+                "const": "PRESENT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "metadata": {
+                "$ref": "#/$defs/decision"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "metadata": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "report_envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "availability",
+        "metadata"
+      ],
+      "properties": {
+        "availability": {
+          "enum": [
+            "PRESENT",
+            "ABSENT",
+            "UNAVAILABLE"
+          ]
+        },
+        "metadata": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/report"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "availability": {
+                "const": "PRESENT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "metadata": {
+                "$ref": "#/$defs/report"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "metadata": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

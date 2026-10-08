@@ -2,6 +2,7 @@
   "$schema": "https://v2-8-12.turborepo.dev/schema.json",
   "globalDependencies": [".npmrc", ".oxfmtrc.json", ".oxlintrc.json"],
   "globalEnv": [
+    "VITE_CURVE_MANUAL_PLAN_V2_ENABLED",
     "APP_VERSION",
     "DEV",
     "PROD",
@@ -87,6 +88,11 @@
     "test": {
       "dependsOn": ["^build"],
       "outputs": []
+    },
+    "@plane/services#build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", "src/curve/prd-review-context.validator.mjs"]
     }
   }
 }

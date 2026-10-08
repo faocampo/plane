@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/schemas/access-envelope.schema.json",
+  "title": "Curve immutable Access Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "source_refs",
+    "effective_principal",
+    "source_authorization_digest",
+    "classification",
+    "allowed_audiences",
+    "allowed_destinations",
+    "retention_policy_ref",
+    "redaction_state",
+    "legal_hold",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+    "workspace_id": { "$ref": "common.schema.json#/$defs/WorkspaceId" },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "common.schema.json#/$defs/ResourceRef" }
+    },
+    "effective_principal": { "$ref": "common.schema.json#/$defs/ActorRef" },
+    "source_authorization_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+    "classification": { "$ref": "common.schema.json#/$defs/DataClassification" },
+    "allowed_audiences": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,99}$" },
+      "uniqueItems": true
+    },
+    "allowed_destinations": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,99}$" },
+      "uniqueItems": true
+    },
+    "retention_policy_ref": { "$ref": "common.schema.json#/$defs/ResourceRef" },
+    "redaction_state": { "type": "string", "enum": ["RAW", "REDACTED", "SANITIZED_METADATA_ONLY"] },
+    "transformation_refs": {
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/ResourceRef" }
+    },
+    "legal_hold": { "type": "boolean" },
+    "expires_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "revoked_at": {
+      "oneOf": [{ "$ref": "common.schema.json#/$defs/Instant" }, { "type": "null" }]
+    },
+    "created_at": { "$ref": "common.schema.json#/$defs/Instant" }
+  }
+}

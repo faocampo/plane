@@ -140,6 +140,21 @@ CURVE_PROVIDER_REGISTRY_ENABLED = os.environ.get("CURVE_PROVIDER_REGISTRY_ENABLE
     "yes",
     "on",
 }
+# Additive candidate: operator-reviewed local configuration only; no environment activation.
+CURVE_PROJECT_ASSOCIATIONS_ENABLED = False
+CURVE_SCOPE_PROPOSALS_ENABLED = False
+CURVE_SCOPE_REOPENING_ENABLED = False
+CURVE_MANUAL_PLAN_DRAFT_V2_ENABLED = False
+CURVE_SCOPE_EDITOR_READ_V2_ENABLED = False
+CURVE_MANUAL_GATE2_V2_ENABLED = False
+CURVE_MANUAL_PLAN_V2_SYNTHETIC_ROOT = ""
+CURVE_LOCAL_PLANE_INSTALLATION_ID = None
+
+# Metadata reads have their own policy and trusted adapter. Configuration alone
+# never enables PRD commands or activates a source/storage provider.
+CURVE_PRD_READ_ENABLED = False
+CURVE_PRD_READ_RUNTIME = None
+
 CURVE_SSE_REPLAY_LIMIT = max(1, min(1000, int(os.environ.get("CURVE_SSE_REPLAY_LIMIT", "100"))))
 CURVE_SSE_POLL_INTERVAL_SECONDS = max(
     0.1,

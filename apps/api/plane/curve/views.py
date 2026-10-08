@@ -300,7 +300,7 @@ class CurveAPIView(BaseAPIView):
 
     def problem(self, request, *, status_code: int, code: str, title: str, field: str | None = None, extra=None):
         body = {
-            "type": f"https://curve.x3m.internal/problems/{code.lower().replace('_', '-')}",
+            "type": f"https://curve.example.invalid/problems/{code.lower().replace('_', '-')}",
             "title": title,
             "status": status_code,
             "correlation_id": correlation_id_for_request(request),

@@ -15,10 +15,15 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "@makepl
 import { ProductUpdatesModal } from "@/components/global";
 import { AppSidebarItem } from "@/components/sidebar/sidebar-item";
 import { PlaneVersionNumber } from "@/components/global/version-number";
+import { CurveSourceLink } from "@/components/curve/curve-source-link";
 // hooks
 import { usePowerK } from "@/hooks/store/use-power-k";
 
-export const HelpMenuRoot = observer(function HelpMenuRoot() {
+export const HelpMenuRoot = observer(function HelpMenuRoot({
+  showCurveAttribution = false,
+}: {
+  showCurveAttribution?: boolean;
+}) {
   // store hooks
   const { t } = useTranslation();
   const { toggleShortcutsListModal } = usePowerK();
@@ -51,6 +56,20 @@ export const HelpMenuRoot = observer(function HelpMenuRoot() {
           footer={
             <div className="text-11 text-secondary">
               <PlaneVersionNumber />
+              {showCurveAttribution && (
+                <div className="mt-1 space-y-2 border-t border-subtle px-1 pt-2">
+                  <p>Plane powers Curve&apos;s work-management capabilities.</p>
+                  <a
+                    href="https://github.com/makeplane/plane"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-link-primary underline"
+                  >
+                    Plane source (AGPL)
+                  </a>
+                  <CurveSourceLink compact />
+                </div>
+              )}
             </div>
           }
         >

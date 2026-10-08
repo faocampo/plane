@@ -1,0 +1,6 @@
+{
+  "status": "REVIEWED_PROSPECTIVE_DDL_NOT_RUNTIME_QUALIFIED",
+  "physical_catalog_digest": "sha256:4d33761d55c0f0cb509af13a729cdb6a7479c7b8ca662fc843f856bce33adb08",
+  "migration_unpinned_digest": "sha256:496469fcaf4c6ef07102abcb83e945465cfbf2ad067e093d98e3b9dcd7ab67e2",
+  "boundary": "Actual event schema, unambiguous retained reviewer, fresh review-subject replacement before approval; deterministic catalog; original seals and foreign keys preserved"
+}

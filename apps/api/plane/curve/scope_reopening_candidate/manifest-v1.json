@@ -1,0 +1,8 @@
+{
+  "policy-v1.json": "sha256:598e492b7dc23369eaf3029d7e208b4fd338d03d3e3388fcb10305e9c02b0094",
+  "pre-plan-baseline-v1.json": "sha256:f3829e16aa91e055d8bb907477c51b3b5b78ac07e1d58e446cef4b835c2c65bb",
+  "scope-proposal-revision-v2.schema.json": "sha256:def7127b3bc5644ce96428dc127a345d87faf8c875a7314fd8b8ac2e716ef7cd",
+  "scope-reopening-command-v1.schema.json": "sha256:312af5442338f406230c63f12a1752d7f0e0a0e3e2fba41a76836ef693ab5eb9",
+  "scope-reopening-event-v1.schema.json": "sha256:e12b7a83111ecdab7608b7b4880051171f01b5b27ac496864cc058f81a201d5b",
+  "scope-reopening-receipt-v1.schema.json": "sha256:84f75afe3baffa50927906abb9c088c9196b3db486688b53c8ff0adaa6d03f75"
+}

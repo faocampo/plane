@@ -47,7 +47,9 @@ def main():
         cmd.append("-v")
 
     # Add common flags
-    cmd.extend(["--reuse-db", "--nomigrations"])
+    # SQL constraints and triggers are part of runtime correctness. Syncing ORM
+    # models alone omits RunSQL operations and cannot verify those safeguards.
+    cmd.extend(["--reuse-db", "--migrations"])
 
     # Print command
     print(f"Running: {' '.join(cmd)}")

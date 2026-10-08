@@ -1,0 +1,19 @@
+{
+  "schema_version": "curve.scope-editor-precondition-policy/v2-candidate",
+  "policy_edition": "LOCAL_SCOPE_EDITOR_PRECONDITION_RECONSTRUCTION_V2",
+  "environment": "LOCAL",
+  "default_enabled": false,
+  "initiative_mode": "STANDALONE",
+  "initiative_state": "DRAFT",
+  "authority": [
+    "INITIATIVE_CREATOR",
+    "CURRENT_WORKSPACE_ADMINISTRATOR"
+  ],
+  "old_task_access_required": false,
+  "maximum_revisions": 1000,
+  "maximum_initial_revision_fetch": 1001,
+  "write_effects": false,
+  "saved_empty_scope": "PRESENT",
+  "query_parameters": false,
+  "denial": "FIXED_NON_ENUMERATING_404"
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": "curve.reconstruction-qualification-delta/v1-candidate",
+  "status": "PROPOSED_NOT_RUNTIME_QUALIFIED",
+  "plane_base_commit": "7d4225d594adf984de1451f16ad2c8ab741c58eb",
+  "preserved_predecessors": {
+    "scope_reopening_qualification.json": "sha256:72bdb3b987ec1925754e6a14dee36cecec3c85706605c052d443628d84e7fb52",
+    "project_association_read_qualification.json": "sha256:5381243df882c087ab61932cda77e286a76b3b3e4b19853be5eea9cc81574f1b"
+  },
+  "draft_successor": {
+    "proof_path": "manual_plan_draft_reconstruction_qualification_v2.json",
+    "immediate_predecessor": "project_association_read_qualification.json",
+    "runtime_added": [
+      "manual_plan_v2/__init__.py",
+      "manual_plan_v2/contracts.py",
+      "manual_plan_v2/models.py",
+      "manual_plan_v2/repository.py",
+      "manual_plan_v2/policy.py",
+      "manual_plan_v2/services.py",
+      "manual_plan_v2/reads.py",
+      "manual_plan_v2/views.py",
+      "manual_plan_v2/validation.py",
+      "manual_plan_v2/validator_worker.py",
+      "manual_plan_v2/synthetic.py"
+    ],
+    "runtime_replaced": [
+      "models.py",
+      "urls.py"
+    ],
+    "trusted_root_review": [
+      "scope_reopening_qualification.py"
+    ],
+    "migration_added": [
+      "0024_manual_draft_reconstruction.py"
+    ],
+    "models_added": [
+      {
+        "model_name": "manualplandraftv2",
+        "db_table": "curve_manual_plan_draft_v2",
+        "columns": [
+          "current_revision_id",
+          "id",
+          "initiative_id",
+          "product_id",
+          "version",
+          "workspace_id"
+        ]
+      },
+      {
+        "model_name": "manualplanrevisionv2",
+        "db_table": "curve_manual_plan_revision_v2",
+        "columns": [
+          "command_receipt_id",
+          "created_by",
+          "digest",
+          "draft_id",
+          "id",
+          "initiative_id",
+          "initiative_version",
+          "input_identity_digest",
+          "original_input_identity",
+          "payload",
+          "policy_decision_id",
+          "predecessor_id",
+          "product_id",
+          "recorded_at",
+          "validation_receipt",
+          "validation_receipt_digest",
+          "version",
+          "workspace_id"
+        ]
+      }
+    ],
+    "writer_added": "MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2",
+    "excluded_writers": [
+      "PLAN_APPROVAL",
+      "CONTROLLING_WORK_BINDING",
+      "EXECUTION",
+      "COMPLETION_CREDIT"
+    ],
+    "historical_seal": {
+      "table": "curve_scope_reopening_coverage",
+      "edition": "CURVE_PRE_PLAN_C2B_V1",
+      "digest": "sha256:e44c580ea214e03b315c2b14c038cb14ae5d99fa8a60115e82d6b5841ac177a7"
+    },
+    "current_seal_edition": "CURVE_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2",
+    "current_catalog_digest": null,
+    "migration_digest": null,
+    "runtime_source_digests": null,
+    "current_seal_storage": "Separate immutable coverage table; preserve original C2b table, row and trigger",
+    "db_functions_replaced": [
+      "curve_scope_reopening_verify_coverage()"
+    ],
+    "schema_counts_informational_only": {
+      "runtime_modules": 133,
+      "migrations": 24,
+      "models": 33
+    }
+  },
+  "read_successor": {
+    "proof_path": "scope_editor_read_reconstruction_qualification_v2.json",
+    "immediate_predecessor": "manual_plan_draft_reconstruction_qualification_v2.json",
+    "runtime_added": [
+      "scope_editor_read_v2.py",
+      "scope_editor_read_views_v2.py"
+    ],
+    "runtime_replaced": [
+      "urls.py"
+    ],
+    "non_runtime_delta": [],
+    "schema_counts_informational_only": {
+      "runtime_modules": 135,
+      "migrations": 24,
+      "models": 33
+    }
+  },
+  "qualification_requirement": "NEW_FROZEN_SOURCE_AND_REAL_POSTGRESQL_EVIDENCE_REQUIRED",
+  "lost_lineage_databases": "REJECT_WITHOUT_SEPARATE_PRESERVATION_PLAN"
+}

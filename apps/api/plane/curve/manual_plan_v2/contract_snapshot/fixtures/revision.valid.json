@@ -1,0 +1,30 @@
+{
+  "schema_version": "curve.manual-plan-draft.revision/v2-candidate",
+  "policy_edition": "LOCAL_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2",
+  "id": "30000000-0000-4000-8000-000000000016",
+  "workspace_id": "30000000-0000-4000-8000-000000000001",
+  "product_id": "30000000-0000-4000-8000-000000000003",
+  "initiative_id": "30000000-0000-4000-8000-000000000002",
+  "draft_id": "30000000-0000-4000-8000-000000000017",
+  "revision": 1,
+  "initiative_version": 10,
+  "predecessor_id": null,
+  "approved_subject_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000004",
+    "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "definition_ref": {
+    "object_id": "30000000-0000-4000-8000-000000000013",
+    "digest": "sha256:d0a5d25d0f56f2936d1c812f401c39e1e30d5753eed35fc19f3c9a601ff1eda8",
+    "size_bytes": 7771,
+    "media_type": "application/json"
+  },
+  "manual_profile_ref": {
+    "entity_id": "20000000-0000-4000-8000-000000000201",
+    "digest": "sha256:16ddfbb742fb06e370e1c2db3723eb98c826e1454bf237d97f678656649314a4"
+  },
+  "created_by": "30000000-0000-4000-8000-000000000024",
+  "recorded_at": "2026-10-05T00:00:00.000Z",
+  "controlling": false,
+  "digest": "sha256:135eea585626b344f463986dbaaf43bfac0cb06189a2b1f85e7d23f7e4933ee0"
+}

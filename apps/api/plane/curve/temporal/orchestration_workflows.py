@@ -19,6 +19,7 @@ with workflow.unsafe.imports_passed_through():
         CHILD_START_SIGNAL_TIMEOUT_SECONDS,
         CONTINUE_AS_NEW_WAVE_THRESHOLD,
         PARENT_CANCEL_TIMEOUT_SECONDS,
+        PARENT_CHILD_CANCEL_ONCE_PATCH_ID,
         PARENT_ORCHESTRATION_PATCH_ID,
         QUESTION_ANSWER_TIMEOUT_SECONDS,
         slice_attempt_workflow_id,
@@ -289,6 +290,7 @@ class CurveInitiativeOrchestrationWorkflowV1:
         self._last_rejected_command_id = workflow_input.last_rejected_command_id
         self._last_command_rejection_code = workflow_input.last_command_rejection_code
         self._active_handles: dict[str, workflow.ChildWorkflowHandle[ChildResultV1]] = {}
+        self._cancel_requested_slice_ids: set[str] = set()
 
     @workflow.run
     async def run(self, workflow_input: ParentWorkflowInputV1) -> ParentResultV1:
@@ -515,8 +517,15 @@ class CurveInitiativeOrchestrationWorkflowV1:
         self._phase = phase
 
     def _cancel_active_children(self) -> None:
+        # Keep the old command sequence when replaying histories without this marker.
+        # New runs can reach this method from both the signal handler and wave waiter.
+        cancel_once = workflow.patched(PARENT_CHILD_CANCEL_ONCE_PATCH_ID)
         for slice_id in sorted(self._active_handles):
+            if cancel_once and slice_id in self._cancel_requested_slice_ids:
+                continue
             self._active_handles[slice_id].cancel()
+            if cancel_once:
+                self._cancel_requested_slice_ids.add(slice_id)
 
     @workflow.query(name="state")
     def state(self) -> ParentStateV1:

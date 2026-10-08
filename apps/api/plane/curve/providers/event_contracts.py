@@ -18,10 +18,10 @@ _CONTRACT_DIRECTORY = Path(__file__).resolve().parents[1] / "contracts"
 _SCHEMA_DIRECTORY = _CONTRACT_DIRECTORY / "schemas"
 _MANIFEST_PATH = _CONTRACT_DIRECTORY / "providers" / "m0-s9a-provider-registry-v1.json"
 PROVIDER_CONNECTION_EVENT_SCHEMA = (
-    "https://curve.x3m.internal/contracts/schemas/provider-connection-event-v1.schema.json"
+    "https://curve.example.invalid/contracts/schemas/provider-connection-event-v1.schema.json"
 )
 PROVIDER_RECONCILIATION_EVENT_SCHEMA = (
-    "https://curve.x3m.internal/contracts/schemas/provider-reconciliation-event-v1.schema.json"
+    "https://curve.example.invalid/contracts/schemas/provider-reconciliation-event-v1.schema.json"
 )
 
 

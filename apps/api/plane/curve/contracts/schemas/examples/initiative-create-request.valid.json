@@ -2,12 +2,12 @@
   "product_id": "70000000-0000-4000-8000-000000000001",
   "mode": "STANDALONE",
   "roadmap_item_id": null,
-  "keyword": "Loomit-SDK-panel",
-  "title": "Loomit SDK compatibility panel",
+  "keyword": "Example-Product-SDK-panel",
+  "title": "Example Product SDK compatibility panel",
   "description": {
     "schema_version": "1.0",
     "format": "MARKDOWN",
-    "body": "Show installed and recommended Loomit SDK versions in App Details."
+    "body": "Show installed and recommended Example Product SDK versions in App Details."
   },
   "risk_tier": "STANDARD",
   "gate_assignments": [

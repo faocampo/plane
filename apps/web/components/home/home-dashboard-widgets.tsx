@@ -58,7 +58,7 @@ export const HOME_WIDGETS_LIST: {
   },
 };
 
-export const DashboardWidgets = observer(function DashboardWidgets() {
+export const DashboardWidgets = observer(function DashboardWidgets({ curveMode = false }: { curveMode?: boolean }) {
   // router
   const { workspaceSlug } = useParams();
   // navigation
@@ -89,7 +89,17 @@ export const DashboardWidgets = observer(function DashboardWidgets() {
       {!isWikiApp && <NoProjectsEmptyState />}
 
       {isAnyWidgetEnabled ? (
-        <div className="flex flex-col">
+        <section className="flex flex-col" aria-labelledby={curveMode ? "curve-home-context-title" : undefined}>
+          {curveMode && (
+            <div className="pt-8 pb-1">
+              <h2 id="curve-home-context-title" className="text-14 font-semibold text-primary">
+                Continue and capture context
+              </h2>
+              <p className="mt-1 text-11 leading-5 text-secondary">
+                Resume recent work, keep reference links close, and leave yourself lightweight notes.
+              </p>
+            </div>
+          )}
           {orderedWidgets.map((key) => {
             const WidgetComponent = HOME_WIDGETS_LIST[key]?.component;
             const isEnabled = widgetsMap[key]?.is_enabled;
@@ -100,7 +110,7 @@ export const DashboardWidgets = observer(function DashboardWidgets() {
               </div>
             );
           })}
-        </div>
+        </section>
       ) : (
         <div className="grid h-full w-full place-items-center">
           <SimpleEmptyState

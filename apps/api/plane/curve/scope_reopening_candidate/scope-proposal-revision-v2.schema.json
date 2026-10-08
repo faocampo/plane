@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/scope-reopening-v1/scope-proposal-revision-v2.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "proposal_id",
+    "initiative_id",
+    "product_id",
+    "version",
+    "initiative_version",
+    "predecessor_id",
+    "item_count",
+    "delivery_count",
+    "membership_digest",
+    "created_by",
+    "recorded_at",
+    "policy_edition",
+    "command_receipt_id",
+    "controlling",
+    "items"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "2.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "proposal_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "initiative_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "initiative_version": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 9007199254740991
+    },
+    "predecessor_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "item_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "delivery_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "membership_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "created_by": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policy_edition": {
+      "const": "REOPENED_EXISTING_WORK_SCOPE_PROPOSAL_V1"
+    },
+    "command_receipt_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "controlling": {
+      "const": false
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "association_id",
+          "association_version",
+          "source_issue_id",
+          "purpose",
+          "provider_installation_id",
+          "source_project_id",
+          "source_observed_at",
+          "source_version",
+          "source_fingerprint"
+        ],
+        "properties": {
+          "association_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "association_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "source_issue_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "purpose": {
+            "enum": [
+              "CONTEXT_EVIDENCE",
+              "PROPOSED_DELIVERY"
+            ]
+          },
+          "provider_installation_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "source_project_id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          },
+          "source_observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "source_fingerprint": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  }
+}

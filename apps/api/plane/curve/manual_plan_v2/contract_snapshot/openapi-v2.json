@@ -1,0 +1,517 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Curve reconstructed manual draft candidate",
+    "version": "2.0.0-candidate"
+  },
+  "security": [
+    {
+      "sessionAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/workspaces/{slug}/curve/initiatives/{initiative_id}/manual-plan-drafts/v2/": {
+      "post": {
+        "operationId": "saveManualPlanDraftV2",
+        "description": "Save one immutable manual draft. Session authentication and standard Django CSRF are required. No approval, control or execution.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+            },
+            "description": "Strong typed C1-style Initiative ETag; exact target UUID and positive safe-integer version. This is the explicit v2 selection, not an untyped numeric header."
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-save-v2.schema.json"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "New revision; exact revision Location is returned.",
+            "headers": {
+              "ETag": {
+                "description": "Current typed C1-style Initiative ETag with target UUID and a positive safe-integer version; success only.",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Exact immutable revision route."
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-revision-v2.schema.json"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Currently authorized exact replay of the original revision.",
+            "headers": {
+              "ETag": {
+                "description": "Current typed C1-style Initiative ETag with target UUID and a positive safe-integer version; success only.",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-revision-v2.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed absent, inaccessible or unavailable denial",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "State or exact command identity conflict",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Current precondition failed",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Bounded input exceeded",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Strict JSON, closed schema or deterministic validation failure",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Required precondition missing",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Qualified edition or fixed local validator unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{slug}/curve/initiatives/{initiative_id}/manual-plan-drafts/v2/current/": {
+      "get": {
+        "operationId": "readCurrentManualPlanDraftV2",
+        "description": "Protected current authorization, original input identity and no-store; no query parameters.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current authorized closed projection.",
+            "headers": {
+              "ETag": {
+                "description": "Current typed C1-style Initiative ETag with target UUID and a positive safe-integer version; success only.",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-revision-v2.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed absent, inaccessible or unavailable denial",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Qualified edition or fixed local validator unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{slug}/curve/initiatives/{initiative_id}/manual-plan-drafts/v2/revisions/{revision_id}/": {
+      "get": {
+        "operationId": "readManualPlanDraftRevisionV2",
+        "description": "Protected current authorization, original input identity and no-store; no query parameters.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revision_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current authorized closed projection.",
+            "headers": {
+              "ETag": {
+                "description": "Current typed C1-style Initiative ETag with target UUID and a positive safe-integer version; success only.",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-revision-v2.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed absent, inaccessible or unavailable denial",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Qualified edition or fixed local validator unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{slug}/curve/initiatives/{initiative_id}/manual-plan-drafts/v2/status/": {
+      "get": {
+        "operationId": "readManualPlanDraftStatusV2",
+        "description": "Protected current authorization, original input identity and no-store; no query parameters.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current authorized closed projection.",
+            "headers": {
+              "ETag": {
+                "description": "Current typed C1-style Initiative ETag with target UUID and a positive safe-integer version; success only.",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-status-v2.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed absent, inaccessible or unavailable denial",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Qualified edition or fixed local validator unavailable",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-error-v2.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

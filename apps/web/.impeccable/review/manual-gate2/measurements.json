@@ -1,0 +1,35 @@
+{
+  "errors": [],
+  "measurements": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "text": "Example Initiative\n\nPlanning · Synthetic interface preview\n\nManual plan\n\nReview the plan, record its decision and manage reserved tasks. Execution remains manual.\n\nPlan awaiting review\n\nRefresh\nRead plan definition\nA synthetic user can review the example outcome.\nA synthetic user can review the example outcome.\nRead the complete definition\nTask reservations\n\nNo tasks are reserved by this plan.\n\nNext decision\nApprove and reserve tasks\nRequest plan changes\nDecision evidence\nChoose protected evidence\nEvidence 1\nRead decision evidence\n\nThe plan covers the agreed outcome and acceptance criteria. The named reviewers have checked the protected inputs. Approval reserves the selected tasks; execution remains manual.\n\nRead the complete evidence\nI reviewed this plan and its decision evidence.\nApprove and reserve tasks"
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "scrollWidth": 390,
+      "text": "Example Initiative\n\nPlanning · Synthetic interface preview\n\nManual plan\n\nReview the plan, record its decision and manage reserved tasks. Execution remains manual.\n\nPlan awaiting review\n\nRefresh\nRead plan definition\nA synthetic user can review the example outcome.\nA synthetic user can review the example outcome.\nRead the complete definition\nTask reservations\n\nNo tasks are reserved by this plan.\n\nNext decision\nApprove and reserve tasks\nRequest plan changes\nDecision evidence\nChoose protected evidence\nEvidence 1\nRead decision evidence\n\nThe plan covers the agreed outcome and acceptance criteria. The named reviewers have checked the protected inputs. Approval reserves the selected tasks; execution remains manual.\n\nRead the complete evidence\nI reviewed this plan and its decision evidence.\nApprove and reserve tasks"
+    },
+    {
+      "name": "mobile-held",
+      "width": 390,
+      "scrollWidth": 390,
+      "text": "Example Initiative\n\nPlanning · Synthetic interface preview\n\nManual plan\n\nReview the plan, record its decision and manage reserved tasks. Execution remains manual.\n\nPlan approved · tasks reserved\n\nRefresh\n\nThis Initiative is paused. Its reservations remain in place until an explicit reconciled release.\n\nRead plan definition\nTask reservations\nTask 1 · Reserved · generation 1\nTask identity\nNext decision\nReconcile selected tasks\nRelease reconciled tasks\nDecision evidence\nChoose protected evidence\nEvidence 1\nRead decision evidence\nI reviewed this plan and its decision evidence and selected the reservations to reconcile or release.\nReconcile selected tasks"
+    },
+    {
+      "name": "mobile-unavailable",
+      "width": 390,
+      "scrollWidth": 390,
+      "text": "Example Initiative\n\nPlanning · Synthetic interface preview\n\nManual plan\n\nReview the plan, record its decision and manage reserved tasks. Execution remains manual.\n\nManual plan unavailable for this view\n\nRefresh"
+    },
+    {
+      "name": "mobile-unknown",
+      "width": 390,
+      "scrollWidth": 390,
+      "text": "Example Initiative\n\nPlanning · Synthetic interface preview\n\nManual plan\n\nReview the plan, record its decision and manage reserved tasks. Execution remains manual.\n\nDecision outcome not confirmed\n\nRefresh\n\nThe outcome could not be confirmed. Retry the same decision to recover its result.\n\nRetry the same decision"
+    }
+  ]
+}

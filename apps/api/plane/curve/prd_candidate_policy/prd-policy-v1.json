@@ -1,0 +1,161 @@
+{
+  "schema_version": "1.0-candidate",
+  "policy_key": "CURVE_PRD_POLICY",
+  "policy_version": 1,
+  "default_effect": "DENY",
+  "unknown_classification": "RESTRICTED",
+  "allow_reason_code": "POLICY_ALLOWED",
+  "deny_precedence": [
+    "POLICY_CONTEXT_INVALID",
+    "FEATURE_DISABLED",
+    "UNAUTHENTICATED",
+    "AGENT_NOT_ALLOWED",
+    "WORKSPACE_MISMATCH",
+    "INACTIVE_MEMBERSHIP",
+    "UNKNOWN_ACTION",
+    "RESOURCE_TYPE_NOT_ALLOWED",
+    "RESOURCE_NOT_FOUND",
+    "UNSUPPORTED_PRINCIPAL",
+    "ROLE_NOT_ALLOWED",
+    "ENVIRONMENT_NOT_ALLOWED",
+    "CLASSIFICATION_NOT_ALLOWED",
+    "OBJECT_ACL_REQUIRED",
+    "OBJECT_ACL_DENIED",
+    "ASSIGNMENT_REQUIRED",
+    "ASSIGNMENT_MISMATCH",
+    "SEPARATION_OF_DUTY_DENIED",
+    "TARGET_ALLOWLIST_REQUIRED",
+    "TARGET_NOT_ALLOWED",
+    "SERVICE_AUTHORIZATION_REQUIRED",
+    "SERVICE_AUTHORIZATION_INVALID",
+    "SERVICE_AUTHORIZATION_INACTIVE",
+    "SERVICE_AUTHORIZATION_EXPIRED",
+    "EXTERNAL_EFFECT_NOT_ALLOWED"
+  ],
+  "actions": [
+    {
+      "action": "CURVE.PRD.SUBMIT",
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "WORKSPACE_MEMBER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
+      "object_acl": "REQUIRED",
+      "owner_satisfies_acl": true,
+      "assignment": "THREE_ACTIVE_HUMANS",
+      "separation_of_duty": "PRD_THREE_ACTIVE_HUMANS",
+      "target_allowlist": "NOT_APPLICABLE",
+      "external_side_effect": false,
+      "permitted_projection": [
+        "NO_BODY"
+      ]
+    },
+    {
+      "action": "CURVE.PRD.APPROVE",
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "PRODUCT_APPROVER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
+      "object_acl": "REQUIRED",
+      "owner_satisfies_acl": false,
+      "assignment": "PRODUCT_APPROVER",
+      "separation_of_duty": "PRD_THREE_ACTIVE_HUMANS",
+      "target_allowlist": "NOT_APPLICABLE",
+      "external_side_effect": false,
+      "permitted_projection": [
+        "NO_BODY"
+      ]
+    },
+    {
+      "action": "CURVE.PRD.REQUEST_CHANGES",
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "PRODUCT_APPROVER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
+      "object_acl": "REQUIRED",
+      "owner_satisfies_acl": false,
+      "assignment": "PRODUCT_APPROVER",
+      "separation_of_duty": "PRD_THREE_ACTIVE_HUMANS",
+      "target_allowlist": "NOT_APPLICABLE",
+      "external_side_effect": false,
+      "permitted_projection": [
+        "NO_BODY"
+      ]
+    },
+    {
+      "action": "CURVE.PRD.REJECT",
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "PRODUCT_APPROVER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
+      "object_acl": "REQUIRED",
+      "owner_satisfies_acl": false,
+      "assignment": "PRODUCT_APPROVER",
+      "separation_of_duty": "PRD_THREE_ACTIVE_HUMANS",
+      "target_allowlist": "NOT_APPLICABLE",
+      "external_side_effect": false,
+      "permitted_projection": [
+        "NO_BODY"
+      ]
+    }
+  ]
+}

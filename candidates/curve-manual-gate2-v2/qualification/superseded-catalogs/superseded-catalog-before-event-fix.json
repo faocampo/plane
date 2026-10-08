@@ -1,0 +1,6 @@
+{
+  "status": "REVIEWED_PROSPECTIVE_DDL_NOT_RUNTIME_QUALIFIED",
+  "physical_catalog_digest": "sha256:644f89bc5d1b9fc93392b322852b26914146884c764eabddc4da5f5f54d048a3",
+  "migration_unpinned_digest": "sha256:32aa526118e5dcba8f6ed45c87eb332ae38a09e3b27c7997fed43650366f2cf0",
+  "boundary": "Four retained models, unchanged foreign keys; deterministic constraint-name tie-break in successor catalog; original catalog and seals restored on empty reverse"
+}

@@ -26,7 +26,7 @@ from plane.curve.models import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db]
 
-ACTOR = {"actor_type": "HUMAN", "actor_id": "federico"}
+ACTOR = {"actor_type": "HUMAN", "actor_id": "reviewer-alpha"}
 SERVICE_ACTOR = {"actor_type": "SERVICE", "actor_id": "curve-api"}
 DIGEST = f"sha256:{'a' * 64}"
 OTHER_DIGEST = f"sha256:{'b' * 64}"

@@ -1,0 +1,109 @@
+{
+  "workspace_id": "30000000-0000-4000-8000-000000000001",
+  "initiative_id": "30000000-0000-4000-8000-000000000002",
+  "initiative_key": "example-initiative",
+  "manual_profile_ref": {
+    "entity_id": "20000000-0000-4000-8000-000000000201",
+    "digest": "sha256:16ddfbb742fb06e370e1c2db3723eb98c826e1454bf237d97f678656649314a4"
+  },
+  "approved_subject_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000004",
+    "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "scope_revision_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000005",
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "workflow_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000008",
+    "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "quality_policy_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000009",
+    "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "repositories": [
+    {
+      "repository_ref": {
+        "entity_id": "30000000-0000-4000-8000-000000000006",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "base_branch": "main",
+      "base_commit": {
+        "algorithm": "sha1",
+        "value": "1111111111111111111111111111111111111111"
+      },
+      "repository_policy_ref": {
+        "entity_id": "30000000-0000-4000-8000-000000000007",
+        "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "context_input_ref": {
+        "object_id": "30000000-0000-4000-8000-000000000010",
+        "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "size_bytes": 1024,
+        "media_type": "application/json"
+      }
+    }
+  ],
+  "owner_ids": [
+    "30000000-0000-4000-8000-000000000024"
+  ],
+  "code_approver_id": "30000000-0000-4000-8000-000000000023",
+  "risk_tier": "STANDARD",
+  "budget_policy_ref": {
+    "entity_id": "20000000-0000-4000-8000-000000000204",
+    "digest": "sha256:25bd9129a8d8cca13a81aff51c6f9d16d0bdae18689f968eb82783f95d51bbc8"
+  },
+  "requirement_ids": [
+    "FR-008",
+    "FR-009"
+  ],
+  "acceptance_ids": [
+    "AC-10",
+    "AC-11"
+  ],
+  "required_check_ids": [
+    "lint",
+    "security",
+    "unit"
+  ],
+  "proposed_delivery_refs": [
+    {
+      "provider_installation_id": "30000000-0000-4000-8000-000000000030",
+      "source_issue_id": "30000000-0000-4000-8000-000000000031"
+    },
+    {
+      "provider_installation_id": "30000000-0000-4000-8000-000000000030",
+      "source_issue_id": "30000000-0000-4000-8000-000000000032"
+    }
+  ],
+  "dependency_artifact_refs": [],
+  "protected_object_refs": [
+    {
+      "object_id": "30000000-0000-4000-8000-000000000010",
+      "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "size_bytes": 1024,
+      "media_type": "application/json"
+    }
+  ],
+  "workflow_conditions": {
+    "workflow_ref": {
+      "entity_id": "30000000-0000-4000-8000-000000000008",
+      "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    "allowed_conditions": [
+      {
+        "dependency_type": "EXECUTION_ORDER",
+        "condition_subject": "VERTICAL_SLICE",
+        "required_state": "DRAFT_ELIGIBLE",
+        "condition_source": "PINNED_WORKFLOW_STATE"
+      },
+      {
+        "dependency_type": "MERGE_ORDER",
+        "condition_subject": "PR_MR_BINDING",
+        "required_state": "MERGED",
+        "condition_source": "VCS_OBSERVATION_ONLY"
+      }
+    ]
+  }
+}

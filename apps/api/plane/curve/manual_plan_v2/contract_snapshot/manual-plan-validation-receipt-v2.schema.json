@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-validation-receipt-v2.schema.json",
+  "title": "Private deterministic validation result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "validator_edition",
+    "definition_digest",
+    "input_identity_digest",
+    "result",
+    "repository_count",
+    "slice_count",
+    "edge_count",
+    "required_conditions",
+    "digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-validation-receipt/v2-candidate"
+    },
+    "validator_edition": {
+      "const": "DETERMINISTIC_SDLC_MANUAL_PLAN_V2"
+    },
+    "definition_digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    },
+    "input_identity_digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    },
+    "result": {
+      "const": "VALID"
+    },
+    "repository_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 32
+    },
+    "slice_count": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256
+    },
+    "edge_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4096
+    },
+    "required_conditions": {
+      "const": "FUTURE_NOT_ASSERTED"
+    },
+    "digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    }
+  }
+}

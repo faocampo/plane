@@ -97,12 +97,12 @@
   "event_payload_contracts": [
     {
       "aggregate_type": "PROVIDER_CONNECTION",
-      "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-connection-event-v1.schema.json",
+      "payload_schema": "https://curve.example.invalid/contracts/schemas/provider-connection-event-v1.schema.json",
       "event_types": []
     },
     {
       "aggregate_type": "OPERATION",
-      "payload_schema": "https://curve.x3m.internal/contracts/schemas/provider-reconciliation-event-v1.schema.json",
+      "payload_schema": "https://curve.example.invalid/contracts/schemas/provider-reconciliation-event-v1.schema.json",
       "event_types": []
     }
   ],

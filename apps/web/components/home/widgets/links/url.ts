@@ -15,6 +15,14 @@ export const normalizeQuickLinkUrl = (value: string): string | undefined => {
   const trimmedValue = value.trim();
   if (!trimmedValue) return undefined;
 
+  // A host with a port is a bare address; other explicit schemes must be HTTP(S).
+  if (
+    /^[a-z][a-z\d+.-]*:/i.test(trimmedValue) &&
+    !HTTP_PROTOCOL_PATTERN.test(trimmedValue) &&
+    !/^[^/?#]+:\d+(?:[/?#]|$)/.test(trimmedValue)
+  )
+    return undefined;
+
   const normalizedValue = HTTP_PROTOCOL_PATTERN.test(trimmedValue) ? trimmedValue : `http://${trimmedValue}`;
 
   try {
@@ -26,7 +34,7 @@ export const normalizeQuickLinkUrl = (value: string): string | undefined => {
       isValidIPv4Address(url.hostname) ||
       (url.hostname.startsWith("[") && url.hostname.endsWith("]"));
 
-    return isSupportedProtocol && isValidHostname ? normalizedValue : undefined;
+    return isSupportedProtocol && isValidHostname && !url.username && !url.password ? normalizedValue : undefined;
   } catch {
     return undefined;
   }

@@ -34,7 +34,9 @@ from plane.curve.observability.propagation import current_traceparent
 from plane.curve.policy_evaluator import evaluate_core_policy
 from plane.curve.policy_manifest import (
     CORE_POLICY_MANIFEST_DIGEST,
+    PRD_POLICY_MANIFEST_DIGEST,
     CORE_POLICY_V2_MANIFEST_DIGEST,
+    SCOPE_REOPENING_POLICY_MANIFEST_DIGEST,
 )
 from plane.curve.policy_types import PolicyEffect, PolicyEvaluationResult
 from plane.db.models import Workspace, WorkspaceMember
@@ -68,6 +70,11 @@ _MUTATION_POLICY_BINDINGS = MappingProxyType(
         "CURVE.GATE.DECIDE.PLAN": (1, CORE_POLICY_MANIFEST_DIGEST),
         "CURVE.GATE.DECIDE.CODE_READINESS": (1, CORE_POLICY_MANIFEST_DIGEST),
         "CURVE.FINDING.DISPOSITION.NON_SECURITY": (1, CORE_POLICY_MANIFEST_DIGEST),
+        "CURVE.SCOPE.REOPEN_AND_REPLACE_SCOPE": (1, SCOPE_REOPENING_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.SUBMIT": (1, PRD_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.APPROVE": (1, PRD_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.REQUEST_CHANGES": (1, PRD_POLICY_MANIFEST_DIGEST),
+        "CURVE.PRD.REJECT": (1, PRD_POLICY_MANIFEST_DIGEST),
     }
 )
 
@@ -956,8 +963,22 @@ def request_operation_cancellation(
 
     def mutation_callback(receipt, observation):
         from plane.curve.services import _request_operation_cancellation_authorized
+        from plane.curve.models import PrdAcceptedCommand
+        from plane.curve.temporal.prd_contracts import PRD_DESTINATION
 
         actor = _human_actor(request.user)
+        from plane.curve.scoped_prd_models import ScopedPrdAcceptedCommand
+        from plane.curve.temporal.scoped_prd_contracts import PRD_DESTINATION as SCOPED_PRD_DESTINATION
+
+        resolved_destination = (
+            SCOPED_PRD_DESTINATION
+            if ScopedPrdAcceptedCommand.objects.filter(
+                workspace_id=receipt.workspace_id, operation_id=operation_id
+            ).exists()
+            else PRD_DESTINATION
+            if PrdAcceptedCommand.objects.filter(workspace_id=receipt.workspace_id, operation_id=operation_id).exists()
+            else destination
+        )
         try:
             return _request_operation_cancellation_authorized(
                 authorization_receipt=receipt,
@@ -972,7 +993,7 @@ def request_operation_cancellation(
                 effective_principal=dict(actor),
                 correlation_id=correlation_id,
                 causation_id=f"cancel:{operation_id}",
-                destination=destination,
+                destination=resolved_destination,
                 traceparent=observation.traceparent(),
             )
         except Exception:

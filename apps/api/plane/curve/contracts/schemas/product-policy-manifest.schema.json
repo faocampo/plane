@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/product-policy-manifest.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/product-policy-manifest.schema.json",
   "title": "Curve Product policy manifest",
   "type": "object",
   "additionalProperties": false,

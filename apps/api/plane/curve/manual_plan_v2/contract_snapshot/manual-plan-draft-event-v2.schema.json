@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-event-v2.schema.json",
+  "title": "Minimal immutable manual draft event payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "event_type",
+    "workspace_id",
+    "initiative_id",
+    "draft_id",
+    "revision_id",
+    "revision_digest",
+    "definition_digest",
+    "input_identity_digest",
+    "policy_decision_id",
+    "controlling"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-draft.event/v2-candidate"
+    },
+    "policy_edition": {
+      "const": "LOCAL_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2"
+    },
+    "event_type": {
+      "const": "CURVE.MANUAL_PLAN_DRAFT_SAVED_V2"
+    },
+    "workspace_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "initiative_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "draft_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "revision_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "revision_digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    },
+    "definition_digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    },
+    "input_identity_digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    },
+    "policy_decision_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "controlling": {
+      "const": false
+    }
+  }
+}

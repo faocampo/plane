@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/scoped-prd-v1/scoped-prd-return-for-revision-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "gate_assignment_id",
+    "checkpoint_id",
+    "artifact_version_id",
+    "content_digest",
+    "provider_version",
+    "evidence_snapshot_id",
+    "confirmed_risk_tier",
+    "decision",
+    "rationale",
+    "scoped_subject_id",
+    "scoped_subject_digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.scoped-prd/v1-candidate"
+    },
+    "policy_edition": {
+      "const": "EXACT_EXISTING_WORK_SCOPED_PRD_V1"
+    },
+    "gate_assignment_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "artifact_version_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "content_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "provider_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9._~-]+$"
+    },
+    "evidence_snapshot_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "confirmed_risk_tier": {
+      "enum": [
+        "LOW",
+        "STANDARD",
+        "HIGH"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "CHANGES_REQUESTED",
+        "REJECTED"
+      ]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "\\S"
+    },
+    "scoped_subject_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "scoped_subject_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

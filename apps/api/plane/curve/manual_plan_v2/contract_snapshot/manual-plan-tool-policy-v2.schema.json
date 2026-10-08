@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-tool-policy-v2.schema.json",
+  "title": "Manual planning zero-automation tool policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "policy_kind",
+    "automatic_tool_calls",
+    "agent_dispatch",
+    "controller_execution",
+    "allowed_capabilities"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-tool-policy/v2-candidate"
+    },
+    "id": {
+      "const": "20000000-0000-4000-8000-000000000203"
+    },
+    "version": {
+      "const": 1
+    },
+    "policy_kind": {
+      "const": "TOOL"
+    },
+    "automatic_tool_calls": {
+      "const": "DENIED"
+    },
+    "agent_dispatch": {
+      "const": "DENIED"
+    },
+    "controller_execution": {
+      "const": "DENIED"
+    },
+    "allowed_capabilities": {
+      "const": []
+    }
+  }
+}

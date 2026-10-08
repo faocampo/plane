@@ -4,6 +4,14 @@
 
 from django.core.exceptions import RequestDataTooBig
 from django.http import JsonResponse
+from io import BytesIO
+import uuid
+from plane.curve.request_privacy import (
+    is_prd_command_request,
+    PRD_COMMAND_MAX_BYTES,
+    is_scope_proposal_request,
+    SCOPE_PROPOSAL_MAX_BYTES,
+)
 
 
 class RequestBodySizeLimitMiddleware:
@@ -16,6 +24,28 @@ class RequestBodySizeLimitMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        scope = is_scope_proposal_request(request)
+        if scope or is_prd_command_request(request):
+            limit = SCOPE_PROPOSAL_MAX_BYTES if scope else PRD_COMMAND_MAX_BYTES
+            code = "SCOPE_PROPOSAL_REQUEST_TOO_LARGE" if scope else "PRD_COMMAND_TOO_LARGE"
+            body = request.read(limit + 1)
+            if len(body) > limit:
+                return JsonResponse(
+                    {
+                        "type": "urn:curve:problem:" + code.lower().replace("_", "-"),
+                        "code": code,
+                        "title": "The scope proposal is too large" if scope else "The PRD command is too large",
+                        "status": 413,
+                        **({"correlation_id": f"curve-{uuid.uuid4()}"} if scope else {}),
+                    },
+                    status=413,
+                    content_type="application/problem+json",
+                    headers={"Cache-Control": "no-store"},
+                )
+            # Preserve exact bytes before session CSRF validation invokes DRF's
+            # parser. Duplicate keys must remain visible to the command boundary.
+            request._body = body
+            request._stream = BytesIO(body)
         try:
             _ = request.body
         except RequestDataTooBig:

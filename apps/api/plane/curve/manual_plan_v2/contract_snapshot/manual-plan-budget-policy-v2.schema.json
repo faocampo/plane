@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-budget-policy-v2.schema.json",
+  "title": "Manual planning zero-automation budget policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "policy_kind",
+    "automatic_spending",
+    "paid_fallback",
+    "automatic_budget_increase",
+    "financial_allocation"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-budget-policy/v2-candidate"
+    },
+    "id": {
+      "const": "20000000-0000-4000-8000-000000000204"
+    },
+    "version": {
+      "const": 1
+    },
+    "policy_kind": {
+      "const": "BUDGET"
+    },
+    "automatic_spending": {
+      "const": "DENIED"
+    },
+    "paid_fallback": {
+      "const": "DENIED"
+    },
+    "automatic_budget_increase": {
+      "const": "DENIED"
+    },
+    "financial_allocation": {
+      "const": false
+    }
+  }
+}

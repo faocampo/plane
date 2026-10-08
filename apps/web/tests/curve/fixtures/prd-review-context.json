@@ -1,0 +1,87 @@
+{
+  "schema_version": "curve.prd-review-context/v1-candidate",
+  "workspace_id": "00000000-0000-4000-8000-000000000001",
+  "initiative_id": "00000000-0000-4000-8000-000000000002",
+  "initiative_version": 7,
+  "state": "PRD_REVIEW",
+  "observed_at": "2026-10-02T12:00:00.000Z",
+  "binding": {
+    "availability": "PRESENT",
+    "metadata": {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "metadata_schema_version": "1.0",
+      "version": 2,
+      "synchronization_status": "CURRENT",
+      "last_reconciled_at": "2026-10-02T11:00:00.000Z"
+    }
+  },
+  "checkpoint": {
+    "availability": "PRESENT",
+    "metadata": {
+      "id": "00000000-0000-4000-8000-000000000024",
+      "metadata_schema_version": "2.0",
+      "checkpoint_number": 2,
+      "artifact_version_id": "00000000-0000-4000-8000-000000000025",
+      "evidence_snapshot_id": "00000000-0000-4000-8000-000000000023",
+      "provider_version": "4",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "recorded_at": "2026-10-02T11:00:00.000Z"
+    }
+  },
+  "readiness": {
+    "availability": "PRESENT",
+    "metadata": {
+      "id": "00000000-0000-4000-8000-000000000020",
+      "schema_version": "curve.prd-readiness/v1-candidate",
+      "status": "READY",
+      "reasons": [],
+      "checked_at": "2026-10-02T11:00:00.000Z",
+      "profile_digest": "sha256:893116c9ad148748d096e07017002bf405a0bc892b423e59675458fafb6789dc",
+      "applicability_scope": "NEW_SUBMISSION",
+      "applicability": "CURRENT",
+      "applicability_reasons": ["EXACT_SUBJECT_MATCH"],
+      "ready_for_submission": true
+    }
+  },
+  "reviewer": {
+    "assignment_id": "00000000-0000-4000-8000-000000000010",
+    "identity": {
+      "actor_type": "HUMAN",
+      "actor_id": "00000000-0000-4000-8000-000000000003"
+    },
+    "display_name": "Fictional Reviewer 1",
+    "validity": "VALID",
+    "reason_codes": ["CURRENT_ASSIGNMENT"],
+    "requesting_human_is_reviewer": true
+  },
+  "decision": {
+    "availability": "ABSENT",
+    "metadata": null
+  },
+  "capabilities": {
+    "submit": {
+      "available": false,
+      "reason_codes": ["COMMAND_RUNTIME_NOT_EVALUATED"],
+      "evaluated_at": "2026-10-02T12:00:00.000Z"
+    },
+    "approve": {
+      "available": false,
+      "reason_codes": ["COMMAND_RUNTIME_NOT_EVALUATED"],
+      "evaluated_at": "2026-10-02T12:00:00.000Z"
+    },
+    "request_changes": {
+      "available": false,
+      "reason_codes": ["COMMAND_RUNTIME_NOT_EVALUATED"],
+      "evaluated_at": "2026-10-02T12:00:00.000Z"
+    },
+    "reject": {
+      "available": false,
+      "reason_codes": ["COMMAND_RUNTIME_NOT_EVALUATED"],
+      "evaluated_at": "2026-10-02T12:00:00.000Z"
+    }
+  },
+  "command_preconditions": {
+    "initiative_version": 7,
+    "commandETag": "\"7\""
+  }
+}

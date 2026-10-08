@@ -1,0 +1,212 @@
+{
+  "association": {
+    "schema_version": "1.0",
+    "id": "00000000-0000-0000-0000-000000000004",
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+    "source_project_id": "00000000-0000-0000-0000-000000000006",
+    "product_id": "00000000-0000-0000-0000-000000000002",
+    "state": "ACTIVE",
+    "version": 1,
+    "effective_at": "2026-10-04T12:00:00Z",
+    "initiated_by": "00000000-0000-0000-0000-000000000007",
+    "policy_edition": "EXPLICIT_EXISTING_PROJECT_ASSOCIATION_V1",
+    "command_receipt_id": "00000000-0000-0000-0000-000000000008",
+    "source_observed_at": "2026-10-04T12:00:00Z",
+    "source_version": "2026-10-04T12:00:00Z",
+    "ended_at": null,
+    "ended_by": null,
+    "end_reason": null,
+    "end_receipt_id": null
+  },
+  "associationCreate": {
+    "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+    "source_project_id": "00000000-0000-0000-0000-000000000006"
+  },
+  "associationEnd": {
+    "expected_product_version": 6,
+    "reason": "Synthetic operational reconciliation"
+  },
+  "revision": {
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "product_id": "00000000-0000-0000-0000-000000000002",
+    "initiative_id": "00000000-0000-0000-0000-000000000003",
+    "schema_version": "1.0",
+    "id": "00000000-0000-0000-0000-00000000000a",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "version": 1,
+    "initiative_version": 2,
+    "predecessor_id": null,
+    "item_count": 1,
+    "delivery_count": 1,
+    "membership_digest": "sha256:b69fb427407c980a0754090d8d30141419596640ca7edaddea1d5ae3bdbb8422",
+    "created_by": "00000000-0000-0000-0000-000000000007",
+    "recorded_at": "2026-10-04T12:00:00Z",
+    "policy_edition": "EXPLICIT_EXISTING_WORK_SCOPE_PROPOSAL_V1",
+    "command_receipt_id": "00000000-0000-0000-0000-00000000000c",
+    "controlling": false,
+    "items": [
+      {
+        "association_id": "00000000-0000-0000-0000-000000000004",
+        "association_version": 1,
+        "source_issue_id": "00000000-0000-0000-0000-000000000009",
+        "purpose": "PROPOSED_DELIVERY",
+        "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+        "source_project_id": "00000000-0000-0000-0000-000000000006",
+        "source_observed_at": "2026-10-04T12:00:00Z",
+        "source_version": "source-v1",
+        "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  },
+  "replace": {
+    "expected_scope_revision": 0,
+    "items": [
+      {
+        "association_id": "00000000-0000-0000-0000-000000000004",
+        "association_version": 1,
+        "source_issue_id": "00000000-0000-0000-0000-000000000009",
+        "purpose": "PROPOSED_DELIVERY"
+      }
+    ]
+  },
+  "observe": {
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "scope_revision_id": "00000000-0000-0000-0000-00000000000a",
+    "scope_revision": 1,
+    "membership_digest": "sha256:b69fb427407c980a0754090d8d30141419596640ca7edaddea1d5ae3bdbb8422"
+  },
+  "observation": {
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "product_id": "00000000-0000-0000-0000-000000000002",
+    "initiative_id": "00000000-0000-0000-0000-000000000003",
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "scope_revision_id": "00000000-0000-0000-0000-00000000000a",
+    "scope_revision": 1,
+    "membership_digest": "sha256:b69fb427407c980a0754090d8d30141419596640ca7edaddea1d5ae3bdbb8422",
+    "id": "00000000-0000-0000-0000-00000000000d",
+    "initiative_version": 3,
+    "members": [
+      {
+        "association_id": "00000000-0000-0000-0000-000000000004",
+        "association_version": 1,
+        "source_issue_id": "00000000-0000-0000-0000-000000000009",
+        "purpose": "PROPOSED_DELIVERY",
+        "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+        "source_project_id": "00000000-0000-0000-0000-000000000006",
+        "source_version": "source-v1",
+        "source_fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "reviewers": [
+      {
+        "gate_assignment_id": "00000000-0000-0000-0000-000000000014",
+        "gate_type": "CODE_READINESS",
+        "approver_user_id": "00000000-0000-0000-0000-00000000001e"
+      },
+      {
+        "gate_assignment_id": "00000000-0000-0000-0000-000000000015",
+        "gate_type": "PLAN_APPROVAL",
+        "approver_user_id": "00000000-0000-0000-0000-00000000001f"
+      },
+      {
+        "gate_assignment_id": "00000000-0000-0000-0000-000000000016",
+        "gate_type": "PRD_APPROVAL",
+        "approver_user_id": "00000000-0000-0000-0000-000000000020"
+      }
+    ],
+    "created_by": "00000000-0000-0000-0000-000000000007",
+    "recorded_at": "2026-10-04T12:00:00Z",
+    "controlling": false,
+    "digest": "sha256:12941d5d36c0acd6893f8d75ecfc443cef453849f81a1be65ff2addd250a57dd"
+  },
+  "submit": {
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "scope_revision_id": "00000000-0000-0000-0000-00000000000a",
+    "scope_revision": 1,
+    "membership_digest": "sha256:b69fb427407c980a0754090d8d30141419596640ca7edaddea1d5ae3bdbb8422",
+    "external_document_binding_id": "00000000-0000-0000-0000-000000000028",
+    "evidence_snapshot_id": "00000000-0000-0000-0000-000000000010",
+    "completeness_check_id": "00000000-0000-0000-0000-000000000029",
+    "observation_set_id": "00000000-0000-0000-0000-00000000000d",
+    "observation_digest": "sha256:12941d5d36c0acd6893f8d75ecfc443cef453849f81a1be65ff2addd250a57dd"
+  },
+  "subject": {
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "product_id": "00000000-0000-0000-0000-000000000002",
+    "initiative_id": "00000000-0000-0000-0000-000000000003",
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "proposal_id": "00000000-0000-0000-0000-00000000000b",
+    "scope_revision_id": "00000000-0000-0000-0000-00000000000a",
+    "scope_revision": 1,
+    "membership_digest": "sha256:b69fb427407c980a0754090d8d30141419596640ca7edaddea1d5ae3bdbb8422",
+    "checkpoint_id": "00000000-0000-0000-0000-00000000000e",
+    "artifact_version_id": "00000000-0000-0000-0000-00000000000f",
+    "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "provider_version": "provider-v1",
+    "evidence_snapshot_id": "00000000-0000-0000-0000-000000000010",
+    "id": "00000000-0000-0000-0000-000000000011",
+    "observation_set_id": "00000000-0000-0000-0000-00000000000d",
+    "observation_digest": "sha256:12941d5d36c0acd6893f8d75ecfc443cef453849f81a1be65ff2addd250a57dd",
+    "scoped_readiness_id": "00000000-0000-0000-0000-000000000012",
+    "scoped_readiness_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "members": [
+      {
+        "association_id": "00000000-0000-0000-0000-000000000004",
+        "association_version": 1,
+        "source_issue_id": "00000000-0000-0000-0000-000000000009",
+        "purpose": "PROPOSED_DELIVERY",
+        "provider_installation_id": "00000000-0000-0000-0000-000000000005",
+        "source_project_id": "00000000-0000-0000-0000-000000000006"
+      }
+    ],
+    "created_by": "00000000-0000-0000-0000-000000000007",
+    "recorded_at": "2026-10-04T12:00:00Z",
+    "controlling": false,
+    "digest": "sha256:9e0f33b99b4124768bcf656f5a0badb408adf45182f23e6f0c0798764e4d82a8"
+  },
+  "approve": {
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "checkpoint_id": "00000000-0000-0000-0000-00000000000e",
+    "artifact_version_id": "00000000-0000-0000-0000-00000000000f",
+    "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "provider_version": "provider-v1",
+    "evidence_snapshot_id": "00000000-0000-0000-0000-000000000010",
+    "gate_assignment_id": "00000000-0000-0000-0000-000000000016",
+    "confirmed_risk_tier": "STANDARD",
+    "rationale": "Synthetic protected rationale. Do not log.",
+    "scoped_subject_id": "00000000-0000-0000-0000-000000000011",
+    "scoped_subject_digest": "sha256:9e0f33b99b4124768bcf656f5a0badb408adf45182f23e6f0c0798764e4d82a8"
+  },
+  "returnForRevision": {
+    "schema_version": "curve.scoped-prd/v1-candidate",
+    "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+    "checkpoint_id": "00000000-0000-0000-0000-00000000000e",
+    "artifact_version_id": "00000000-0000-0000-0000-00000000000f",
+    "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "provider_version": "provider-v1",
+    "evidence_snapshot_id": "00000000-0000-0000-0000-000000000010",
+    "gate_assignment_id": "00000000-0000-0000-0000-000000000016",
+    "confirmed_risk_tier": "STANDARD",
+    "rationale": "Synthetic protected rationale. Do not log.",
+    "scoped_subject_id": "00000000-0000-0000-0000-000000000011",
+    "scoped_subject_digest": "sha256:9e0f33b99b4124768bcf656f5a0badb408adf45182f23e6f0c0798764e4d82a8",
+    "decision": "CHANGES_REQUESTED"
+  },
+  "operation": {
+    "schema_version": "1.0",
+    "id": "00000000-0000-0000-0000-00000000002a",
+    "workspace_id": "00000000-0000-0000-0000-000000000001",
+    "operation_type": "WORKFLOW_COMMAND",
+    "status": "PENDING",
+    "version": 1
+  }
+}

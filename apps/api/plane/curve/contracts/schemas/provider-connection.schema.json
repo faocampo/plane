@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/provider-connection.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/provider-connection.schema.json",
   "title": "Curve workspace-scoped provider connection",
   "type": "object",
   "additionalProperties": false,

@@ -27,7 +27,7 @@ import {
 import type { TLinkOperations } from "./use-links";
 import { getQuickLinkUrlError, normalizeQuickLinkUrl } from "./url";
 
-export type TLinkOperationsModal = Exclude<TLinkOperations, "remove">;
+export type TLinkOperationsModal = Omit<TLinkOperations, "remove">;
 
 export type TLinkCreateFormFieldOptions = TLinkEditableFields & {
   id?: string;
@@ -125,6 +125,7 @@ export const LinkCreateUpdateModal = observer(function LinkCreateUpdateModal(pro
                             id="url"
                             aria-invalid={Boolean(errors.url)}
                             aria-describedby={errors.url ? "quicklink-url-error" : undefined}
+                            maxLength={2048}
                             type="text"
                             value={value}
                             onChange={onChange}

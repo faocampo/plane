@@ -1,0 +1,15 @@
+{
+  "extends": "../../../apps/web/tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "noEmit": true,
+    "types": ["node"],
+    "typeRoots": ["../../../apps/web/node_modules/@types"],
+    "paths": {
+      "@plane/types": ["../../types/src/index.ts"],
+      "vitest": ["../../../apps/web/node_modules/vitest"]
+    }
+  },
+  "include": ["./project-association-preconditions.test.ts"]
+}

@@ -1,0 +1,67 @@
+--- a/apps/api/plane/curve/models.py
++++ b/apps/api/plane/curve/models.py
+@@ -1378,6 +1378,11 @@
+                         policy_version=1,
+                         policy_manifest_digest="sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c",
+                     )
++                    | models.Q(
++                        policy_key="CURVE_MANUAL_PLAN_DRAFT_POLICY_V2",
++                        policy_version=2,
++                        policy_manifest_digest="sha256:cd960f017b8209b5e4a26a624cfb3549577f946c5a9682c593dec5908d6ab2f0",
++                    )
+                 ),
+                 name="curve_policy_identity_ck",
+             ),
+@@ -1455,3 +1460,5 @@
+ )
+
+ from .scope_reopening_models import ScopeReopening  # noqa: E402,F401
++
++from .manual_plan_v2.models import ManualPlanDraftV2, ManualPlanRevisionV2  # noqa: E402,F401
+--- a/apps/api/plane/curve/urls.py
++++ b/apps/api/plane/curve/urls.py
+@@ -3,6 +3,7 @@
+ # See the LICENSE file for details.
+
+ from django.urls import path
++from plane.curve.manual_plan_v2.views import ManualPlanSaveEndpoint, ManualPlanReadEndpoint
+ from plane.curve.project_association_read_views import CurveProjectAssociationPreconditionsEndpoint
+ from plane.curve.scope_reopening_views import CurveScopeReopeningEndpoint, CurveScopeReopeningPreconditionsEndpoint
+ from plane.curve.scope_proposal_views import CurveScopeProposalEndpoint, CurveScopeProposalRevisionEndpoint
+@@ -42,6 +43,26 @@
+
+ urlpatterns = [
+     path(
++        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/",
++        ManualPlanSaveEndpoint.as_view(),
++        name="curve-manual-plan-v2-save",
++    ),
++    path(
++        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/current/",
++        ManualPlanReadEndpoint.as_view(action="READ_CURRENT"),
++        name="curve-manual-plan-v2-current",
++    ),
++    path(
++        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/status/",
++        ManualPlanReadEndpoint.as_view(action="READ_STATUS"),
++        name="curve-manual-plan-v2-status",
++    ),
++    path(
++        "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/manual-plan-drafts/v2/revisions/<uuid:revision_id>/",
++        ManualPlanReadEndpoint.as_view(action="READ_REVISION"),
++        name="curve-manual-plan-v2-revision",
++    ),
++    path(
+         "workspaces/<str:slug>/curve/products/<uuid:product_id>/project-association-preconditions/",
+         CurveProjectAssociationPreconditionsEndpoint.as_view(),
+         name="curve-project-association-preconditions",
+--- a/apps/api/plane/curve/tests/test_project_association_read_qualification.py
++++ b/apps/api/plane/curve/tests/test_project_association_read_qualification.py
+@@ -33,6 +33,6 @@
+     assert {key: value for key, value in predecessor.items() if key != "runtime_sources"} == {
+         key: value for key, value in updated.items() if key != "runtime_sources"
+     }
+-    assert qualification._qualified_runtime_sources(predecessor) == qualification.current_runtime_sources()
++    assert qualification._current_qualification(predecessor)["runtime_sources"] == qualification.current_runtime_sources()
+     with transaction.atomic():
+         qualification.require_reopening_qualification()

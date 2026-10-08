@@ -1,0 +1,6 @@
+{
+  "openapi-v2.json": "sha256:7d5eaf0b6da6f7abd20f3ddbc3b54d210b5263fed48da27ef3b5e034a6c96c4f",
+  "policy-v2.json": "sha256:01dfbad4b73decb707e14b7c12d65928c8869ba64b0e1b1ccc6a972058a33a05",
+  "scope-editor-error-v2.schema.json": "sha256:6438c2f9583164a60e14ea8d04e73181b43be998feb7de5fd9bbc666500f18fa",
+  "scope-editor-precondition-v2.schema.json": "sha256:5f5c1cd2b8e0b0511bb9d755f35dc657431ba730897bf10ee3953ef19e2122ae"
+}

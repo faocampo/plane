@@ -1,0 +1,10 @@
+{
+  "schema_version": "curve.manual-plan-draft.status/v2-candidate",
+  "policy_edition": "LOCAL_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2",
+  "workspace_id": "30000000-0000-4000-8000-000000000001",
+  "initiative_id": "30000000-0000-4000-8000-000000000002",
+  "initiative_version": 10,
+  "draft_status": "CURRENT",
+  "current_revision_id": "30000000-0000-4000-8000-000000000016",
+  "expected_draft_revision": 1
+}

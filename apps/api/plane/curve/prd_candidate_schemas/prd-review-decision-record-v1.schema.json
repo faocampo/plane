@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/schemas/prd-review-decision-record-v1.schema.json",
+  "title": "PRD review decision metadata candidate",
+  "description": "Append-only exact review subject with protected rationale reference. Rationale bytes are the original nonblank 1-2000 Unicode scalar string encoded as UTF-8 without normalization. Schema conformance is not current authority or storage proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "initiative_id",
+    "gate_assignment_id",
+    "checkpoint_id",
+    "artifact_version_id",
+    "content_digest",
+    "provider_version",
+    "evidence_snapshot_id",
+    "access_evaluation_id",
+    "policy_version_ids",
+    "confirmed_risk_tier",
+    "state",
+    "decided_by",
+    "decided_at",
+    "provider_validation_cutoff",
+    "rationale_ref",
+    "rationale_access_envelope_id",
+    "rationale_retention_policy_version_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0-candidate"
+    },
+    "id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/id"
+    },
+    "workspace_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/workspace_id"
+    },
+    "initiative_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/initiative_id"
+    },
+    "gate_assignment_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/gate_assignment_id"
+    },
+    "checkpoint_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/checkpoint_id"
+    },
+    "artifact_version_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/artifact_version_id"
+    },
+    "content_digest": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/content_digest"
+    },
+    "provider_version": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/provider_version"
+    },
+    "evidence_snapshot_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/evidence_snapshot_id"
+    },
+    "access_evaluation_id": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/access_evaluation_id"
+    },
+    "policy_version_ids": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/policy_version_ids"
+    },
+    "confirmed_risk_tier": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/confirmed_risk_tier"
+    },
+    "state": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/state"
+    },
+    "decided_by": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/decided_by"
+    },
+    "decided_at": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/decided_at"
+    },
+    "provider_validation_cutoff": {
+      "$ref": "external-prd-v1.schema.json#/$defs/Decision/properties/provider_validation_cutoff"
+    },
+    "rationale_ref": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/ObjectRef"
+        },
+        {
+          "properties": {
+            "size_bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8000
+            },
+            "media_type": {
+              "const": "text/plain; charset=utf-8"
+            }
+          }
+        }
+      ]
+    },
+    "rationale_access_envelope_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    },
+    "rationale_retention_policy_version_id": {
+      "$ref": "common.schema.json#/$defs/OpaqueId"
+    }
+  }
+}
