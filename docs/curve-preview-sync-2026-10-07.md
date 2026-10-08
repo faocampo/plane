@@ -5,7 +5,8 @@
 Bring upstream `preview` at `7466675e471efe1c96b122615f7a0d30c9b2eb05`
 into the Curve integration line starting at
 `9bedb74a77460c65ac681854b714a4607680398e`, then update active development
-candidates. The fork and upstream preview refs already match exactly.
+candidates. The fork preview matches this initial checkpoint; upstream advanced
+by three commits during the October 8 refresh (see below).
 Recovery checkpoints, historical branches, original edits and stashes remain intact.
 This synchronization supplies no deployment or activation authority.
 
@@ -43,8 +44,15 @@ before any integration merge. Prior candidate evidence is historical after a syn
 Fresh fetch found three additional upstream commits, ending at
 `bab49bb978ccb56af1d78dec6c6d54dfe8d03c1c`: security dependency updates,
 Python dependency management with uv, and the MinIO image replacement.
-The fork preview remains at the original checkpoint. Complete this resolved
-checkpoint, then integrate and validate the new upstream delta before publication.
+The fork preview remains at the original checkpoint. The initial merge is committed
+as `07e7c5e7cf`, followed by test-fixture correction `2cf64870a0`.
+The three-commit delta is merged locally with four conflicts resolved: retain
+Curve delivery/document instructions, combine upstream uv lint with Curve tests,
+and move Temporal 1.31.0 into the new Python manifest/lockfile. Upstream's default
+dev/test groups preserve the old local test dependencies. The lockfile adds only
+Temporal, nexus-rpc and types-protobuf; existing upstream package versions remain.
+Frozen JavaScript and Python installs pass, backend Ruff passes, 39 web tests and
+10 hook/workflow regression tests pass, and contract integrity passes.
 
 The merge-aware hook implementation passed validation. Five isolated Git tests
 pass: ordinary commits, unresolved conflicts, blob-based classification including
@@ -60,8 +68,8 @@ Publication remains pending the additional upstream delta and exact-head CI.
 The original pre-commit hook applied strict warning checks to every unchanged
 upstream import and failed on existing warnings. It restored its attempted edits.
 The owner authorized continuation with the tested merge-aware hook. No bypass was
-used. The resolved checkpoint is ready to commit on
-`integration/preview-sync-20261007`; remote working branches remain unchanged.
+used. The original checkpoint is committed on `integration/preview-sync-20261007`;
+validation of the latest delta is in progress. Remote working branches remain unchanged.
 
 Read-only analysis also found 25 conflict reports for the Initiative candidate
 and 23 for the retained existing-project branch. These branches remain unchanged

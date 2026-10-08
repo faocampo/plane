@@ -50,7 +50,7 @@ jobs:
         run: corepack enable pnpm
 
       - name: Validate workflow selection contract
-        run: node --test scripts/tests/web-validation-workflow.test.mjs
+        run: node --test scripts/tests/web-validation-workflow.test.mjs scripts/tests/pre-commit.test.mjs
 
       - name: Get pnpm store directory
         shell: bash
