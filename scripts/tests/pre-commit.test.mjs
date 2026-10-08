@@ -62,6 +62,6 @@ test("renamed resolutions remain strict and deleted paths are not passed to tool
   f.put("shared.js", "resolved\n");
   f.git("add", ".");
   f.git("mv", "shared.js", "renamed.js");
-  f.git("rm", "space and\nnewline.js");
+  f.git("rm", "-f", "space and\nnewline.js");
   assert.deepEqual(mergePlan(f.cwd), { strict: ["renamed.js"], imported: 0 });
 });
