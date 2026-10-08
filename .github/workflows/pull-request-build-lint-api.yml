@@ -34,18 +34,24 @@ jobs:
       )
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.12.x"
-          cache: 'pip'
-          cache-dependency-path: 'apps/api/requirements.txt'
-      - name: Install Ruff
-        run: python -m pip install ruff
+          # uv version comes from [tool.uv] required-version.
+          version-file: "apps/api/pyproject.toml"
+          # Same patch release as the production image (python:3.12.12-alpine).
+          python-version: "3.12.12"
+          enable-cache: true
+          cache-dependency-glob: "apps/api/uv.lock"
+      # Only the dev group (ruff) is needed to lint. --locked still fails the
+      # job if uv.lock is out of date with pyproject.toml.
       - name: Install API Dependencies
-        run: cd apps/api && pip install -r requirements.txt
+        working-directory: apps/api
+        run: uv sync --locked --only-group dev
+      # No --fix: fixable violations must fail the job, not be rewritten on the runner.
       - name: Lint apps/api
-        run: ruff check apps/api
+        working-directory: apps/api
+        run: uv run --no-sync ruff check .
 
   test-curve:
     name: Test Curve (${{ matrix.test-group }})
@@ -84,6 +90,12 @@ jobs:
             -e PYTHONPATH=/code:/code/plane/curve:/code/plane/curve/tests/manual_plan_v2:/code/plane/curve/tests/manual_plan_v2/host api-tests \
             sh -c 'python plane/curve/tests/run_ci_suite.py "${{ matrix.test-group }}" && python manage.py makemigrations --check --dry-run'
 
+      - name: Run storage regression tests
+        if: matrix.test-group == 'core'
+        run: |
+          docker compose -f docker-compose-test.yml run --no-deps --rm api-tests \
+            pytest plane/tests/unit/settings/test_storage.py -q
+
       - name: Clean disposable Plane test environment
         if: always()
         run: docker compose -f docker-compose-test.yml down -v --remove-orphans
@@ -107,11 +119,10 @@ jobs:
           ref: e2428ae627c0022fda7a91d8e950b921b6a668c2
           path: .curve-contracts
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.12.x"
-          cache: 'pip'
-          cache-dependency-path: 'apps/api/requirements.txt'
+          version-file: "apps/api/pyproject.toml"
+          python-version: "3.12.12"
       - uses: actions/setup-node@v6
         with:
           node-version: '22.18.0'
@@ -122,9 +133,10 @@ jobs:
           corepack prepare pnpm@11.3.0 --activate
           pnpm install --frozen-lockfile
       - name: Install API dependencies
-        run: pip install -r apps/api/requirements.txt
+        working-directory: apps/api
+        run: uv sync --locked
       - name: Run isolated host-only doubles
         env:
           PYTHONPATH: apps/api/plane/curve:apps/api/plane/curve/tests/manual_plan_v2/host
           CURVE_REFERENCE_ROOT: ${{ github.workspace }}/.curve-contracts
-        run: python apps/api/plane/curve/tests/run_ci_suite.py host-doubles
+        run: apps/api/.venv/bin/python apps/api/plane/curve/tests/run_ci_suite.py host-doubles

@@ -21,6 +21,7 @@ const { appTheme } = vi.hoisted(() => ({
 
 vi.mock("@/hooks/store/use-app-theme", () => ({ useAppTheme: () => appTheme }));
 vi.mock("@plane/hooks", () => ({ usePlatformOS: () => ({ isMobile: false }) }));
+vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: () => "Toggle workspace navigation" }) }));
 vi.mock("@plane/propel/icon-button", () => ({
   IconButton: ({ icon: _icon, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { icon?: unknown }) => (
     <button type="button" {...props} />

@@ -388,7 +388,7 @@ describe("Curve Initiative shell", () => {
     await openCreation();
     fillDefinition();
     fireEvent.click(screen.getByText("Keyword and business intent"));
-    const panel = screen.getByRole("dialog");
+    const panel = screen.getByTestId("initiative-creation-scroll");
     panel.scrollTop = 240;
     continueToReviewers();
     await waitFor(() => {

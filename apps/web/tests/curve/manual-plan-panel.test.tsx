@@ -4,7 +4,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { ManualPlanPanel } from "../../core/components/curve/initiatives/manual-plan-panel";
+import { ManualPlanPanel } from "../../components/curve/initiatives/manual-plan-panel";
 import { ManualPlanClientError } from "@plane/services";
 import { fixture, payload, revision, status, target, result } from "./manual-plan-fixtures";
 import type { ManualPlanStatus } from "../../../../packages/services/src/curve/manual-plan-draft.types";

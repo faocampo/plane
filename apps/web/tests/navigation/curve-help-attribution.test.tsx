@@ -4,8 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { HelpMenuRoot } from "@/components/workspace/sidebar/help-section/root";
 
@@ -23,7 +23,7 @@ vi.mock("@plane/ui", () => {
 });
 vi.mock("@/components/global", () => ({ ProductUpdatesModal: () => null }));
 vi.mock("@/components/global/version-number", () => ({ PlaneVersionNumber: () => <span>Plane version</span> }));
-vi.mock("@/components/sidebar/sidebar-item", () => ({ AppSidebarItem: () => <button type="button">Help</button> }));
+vi.mock("@/components/sidebar/sidebar-item", () => ({ AppSidebarItem: { Icon: () => <span>Help</span> } }));
 vi.mock("@/components/curve/curve-source-link", () => ({
   CurveSourceLink: () => <a href="https://github.com/faocampo/plane">Curve source</a>,
 }));
@@ -33,10 +33,21 @@ vi.mock("@/hooks/store/use-power-k", () => ({
 vi.mock("@plane/propel/icons", () => ({ PageIcon: () => null }));
 
 describe("Curve Help attribution", () => {
-  it("keeps Plane and Curve source information inside Help for the Curve shell", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      }
+    );
+  });
+  afterEach(() => vi.unstubAllGlobals());
+  it("keeps Plane and Curve source information inside Help for the Curve shell", async () => {
     render(<HelpMenuRoot showCurveAttribution />);
-
-    expect(screen.getByText("Plane powers Curve's work-management capabilities.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "power_k.group_titles.help" }));
+    expect(await screen.findByText("Plane powers Curve's work-management capabilities.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Plane source (AGPL)" })).toHaveAttribute(
       "href",
       "https://github.com/makeplane/plane"

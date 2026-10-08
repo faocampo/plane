@@ -40,7 +40,7 @@ describe("Quicklink form", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("link.modal.url.required");
     expect(url).toHaveValue("not a website");
-    expect(url).toHaveAttribute("aria-describedby", "quick-link-url-error");
+    expect(url).toHaveAttribute("aria-describedby", "quicklink-url-error");
     expect(linkOperations.create).not.toHaveBeenCalled();
   });
 

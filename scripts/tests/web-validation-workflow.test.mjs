@@ -48,7 +48,8 @@ test("manual runs select the full package graph and PRs alone use affected selec
 
 test("type validation requires successful build and every job uses a compatible Node release", () => {
   assert.match(workflow, /  check-types:\n[\s\S]*?    needs: build/);
-  assert.equal((workflow.match(/node-version: "22\.18\.0"/g) ?? []).length, 4);
+  assert.equal((workflow.match(/node-version-file: \.node-version/g) ?? []).length, 4);
+  assert.equal(readFileSync(new URL("../../.node-version", import.meta.url), "utf8").trim(), "22.22.0");
   assert.equal((workflow.match(/run: pnpm install --frozen-lockfile/g) ?? []).length, 4);
 });
 

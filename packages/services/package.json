@@ -22,7 +22,8 @@
     "clean": "rm -rf .turbo && rm -rf .next && rm -rf node_modules && rm -rf dist",
     "generate:prd-validator": "node generate-prd-read-validator.mjs",
     "generate:existing-work-validators": "node generate-existing-work-validators.mjs",
-    "check:manual-gate2-contracts": "node check-manual-gate2-contracts.mjs"
+    "check:manual-gate2-contracts": "node check-manual-gate2-contracts.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@plane/constants": "workspace:*",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@plane/typescript-config": "workspace:*",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

@@ -39,6 +39,6 @@ test("Curve CI retains explicit dispatch, the draft gate and unconditional clean
 });
 
 test("API lint validates the checked-out source without rewriting model registrations", () => {
-  assert.match(workflow, /run: ruff check apps\/api/);
+  assert.match(workflow, /run: uv run --no-sync ruff check \./);
   assert.doesNotMatch(workflow, /ruff check --fix/);
 });

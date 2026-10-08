@@ -4,7 +4,7 @@
 import React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { ManualControlEntry, ManualControlPanel } from "../../core/components/curve/initiatives/manual-control-panel";
+import { ManualControlEntry, ManualControlPanel } from "../../components/curve/initiatives/manual-control-panel";
 import { ManualPlanClientError } from "@plane/services";
 import { definitionRef, material, rationaleRef, record, result, status, target } from "./manual-plan-gate2-fixtures";
 import { payload as draftPayload } from "./manual-plan-fixtures";

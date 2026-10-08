@@ -43,7 +43,7 @@ vi.mock("@plane/propel/button", () => ({
   ),
 }));
 vi.mock("@plane/propel/icons", () => ({ UserCirclePropertyIcon: () => <span aria-hidden="true" /> }));
-vi.mock("@plane/propel/toast", () => ({
+vi.mock("@plane/blocks/toast", () => ({
   TOAST_TYPE: { ERROR: "error" },
   setToast,
 }));
@@ -57,6 +57,7 @@ vi.mock("@plane/utils", () => ({
   checkURLValidity: vi.fn(() => true),
   getAssetIdFromUrl: vi.fn(() => "asset-1"),
   getFileURL: vi.fn((value: string) => value),
+  cn: (...values: unknown[]) => values.filter((value) => typeof value === "string").join(" "),
 }));
 
 describe("User image upload", () => {
