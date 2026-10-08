@@ -42,7 +42,7 @@ jobs:
       - name: Install API Dependencies
         run: cd apps/api && pip install -r requirements.txt
       - name: Lint apps/api
-        run: ruff check --fix apps/api
+        run: ruff check apps/api
 
   test-curve:
     name: Test Curve
@@ -67,8 +67,9 @@ jobs:
 
       - name: Run Curve backend tests and migration-drift check
         run: |
-          docker compose -f docker-compose-test.yml run --rm --build api-tests \
-            sh -c 'pytest plane/curve/tests -q && python manage.py makemigrations --check --dry-run'
+          docker compose -f docker-compose-test.yml up -d --wait test-db test-redis test-mq
+          docker compose -f docker-compose-test.yml run --no-deps --rm --build api-tests \
+            sh -c 'pytest plane/curve/tests plane/tests/unit/settings/test_storage.py -q && python manage.py makemigrations --check --dry-run'
 
       - name: Clean disposable Plane test environment
         if: always()
