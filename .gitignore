@@ -114,10 +114,12 @@ scripts/
 !/scripts/
 /scripts/*
 !/scripts/curve-observability-proof.mjs
+!/scripts/pre-commit.mjs
 !/scripts/tests/
 /scripts/tests/*
 !/scripts/tests/curve-observability-proof.test.mjs
 !/scripts/tests/web-validation-workflow.test.mjs
+!/scripts/tests/pre-commit.test.mjs
 
 # Curve local observability proof state
 /.curve-local/
