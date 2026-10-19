@@ -140,10 +140,10 @@ function InitiativeRow({
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-mono truncate text-10 text-tertiary">#{initiative.keyword}</p>
+          <p className="font-mono truncate text-12 text-tertiary">#{initiative.keyword}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <InitiativeRiskBadge risk={initiative.risk_tier} />
-            <span className="text-10 text-tertiary">Updated {calculateTimeAgo(initiative.updated_at)}</span>
+            <span className="text-12 text-tertiary">Updated {calculateTimeAgo(initiative.updated_at)}</span>
           </div>
         </div>
         <div className="flex -space-x-1" aria-label="Assigned gate approvers">
@@ -412,6 +412,8 @@ function InitiativeEditDialog({
   const [description, setDescription] = useState(initiative.description.body);
   const [errors, setErrors] = useState<Partial<Record<"title" | "keyword" | "description", string>>>({});
   const titleRef = useRef<HTMLInputElement>(null);
+  const keywordRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const submit = async () => {
     const nextErrors: typeof errors = {};
@@ -422,7 +424,13 @@ function InitiativeEditDialog({
     if (!description.trim()) nextErrors.description = "Describe the problem and intended outcome.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      if (nextErrors.title) titleRef.current?.focus();
+      const field = nextErrors.title
+        ? titleRef.current
+        : nextErrors.keyword
+          ? keywordRef.current
+          : descriptionRef.current;
+      field?.focus();
+      field?.scrollIntoView({ block: "nearest" });
       return;
     }
 
@@ -484,6 +492,7 @@ function InitiativeEditDialog({
             <label className="block text-12 font-semibold text-primary">
               Keyword
               <input
+                ref={keywordRef}
                 value={keyword}
                 onChange={(event) => {
                   setKeyword(event.target.value);
@@ -542,6 +551,7 @@ function InitiativeEditDialog({
             <label className="block text-12 font-semibold text-primary sm:col-span-2">
               Problem and intended outcome
               <textarea
+                ref={descriptionRef}
                 value={description}
                 onChange={(event) => {
                   setDescription(event.target.value);
@@ -765,7 +775,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
       <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-layer-1 px-2 py-1 text-10 font-medium text-secondary">Manual-first</span>
+            <span className="rounded-full bg-layer-1 px-2 py-1 text-12 font-medium text-secondary">Manual-first</span>
           </div>
           <h1 className="mt-1 text-32 leading-tight font-semibold tracking-[-0.025em] text-primary">Initiatives</h1>
         </div>
@@ -791,13 +801,13 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
 
       <section className="mt-5 flex flex-wrap gap-2" aria-label="Loaded Initiative portfolio summary">
         {[
-          { id: "ACTIVE" as const, label: "Active", value: activeCount, detail: "Draft or aligning" },
+          { id: "ACTIVE" as const, label: "Draft and aligning", value: activeCount, detail: "Draft or aligning" },
           { id: "PAUSED" as const, label: "Paused", value: pausedCount, detail: "Explicitly recoverable" },
           {
             id: "NEEDS_ATTENTION" as const,
-            label: "Needs attention",
+            label: "High-risk definition work",
             value: needsAttentionCount,
-            detail: "High-risk active work",
+            detail: "High-risk Draft and Aligning Initiatives",
           },
         ].map(({ id, label, value, detail }) => (
           <button
@@ -809,7 +819,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
               summaryFilter === id && "bg-accent-subtle"
             )}
             title={detail}
-            aria-label={`Filter Initiatives: ${label}`}
+            aria-label={`Filter Initiatives: ${label}, ${value}`}
             aria-pressed={summaryFilter === id}
           >
             <div className="flex items-baseline gap-2">
@@ -939,7 +949,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             <h2 id="curve-initiative-list-title" className="text-12 font-semibold text-primary">
               Workspace Initiatives
             </h2>
-            <span className="text-10 text-tertiary">Newest first</span>
+            <span className="text-12 text-tertiary">Newest first</span>
           </div>
           {visibleInitiatives.length === 0 ? (
             <InitiativeEmpty filtered={filtered} />

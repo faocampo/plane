@@ -47,7 +47,7 @@ describe("Curve Home overview", () => {
 
     expect(screen.getByRole("heading", { name: "Your control room" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open My work/ })).toHaveAttribute("href", "/example-workspace/profile/");
-    expect(screen.getByRole("link", { name: /Initiative needs attention/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /high-risk definition/ })).toHaveAttribute(
       "href",
       "/example-workspace/curve/initiatives/?summary=NEEDS_ATTENTION"
     );
@@ -58,7 +58,7 @@ describe("Curve Home overview", () => {
 
     const attentionQueue = screen.getByRole("heading", { name: "Attention queue" }).parentElement?.parentElement;
     expect(attentionQueue).toBeTruthy();
-    expect(within(attentionQueue as HTMLElement).getByText("Initiative needs attention")).toBeInTheDocument();
+    expect(within(attentionQueue as HTMLElement).getByText("high-risk definition")).toBeInTheDocument();
     expect(within(attentionQueue as HTMLElement).getByText("Initiatives in alignment")).toBeInTheDocument();
     expect(within(attentionQueue as HTMLElement).getByText("mentions waiting")).toBeInTheDocument();
 

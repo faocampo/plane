@@ -93,7 +93,7 @@ function SourceCoverage({ name, source }: { name: string; source: ProjectRead<un
         </span>
         <p className="mt-1 text-11 leading-5 text-secondary">{state.explanation}</p>
         {source.status === "ready" && source.observedAt && (
-          <p className="mt-2 text-10 leading-4 break-words text-tertiary">
+          <p className="mt-2 text-12 leading-4 break-words text-tertiary">
             Read at <time dateTime={source.observedAt}>{source.observedAt.replace("T", " ").replace("Z", " UTC")}</time>
           </p>
         )}
@@ -400,7 +400,7 @@ export function ProjectOutlookView(props: ProjectOutlookViewProps) {
                           <Check className="mt-0.5 size-4 shrink-0 text-accent-primary" aria-hidden="true" />
                         )}
                       </span>
-                      <span className="font-mono mt-1 block text-10 text-tertiary">{project.identifier}</span>
+                      <span className="font-mono mt-1 block text-12 text-tertiary">{project.identifier}</span>
                       <span className="mt-2 block text-11 text-secondary">
                         Lead: {projectLeadLabel(project, members)}
                       </span>

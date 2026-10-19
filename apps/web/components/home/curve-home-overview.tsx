@@ -152,10 +152,10 @@ export function CurveHomeOverviewView({
           </div>
           <ActionRow
             count={needsAttention}
-            description="High-risk active Initiatives that deserve an explicit check."
+            description="High-risk Draft and Aligning Initiatives that deserve an explicit check."
             href={initiativesAttentionHref}
             icon={<CircleAlert className="size-5" />}
-            label={needsAttention === 1 ? "Initiative needs attention" : "Initiatives need attention"}
+            label={needsAttention === 1 ? "high-risk definition" : "high-risk definitions"}
             loading={isInitiativesLoading}
             tone="attention"
             unavailable={isInitiativesUnavailable}
@@ -232,7 +232,7 @@ export function CurveHomeOverviewView({
           <div className="mt-5 border-t border-subtle pt-4">
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-11 text-secondary">
-                {activeInitiatives === 1 ? "Active Initiative" : "Active Initiatives"}
+                {activeInitiatives === 1 ? "Draft or aligning Initiative" : "Draft and aligning Initiatives"}
               </span>
               <span className="text-12 font-semibold text-primary tabular-nums">
                 {isInitiativesLoading

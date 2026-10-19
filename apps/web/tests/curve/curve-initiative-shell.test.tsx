@@ -214,11 +214,11 @@ describe("Curve Initiative shell", () => {
   it("retains accessible portfolio shortcuts and navigation parameters", async () => {
     window.history.replaceState({}, "", "/example-workspace/curve/initiatives/?summary=NEEDS_ATTENTION");
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
-    expect(screen.getByRole("button", { name: "Filter Initiatives: Needs attention" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: /Filter Initiatives: High-risk definition work/ })).toHaveAttribute(
       "aria-pressed",
       "true"
     );
-    const active = screen.getByRole("button", { name: "Filter Initiatives: Active" });
+    const active = screen.getByRole("button", { name: /Filter Initiatives: Draft and aligning/ });
     fireEvent.click(active);
     expect(active).toHaveAttribute("aria-pressed", "true");
     expect(within(screen.getByRole("region", { name: "Initiative filters" })).getByRole("status")).toHaveTextContent(
@@ -517,6 +517,20 @@ describe("Curve Initiative shell", () => {
         })
       )
     );
+  });
+
+  it.each(["Keyword", "Problem and intended outcome"])("focuses invalid edit field: %s", async (label) => {
+    const draft = initiatives[1];
+    useCurveInitiativesMock.mockReturnValue({ ...defaultHookValue, initiatives: [draft], selectedInitiative: draft });
+    render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
+    fireEvent.click(screen.getByRole("button", { name: "Edit Initiative" }));
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    const field = within(screen.getByRole("dialog")).getByRole("textbox", { name: new RegExp(label) });
+    fireEvent.change(field, { target: { value: label === "Keyword" ? "invalid_keyword" : "" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(field).toHaveFocus();
+    expect(defaultHookValue.updateInitiativeDraft).not.toHaveBeenCalled();
   });
 
   it("keeps edits within Draft and before any external resource", async () => {

@@ -85,6 +85,24 @@ describe("manual control panel", () => {
     expect(screen.getByRole("button", { name: "Approve and reserve tasks" })).toBeEnabled();
     expect(p.api.execute).not.toHaveBeenCalled();
   });
+  it("loads meaningful choices without granting review authority", async () => {
+    const p = props();
+    render(<ManualControlPanel {...p} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Load readable review choices" }));
+    await screen.findByText("Review choices loaded. Open the selected definition and evidence before deciding.");
+    expect(screen.getByRole("option", { name: /Synthetic approval evidence/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Approve and reserve tasks" })).toBeDisabled();
+    expect(p.api.execute).not.toHaveBeenCalled();
+  });
+  it("discards readable choices when their version changed", async () => {
+    const p = props();
+    p.api.material.mockResolvedValue(result(material("DEFINITION"), 11));
+    render(<ManualControlPanel {...p} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Load readable review choices" }));
+    await screen.findByText("Review choices or your access changed. Refresh before continuing.");
+    expect(screen.queryByRole("option", { name: /Synthetic approval evidence/ })).not.toBeInTheDocument();
+    expect(p.api.execute).not.toHaveBeenCalled();
+  });
   it("retains an uncertain command for deliberate identical retry", async () => {
     const p = props();
     p.api.execute.mockRejectedValue(new ManualPlanClientError("UNKNOWN"));

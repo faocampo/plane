@@ -27,6 +27,7 @@ import type {
   ManualPlanTarget,
 } from "@plane/services";
 import { ManualPlanPanel } from "./manual-plan-panel";
+import { MaterialContent, materialLabel, taskLabel } from "./manual-plan-content";
 
 const gateApi = new ManualGate2Service();
 const draftApi = new ManualPlanDraftService();
@@ -78,6 +79,7 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
     [workspaceSlug, workspaceId, productId, initiativeId]
   );
   const id = useId();
+  const [choiceMaterials, setChoiceMaterials] = useState<Record<string, ManualGate2Material>>({});
   const [ready, setReady] = useState<Ready | null>(null);
   const [loading, setLoading] = useState(true);
   const [epoch, setEpoch] = useState(0);
@@ -105,6 +107,7 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
     []
   );
   function clear() {
+    setChoiceMaterials({});
     setReady(null);
     setDefinition(null);
     setPreparedDefinition(null);
@@ -219,6 +222,44 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
       if (!controller.signal.aborted) {
         clear();
         setNotice("The material or your access changed. Refresh before continuing.");
+      }
+    } finally {
+      if (active.current) setBusy(false);
+    }
+  }
+  async function loadChoiceLabels() {
+    if (!ready || busy || writing.current || pending.current) return;
+    operation.current?.abort();
+    const controller = new AbortController();
+    operation.current = controller;
+    setBusy(true);
+    setNotice("");
+    const refs = [
+      ...(ready.preparation?.plans.map((p) => ({ ref: p.payload.definition_ref, kind: "DEFINITION" as const })) ?? []),
+      ...(current ? [{ ref: current.definition_ref, kind: "DEFINITION" as const }] : []),
+      ...rationales.map((r) => ({ ref: r.reference, kind: "RATIONALE" as const })),
+    ];
+    const loaded: Record<string, ManualGate2Material> = {};
+    try {
+      for (const { ref, kind } of refs) {
+        if (loaded[ref.object_id]) continue;
+        const result = await api.material(target, ref, controller.signal);
+        if (controller.signal.aborted || !active.current) return;
+        if (
+          result.currentVersion !== ready.version ||
+          result.data.kind !== kind ||
+          result.data.reference.object_id !== ref.object_id ||
+          result.data.reference.digest !== ref.digest
+        )
+          throw new ManualPlanClientError("CONFLICT");
+        loaded[ref.object_id] = result.data;
+      }
+      setChoiceMaterials(loaded);
+      setNotice("Review choices loaded. Open the selected definition and evidence before deciding.");
+    } catch {
+      if (!controller.signal.aborted) {
+        clear();
+        setNotice("Review choices or your access changed. Refresh before continuing.");
       }
     } finally {
       if (active.current) setBusy(false);
@@ -343,6 +384,19 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
       )}
       {ready && (
         <>
+          <Button
+            size="lg"
+            variant="secondary"
+            render={<button className={focus} />}
+            disabled={busy}
+            onClick={() => void loadChoiceLabels()}
+            stretch="auto"
+            label="Load readable review choices"
+          />
+          <p className="text-12 text-secondary">
+            Load authorized descriptions to distinguish definitions and evidence. Task names use the reviewed plan when
+            available; full references distinguish individual tasks.
+          </p>
           {current?.effective_hold && (
             <p className="flex items-start gap-2 rounded-md bg-warning-subtle p-3 text-13 text-primary">
               <PauseCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
@@ -368,7 +422,9 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
                   >
                     {ready.preparation.plans.map((p, i) => (
                       <option key={p.payload.definition_ref.object_id} value={i}>
-                        Definition {i + 1}
+                        {materialLabel(choiceMaterials[p.payload.definition_ref.object_id] ?? null) ??
+                          "Definition description unavailable"}{" "}
+                        · {p.payload.definition_ref.object_id}
                       </option>
                     ))}
                   </select>
@@ -423,11 +479,14 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
                   <p className="mt-2 text-13 text-secondary">No tasks are reserved by this plan.</p>
                 ) : (
                   <ul className="mt-2 divide-y divide-subtle">
-                    {current.claims.map((c, i) => (
-                      <li key={c.claim_id} className="flex flex-wrap items-center gap-3 py-3 text-13 text-primary">
+                    {current.claims.map((c) => (
+                      <li
+                        key={c.claim_id}
+                        className="flex flex-wrap items-center gap-3 py-3 text-13 [overflow-wrap:anywhere] text-primary"
+                      >
                         {c.state === "ACTIVE" && needsClaims && (
                           <input
-                            aria-label={`Select task ${i + 1}`}
+                            aria-label={`Select ${taskLabel(definition ?? choiceMaterials[current.definition_ref.object_id] ?? null, c.installation_id, c.issue_id)}`}
                             className={`size-5 ${focus}`}
                             type="checkbox"
                             checked={selection.includes(c.claim_id)}
@@ -440,7 +499,12 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
                           />
                         )}
                         <span>
-                          Task {i + 1} · {c.state === "ACTIVE" ? "Reserved" : "Released"} · generation {c.generation}
+                          {taskLabel(
+                            definition ?? choiceMaterials[current.definition_ref.object_id] ?? null,
+                            c.installation_id,
+                            c.issue_id
+                          )}{" "}
+                          · {c.state === "ACTIVE" ? "Reserved" : "Released"} · generation {c.generation}
                         </span>
                         <details className="min-w-0 text-secondary">
                           <summary className={`cursor-pointer py-1 ${focus}`}>Task identity</summary>
@@ -487,9 +551,11 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
                           }}
                         >
                           <option value="">Choose protected evidence</option>
-                          {rationales.map((r, i) => (
+                          {rationales.map((r) => (
                             <option key={r.reference.object_id} value={r.reference.object_id}>
-                              Evidence {i + 1}
+                              {materialLabel(choiceMaterials[r.reference.object_id] ?? null) ??
+                                `${labels[r.intent]} evidence`}{" "}
+                              · {r.reference.object_id}
                             </option>
                           ))}
                         </select>
@@ -547,47 +613,5 @@ function ManualControlSession({ target: source, viewerId, api = gateApi, drafts 
         </>
       )}
     </section>
-  );
-}
-function MaterialContent({ material }: { material: ManualGate2Material }) {
-  let text = "";
-  let outcomes: { id: string; text: string }[] = [];
-  try {
-    const body = JSON.parse(material.content) as Record<string, unknown>;
-    if (material.kind === "RATIONALE" && typeof body.text === "string") text = body.text;
-    if (material.kind === "DEFINITION" && Array.isArray(body.slices))
-      outcomes = body.slices.flatMap((s: unknown) =>
-        s && typeof s === "object" && "user_outcome" in s && typeof s.user_outcome === "string"
-          ? [{ id: "id" in s && typeof s.id === "string" ? s.id : s.user_outcome, text: s.user_outcome }]
-          : []
-      );
-  } catch {
-    return (
-      <p role="alert" className="mt-3 text-13 text-secondary">
-        The protected material could not be displayed.
-      </p>
-    );
-  }
-  return (
-    <div className="mt-3 min-w-0 space-y-3 text-13 leading-6 text-primary">
-      {text && <p className="max-w-prose break-words whitespace-pre-wrap">{text}</p>}
-      {!!outcomes.length && (
-        <ul className="list-disc space-y-2 pl-5">
-          {outcomes.map((outcome) => (
-            <li key={outcome.id} className="max-w-prose break-words">
-              {outcome.text}
-            </li>
-          ))}
-        </ul>
-      )}
-      <details>
-        <summary className="focus-visible:outline-accent-primary cursor-pointer text-secondary focus-visible:outline-2">
-          Read the complete {material.kind === "DEFINITION" ? "definition" : "evidence"}
-        </summary>
-        <pre className="mt-3 max-h-80 overflow-auto rounded-md bg-layer-1 p-3 text-12 break-words whitespace-pre-wrap">
-          {material.content}
-        </pre>
-      </details>
-    </div>
   );
 }
