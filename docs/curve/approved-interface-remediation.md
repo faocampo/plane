@@ -73,12 +73,16 @@ A read-only execution-plan comparison identified substantial query-compilation o
 
 Full request and browser latency still require quiet-runtime measurement; isolated query timings under regression load are diagnostic evidence only.
 
+## Owner UX acceptance
+
+The repository owner accepted the implemented interface on 2026-10-22 against candidate `d57397ae06dbd472e64eb1b35049c85d291cd2e4`. The accepted flow is Product approval of the PRD followed by Technical approval of the implementation plan, with no Code Approver stage. The current PR head was verified at that commit after acceptance. This closes the owner UX review gate; the remaining validation and integration requirements below retain their scope.
+
 ## Remaining acceptance and delivery
 
 1. Finish the full native compatibility run and resolve any actual failures.
 2. Measure local request latency without concurrent regression load and address the observed delay while preserving current authorization and integrity checks. One earlier qualification call took 2.574 seconds, including 1.973 seconds in database execution; that diagnostic is not request-latency acceptance.
 3. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and recovery are verified; a live mid-mutation response-loss exercise has not been performed.
-4. Complete current-head validation and owner review before integration. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI remains unavailable while repository Actions is disabled.
+4. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI remains unavailable while repository Actions is disabled.
 
 Storage initialization is required for the local document directory. Production provider/storage activation, release qualification and later milestones retain their own gates.
 
