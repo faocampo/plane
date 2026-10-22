@@ -20,15 +20,22 @@ function LocalDocumentReviewContent(props: Props) {
   const [product, setProduct] = useState<DocumentApprovalStatus>("LOADING");
   const [technical, setTechnical] = useState<DocumentApprovalStatus>("LOADING");
   const ready = props.initiative.state === "PLANNING" && product === "APPROVED";
+  const productUnknown = product === "LOADING" || product === "UNAVAILABLE";
   return (
     <DocumentReviewStages
-      statuses={[product, ready ? technical : "LOCKED"]}
+      statuses={[product, ready ? technical : productUnknown ? product : "LOCKED"]}
       prd={<LocalPrdReviewPanel {...props} onStatus={setProduct} />}
       plan={
         ready ? (
           <LocalPlanReviewPanel {...props} onStatus={setTechnical} />
         ) : (
-          <p>Product approval comes first. The implementation plan is reviewed after the PRD.</p>
+          <p>
+            {product === "UNAVAILABLE"
+              ? "Refresh Product requirements to check the current approval status."
+              : product === "LOADING"
+                ? "Checking Product approval…"
+                : "Product approval comes first. The implementation plan is reviewed after the PRD."}
+          </p>
         )
       }
     />

@@ -202,7 +202,9 @@ function LocalPrdReview({ workspaceSlug, initiative, viewerId, onReviewSaved, on
                   ? `Uploaded ${new Date(current.source.uploaded_at).toLocaleDateString()}`
                   : loading
                     ? "Checking document…"
-                    : "Start with your PRD"}
+                    : readError
+                      ? "Document unavailable"
+                      : "Start with your PRD"}
               </p>
             </div>
             {current?.source && <span className="curve-prd-review__version">v{current.source.version}</span>}

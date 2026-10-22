@@ -4,6 +4,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ICurveInitiative } from "@plane/types";
+import { LocalDocumentReview } from "@/components/curve/initiatives/local-document-review";
 import { LocalPrdReviewPanel } from "@/components/curve/initiatives/local-prd-review-panel";
 const {
   retrieveCurrent,
@@ -273,4 +274,26 @@ describe("approved PRD updates", () => {
     expect(screen.getByText(/previous approval stays in history/)).toBeVisible();
     expect(screen.queryByRole("button", { name: "Send for Product review" })).not.toBeInTheDocument();
   });
+});
+
+it("distinguishes unavailable approval information from a missing document and recovers on refresh", async () => {
+  retrieveCurrent.mockRejectedValueOnce(new Error("Connection unavailable"));
+  retrieveReview.mockRejectedValueOnce(new Error("Connection unavailable"));
+  render(
+    <LocalDocumentReview
+      workspaceSlug="example"
+      initiative={{ ...initiative, state: "ALIGNING" }}
+      viewerId="viewer"
+      onReviewSaved={vi.fn()}
+    />
+  );
+  expect(await screen.findByText("Document unavailable")).toBeVisible();
+  expect(screen.queryByText("Start with your PRD")).not.toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: /Product requirements.*Status unavailable/ })).toBeVisible();
+  fireEvent.click(screen.getByRole("tab", { name: /Implementation plan.*Status unavailable/ }));
+  expect(screen.getByText("Refresh Product requirements to check the current approval status.")).toBeVisible();
+  fireEvent.click(screen.getByRole("tab", { name: /Product requirements/ }));
+  fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  expect(await screen.findByRole("heading", { name: "Add your requirements" })).toBeVisible();
+  expect(screen.getByRole("tab", { name: /Implementation plan.*After Product approval/ })).toBeVisible();
 });
