@@ -851,14 +851,26 @@ def require_reopening_qualification():
                 "plane.curve.migrations."
                 + ("0025_manual_gate2_reconstruction" if GATE2_SUCCESSOR_PATH.exists() else "0023_scope_reopening")
             ).CATALOG_SQL
-            cursor.execute("SHOW search_path")
-            previous_path = cursor.fetchone()[0]
-            cursor.execute("SET LOCAL search_path = pg_catalog, public")
-            cursor.execute("SELECT 'sha256:' || encode(sha256(convert_to((" + catalog_sql + ")::text, 'UTF8')), 'hex')")
-            physical = cursor.fetchone()[0]
-            cursor.execute("SELECT set_config('search_path', %s, true)", [previous_path])
-            if physical != qualification["physical_catalog_digest"]:
-                raise ValueError
-            cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
+            cursor.execute("SELECT current_setting('search_path'), current_setting('jit')")
+            previous_path, previous_jit = cursor.fetchone()
+            # Catalog checks return one small snapshot. Compiling hundreds of
+            # expressions costs more than executing them; keep every check fresh
+            # and restore the caller's settings before returning.
+            cursor.execute("SET LOCAL jit = off")
+            try:
+                cursor.execute("SET LOCAL search_path = pg_catalog, public")
+                cursor.execute(
+                    "SELECT 'sha256:' || encode(sha256(convert_to((" + catalog_sql + ")::text, 'UTF8')), 'hex')"
+                )
+                physical = cursor.fetchone()[0]
+                cursor.execute("SELECT set_config('search_path', %s, true)", [previous_path])
+                if physical != qualification["physical_catalog_digest"]:
+                    raise ValueError
+                cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
+            finally:
+                cursor.execute(
+                    "SELECT set_config('search_path', %s, true), set_config('jit', %s, true)",
+                    [previous_path, previous_jit],
+                )
     except Exception:
         raise PrdCommandError("SCOPE_REOPENING_EDITION_UNAVAILABLE", 503) from None

@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
-from django.db import transaction
+from django.db import connection, transaction
 from plane.curve import scope_reopening_qualification as root
 from plane.curve.prd_commands import PrdCommandError
 
@@ -82,3 +82,20 @@ def test_runtime_rejects_changed_or_unavailable_proof(monkeypatch, damage):
         monkeypatch.setattr(Path, "is_symlink", lambda p: p == target or is_link(p))
     with transaction.atomic(), pytest.raises(PrdCommandError):
         root.require_manual_plan_v3_qualification()
+
+
+@pytest.mark.parametrize("initial_jit", ["on", "off"])
+@pytest.mark.parametrize("changed_catalog", [False, True])
+def test_fresh_catalog_checks_preserve_caller_settings_and_reject_tampering(initial_jit, changed_catalog):
+    with transaction.atomic(), connection.cursor() as cursor:
+        cursor.execute("SELECT set_config('jit', %s, true)", [initial_jit])
+        cursor.execute("SET LOCAL search_path = public")
+        if changed_catalog:
+            cursor.execute("CREATE INDEX curve_qualification_test_probe ON curve_initiative (id)")
+            with pytest.raises(PrdCommandError):
+                root.require_manual_plan_v3_qualification()
+        else:
+            root.require_manual_plan_v3_qualification()
+        cursor.execute("SELECT current_setting('search_path'), current_setting('jit')")
+        assert cursor.fetchone() == ("public", initial_jit)
+        transaction.set_rollback(True)

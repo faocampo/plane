@@ -83,10 +83,12 @@ def assert_retained_reverse_refused():
     with pytest.raises(RuntimeError, match="MANUAL_PLAN_DRAFT_RETAINED_EVIDENCE_PREVENTS_REVERSE"):
         with connection.schema_editor() as editor:
             MIGRATION.require_empty_reverse(None, editor)
-    catalog_sql = import_module("plane.curve.migrations.0023_scope_reopening").CATALOG_SQL
+    # Current successors use the deterministic constraint-name tie-breaker.
+    # The historical empty round trip above still verifies its original catalog.
+    catalog_sql = import_module("plane.curve.migrations.0025_manual_gate2_reconstruction").CATALOG_SQL
     with connection.cursor() as cursor:
         cursor.execute(catalog_sql)
-        before_catalog = cursor.fetchone()[0]
+        before_catalog = json.loads(cursor.fetchone()[0])
     leaves = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
     try:
         with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
@@ -95,7 +97,7 @@ def assert_retained_reverse_refused():
         MigrationExecutor(connection).migrate(leaves)
     with connection.cursor() as cursor:
         cursor.execute(catalog_sql)
-        after_catalog = cursor.fetchone()[0]
+        after_catalog = json.loads(cursor.fetchone()[0])
     differences = {}
     for section, value in before_catalog.items():
         before_rows = {json.dumps(row, sort_keys=True) for row in value}
