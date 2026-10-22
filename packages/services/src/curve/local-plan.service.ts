@@ -322,6 +322,7 @@ export class CurveLocalPlanService extends CurveExistingWorkTransport {
   private async content(path: string, ref: LocalPlanReference, signal?: AbortSignal) {
     const response = await this.get(path, {
       signal,
+      timeout: this.requestTimeoutMs,
       responseType: "arraybuffer",
       headers: { "Cache-Control": "no-store" },
     });

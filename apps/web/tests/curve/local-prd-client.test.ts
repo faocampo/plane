@@ -143,6 +143,9 @@ describe("local document browser client", () => {
     get.mockResolvedValue(response(bytes.buffer));
     const record = await decodeCurveLocalPrdSource(source(), scope);
     expect((await service.retrieveContent("example", scope, record)).type).toBe("text/plain;charset=utf-8");
+    expect(get.mock.calls.at(-1)?.[1]).toEqual(
+      expect.objectContaining({ timeout: 60_000, responseType: "arraybuffer" })
+    );
     get.mockResolvedValue(response(new Uint8Array(bytes.length).buffer));
     await expect(service.retrieveContent("example", scope, record)).rejects.toThrow();
   });
@@ -278,6 +281,9 @@ describe("local Product review client", () => {
     const decision = await decodeLocalDecision({ ...data, digest: hash(canonical(data)) }, scope, submission);
     get.mockResolvedValue(response(Uint8Array.from(new TextEncoder().encode(note)).buffer));
     expect(await service.retrieveFeedback("example", scope, decision, submission)).toBe(note);
+    expect(get.mock.calls.at(-1)?.[1]).toEqual(
+      expect.objectContaining({ timeout: 60_000, responseType: "arraybuffer" })
+    );
     get.mockResolvedValue(response(new Uint8Array(note.length).buffer));
     await expect(service.retrieveFeedback("example", scope, decision, submission)).rejects.toThrow();
     await expect(

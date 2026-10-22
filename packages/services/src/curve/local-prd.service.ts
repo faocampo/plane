@@ -358,6 +358,7 @@ export class CurveLocalPrdService extends CurveExistingWorkTransport {
       requireCurve(item.feedback !== null);
       const response = await this.get(`${reviewRoot(slug, scope)}decisions/${curveExistingWorkId(item.id)}/feedback/`, {
         signal,
+        timeout: this.requestTimeoutMs,
         responseType: "arraybuffer",
         headers: { "Cache-Control": "no-store" },
       });
@@ -458,6 +459,7 @@ export class CurveLocalPrdService extends CurveExistingWorkTransport {
       this.checkCancellation(signal);
       const response = await this.get(`${root(slug, scope)}${curveExistingWorkId(verified.id)}/content/`, {
         signal,
+        timeout: this.requestTimeoutMs,
         responseType: "arraybuffer",
         headers: { "Cache-Control": "no-store" },
       });

@@ -258,6 +258,7 @@ it("checks document bytes before preview", async () => {
   const revision = await decodeLocalPlanRevision(plan(), scope, approval());
   get.mockResolvedValue(response(bytes.buffer));
   expect((await service.retrieveContent("example", scope, revision, approval())).size).toBe(bytes.length);
+  expect(get.mock.calls.at(-1)?.[1]).toEqual(expect.objectContaining({ timeout: 60_000, responseType: "arraybuffer" }));
   get.mockResolvedValue(response(new Uint8Array(bytes.length).buffer));
   await expect(service.retrieveContent("example", scope, revision, approval())).rejects.toThrow();
 });

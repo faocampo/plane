@@ -395,7 +395,8 @@ describe("explicit scoped PRD V1 transport", () => {
       `/api/v1/workspaces/example/curve/initiatives/${scope.initiativeId}/scoped-prd/v1/subjects/current/`,
       `/api/v1/workspaces/example/curve/initiatives/${scope.initiativeId}/scoped-prd/v1/subjects/${f.subject.id}/`,
     ]);
-    for (const call of get.mock.calls) expect(call[1]).toEqual({ signal, headers: { "Cache-Control": "no-store" } });
+    for (const call of get.mock.calls)
+      expect(call[1]).toEqual({ signal, timeout: 60_000, headers: { "Cache-Control": "no-store" } });
     expect(post).not.toHaveBeenCalled();
   });
   it("rejects swapped observation and subject IDs without treating them as absent", async () => {
@@ -553,7 +554,7 @@ describe("explicit scoped PRD V1 transport", () => {
     ).rejects.toMatchObject({ code: "INVALID" });
     expect(get).not.toHaveBeenCalled();
   });
-  it.each(["network-loss", "aborted-after-success"])(
+  it.each(["network-loss", "timeout", "aborted-after-success"])(
     "marks %s after mutation dispatch as outcome unknown, never domain cancellation",
     async (kind) => {
       const service = new CurveScopedPrdV1Service();
@@ -561,6 +562,7 @@ describe("explicit scoped PRD V1 transport", () => {
       const controller = new AbortController();
       const post = vi.spyOn(service, "post").mockImplementation(async () => {
         if (kind === "network-loss") throw { code: "ERR_NETWORK", config: { data: fixture().approve } };
+        if (kind === "timeout") throw { code: "ECONNABORTED" };
         controller.abort();
         return acceptance();
       });
@@ -570,14 +572,44 @@ describe("explicit scoped PRD V1 transport", () => {
       expect(post).toHaveBeenCalledTimes(1);
     }
   );
-  it("keeps a pre-dispatch CSRF transport failure distinct from an uncertain mutation", async () => {
+  it.each(["ERR_NETWORK", "ECONNABORTED"])(
+    "keeps pre-dispatch CSRF %s distinct from an uncertain mutation",
+    async (code) => {
+      const service = new CurveScopedPrdV1Service();
+      vi.spyOn(service, "get").mockRejectedValue({ code });
+      const post = vi.spyOn(service, "post");
+      await expect(service.approve("example", scope, fixture().approve, options)).rejects.toMatchObject({
+        code: "TRANSPORT",
+      });
+      expect(post).not.toHaveBeenCalled();
+    }
+  );
+  it("bounds CSRF and write attempts while preserving the original retry command", async () => {
     const service = new CurveScopedPrdV1Service();
-    vi.spyOn(service, "get").mockRejectedValue({ code: "ERR_NETWORK" });
-    const post = vi.spyOn(service, "post");
-    await expect(service.approve("example", scope, fixture().approve, options)).rejects.toMatchObject({
+    const get = mockCSRF(service);
+    const post = vi
+      .spyOn(service, "post")
+      .mockRejectedValueOnce({ code: "ECONNABORTED" })
+      .mockResolvedValueOnce(acceptance());
+    const command = fixture().approve;
+    await expect(service.approve("example", scope, command, options)).rejects.toMatchObject({
+      code: "MUTATION_OUTCOME_UNKNOWN",
+    });
+    expect(post).toHaveBeenCalledTimes(1);
+    await service.approve("example", scope, command, options);
+    expect(post).toHaveBeenCalledTimes(2);
+    expect(post.mock.calls[1]).toEqual(post.mock.calls[0]);
+    for (const [, config] of get.mock.calls) expect(config).toEqual(expect.objectContaining({ timeout: 60_000 }));
+    expect(post.mock.calls[0][2]).toEqual(expect.objectContaining({ timeout: 60_000 }));
+  });
+  it("bounds reads and reports a timed-out read without claiming a mutation", async () => {
+    const service = new CurveScopedPrdV1Service();
+    const get = vi.spyOn(service, "get").mockRejectedValue({ code: "ECONNABORTED" });
+    await expect(service.retrieveCurrentSubject("example", scope, subjectExpectation())).rejects.toMatchObject({
       code: "TRANSPORT",
     });
-    expect(post).not.toHaveBeenCalled();
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(get.mock.calls[0][1]).toEqual(expect.objectContaining({ timeout: 60_000 }));
   });
   it("marks an invalid successful response as outcome unknown and never retries it", async () => {
     const service = new CurveScopedPrdV1Service();

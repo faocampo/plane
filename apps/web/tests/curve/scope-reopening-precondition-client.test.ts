@@ -52,7 +52,7 @@ describe("minimal scope-reopening precondition read", () => {
     });
     expect(get).toHaveBeenCalledExactlyOnceWith(
       `/api/v1/workspaces/example%2Fworkspace/curve/initiatives/${target.initiativeId}/scope-reopening/v1/preconditions/`,
-      { signal, headers: { "Cache-Control": "no-store" } }
+      { signal, timeout: 60_000, headers: { "Cache-Control": "no-store" } }
     );
     expect(post).not.toHaveBeenCalled();
     expect(patch).not.toHaveBeenCalled();

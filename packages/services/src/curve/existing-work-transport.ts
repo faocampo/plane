@@ -37,6 +37,9 @@ export function curveExistingWorkEtag(response: AxiosResponse, expected: string)
   return expected;
 }
 export abstract class CurveExistingWorkTransport extends APIService {
+  // Bound each network attempt, including protected document and feedback reads.
+  // A write timeout cannot establish whether the server committed the command.
+  protected readonly requestTimeoutMs = 60_000;
   constructor(baseURL = API_BASE_URL) {
     super(baseURL);
   }
@@ -73,7 +76,11 @@ export abstract class CurveExistingWorkTransport extends APIService {
   }
   protected async read(path: string, signal?: AbortSignal): Promise<AxiosResponse> {
     if (signal?.aborted) throw new CurveExistingWorkError("CANCELLED");
-    const response = await this.get(path, { signal, headers: { "Cache-Control": "no-store" } });
+    const response = await this.get(path, {
+      signal,
+      timeout: this.requestTimeoutMs,
+      headers: { "Cache-Control": "no-store" },
+    });
     if (signal?.aborted) throw new CurveExistingWorkError("CANCELLED");
     requireCurve(response.status === 200);
     return response;
@@ -103,6 +110,7 @@ export abstract class CurveExistingWorkTransport extends APIService {
     if (signal?.aborted) throw new CurveExistingWorkError("CANCELLED");
     const csrf = await this.get("/auth/get-csrf-token/", {
       signal,
+      timeout: this.requestTimeoutMs,
       params: { cache_bust: Date.now() },
       headers: { "Cache-Control": "no-store" },
     });
@@ -113,6 +121,7 @@ export abstract class CurveExistingWorkTransport extends APIService {
     try {
       const response = await this.post(path, payload, {
         signal,
+        timeout: this.requestTimeoutMs,
         headers: {
           "Content-Type": upload?.contentType ?? "application/json",
           ...(upload?.planApproval
