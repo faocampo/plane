@@ -19,3 +19,12 @@ export * from "./project-association-preconditions.service";
 export * from "./manual-plan-draft.service";
 
 export * from "./manual-gate2.service";
+
+export * from "./manual-plan-draft-v3.service";
+
+export * from "./manual-gate2-v3.service";
+
+export * from "./scoped-prd-v2.service";
+
+export * from "./local-prd.service";
+export * from "./local-plan.service";

@@ -6,7 +6,7 @@
 from copy import deepcopy
 import json
 import uuid
-from manual_plan_v2.validation import ROOT, canonical_json, digest, metadata_digest
+from plane.curve.manual_plan_v2.validation import ROOT, canonical_json, digest, metadata_digest
 
 
 def fixture(name):

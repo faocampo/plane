@@ -1,0 +1,30 @@
+{
+  "actions": {
+    "READ": {
+      "actor": "CURRENT_CREATOR_OR_ASSIGNED_APPROVER"
+    },
+    "UPLOAD": {
+      "actor": "CURRENT_INITIATIVE_CREATOR",
+      "exact_initiative_version": true,
+      "states": ["DRAFT", "ALIGNING"]
+    }
+  },
+  "default_effect": "DENY",
+  "environment": "LOCAL",
+  "file_types": ["application/pdf", "text/markdown", "text/plain"],
+  "maximum_upload_bytes": 10485760,
+  "policy_key": "CURVE_LOCAL_PRD_POLICY",
+  "policy_version": 2,
+  "production_activation": false,
+  "projection": "LOCAL_PRD_SOURCE_METADATA_V1",
+  "required_current_checks": [
+    "ACTIVE_WORKSPACE_MEMBERSHIP",
+    "TWO_STAGE_INITIATIVE",
+    "ACTIVE_PRODUCT",
+    "NO_PENDING_SCOPE_REOPENING",
+    "QUALIFIED_RUNTIME",
+    "CURRENT_INITIATIVE_ACCESS_FOR_OWNER_ACTOR_AND_BOTH_APPROVERS",
+    "NO_EXISTING_WORK_SCOPE_OR_EXTERNAL_PRD"
+  ],
+  "schema_version": "curve.local-prd-policy/v2-candidate"
+}

@@ -274,14 +274,16 @@ def test_complete_migration_empty_reverse_forward_and_retained_refusal():
     from plane.curve.scope_reopening_qualification import require_manual_gate2_v2_qualification
 
     m = import_module("plane.curve.migrations.0025_manual_gate2_reconstruction")
-    with transaction.atomic(), connection.cursor() as c:
-        assert m._catalog(c) == m.CURRENT_CATALOG_DIGEST
+    leaves = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
     try:
         MigrationExecutor(connection).migrate([("curve", "0024_manual_draft_reconstruction")])
         with transaction.atomic(), connection.cursor() as c:
             assert m._catalog(c) == m.BASELINE_CATALOG_DIGEST
-    finally:
         MigrationExecutor(connection).migrate([("curve", "0025_manual_gate2_reconstruction")])
+        with transaction.atomic(), connection.cursor() as c:
+            assert m._catalog(c) == m.CURRENT_CATALOG_DIGEST
+    finally:
+        MigrationExecutor(connection).migrate(leaves)
     with transaction.atomic():
         require_manual_gate2_v2_qualification()
 
@@ -290,6 +292,11 @@ def test_complete_reverse_refuses_retained_manual_approval(native):
     n = native
     approve(n)
     before = counts()
-    with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-        MigrationExecutor(connection).migrate([("curve", "0024_manual_draft_reconstruction")])
+    leaves = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    try:
+        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+            MigrationExecutor(connection).migrate([("curve", "0024_manual_draft_reconstruction")])
+    finally:
+        # Later migrations may already have reversed before the retained gate refuses.
+        MigrationExecutor(connection).migrate(leaves)
     assert counts() == before and ManualTaskClaimV2.objects.get().state == "ACTIVE"

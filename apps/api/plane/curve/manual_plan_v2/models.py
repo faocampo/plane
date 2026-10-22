@@ -38,8 +38,10 @@ class DraftRecord(models.Model):
         app_label = "curve"
 
     def save(self, *args, **kwargs):
-        from .repository import assert_draft_write
+        from .repository import _WRITE, assert_draft_write
 
+        if _WRITE.get() is None:
+            from plane.curve.manual_plan_v3.repository import assert_draft_write
         assert_draft_write(self)
         if not self._state.adding and type(self) is not ManualPlanDraftV2:
             raise ImmutableDraftError("Manual-plan revisions are immutable")
@@ -120,4 +122,6 @@ class ManualPlanRevisionV2(DraftRecord):
     def as_record(self):
         from .contracts import verify_revision
 
+        if self.payload.get("schema_version") == "curve.manual-plan-draft.revision/v3-candidate":
+            from plane.curve.manual_plan_v3.contracts import verify_revision
         return verify_revision(self)

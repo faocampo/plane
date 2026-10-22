@@ -13,7 +13,8 @@ from .policy_services import assert_active_mutation_receipt
 from .prd_commands import PrdCommandError, check_prd_command_subject
 from .prd_checkpoint_repository import append_document_checkpoint_metadata
 from .scoped_prd_commands import ScopedPrdCommand, validate_scoped_command
-from .scoped_prd_contracts import SCHEMA_VERSION, POLICY_EDITION, metadata_digest
+from .scoped_prd_contracts import metadata_digest
+from .scoped_prd_editions import edition_for_initiative, edition_for_schema
 from .scoped_prd_policy import require_scoped_current, scope_pins
 
 _WRITE = ContextVar("scoped_prd_write", default=None)
@@ -74,14 +75,15 @@ def assert_scoped_write(record):
 
 
 def guard_command(command, workspace_id, initiative_id, actor_id, *, preflight=False):
-    validate_scoped_command(command, metadata_only=True)
+    validate_scoped_command(command, metadata_only=True, edition=command.subject_metadata().get("schema_version"))
     from .models import ExternalDocumentBinding, DocumentCheckpoint, GateAssignment
     from .scoped_prd_models import ScopedPrdObservation, ScopedPrdSubject
 
     if type(command) is not ScopedPrdCommand:
         raise PrdCommandError("SCOPED_PRD_INVALID")
     payload = command.subject_metadata()
-    if payload.get("schema_version") != SCHEMA_VERSION or payload.get("policy_edition") != POLICY_EDITION:
+    edition = edition_for_schema(payload.get("schema_version"))
+    if payload.get("policy_edition") != edition.policy_edition:
         raise PrdCommandError("SCOPED_PRD_INVALID")
     observation, subject = None, None
     if command.action == "CURVE.PRD.SUBMIT":
@@ -113,6 +115,8 @@ def guard_command(command, workspace_id, initiative_id, actor_id, *, preflight=F
         observation=observation,
         subject=subject,
     )
+    if edition != edition_for_initiative(context.initiative):
+        raise PrdCommandError("SCOPED_PRD_SUBJECT_CHANGED", 409)
     if observation is not None and any(payload[key] != value for key, value in scope_pins(context).items()):
         raise PrdCommandError("SCOPED_PRD_SUBJECT_CHANGED", 409)
     if preflight:
@@ -136,9 +140,10 @@ def guard_command(command, workspace_id, initiative_id, actor_id, *, preflight=F
 
 
 def entity(context, record_id):
+    edition = edition_for_initiative(context.initiative)
     return dict(
-        schema_version=SCHEMA_VERSION,
-        policy_edition=POLICY_EDITION,
+        schema_version=edition.schema_version,
+        policy_edition=edition.policy_edition,
         id=str(record_id),
         workspace_id=str(context.workspace.id),
         product_id=str(context.product.id),

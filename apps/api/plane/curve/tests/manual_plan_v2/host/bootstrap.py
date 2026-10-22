@@ -5,6 +5,8 @@
 
 from pathlib import Path
 import os
+from importlib import import_module
+from unittest.mock import patch
 import sys
 
 RUNTIME_ROOT = Path(__file__).resolve().parents[3]
@@ -26,3 +28,8 @@ def install():
 
     django.setup()
     sys.path.insert(0, str(RUNTIME_ROOT))
+    sys.path.insert(0, str(RUNTIME_ROOT.parents[1]))
+    # All host tests use the same canonical model modules as the application.
+    # Loading a second short-name copy would register each Django model twice.
+    with patch.dict(os.environ, {"DJANGO_SETTINGS_MODULE": "plane.settings.curve_worker"}):
+        import_module("plane")

@@ -23,6 +23,7 @@ def test_native_group_boundaries_and_coverage_guard_are_preserved():
     assert {path.relative_to(ROOT).parts[0] for path in groups["manual-planning"]} == MANUAL_DIRECTORIES
     assert {path.name for path in groups["scope-regression"]} == SCOPE_FILES
     assert ROOT / "test_ci_suite_partition.py" in groups["core"]
+    assert ROOT / "manual_plan_v2" / "host" / "test_two_stage_gate2_domain.py" in groups["host-doubles"]
     assert {path.parent for path in groups["host-doubles"]} == {
         ROOT / "manual_plan_v2" / "host",
         ROOT / "scope_editor_v2" / "host",

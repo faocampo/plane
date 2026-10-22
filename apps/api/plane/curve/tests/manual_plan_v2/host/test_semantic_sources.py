@@ -10,7 +10,7 @@ from copy import deepcopy
 import bootstrap
 
 bootstrap.install()
-from manual_plan_v2.validation import (
+from plane.curve.manual_plan_v2.validation import (
     InvalidPlan,
     derive_semantic_facts,
     validate_definition,

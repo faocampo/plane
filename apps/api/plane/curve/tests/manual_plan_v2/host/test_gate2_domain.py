@@ -19,7 +19,7 @@ sys.path.insert(0, str(bootstrap.RUNTIME_ROOT.parents[1]))
 # no-Celery import profile as the bounded validator worker; host settings stay local.
 with patch.dict(os.environ, {"DJANGO_SETTINGS_MODULE": "plane.settings.curve_worker"}):
     from plane.curve.manual_gate2_v2 import domain as g
-from manual_plan_v2.validation import ROOT, canonical_json, digest, metadata_digest, validate_definition
+from plane.curve.manual_plan_v2.validation import ROOT, canonical_json, digest, metadata_digest, validate_definition
 from test_draft_core import fixture
 
 

@@ -15,7 +15,7 @@ import bootstrap
 
 bootstrap.install()
 
-from manual_plan_v2 import contracts, repository, services
+from plane.curve.manual_plan_v2 import contracts, repository, services
 from test_draft_core import command, fixture, initiative, revision
 
 

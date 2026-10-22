@@ -76,17 +76,39 @@ def _empty_reverse_and_forward():
     assert catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
 
 
+def assert_retained_reverse_refused():
+    # Exercise the historical guard directly: a newer guard may refuse first
+    # when the full current migration chain contains retained successor evidence.
+    with pytest.raises(RuntimeError, match="MANUAL_PLAN_DRAFT_RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+        with connection.schema_editor() as editor:
+            MIGRATION.require_empty_reverse(None, editor)
+    catalog_sql = import_module("plane.curve.migrations.0023_scope_reopening").CATALOG_SQL
+    with connection.cursor() as cursor:
+        cursor.execute(catalog_sql)
+        before_catalog = cursor.fetchone()[0]
+    leaves = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    try:
+        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+            MigrationExecutor(connection).migrate(PREVIOUS)
+    finally:
+        MigrationExecutor(connection).migrate(leaves)
+    with connection.cursor() as cursor:
+        cursor.execute(catalog_sql)
+        after_catalog = cursor.fetchone()[0]
+    for section, value in before_catalog.items():
+        assert after_catalog[section] == value, section
+    with transaction.atomic():
+        require_manual_plan_v2_qualification()
+
+
 def test_complete_reverse_refuses_saved_and_replayed_evidence_without_changing_it(native):
     value = command(native)
     first = save(native, value)
     save(native, value)
     before = counts()
-    with historical_manual_catalog():
-        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-            MigrationExecutor(connection).migrate(PREVIOUS)
-        assert counts() == before
-        assert ManualPlanRevisionV2.objects.get(id=first.data["id"]).as_record() == first.data
-        assert catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
+    assert_retained_reverse_refused()
+    assert counts() == before
+    assert ManualPlanRevisionV2.objects.get(id=first.data["id"]).as_record() == first.data
 
 
 def test_no_effect_audit_alone_prevents_reverse(native):
@@ -107,8 +129,6 @@ def test_no_effect_audit_alone_prevents_reverse(native):
             correlation_id="synthetic-retained-audit",
         )
     before = counts()
-    with historical_manual_catalog():
-        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-            MigrationExecutor(connection).migrate(PREVIOUS)
-        assert AuditEvent.objects.filter(id=audit.id, outcome="NO_EFFECT").exists()
-        assert counts() == before and catalog() == MIGRATION.CURRENT_CATALOG_DIGEST
+    assert_retained_reverse_refused()
+    assert AuditEvent.objects.filter(id=audit.id, outcome="NO_EFFECT").exists()
+    assert counts() == before

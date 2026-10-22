@@ -24,9 +24,11 @@ def records():
 def test_header_successor_preserves_authority_and_complete_source_closure():
     predecessor, successor = records()
     before = deepcopy(predecessor)
-    qualified = root.validate_source_header_successor(predecessor, successor)
+    qualified = root._retained_header_projection(predecessor)
     assert predecessor == before
-    assert qualified["runtime_sources"] == root.current_runtime_sources()
+    assert qualified["runtime_sources"] != root.current_runtime_sources()
+    baseline = json.loads(root.QUALIFICATION_PATH.read_bytes())
+    assert root._current_qualification(baseline)["runtime_sources"] == root.current_runtime_sources()
     assert {key: value for key, value in qualified.items() if key != "runtime_sources"} == {
         key: value for key, value in before.items() if key != "runtime_sources"
     }

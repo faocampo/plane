@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "READ": {
+      "actor": "CURRENT_CREATOR_OR_ASSIGNED_APPROVER"
+    },
+    "UPLOAD": {
+      "actor": "CURRENT_INITIATIVE_CREATOR",
+      "exact_initiative_version": true,
+      "states": ["PLANNING"]
+    }
+  },
+  "default_effect": "DENY",
+  "environment": "LOCAL",
+  "file_types": ["application/pdf", "text/markdown", "text/plain"],
+  "maximum_upload_bytes": 10485760,
+  "policy_key": "CURVE_LOCAL_PLAN_UPLOAD_POLICY",
+  "policy_version": 1,
+  "production_activation": false,
+  "projection": "LOCAL_PLAN_REVISION_METADATA_V1",
+  "required_current_checks": [
+    "ACTIVE_WORKSPACE_MEMBERSHIP",
+    "ACTIVE_NATIVE_SOURCE_ACCESS_FOR_ACTOR_AND_BOTH_APPROVERS",
+    "TWO_STAGE_INITIATIVE",
+    "ACTIVE_PRODUCT",
+    "NO_PENDING_SCOPE_REOPENING",
+    "QUALIFIED_RUNTIME",
+    "CURRENT_EXACT_LOCAL_PRD_APPROVAL",
+    "EXACT_PLAN_REVISION_VERSION"
+  ],
+  "schema_version": "curve.local-plan-upload-policy/v1-candidate"
+}

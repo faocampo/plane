@@ -115,6 +115,7 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   const foundationHref = `/${slug}/curve`;
   const initiativesHref = `${foundationHref}/initiatives`;
   const projectsHref = `${foundationHref}/projects`;
+  const isReviewDesk = pathname === initiativesHref || pathname.startsWith(`${initiativesHref}/`);
   const closeMobileNavigation = () => {
     if (window.innerWidth < 768) toggleSidebar(true);
   };
@@ -122,11 +123,14 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   return (
     <div
       id="curve-workspace-navigation"
-      className={cn("flex h-full w-full animate-fade-in flex-col", resolvedTheme === "dark" && "bg-[#0B1020]")}
+      className={cn(
+        "flex h-full w-full animate-fade-in flex-col",
+        resolvedTheme === "dark" && !isReviewDesk && "bg-[#0B1020]"
+      )}
       aria-label="Curve workspace navigation"
     >
       <div className="flex min-h-14 items-center justify-between gap-3 px-5 pb-3">
-        {resolvedTheme === "dark" ? (
+        {resolvedTheme === "dark" && !isReviewDesk ? (
           <div className="relative h-10 w-[8.25rem] shrink-0 overflow-hidden" aria-label="Curve">
             <img
               src="/curve/curve-logo-dark-v1.png"

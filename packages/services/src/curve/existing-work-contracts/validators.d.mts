@@ -17,6 +17,12 @@ import type {
   CurveScopedPrdReturnV1,
   CurveScopeReopeningPreconditionsV1,
   CurveProjectAssociationPreconditionsV1,
+  CurveScopedPrdObserveV2,
+  CurveScopedPrdObservationV2,
+  CurveScopedPrdSubjectV2,
+  CurveScopedPrdSubmitV2,
+  CurveScopedPrdApproveV2,
+  CurveScopedPrdReturnV2,
 } from "@plane/types";
 export declare const validateCurveProjectAssociationCreate: {
   (input: unknown): input is CurveProjectAssociationCreate;
@@ -68,5 +74,29 @@ export declare const validateCurveScopeReopeningPreconditionsV1: {
 };
 export declare const validateCurveProjectAssociationPreconditionsV1: {
   (input: unknown): input is CurveProjectAssociationPreconditionsV1;
+  errors?: unknown;
+};
+export declare const validateCurveScopedPrdObserveV2: {
+  (input: unknown): input is CurveScopedPrdObserveV2;
+  errors?: unknown;
+};
+export declare const validateCurveScopedPrdObservationV2: {
+  (input: unknown): input is CurveScopedPrdObservationV2;
+  errors?: unknown;
+};
+export declare const validateCurveScopedPrdSubjectV2: {
+  (input: unknown): input is CurveScopedPrdSubjectV2;
+  errors?: unknown;
+};
+export declare const validateCurveScopedPrdSubmitV2: {
+  (input: unknown): input is CurveScopedPrdSubmitV2;
+  errors?: unknown;
+};
+export declare const validateCurveScopedPrdApproveV2: {
+  (input: unknown): input is CurveScopedPrdApproveV2;
+  errors?: unknown;
+};
+export declare const validateCurveScopedPrdReturnV2: {
+  (input: unknown): input is CurveScopedPrdReturnV2;
   errors?: unknown;
 };

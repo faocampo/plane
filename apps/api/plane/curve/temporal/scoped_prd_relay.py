@@ -21,6 +21,7 @@ from plane.curve.config import is_curve_enabled_for_workspace
 from plane.curve.observability.propagation import event_contract
 from plane.curve.scoped_prd_completion import _worker_grant, _transition, complete_scoped_prd_operation
 from plane.curve.services import claim_due_outbox, acknowledge_outbox, retry_outbox, dead_letter_outbox
+from ..scoped_prd_editions import edition_for_schema
 from .contracts import OperationActivityInputV1
 from .constants import TASK_QUEUE
 from .scoped_prd_contracts import PRD_DESTINATION, PRD_WORKFLOW_TYPE, prd_workflow_id
@@ -68,7 +69,8 @@ def _prepare(outbox):
         operation = Operation.objects.select_for_update().get(workspace_id=workspace.id, id=event.aggregate_id)
         if (
             record is None
-            or operation.command_type != "SCOPED_PRD_V1_" + record.action.removeprefix("CURVE.PRD.")
+            or operation.command_type
+            != edition_for_schema(record.edition).command_prefix + record.action.removeprefix("CURVE.PRD.")
             or operation.operation_type != "WORKFLOW_COMMAND"
             or operation.target
             != {

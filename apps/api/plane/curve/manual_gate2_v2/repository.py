@@ -130,7 +130,9 @@ def lock_claims(initiative, subject):
             and original.workspace_id == row.workspace_id
             and original.initiative_id == row.initiative_id
         )
-        verify_record(original)
+        from plane.curve.manual_gate2_v3.contracts import verify_claim_subject
+
+        verify_claim_subject(original)
     return keys
 
 

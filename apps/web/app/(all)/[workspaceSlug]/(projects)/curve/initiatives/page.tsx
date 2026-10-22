@@ -29,7 +29,7 @@ export default function CurveInitiativesPage({ params }: Route.ComponentProps) {
     <>
       <PageHead title="Initiatives · Curve" />
       <CurveInitiativesHeader />
-      <div className="size-full overflow-y-auto bg-surface-1">
+      <div className="curve-initiative-page size-full overflow-y-auto bg-surface-1">
         <InitiativeWorkspace workspaceSlug={workspaceSlug ?? shell?.workspace_slug ?? ""} />
       </div>
     </>

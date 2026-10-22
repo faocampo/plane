@@ -203,7 +203,7 @@ def issue_key(ref):
     return ref["provider_installation_id"] + ":" + ref["source_issue_id"]
 
 
-def validate_definition_semantics(definition, facts):
+def validate_definition_semantics(definition, facts, *, require_code_approver=True):
     for key in (
         "manual_profile_ref",
         "approved_subject_ref",
@@ -233,11 +233,12 @@ def validate_definition_semantics(definition, facts):
             item["owner"]["actor_type"] == "HUMAN" and item["owner"]["actor_id"] in facts["owner_ids"],
             "OWNER_UNAVAILABLE",
         )
-        require(
-            item["code_approver"]["actor_type"] == "HUMAN"
-            and item["code_approver"]["actor_id"] == facts["code_approver_id"],
-            "CODE_APPROVER_MISMATCH",
-        )
+        if require_code_approver:
+            require(
+                item["code_approver"]["actor_type"] == "HUMAN"
+                and item["code_approver"]["actor_id"] == facts["code_approver_id"],
+                "CODE_APPROVER_MISMATCH",
+            )
         require(ranks[item["risk_tier"]] >= ranks[facts["risk_tier"]], "RISK_UNDERSTATED")
         require(same(item["budget_policy_ref"], facts["budget_policy_ref"]), "BUDGET_POLICY_MISMATCH")
         for key, covered in (("requirement_ids", requirements), ("acceptance_ids", acceptances)):
@@ -301,7 +302,9 @@ def validate_definition_semantics(definition, facts):
         visit(key)
 
 
-def validate_input_identity(identity, definition):
+def validate_input_identity(
+    identity, definition, *, approval_gates=("CODE_READINESS", "PLAN_APPROVAL", "PRD_APPROVAL")
+):
     for key in (
         "workspace_id",
         "initiative_id",
@@ -314,12 +317,10 @@ def validate_input_identity(identity, definition):
         require(same(identity[key], definition[key]), "INPUT_REFERENCE_MISMATCH")
     require(same(identity["repository_inputs"], definition["repositories"]), "INPUT_REPOSITORY_MISMATCH")
     gates = identity["gate_assignments"]
-    require(
-        [g["gate_type"] for g in gates] == ["CODE_READINESS", "PLAN_APPROVAL", "PRD_APPROVAL"], "INPUT_GATES_MISSING"
-    )
-    require(len({g["gate_assignment_id"] for g in gates}) == 3, "INPUT_ASSIGNMENT_REUSED")
+    require([g["gate_type"] for g in gates] == list(approval_gates), "INPUT_GATES_MISSING")
+    require(len({g["gate_assignment_id"] for g in gates}) == len(approval_gates), "INPUT_ASSIGNMENT_REUSED")
     if any(s["risk_tier"] != "LOW" for s in definition["slices"]):
-        require(len({g["approver_user_id"] for g in gates}) == 3, "INPUT_GATE_SEPARATION")
+        require(len({g["approver_user_id"] for g in gates}) == len(approval_gates), "INPUT_GATE_SEPARATION")
     require(
         identity["human_owner_ids"] == sorted({s["owner"]["actor_id"] for s in definition["slices"]}),
         "INPUT_OWNER_MISMATCH",
@@ -473,7 +474,7 @@ def _normalized_prd_facts(value, identity):
     )
 
 
-def derive_semantic_facts(identity, sources, materials, native_facts):
+def derive_semantic_facts(identity, sources, materials, native_facts, *, require_code_approver=True):
     """Fixed synthetic-body adapter. No editable facts list can weaken these facts.
 
     All source bodies must be in the retained protected inventory and byte-bound.
@@ -617,12 +618,13 @@ def derive_semantic_facts(identity, sources, materials, native_facts):
         repositories=repositories,
         dependency_artifact_refs=deepcopy(workflow["dependency_artifact_refs"]),
         owner_ids=deepcopy(identity["human_owner_ids"]),
-        code_approver_id=next(
-            item["approver_user_id"] for item in identity["gate_assignments"] if item["gate_type"] == "CODE_READINESS"
-        ),
         protected_object_refs=[deepcopy(item["object_ref"]) for item in identity["protected_inputs"]],
         workflow_conditions=dict(workflow_ref=deepcopy(identity["workflow_ref"]), allowed_conditions=allowed),
     )
+    if require_code_approver:
+        result["code_approver_id"] = next(
+            item["approver_user_id"] for item in identity["gate_assignments"] if item["gate_type"] == "CODE_READINESS"
+        )
     budget = parse_strict_json((ROOT / "manual-plan-profile-v2.json").read_bytes())["budget_policy_ref"]
     result["budget_policy_ref"] = budget
     # Dependency artifacts need explicit retained objects, not asserted future outcomes.

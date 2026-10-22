@@ -158,7 +158,7 @@ export interface ICurveGateAssignment {
 }
 
 export interface ICurveInitiative {
-  schema_version: "1.0" | "1.1";
+  schema_version: "1.0" | "1.1" | "1.2";
   id: string;
   workspace_id: string;
   product_id: string;

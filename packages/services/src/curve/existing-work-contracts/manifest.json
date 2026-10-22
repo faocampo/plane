@@ -76,5 +76,41 @@
     "type": "CurveProjectAssociationPreconditionsV1",
     "source": "apps/api/plane/curve/project_association_read_candidate/project-association-precondition-v1.schema.json",
     "sha256": "5c89be086e2cc7a3efdb7a5247d82f5f8280ed88a4df1c74f7efce7298015a60"
+  },
+  {
+    "name": "scoped-prd-observe-v2",
+    "type": "CurveScopedPrdObserveV2",
+    "source": "apps/api/plane/curve/scoped_prd_v2_candidate/scoped-prd-observe-v2.schema.json",
+    "sha256": "ee6f7b524aaebec45b42ef72dfc7e743edee32301665c35e7fd08246edbe820b"
+  },
+  {
+    "name": "scoped-prd-observation-v2",
+    "type": "CurveScopedPrdObservationV2",
+    "source": "apps/api/plane/curve/scoped_prd_v2_candidate/scoped-prd-observation-v2.schema.json",
+    "sha256": "fb04fc0ff2d1ec2b57df8657fdc05992a025dac3d36fe773dea1fe0052ae3bff"
+  },
+  {
+    "name": "scoped-prd-subject-v2",
+    "type": "CurveScopedPrdSubjectV2",
+    "source": "apps/api/plane/curve/scoped_prd_v2_candidate/scoped-prd-subject-v2.schema.json",
+    "sha256": "b48d63f48bd3c6552db1788aaed887efb037a416b4975b3363417fcbab3f81ea"
+  },
+  {
+    "name": "scoped-prd-submit-v2",
+    "type": "CurveScopedPrdSubmitV2",
+    "source": "apps/api/plane/curve/scoped_prd_v2_candidate/scoped-prd-submit-v2.schema.json",
+    "sha256": "1e40e1aaf76c746da66d590915d23b407ffb5e5f6211f9ea7953b1b8a664d7df"
+  },
+  {
+    "name": "scoped-prd-approve-v2",
+    "type": "CurveScopedPrdApproveV2",
+    "source": "apps/api/plane/curve/scoped_prd_v2_candidate/scoped-prd-approve-v2.schema.json",
+    "sha256": "2f2f8f1ed944b14b2a48e76f2e1b23e1d20c9cbafd5dab78f3d73392ee2ebdb0"
+  },
+  {
+    "name": "scoped-prd-return-for-revision-v2",
+    "type": "CurveScopedPrdReturnV2",
+    "source": "apps/api/plane/curve/scoped_prd_v2_candidate/scoped-prd-return-for-revision-v2.schema.json",
+    "sha256": "bc0918c1818ec7bd9509e10bf64d1b65a2bbd6e2b4e59c82178d00147db5cda8"
   }
 ]

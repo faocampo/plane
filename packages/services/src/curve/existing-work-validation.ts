@@ -88,14 +88,14 @@ function requireProduct(value: { workspace_id: string; product_id: string }, sco
   validateCurveScope(scope);
   requireCurve(value.workspace_id === scope.workspaceId && value.product_id === scope.productId);
 }
-function requireInitiative(
+export function requireInitiative(
   value: { workspace_id: string; product_id: string; initiative_id: string },
   scope: CurveExistingWorkInitiativeScope
 ) {
   requireProduct(value, scope);
   requireCurve(value.initiative_id === scope.initiativeId);
 }
-function requireOrderedMembers(items: Array<{ source_issue_id: string }>) {
+export function requireOrderedMembers(items: Array<{ source_issue_id: string }>) {
   const ids = items.map((item) => item.source_issue_id);
   requireCurve(ids.every((id, i) => i === 0 || ids[i - 1]! < id));
 }
@@ -110,7 +110,7 @@ function canonicalCurveMetadata(value: unknown): string {
   }
   return JSON.stringify(value);
 }
-async function requireCurveDigest(value: unknown, expected: string) {
+export async function requireCurveDigest(value: unknown, expected: string) {
   try {
     const bytes = new TextEncoder().encode(canonicalCurveMetadata(value));
     const hash = await globalThis.crypto.subtle.digest("SHA-256", bytes);
@@ -121,7 +121,7 @@ async function requireCurveDigest(value: unknown, expected: string) {
     throw new CurveExistingWorkError();
   }
 }
-function requireScopedExpectation(expected: CurveScopedPrdScopeV1) {
+export function requireScopedExpectation(expected: CurveScopedPrdScopeV1) {
   requireCurve(
     isCurveUuid(expected.proposal_id) &&
       isCurveUuid(expected.scope_revision_id) &&

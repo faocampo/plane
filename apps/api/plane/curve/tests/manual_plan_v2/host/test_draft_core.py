@@ -15,8 +15,8 @@ import bootstrap
 
 bootstrap.install()
 
-from manual_plan_v2 import contracts, models, policy, repository
-from manual_plan_v2.validation import ROOT, canonical_json, metadata_digest
+from plane.curve.manual_plan_v2 import contracts, models, policy, repository
+from plane.curve.manual_plan_v2.validation import ROOT, canonical_json, metadata_digest
 
 
 def fixture(name):

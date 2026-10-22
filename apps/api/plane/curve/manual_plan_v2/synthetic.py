@@ -160,10 +160,11 @@ class SyntheticManualPlanResolverV2:
         return self._decode_catalog(raw), fence
 
     @staticmethod
-    def _decode_catalog(raw):
+    def _decode_catalog(raw, *, _edition=2):
+        require(_edition in (2, 3), "EDITION_UNAVAILABLE")
         catalog = parse_strict_json(raw, max_bytes=CATALOG_LIMIT)
         _closed(catalog, ("schema_version", "generation", "initiatives", "plans", "objects"))
-        require(catalog["schema_version"] == "curve.synthetic-manual-plan-catalog/v2-candidate")
+        require(catalog["schema_version"] == f"curve.synthetic-manual-plan-catalog/v{_edition}-candidate")
         require(_positive(catalog["generation"]))
         require(type(catalog["initiatives"]) is dict and len(catalog["initiatives"]) <= 128)
         require(type(catalog["plans"]) is dict and len(catalog["plans"]) <= 128)
@@ -202,7 +203,15 @@ class SyntheticManualPlanResolverV2:
             _id(key)
             _closed(plan, ("identity", "facts", "semantic_sources"))
             _closed(plan["semantic_sources"], ("prd", "workflow", "quality", "repositories"))
-            validate("manual-plan-input-identity-v2", plan["identity"])
+            if _edition == 2:
+                validate("manual-plan-input-identity-v2", plan["identity"])
+            else:
+                from plane.curve.manual_plan_v3.validation import candidate_schemas, validate_schema
+
+                try:
+                    validate_schema("manual-plan-input-identity-v3.schema.json", plan["identity"], candidate_schemas())
+                except Exception:
+                    raise ManualPlanError("UNAVAILABLE") from None
             require(
                 plan["identity"]["digest"] == metadata_digest(plan["identity"])
                 and plan["identity"]["definition_ref"]["object_id"] == key
@@ -220,7 +229,7 @@ class SyntheticManualPlanResolverV2:
                     "quality_policy_ref",
                     "repositories",
                     "owner_ids",
-                    "code_approver_id",
+                    *(("code_approver_id",) if _edition == 2 else ()),
                     "risk_tier",
                     "budget_policy_ref",
                     "requirement_ids",

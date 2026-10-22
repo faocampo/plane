@@ -16,6 +16,8 @@ CORE_POLICY_V2_MANIFEST_DIGEST = "sha256:2895b63392236afa07e6f0572d6ddb1c91aa7f4
 CORE_POLICY_V2_MANIFEST_PATH = Path(__file__).resolve().parent / "contracts" / "policy" / "core-policy-v2.json"
 PRD_POLICY_MANIFEST_DIGEST = "sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c"
 PRD_POLICY_MANIFEST_PATH = Path(__file__).resolve().parent / "prd_candidate_policy" / "prd-policy-v1.json"
+PRD_POLICY_V2_MANIFEST_DIGEST = "sha256:aa31f1fb698cdd806032c96f07631cfc03dc68011433ddcbc133cf11d0535e40"
+PRD_POLICY_V2_MANIFEST_PATH = Path(__file__).resolve().parent / "prd_candidate_policy" / "prd-policy-v2.json"
 SCOPE_REOPENING_POLICY_MANIFEST_DIGEST = "sha256:598e492b7dc23369eaf3029d7e208b4fd338d03d3e3388fcb10305e9c02b0094"
 SCOPE_REOPENING_POLICY_MANIFEST_PATH = Path(__file__).resolve().parent / "scope_reopening_candidate" / "policy-v1.json"
 SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST = "sha256:bff7796e940087af1d1150f142800204fa9c26786ed911c9f449c44a0515916a"
@@ -27,6 +29,7 @@ SUPPORTED_CORE_POLICY_MANIFEST_DIGESTS = frozenset(
         CORE_POLICY_MANIFEST_DIGEST,
         CORE_POLICY_V2_MANIFEST_DIGEST,
         PRD_POLICY_MANIFEST_DIGEST,
+        PRD_POLICY_V2_MANIFEST_DIGEST,
         SCOPE_REOPENING_POLICY_MANIFEST_DIGEST,
         SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST,
     }
@@ -75,7 +78,7 @@ def _load_manifest(
     ):
         raise PolicyManifestIntegrityError("core policy manifest identity mismatch")
 
-    if policy_version == 2:
+    if policy_key == "CURVE_CORE_POLICY" and policy_version == 2:
         expected_role_source = {
             "role": "PLATFORM_ADMINISTRATOR",
             "actor_type": "HUMAN",
@@ -146,6 +149,24 @@ def load_prd_policy_manifest() -> Mapping[str, object]:
 
 
 @lru_cache(maxsize=1)
+def load_prd_policy_v2_manifest() -> Mapping[str, object]:
+    """Two-stage successor; historical v1 decisions retain their original policy."""
+    manifest = _load_manifest(
+        manifest_path=PRD_POLICY_V2_MANIFEST_PATH,
+        manifest_digest=PRD_POLICY_V2_MANIFEST_DIGEST,
+        schema_version="2.0-candidate",
+        policy_version=2,
+        policy_key="CURVE_PRD_POLICY",
+    )
+    if manifest.get("supersedes") != {
+        "policy_version": 1,
+        "manifest_digest": PRD_POLICY_MANIFEST_DIGEST,
+    }:
+        raise PolicyManifestIntegrityError("PRD successor policy identity mismatch")
+    return manifest
+
+
+@lru_cache(maxsize=1)
 def load_scope_reopening_policy_manifest() -> Mapping[str, object]:
     return _load_manifest(
         manifest_path=SCOPE_REOPENING_POLICY_MANIFEST_PATH,
@@ -176,6 +197,8 @@ def load_core_policy_manifest_for_digest(policy_manifest_digest: object) -> Mapp
         return load_core_policy_v2_manifest()
     if policy_manifest_digest == PRD_POLICY_MANIFEST_DIGEST:
         return load_prd_policy_manifest()
+    if policy_manifest_digest == PRD_POLICY_V2_MANIFEST_DIGEST:
+        return load_prd_policy_v2_manifest()
     if policy_manifest_digest == SCOPE_REOPENING_POLICY_MANIFEST_DIGEST:
         return load_scope_reopening_policy_manifest()
     if policy_manifest_digest == SCOPE_REOPENING_READ_POLICY_MANIFEST_DIGEST:
@@ -187,5 +210,6 @@ def clear_core_policy_manifest_cache():
     load_core_policy_manifest.cache_clear()
     load_core_policy_v2_manifest.cache_clear()
     load_prd_policy_manifest.cache_clear()
+    load_prd_policy_v2_manifest.cache_clear()
     load_scope_reopening_policy_manifest.cache_clear()
     load_scope_reopening_read_policy_manifest.cache_clear()

@@ -10,7 +10,7 @@ PRD_COMMAND_MAX_BYTES = 65536
 _CURVE = re.compile(r"^/api/v1/workspaces/[^/]+/curve(?:/|$)")
 _PRD = re.compile(r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/prd/(submit|approve|return-for-revision)/?$")
 _SCOPED_PRD = re.compile(
-    r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/scoped-prd/v1/"
+    r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/scoped-prd/v[12]/"
     r"(observations|submit|approve|return-for-revision)/?$"
 )
 
@@ -35,3 +35,17 @@ _SCOPE = re.compile(r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/scope-pr
 
 def is_scope_proposal_request(request):
     return bool(_SCOPE.fullmatch(request.path_info))
+
+
+LOCAL_PRD_UPLOAD_MAX_BYTES = 10 * 1024 * 1024
+_LOCAL_UPLOAD = re.compile(r"^/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/local-prd/v1/sources/?$")
+
+
+def is_local_prd_upload_request(request):
+    return bool(_LOCAL_UPLOAD.fullmatch(request.path_info))
+
+
+def is_local_plan_upload_request(request):
+    return bool(
+        re.fullmatch(r"/api/v1/workspaces/[^/]+/curve/initiatives/[^/]+/local-plan/v1/revisions/?", request.path_info)
+    )

@@ -311,3 +311,21 @@ def test_prd_policy_migration_reverses_empty_and_preserves_retained_decisions(gr
     finally:
         MigrationExecutor(connection).migrate(latest)
     assert PolicyDecision.objects.filter(policy_key="CURVE_PRD_POLICY").count() == 1
+
+
+@pytest.mark.parametrize("action", ["SUBMIT", "APPROVE", "REQUEST_CHANGES", "REJECT"])
+def test_successor_initiative_selects_two_stage_policy_and_ignores_retained_code_history(graph, action):
+    from plane.curve.policy_manifest import PRD_POLICY_V2_MANIFEST_DIGEST
+
+    workspace, initiative, humans, gates = graph
+    initiative.schema_version = "1.2"
+    initiative.save(update_fields=["schema_version"])
+    WorkspaceMember.objects.filter(workspace=workspace, member=humans[3]).update(is_active=False)
+    context, result = evaluate(graph, action=action)
+    assert result.effect is PolicyEffect.ALLOW
+    assert context["policy_manifest_digest"] == PRD_POLICY_V2_MANIFEST_DIGEST
+    assert {gate["role"] for gate in context["assignment_context"]["gate_assignments"]} == {
+        "PRODUCT_APPROVER",
+        "TECHNICAL_APPROVER",
+    }
+    assert GateAssignment.objects.filter(id=gates[2].id).exists()

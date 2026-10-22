@@ -12,7 +12,7 @@ import bootstrap
 bootstrap.install()
 
 from rest_framework.test import APIRequestFactory
-from manual_plan_v2 import contracts, reads, repository, services, views
+from plane.curve.manual_plan_v2 import contracts, reads, repository, services, views
 from test_draft_core import fixture
 
 

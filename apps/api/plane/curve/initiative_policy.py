@@ -28,8 +28,8 @@ from plane.db.models import Workspace, WorkspaceMember
 
 
 INITIATIVE_POLICY_KEY = "CURVE_INITIATIVE_POLICY"
-INITIATIVE_POLICY_VERSION = 1
-INITIATIVE_POLICY_DIGEST = "sha256:df9aa96d5de46232074abcc51fbb268beda0b73b45906c986f106b2d317adf8b"
+INITIATIVE_POLICY_VERSION = 2
+INITIATIVE_POLICY_DIGEST = "sha256:6172fa892cd46d0a869761d22f364e27a2bd019b8adf814b59e5df6a4a7f13cd"
 INITIATIVE_ACTIONS = frozenset(
     {
         "CURVE.INITIATIVE.CREATE",
@@ -76,12 +76,12 @@ def _canonical_digest(value) -> str:
 
 
 def _load_policy() -> dict:
-    path = Path(__file__).resolve().parent / "contracts" / "policy" / "initiative-policy-v1.json"
+    path = Path(__file__).resolve().parent / "two_stage_review" / "contract_snapshot" / "initiative-policy-v2.json"
     payload = path.read_bytes()
     if f"sha256:{hashlib.sha256(payload).hexdigest()}" != INITIATIVE_POLICY_DIGEST:
         raise RuntimeError("Curve Initiative policy integrity check failed")
     policy = json.loads(payload)
-    if policy.get("policy_key") != INITIATIVE_POLICY_KEY or policy.get("policy_version") != 1:
+    if policy.get("policy_key") != INITIATIVE_POLICY_KEY or policy.get("policy_version") != INITIATIVE_POLICY_VERSION:
         raise RuntimeError("Curve Initiative policy identity is invalid")
     return policy
 
@@ -139,6 +139,7 @@ def _reason_codes(*, request, membership, action, initiative, initiative_id) -> 
             workspace_id=initiative.workspace_id,
             initiative_id=initiative.id,
             approver_user_id=request.user.id,
+            gate_type__in=("PRD_APPROVAL", "PLAN_APPROVAL"),
             valid_from__lte=timezone.now(),
             valid_until__isnull=True,
         ).exists()

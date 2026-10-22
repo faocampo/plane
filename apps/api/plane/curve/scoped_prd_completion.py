@@ -28,6 +28,7 @@ from .policy_services import (
     transition_operation_with_service_authorization,
 )
 from .scoped_prd_acceptance import _preflight
+from .scoped_prd_editions import edition_for_schema
 from .scoped_prd_models import ScopedPrdAcceptedCommand as PrdAcceptedCommand
 from .scoped_prd_commands import ScopedPrdCommand, EXTRA_FIELDS
 from .scoped_prd_repository import guard_command, record_scoped_submission, record_scoped_decision
@@ -174,7 +175,11 @@ def _review(record, prepared, initiative, actor, receipt):
         provider_validation_cutoff=instant(prepared.provider_validation_cutoff),
     )
     assignments = list(
-        GateAssignment.objects.filter(workspace_id=record.workspace_id, initiative_id=initiative.id)
+        GateAssignment.objects.filter(
+            workspace_id=record.workspace_id,
+            initiative_id=initiative.id,
+            gate_type__in=edition_for_schema(record.edition).gates,
+        )
         .select_for_update()
         .order_by("id")
     )
@@ -196,6 +201,7 @@ def _review(record, prepared, initiative, actor, receipt):
         current_checkpoint_id=str(initiative.current_prd_checkpoint_id),
         current_risk_tier=initiative.risk_tier,
         current_policy_version_ids=prepared.policy_version_ids,
+        required_gates=edition_for_schema(record.edition).gates,
     )
     decision = PrdReviewDecision.from_wire(
         decision=wire,
@@ -316,7 +322,8 @@ def complete_scoped_prd_operation(*, workspace_id, operation_id, execution_guard
                     }
                     and operation.created_by == actor
                     and (operation.effective_principal is None or operation.effective_principal == actor)
-                    and operation.command_type == "SCOPED_PRD_V1_" + record.action.removeprefix("CURVE.PRD.")
+                    and operation.command_type
+                    == edition_for_schema(record.edition).command_prefix + record.action.removeprefix("CURVE.PRD.")
                     and operation.operation_type == "WORKFLOW_COMMAND"
                 )
 

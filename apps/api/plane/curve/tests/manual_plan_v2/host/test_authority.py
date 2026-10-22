@@ -12,7 +12,7 @@ import uuid
 import bootstrap
 
 bootstrap.install()
-from manual_plan_v2 import contracts, policy, synthetic
+from plane.curve.manual_plan_v2 import contracts, policy, synthetic
 from test_draft_core import fixture
 
 

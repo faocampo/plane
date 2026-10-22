@@ -1442,7 +1442,17 @@ def complete_inbox_message(
 def _has_scoped_prd_command(workspace_id, operation):
     """Explicit durable edition identity for safe pre-dispatch cancellation."""
     from .scoped_prd_models import ScopedPrdAcceptedCommand
+    from .scoped_prd_editions import edition_for_schema
 
-    return ScopedPrdAcceptedCommand.objects.filter(
-        workspace_id=workspace_id, operation_id=operation.id, edition="curve.scoped-prd/v1-candidate"
-    ).exists() and operation.command_type.startswith("SCOPED_PRD_V1_")
+    record = (
+        ScopedPrdAcceptedCommand.objects.filter(
+            workspace_id=workspace_id,
+            operation_id=operation.id,
+            edition__in=["curve.scoped-prd/v1-candidate", "curve.scoped-prd/v2-candidate"],
+        )
+        .only("edition", "action")
+        .first()
+    )
+    return record is not None and operation.command_type == (
+        edition_for_schema(record.edition).command_prefix + record.action.removeprefix("CURVE.PRD.")
+    )

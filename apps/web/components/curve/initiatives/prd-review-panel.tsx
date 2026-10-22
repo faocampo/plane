@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { CheckCircle2, Clock3, FileText, Info, MessageSquare, RefreshCw, ShieldCheck, UserRound } from "lucide-react";
 import type { ICurveInitiative, ICurvePrdReviewContext } from "@plane/types";
-import { Button } from "@makeplane/propel/components/button";
+// oxlint-disable-next-line import/no-unassigned-import -- Load the scoped review styles.
+import "./prd-review-panel.css";
 import curveService from "@/services/curve.service";
 
 type View =
@@ -24,6 +26,7 @@ export function PrdReviewPanel({
   initiative: ICurveInitiative;
   viewerId?: string;
 }) {
+  const titleId = useId();
   const [revision, setRevision] = useState(0);
   const key = `${viewerId ?? "signed-out"}:${workspaceSlug}:${initiative.workspace_id}:${initiative.id}:${initiative.version}:${revision}`;
   const [result, setResult] = useState<View>({ key, status: "loading" });
@@ -75,163 +78,239 @@ export function PrdReviewPanel({
   const checkpoint = context?.checkpoint.metadata;
   const readiness = context?.readiness.metadata;
   const decision = context?.decision.metadata;
+  const review =
+    decision?.state === "APPROVED"
+      ? {
+          title: "Product approved",
+          description: "Approval is recorded for this submitted PRD version.",
+          tone: "approved",
+          Icon: CheckCircle2,
+        }
+      : decision?.state === "CHANGES_REQUESTED"
+        ? {
+            title: "Changes requested",
+            description: "Update the PRD using the Product reviewer’s feedback, then submit a new version.",
+            tone: "changes",
+            Icon: MessageSquare,
+          }
+        : decision?.state === "REJECTED"
+          ? {
+              title: "PRD rejected",
+              description: "A rejection is recorded for this submitted PRD version.",
+              tone: "changes",
+              Icon: MessageSquare,
+            }
+          : context?.decision.availability === "UNAVAILABLE" || context?.checkpoint.availability === "UNAVAILABLE"
+            ? {
+                title: "Review status unavailable",
+                description: "Refresh to check the decision on this PRD.",
+                tone: "neutral",
+                Icon: Info,
+              }
+            : checkpoint
+              ? {
+                  title: "Awaiting Product review",
+                  description: "Product reviews the requirements and intended outcome.",
+                  tone: "pending",
+                  Icon: Clock3,
+                }
+              : {
+                  title: "Prepare the PRD",
+                  description: "Submit the requirements document to begin Product review.",
+                  tone: "neutral",
+                  Icon: FileText,
+                };
+  const StatusIcon = review.Icon;
   return (
-    <section
-      aria-labelledby="curve-initiative-documents-title"
-      className="border-t border-subtle pt-5"
-      aria-busy={view.status === "loading"}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 id="curve-initiative-documents-title" className="text-13 font-semibold text-primary">
-          Documents and PRD review
-        </h3>
-        <Button
-          variant="secondary"
-          size="sm"
+    <section className="curve-prd-review" aria-labelledby={titleId} aria-busy={view.status === "loading"}>
+      <div className="curve-prd-review__heading">
+        <h3 id={titleId}>Product requirements</h3>
+        <button
+          type="button"
+          className="curve-prd-review__refresh"
           disabled={view.status === "loading"}
           onClick={() => setRevision((value) => value + 1)}
-          stretch="auto"
-          label="Refresh PRD context"
-        />
+          aria-label="Refresh PRD context"
+        >
+          <RefreshCw size={16} aria-hidden="true" /> Refresh
+        </button>
       </div>
       {view.status === "loading" && (
-        <p role="status" className="mt-3 text-12 text-secondary">
-          Checking authorized PRD metadata…
-        </p>
+        <div className="curve-prd-review__empty" role="status">
+          <FileText size={30} aria-hidden="true" />
+          <h4>Checking your PRD…</h4>
+          <p>Loading the current document and Product review status.</p>
+        </div>
       )}
       {view.status === "unavailable" && (
-        <div role="status" className="mt-3 text-12 leading-5 text-secondary">
-          <p className="font-medium">PRD context unavailable</p>
-          <p>
-            Access or current context could not be verified. Refresh the Initiative and retry. This does not mean that
-            no PRD or decision exists.
-          </p>
+        <div className="curve-prd-review__empty" role="status">
+          <Info size={30} aria-hidden="true" />
+          <h4>PRD context unavailable</h4>
+          <p>We couldn’t verify access to the current document. Refresh to try again.</p>
         </div>
       )}
       {context && (
-        <div className="mt-4 space-y-4 text-12 leading-5">
-          <p className="text-tertiary">
-            Checked {new Date(context.observed_at).toLocaleString()}. Access is checked again when this view refreshes.
-          </p>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <dt className="text-secondary">Submitted PRD</dt>
-              <dd className="mt-1 text-primary">
+        <div className="curve-prd-review__layout">
+          <div className="curve-prd-review__document">
+            <div className="curve-prd-review__toolbar">
+              <span className="curve-prd-review__file-icon">
+                <FileText size={22} aria-hidden="true" />
+              </span>
+              <div>
+                <h4>Requirements document</h4>
+                <p>
+                  {checkpoint
+                    ? `Submitted ${new Date(checkpoint.recorded_at).toLocaleDateString()}`
+                    : context.checkpoint.availability === "ABSENT"
+                      ? "Ready when you are"
+                      : "Submission status unavailable"}
+                </p>
+              </div>
+              {checkpoint && <span className="curve-prd-review__version">v{checkpoint.checkpoint_number}</span>}
+            </div>
+            <div className="curve-prd-review__document-body">
+              <h4>
                 {checkpoint
-                  ? `Checkpoint ${checkpoint.checkpoint_number} · provider version ${checkpoint.provider_version}`
+                  ? "Submitted PRD"
+                  : context.checkpoint.availability === "ABSENT"
+                    ? "Add your requirements"
+                    : "Document unavailable"}
+              </h4>
+              <p>
+                {checkpoint
+                  ? "This saved version is the document covered by the Product review."
                   : unavailable(context.checkpoint.availability, "No submitted checkpoint recorded")}
-              </dd>
+              </p>
+              {checkpoint && (
+                <p className="curve-prd-review__document-record">
+                  <ShieldCheck size={18} aria-hidden="true" />
+                  Checkpoint {checkpoint.checkpoint_number} · provider version {checkpoint.provider_version}
+                </p>
+              )}
+              <div className="curve-prd-review__notice">
+                <Info size={18} aria-hidden="true" />
+                <p>Document content and private reviewer feedback require separate access.</p>
+              </div>
+              <details className="curve-prd-review__details">
+                <summary>Version and evidence details</summary>
+                <dl>
+                  <div>
+                    <dt>Initiative version</dt>
+                    <dd>{context.initiative_version}</dd>
+                  </div>
+                  <div>
+                    <dt>Linked document</dt>
+                    <dd>
+                      {context.binding.metadata
+                        ? label(context.binding.metadata.synchronization_status)
+                        : unavailable(context.binding.availability, "No binding recorded")}
+                    </dd>
+                  </div>
+                  {checkpoint && (
+                    <>
+                      <div>
+                        <dt>Checkpoint reference</dt>
+                        <dd>{checkpoint.id}</dd>
+                      </div>
+                      <div>
+                        <dt>Evidence snapshot</dt>
+                        <dd>{checkpoint.evidence_snapshot_id}</dd>
+                      </div>
+                      <div>
+                        <dt>Content digest</dt>
+                        <dd>{checkpoint.content_digest}</dd>
+                      </div>
+                    </>
+                  )}
+                  {decision && (
+                    <>
+                      <div>
+                        <dt>Original decision reviewer</dt>
+                        <dd>{decision.decided_by.actor_id}</dd>
+                      </div>
+                      <div>
+                        <dt>Decision recorded</dt>
+                        <dd>{new Date(decision.decided_at).toLocaleString()}</dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+                <h5>Readiness for a new submission</h5>
+                {readiness && (
+                  <p>
+                    Original assessment: {label(readiness.status)} · {new Date(readiness.checked_at).toLocaleString()}
+                  </p>
+                )}
+                <p>
+                  {readiness
+                    ? readiness.ready_for_submission
+                      ? "The exact current report is ready. This is not an approval."
+                      : readiness.applicability !== "CURRENT"
+                        ? `Assessment ${label(readiness.applicability)}. This does not invalidate review of an existing immutable checkpoint.`
+                        : "The current assessment is blocked."
+                    : unavailable(context.readiness.availability, "No readiness report recorded")}
+                </p>
+                {readiness && readiness.reasons.length > 0 && (
+                  <ul>
+                    {readiness.reasons.map((reason) => (
+                      <li key={reason}>{label(reason.replace(":", ": "))}</li>
+                    ))}
+                  </ul>
+                )}
+                <p>
+                  Checked {new Date(context.observed_at).toLocaleString()}. Access is checked again when this view
+                  refreshes.
+                </p>
+              </details>
             </div>
-            <div>
-              <dt className="text-secondary">Current Product Approver</dt>
-              <dd className="mt-1 text-primary">
-                {context.reviewer.display_name ?? "Reviewer unavailable"}
-                {context.reviewer.validity === "INVALID" ? " · assignment needs attention" : ""}
-                {context.reviewer.requesting_human_is_reviewer ? " · you" : ""}
-              </dd>
+          </div>
+          <aside
+            className={`curve-prd-review__reviewer curve-prd-review__reviewer--${review.tone}`}
+            aria-label="Product review status"
+          >
+            <StatusIcon className="curve-prd-review__status-icon" size={28} aria-hidden="true" />
+            <h4>{review.title}</h4>
+            <p>{review.description}</p>
+            <div className="curve-prd-review__person">
+              <span className="curve-prd-review__avatar">
+                <UserRound size={20} aria-hidden="true" />
+              </span>
+              <div>
+                <strong>
+                  {context.reviewer.display_name ?? "Reviewer unavailable"}
+                  {context.reviewer.requesting_human_is_reviewer ? " · you" : ""}
+                </strong>
+                <span>Product reviewer</span>
+              </div>
             </div>
-            <div>
-              <dt className="text-secondary">Decision on this checkpoint</dt>
-              <dd className="mt-1 text-primary">
-                {decision ? label(decision.state) : unavailable(context.decision.availability, "No decision recorded")}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-secondary">Linked document</dt>
-              <dd className="mt-1 text-primary">
-                {context.binding.metadata
-                  ? label(context.binding.metadata.synchronization_status)
-                  : unavailable(context.binding.availability, "No binding recorded")}
-              </dd>
-            </div>
-          </dl>
-          <div>
-            <h4 className="font-semibold text-primary">Readiness for a new submission</h4>
-            {readiness && (
-              <p className="mt-1 text-secondary">
-                Original assessment: {label(readiness.status)} · {new Date(readiness.checked_at).toLocaleString()}
+            {context.reviewer.validity !== "VALID" && (
+              <p className="curve-prd-review__warning">
+                {context.reviewer.validity === "INVALID"
+                  ? "The reviewer assignment needs attention."
+                  : "The current reviewer could not be verified."}
               </p>
             )}
-            <p className="mt-1 text-secondary">
-              {readiness
-                ? readiness.ready_for_submission
-                  ? "The exact current report is ready. This is not an approval."
-                  : readiness.applicability !== "CURRENT"
-                    ? `Assessment ${label(readiness.applicability)}. This does not invalidate review of an existing immutable checkpoint.`
-                    : "The current assessment is blocked."
-                : unavailable(context.readiness.availability, "No readiness report recorded")}
-            </p>
-            {readiness && readiness.reasons.length > 0 && (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-secondary">
-                {readiness.reasons.slice(0, 8).map((reason) => (
-                  <li key={reason}>{label(reason.replace(":", ": "))}</li>
-                ))}
-                {readiness.reasons.length > 8 && (
-                  <li>{readiness.reasons.length - 8} additional checks are listed in evidence details.</li>
-                )}
-              </ul>
+            {context.binding.metadata && context.binding.metadata.synchronization_status !== "CURRENT" && (
+              <p className="curve-prd-review__warning">
+                The linked document needs a current check. The decision shown applies to the saved version above.
+              </p>
             )}
-          </div>
-          <p className="text-secondary">
-            Submission and approval actions are unavailable in this read-only view. Document bodies, protected evidence
-            and private review rationale require separate access.
-          </p>
-          <details>
-            <summary className="cursor-pointer rounded-sm py-1 font-medium text-accent-primary focus-visible:outline-2">
-              Version and evidence details
-            </summary>
-            <dl className="mt-3 space-y-3 break-all text-secondary">
-              <div>
-                <dt>Initiative version</dt>
-                <dd>{context.initiative_version}</dd>
-              </div>
-              {checkpoint && (
-                <>
-                  <div>
-                    <dt>Checkpoint reference</dt>
-                    <dd>{checkpoint.id}</dd>
-                  </div>
-                  <div>
-                    <dt>Evidence snapshot</dt>
-                    <dd>{checkpoint.evidence_snapshot_id}</dd>
-                  </div>
-                  <div>
-                    <dt>Content digest</dt>
-                    <dd>{checkpoint.content_digest}</dd>
-                  </div>
-                </>
-              )}
-              {decision && (
-                <>
-                  <div>
-                    <dt>Original decision reviewer</dt>
-                    <dd>{decision.decided_by.actor_id}</dd>
-                  </div>
-                  <div>
-                    <dt>Decision recorded</dt>
-                    <dd>{new Date(decision.decided_at).toLocaleString()}</dd>
-                  </div>
-                </>
-              )}
-              {readiness && (
-                <div>
-                  <dt>Assessment reasons</dt>
-                  <dd>{readiness.reasons.length ? readiness.reasons.join("; ") : "No structural blockers recorded"}</dd>
-                </div>
-              )}
-            </dl>
-          </details>
+            <p className="curve-prd-review__decision">
+              {decision
+                ? `Decision: ${label(decision.state)}`
+                : unavailable(context.decision.availability, "No decision recorded")}
+            </p>
+            <div className="curve-prd-review__notice">
+              <Info size={18} aria-hidden="true" />
+              <p>Review actions are currently unavailable. Refresh to check for updates.</p>
+            </div>
+            <details className="curve-prd-review__details">
+              <summary>What is needed for PRD review?</summary>
+              <p>A submitted document, accessible supporting evidence and the assigned Product reviewer.</p>
+            </details>
+          </aside>
         </div>
       )}
-      <details className="mt-3 text-12 text-secondary">
-        <summary className="cursor-pointer rounded-sm py-1 font-medium text-accent-primary focus-visible:outline-2">
-          What is needed for PRD review?
-        </summary>
-        <p className="mt-2 leading-5">
-          A submitted immutable document, accessible supporting evidence and the current assigned reviewer. Readiness
-          alone does not mean approval.
-        </p>
-      </details>
     </section>
   );
 }

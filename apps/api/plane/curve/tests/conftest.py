@@ -136,3 +136,86 @@ def manual_gate2_test_teardown(manual_draft_test_teardown):
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(DatabaseOperations, "sql_flush", sql_flush)
         yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def local_prd_test_teardown(manual_gate2_test_teardown):
+    from django.db.backends.postgresql.operations import DatabaseOperations
+
+    original = DatabaseOperations.sql_flush
+    table, name = "curve_local_prd_source", "curve_lprd_immutable"
+
+    def verify():
+        return (
+            f"DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='{table}'::regclass "
+            f"AND tgname='{name}' AND tgenabled='O') THEN RAISE EXCEPTION "
+            "'Local PRD guard missing during fixture cleanup'; END IF; END $$;"
+        )
+
+    def sql_flush(operations, style, tables, *, reset_sequences=False, allow_cascade=False):
+        statements = original(operations, style, tables, reset_sequences=reset_sequences, allow_cascade=allow_cascade)
+        if table not in tables:
+            return statements
+        assert "curve_local_prd_coverage" not in tables
+        result = []
+        for statement in statements:
+            if statement.lstrip().upper().startswith("TRUNCATE "):
+                result.extend(
+                    [
+                        verify(),
+                        f"ALTER TABLE {table} DISABLE TRIGGER {name};",
+                        statement,
+                        f"ALTER TABLE {table} ENABLE TRIGGER {name};",
+                        verify(),
+                    ]
+                )
+            else:
+                result.append(statement)
+        return result
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(DatabaseOperations, "sql_flush", sql_flush)
+        yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def local_prd_review_test_teardown(local_prd_test_teardown):
+    from django.db.backends.postgresql.operations import DatabaseOperations
+
+    original = DatabaseOperations.sql_flush
+    guards = [
+        ("curve_local_prd_submission", "curve_lprs_immutable"),
+        ("curve_local_prd_decision", "curve_lprd_dec_immutable"),
+        ("curve_local_prd_reopening", "curve_lpro_immutable"),
+        ("curve_local_plan_revision", "curve_lplan_immutable"),
+        ("curve_local_plan_submission", "curve_lpls_immutable"),
+        ("curve_local_plan_decision", "curve_lpld_immutable"),
+    ]
+
+    def verify(table, name):
+        return (
+            f"DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='{table}'::regclass "
+            f"AND tgname='{name}' AND tgenabled='O') THEN RAISE EXCEPTION "
+            "'Local review guard missing during fixture cleanup'; END IF; END $$;"
+        )
+
+    def sql_flush(operations, style, tables, *, reset_sequences=False, allow_cascade=False):
+        statements = original(operations, style, tables, reset_sequences=reset_sequences, allow_cascade=allow_cascade)
+        active = [(table, name) for table, name in guards if table in tables]
+        assert "curve_local_prd_review_coverage" not in tables
+        assert "curve_local_prd_reopening_coverage" not in tables
+        result = []
+        for statement in statements:
+            if statement.lstrip().upper().startswith("TRUNCATE "):
+                result.extend(verify(table, name) for table, name in active)
+                result.extend(f"ALTER TABLE {table} DISABLE TRIGGER {name};" for table, name in active)
+                result.append(statement)
+                result.extend(f"ALTER TABLE {table} ENABLE TRIGGER {name};" for table, name in active)
+                result.extend(verify(table, name) for table, name in active)
+            else:
+                result.append(statement)
+        return result
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(DatabaseOperations, "sql_flush", sql_flush)
+        yield

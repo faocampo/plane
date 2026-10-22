@@ -7,6 +7,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { format } from "oxfmt";
+import { checkProductReviewContracts } from "./check-scoped-prd-v2-contracts.mjs";
+checkProductReviewContracts();
 const require = createRequire(import.meta.url);
 const Ajv = require("ajv/dist/2020");
 const addFormats = require("ajv-formats");
@@ -28,6 +30,12 @@ for (const entry of manifest) {
   if (createHash("sha256").update(source).digest("hex") !== entry.sha256)
     throw new Error(`Schema pin mismatch: ${entry.name}`);
   const schema = JSON.parse(source);
+  if (entry.name === "scoped-prd-observation-v2") {
+    // The pinned schema already requires every reviewer item to be an object.
+    // Repeat that constraint inside contains for Ajv strictTypes compilation;
+    // this preserves the accepted wire set and leaves the pinned bytes intact.
+    for (const rule of schema.properties.reviewers.allOf) rule.contains.type = "object";
+  }
   ajv.addSchema(schema);
   exports[`validate${entry.type}`] = schema.$id;
 }

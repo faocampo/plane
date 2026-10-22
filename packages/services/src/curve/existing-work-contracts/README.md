@@ -19,6 +19,21 @@ create a controlling binding, or confer native or gate authority.
   `curve.scoped-prd/v1-candidate` and `EXACT_EXISTING_WORK_SCOPED_PRD_V1` on every
   command. Its mutation ETag is a strong numeric Initiative version. It is never
   interchangeable with Product, association, legacy Initiative, or Operation ETags.
+- `scoped-prd-v2.service.ts` (two-stage Product-review transport) uses explicit
+  `/scoped-prd/v2/` routes and the `EXACT_EXISTING_WORK_SCOPED_PRD_V2` edition.
+  Observation reads require exactly the Product and Technical assignments in
+  canonical order, with distinct assignment IDs. Subject reads bind the exact
+  checkpoint, document digest, provider version and scoped membership. Its
+  acceptance response identifies an Operation whose outcome must be observed
+  separately. The original client and historical schema bytes retain their scope.
+
+`check-scoped-prd-v2-contracts.mjs` (fixed backend manifest and browser parity
+check) runs before validator generation. The two-stage observation schema already
+requires each reviewer item to be an object; generation repeats that constraint
+inside its `contains` clauses for strict Ajv compilation. The accepted wire set
+and pinned schema bytes remain unchanged. The Product client is ready for UI
+integration; document upload and authorized body retrieval require their own
+application integration and runtime evidence.
 
 Backend current native membership, artifact/evidence access, all reviewer guards,
 and policy remain authoritative on every request. Successful metadata reads,

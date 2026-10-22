@@ -1,0 +1,252 @@
+.curve-prd-review {
+  color: #22283d;
+  container-type: inline-size;
+  font-size: 14px;
+  line-height: 1.65;
+  min-width: 0;
+}
+.curve-prd-review__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.curve-prd-review__heading h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+.curve-prd-review__refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #444ed9;
+  cursor: pointer;
+  background: transparent;
+}
+.curve-prd-review__refresh:hover {
+  background: #eeefff;
+}
+.curve-prd-review__refresh:disabled {
+  color: #60677c;
+  cursor: wait;
+}
+.curve-prd-review button:focus-visible,
+.curve-prd-review summary:focus-visible {
+  outline: 3px solid #444ed9;
+  outline-offset: 3px;
+}
+.curve-prd-review__layout {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+.curve-prd-review__document,
+.curve-prd-review__reviewer,
+.curve-prd-review__empty {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 6px 26px #29335509;
+  min-width: 0;
+}
+.curve-prd-review__toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #e6e8f1;
+}
+.curve-prd-review__toolbar h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.curve-prd-review__toolbar p {
+  margin: 0;
+  color: #60677c;
+  font-size: 12px;
+}
+.curve-prd-review__file-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 42px;
+  border-radius: 8px;
+  background: #eeefff;
+  color: #444ed9;
+  flex-shrink: 0;
+}
+.curve-prd-review__version {
+  margin-left: auto;
+  background: #eeefff;
+  color: #444ed9;
+  border-radius: 6px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.curve-prd-review__document-body {
+  padding: 28px;
+  overflow-wrap: anywhere;
+}
+.curve-prd-review__document-body > h4,
+.curve-prd-review__reviewer > h4,
+.curve-prd-review__empty h4 {
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.curve-prd-review__document-body > p,
+.curve-prd-review__reviewer > p,
+.curve-prd-review__empty p {
+  color: #60677c;
+  margin: 0 0 20px;
+  max-width: 65ch;
+}
+.curve-prd-review__document-record {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.curve-prd-review__document-record svg,
+.curve-prd-review__notice svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.curve-prd-review__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eeefff;
+  color: #414b8b;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin: 20px 0;
+}
+.curve-prd-review__notice p {
+  margin: 0;
+}
+.curve-prd-review__reviewer {
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+.curve-prd-review__status-icon {
+  color: #444ed9;
+  margin-bottom: 16px;
+}
+.curve-prd-review__reviewer--approved .curve-prd-review__status-icon {
+  color: #227455;
+}
+.curve-prd-review__reviewer--changes .curve-prd-review__status-icon {
+  color: #96610d;
+}
+.curve-prd-review__person {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border-block: 1px solid #e6e8f1;
+  padding: 18px 0;
+  margin: 24px 0 20px;
+}
+.curve-prd-review__person strong,
+.curve-prd-review__person span {
+  display: block;
+}
+.curve-prd-review__person strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+.curve-prd-review__person div > span {
+  color: #60677c;
+  font-size: 12px;
+}
+.curve-prd-review__person .curve-prd-review__avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e4e8ff;
+  color: #4652a5;
+  flex-shrink: 0;
+}
+.curve-prd-review__reviewer > .curve-prd-review__warning {
+  color: #96610d;
+  background: #fff4df;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.curve-prd-review__decision {
+  font-size: 13px;
+}
+.curve-prd-review__details {
+  border-top: 1px solid #e6e8f1;
+  padding-top: 12px;
+  color: #60677c;
+  font-size: 13px;
+}
+.curve-prd-review__details summary {
+  min-height: 44px;
+  padding: 10px 0;
+  color: #444ed9;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.curve-prd-review__details dl {
+  margin: 12px 0 24px;
+}
+.curve-prd-review__details dl > div {
+  margin: 14px 0;
+}
+.curve-prd-review__details dt {
+  font-weight: 600;
+  color: #22283d;
+}
+.curve-prd-review__details dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.curve-prd-review__details h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #22283d;
+  margin: 24px 0 10px;
+}
+.curve-prd-review__details p {
+  margin: 10px 0;
+}
+.curve-prd-review__details ul {
+  padding-left: 20px;
+  list-style: disc;
+}
+.curve-prd-review__empty {
+  padding: 40px 28px;
+}
+.curve-prd-review__empty > svg {
+  color: #444ed9;
+  margin-bottom: 16px;
+}
+@container (min-width: 740px) {
+  .curve-prd-review__layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+@container (max-width: 400px) {
+  .curve-prd-review__document-body,
+  .curve-prd-review__reviewer {
+    padding: 20px;
+  }
+  .curve-prd-review__toolbar {
+    padding: 16px;
+  }
+}

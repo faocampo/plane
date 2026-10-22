@@ -11,6 +11,7 @@ from .prd_commands import PrdCommandError
 from .prd_read_views import CurvePrdReviewContextEndpoint
 from .prd_views import CurvePrdCommandEndpoint
 from .scoped_prd_commands import parse_scoped_prd_command
+from .scoped_prd_editions import LEGACY, TWO_STAGE
 from .scoped_prd_read import (
     _projection,
     read_scoped_prd_observation,
@@ -32,6 +33,7 @@ def capture_scoped_prd_observation(**kwargs):
 
 
 class CurveScopedPrdCommandEndpoint(CurvePrdCommandEndpoint):
+    edition = LEGACY.schema_version
     http_method_names = ["post", "options"]
 
     def post(self, request, slug, initiative_id):
@@ -41,6 +43,7 @@ class CurveScopedPrdCommandEndpoint(CurvePrdCommandEndpoint):
             raise PrdCommandError("UNSUPPORTED_MEDIA_TYPE", 415)
         command = parse_scoped_prd_command(
             route=self.route,
+            edition=self.edition,
             body=request.body,
             if_match=request.headers.get("If-Match"),
             idempotency_key=request.headers.get("Idempotency-Key"),
@@ -53,7 +56,9 @@ class CurveScopedPrdCommandEndpoint(CurvePrdCommandEndpoint):
                 raise PrdCommandError("SCOPED_PRD_RUNTIME_UNAVAILABLE", 503)
             response = Response(_projection(result.data, "observation"), status=201)
             response["Location"] = reverse(
-                "curve-scoped-prd-observation",
+                "curve-scoped-prd-v2-observation"
+                if self.edition == TWO_STAGE.schema_version
+                else "curve-scoped-prd-observation",
                 kwargs={"slug": slug, "initiative_id": initiative_id, "observation_id": result.data["id"]},
             )
         else:
@@ -83,24 +88,30 @@ class CurveScopedPrdCommandEndpoint(CurvePrdCommandEndpoint):
 
 
 class CurveScopedPrdObservationEndpoint(CurvePrdReviewContextEndpoint):
+    edition = LEGACY.schema_version
+
     def get(self, request, slug, initiative_id, observation_id):
-        return Response(
-            read_scoped_prd_observation(
-                request=request,
-                workspace_slug=slug,
-                initiative_id=initiative_id,
-                observation_id=observation_id,
-            )
+        value = read_scoped_prd_observation(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            observation_id=observation_id,
         )
+        if value["schema_version"] != self.edition:
+            raise PrdCommandError("SCOPED_PRD_UNAVAILABLE", 404)
+        return Response(value)
 
 
 class CurveScopedPrdSubjectEndpoint(CurvePrdReviewContextEndpoint):
+    edition = LEGACY.schema_version
+
     def get(self, request, slug, initiative_id, scoped_subject_id=None):
-        return Response(
-            read_scoped_prd_subject(
-                request=request,
-                workspace_slug=slug,
-                initiative_id=initiative_id,
-                scoped_subject_id=scoped_subject_id,
-            )
+        value = read_scoped_prd_subject(
+            request=request,
+            workspace_slug=slug,
+            initiative_id=initiative_id,
+            scoped_subject_id=scoped_subject_id,
         )
+        if value["schema_version"] != self.edition:
+            raise PrdCommandError("SCOPED_PRD_UNAVAILABLE", 404)
+        return Response(value)

@@ -19,16 +19,9 @@ import { Button } from "@makeplane/propel/components/button";
 import { cn } from "@plane/utils";
 import { initiativeApproverRoles, initiativeBusinessIntentOptions, memberDisplayName } from "./initiative-ui";
 
-type TFormField =
-  | "title"
-  | "product"
-  | "keyword"
-  | "description"
-  | "productApprover"
-  | "technicalApprover"
-  | "codeApprover";
+type TFormField = "title" | "product" | "keyword" | "description" | "productApprover" | "technicalApprover";
 type TFormErrors = Partial<Record<TFormField, string>>;
-const approverFields = ["productApprover", "technicalApprover", "codeApprover"] as const;
+const approverFields = ["productApprover", "technicalApprover"] as const;
 const inputClassName =
   "mt-1 min-h-10 w-full rounded-md border border-subtle bg-surface-1 px-3 py-2 text-13 text-primary outline-none transition focus:border-accent-primary focus:ring-2 focus:ring-accent-subtle disabled:cursor-not-allowed disabled:bg-layer-1 disabled:text-tertiary";
 const fieldLabelClassName = "text-12 font-semibold text-primary";
@@ -59,7 +52,7 @@ export function InitiativeCreateDrawer({
   const [description, setDescription] = useState("");
   const [riskTier, setRiskTier] = useState<TCurveInitiativeRiskTier>("STANDARD");
   const [businessIntent, setBusinessIntent] = useState<TCurveInitiativeBusinessIntent | "">("");
-  const [approverIds, setApproverIds] = useState(["", "", ""]);
+  const [approverIds, setApproverIds] = useState(["", ""]);
   const [errors, setErrors] = useState<TFormErrors>({});
   const [submissionFailed, setSubmissionFailed] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -111,9 +104,9 @@ export function InitiativeCreateDrawer({
       if (!members.some(({ member }) => member.id === id))
         nextErrors[approverFields[index]] = "Choose an active human.";
     });
-    if (riskTier !== "LOW" && approverIds.every(Boolean) && new Set(approverIds).size !== 3) {
+    if (riskTier !== "LOW" && approverIds.every(Boolean) && new Set(approverIds).size !== 2) {
       approverFields.forEach((field) => {
-        nextErrors[field] = "Choose three distinct active humans for Standard or High risk.";
+        nextErrors[field] = "Choose two different reviewers for Standard or High risk.";
       });
     }
     if (showErrors(nextErrors)) return;
@@ -375,8 +368,8 @@ export function InitiativeCreateDrawer({
                     </select>
                     <p id="curve-initiative-reviewer-rule" className="mt-2 text-12 leading-5 text-secondary">
                       {riskTier === "LOW"
-                        ? "One person can hold multiple roles at Low risk. All three roles still need an assignment."
-                        : "Standard and High risk require three different people. Choose each reviewer explicitly."}
+                        ? "One person can hold multiple roles at Low risk. Both approval stages need a reviewer."
+                        : "Standard and High risk require two different people. Choose each reviewer explicitly."}
                     </p>
                   </div>
                   <fieldset className="space-y-5 border-t border-subtle pt-5" disabled={busy}>

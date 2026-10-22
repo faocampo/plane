@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-21T05:54:01.412047+00:00",
+  "title": "Design System: Curve document review implementation checkpoint",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(27% 0.015 270)",
+          "oklch(38% 0.015 270)",
+          "oklch(49% 0.015 270)",
+          "oklch(61% 0.015 270)",
+          "oklch(73% 0.015 270)",
+          "oklch(85% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(27% 0.015 270)",
+          "oklch(38% 0.015 270)",
+          "oklch(49% 0.015 270)",
+          "oklch(61% 0.015 270)",
+          "oklch(73% 0.015 270)",
+          "oklch(85% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Action",
+        "tonalRamp": [
+          "oklch(15% 0.12 265)",
+          "oklch(27% 0.12 265)",
+          "oklch(38% 0.12 265)",
+          "oklch(49% 0.12 265)",
+          "oklch(61% 0.12 265)",
+          "oklch(73% 0.12 265)",
+          "oklch(85% 0.12 265)",
+          "oklch(95% 0.12 265)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "tint": {
+        "role": "primary",
+        "displayName": "Tint",
+        "tonalRamp": [
+          "oklch(15% 0.015 265)",
+          "oklch(27% 0.015 265)",
+          "oklch(38% 0.015 265)",
+          "oklch(49% 0.015 265)",
+          "oklch(61% 0.015 265)",
+          "oklch(73% 0.015 265)",
+          "oklch(85% 0.015 265)",
+          "oklch(95% 0.015 265)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(27% 0.015 270)",
+          "oklch(38% 0.015 270)",
+          "oklch(49% 0.015 270)",
+          "oklch(61% 0.015 270)",
+          "oklch(73% 0.015 270)",
+          "oklch(85% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(27% 0.015 270)",
+          "oklch(38% 0.015 270)",
+          "oklch(49% 0.015 270)",
+          "oklch(61% 0.015 270)",
+          "oklch(73% 0.015 270)",
+          "oklch(85% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(27% 0.015 270)",
+          "oklch(38% 0.015 270)",
+          "oklch(49% 0.015 270)",
+          "oklch(61% 0.015 270)",
+          "oklch(73% 0.015 270)",
+          "oklch(85% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "approved": {
+        "role": "secondary",
+        "displayName": "Approved",
+        "tonalRamp": [
+          "oklch(15% 0.12 155)",
+          "oklch(27% 0.12 155)",
+          "oklch(38% 0.12 155)",
+          "oklch(49% 0.12 155)",
+          "oklch(61% 0.12 155)",
+          "oklch(73% 0.12 155)",
+          "oklch(85% 0.12 155)",
+          "oklch(95% 0.12 155)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "changes": {
+        "role": "secondary",
+        "displayName": "Changes",
+        "tonalRamp": [
+          "oklch(15% 0.12 75)",
+          "oklch(27% 0.12 75)",
+          "oklch(38% 0.12 75)",
+          "oklch(49% 0.12 75)",
+          "oklch(61% 0.12 75)",
+          "oklch(73% 0.12 75)",
+          "oklch(85% 0.12 75)",
+          "oklch(95% 0.12 75)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(15% 0.015 75)",
+          "oklch(27% 0.015 75)",
+          "oklch(38% 0.015 75)",
+          "oklch(49% 0.015 75)",
+          "oklch(61% 0.015 75)",
+          "oklch(73% 0.015 75)",
+          "oklch(85% 0.015 75)",
+          "oklch(95% 0.015 75)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "selection": {
+        "role": "primary",
+        "displayName": "Text selection",
+        "tonalRamp": [
+          "oklch(15% 0.035 265)",
+          "oklch(27% 0.035 265)",
+          "oklch(38% 0.035 265)",
+          "oklch(49% 0.035 265)",
+          "oklch(61% 0.035 265)",
+          "oklch(73% 0.035 265)",
+          "oklch(85% 0.035 265)",
+          "oklch(95% 0.035 265)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary hover",
+        "tonalRamp": [
+          "oklch(15% 0.12 265)",
+          "oklch(27% 0.12 265)",
+          "oklch(38% 0.12 265)",
+          "oklch(49% 0.12 265)",
+          "oklch(61% 0.12 265)",
+          "oklch(73% 0.12 265)",
+          "oklch(85% 0.12 265)",
+          "oklch(95% 0.12 265)"
+        ],
+        "tonalRampPurpose": "Illustrative generated display ramp; implementation uses frontmatter values."
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Document and review heading",
+        "purpose": "Scoped document and reviewer headings."
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel-ambient",
+        "value": "0 6px 26px #29335509",
+        "purpose": "Document and reviewer surfaces."
+      }
+    ],
+    "motion": [
+      {
+        "name": "stage-transition",
+        "value": "160ms ease",
+        "purpose": "Stage background and border; disabled with reduced-motion preference."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "review-columns-container-min",
+        "value": "740px"
+      },
+      {
+        "name": "compact-padding-container-max",
+        "value": "400px"
+      },
+      {
+        "name": "compact-tabs-viewport-max",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Refresh",
+      "kind": "button",
+      "refersTo": "refresh",
+      "description": "Read-only context refresh control.",
+      "html": "<button class=\"ds-refresh\">Refresh</button>",
+      "css": ".ds-refresh{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;color:#444ed9;background:transparent;border:0;border-radius:8px;padding:8px 12px;min-height:44px;cursor:pointer}.ds-refresh:hover{background:#eeefff}.ds-refresh:focus-visible{outline:3px solid #444ed9;outline-offset:3px}.ds-refresh:disabled{color:#60677c;cursor:wait}"
+    },
+    {
+      "name": "Stage tab",
+      "kind": "nav",
+      "refersTo": "stage-tab",
+      "description": "Selected Product stage, with explicit role text.",
+      "html": "<button class=\"ds-stage\" aria-pressed=\"true\"><strong>Product requirements</strong><span>Product approval</span></button>",
+      "css": ".ds-stage{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;display:block;min-height:88px;padding:16px;border:1px solid #444ed9;border-radius:12px;background:#eeefff;color:#22283d;text-align:left;cursor:pointer;transition:background-color 160ms ease,border-color 160ms ease}.ds-stage strong{display:block;font-size:15px;line-height:1.4}.ds-stage span{display:block;margin-top:4px;font-size:13px;color:#60677c}.ds-stage:hover{border-color:#444ed9}.ds-stage:focus-visible{outline:3px solid #444ed9;outline-offset:3px}@media(prefers-reduced-motion:reduce){.ds-stage{transition:none}}"
+    },
+    {
+      "name": "Version chip",
+      "kind": "chip",
+      "refersTo": "version-chip",
+      "description": "Synthetic version context.",
+      "html": "<span class=\"ds-version\">v2</span>",
+      "css": ".ds-version{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;display:inline-block;background:#eeefff;color:#444ed9;border-radius:6px;padding:3px 9px;font-size:12px;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Review panel",
+      "kind": "card",
+      "refersTo": "review-panel",
+      "description": "Synthetic recorded review status.",
+      "html": "<aside class=\"ds-review\"><h4>Product approved</h4><p>Approval is recorded for this submitted PRD version.</p></aside>",
+      "css": ".ds-review{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;background:#fff;color:#22283d;border-radius:14px;padding:24px;box-shadow:0 6px 26px #29335509}.ds-review h4{font-size:24px;line-height:1.35;letter-spacing:-.025em;font-weight:800;margin:0 0 12px}.ds-review p{color:#60677c;line-height:1.65;margin:0}"
+    },
+    {
+      "name": "Status notice",
+      "kind": "custom",
+      "refersTo": "status-notice",
+      "description": "Access and availability explanation.",
+      "html": "<div class=\"ds-notice\">Review actions are currently unavailable. Refresh to check for updates.</div>",
+      "css": ".ds-notice{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;background:#eeefff;color:#414b8b;padding:14px;border-radius:10px;font-size:13px;line-height:1.65}"
+    },
+    {
+      "name": "Evidence disclosure",
+      "kind": "custom",
+      "description": "Initially collapsed synthetic evidence.",
+      "html": "<details class=\"ds-evidence\"><summary>Version and evidence details</summary><p>Example checkpoint: 2</p></details>",
+      "css": ".ds-evidence{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;border-top:1px solid #e6e8f1;padding-top:12px;color:#60677c;font-size:13px}.ds-evidence summary{min-height:44px;padding:10px 0;color:#444ed9;cursor:pointer;border-radius:4px}.ds-evidence summary:hover{color:#22283d}.ds-evidence summary:focus-visible{outline:3px solid #444ed9;outline-offset:3px}"
+    },
+    {
+      "name": "Technical primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Records an allowed Technical decision or recovers the exact pending decision.",
+      "html": "<button class=\"ds-technical-primary\">Approve plan</button>",
+      "css": ".ds-technical-primary{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;width:100%;min-height:44px;margin-top:20px;padding:12px 16px;border:0;border-radius:8px;background:#444ed9;color:#fff;font-weight:700;cursor:pointer}.ds-technical-primary:hover{background:#343eb8}.ds-technical-primary:focus-visible{outline:3px solid #444ed9;outline-offset:3px}.ds-technical-primary:disabled{background:#e6e8f1;color:#60677c;cursor:not-allowed}"
+    },
+    {
+      "name": "Saved decision note",
+      "kind": "input",
+      "refersTo": "saved-note-select",
+      "description": "Selects existing notes matching the chosen decision intent.",
+      "html": "<label class=\"ds-note\">Choose a saved note<select><option>Example review note</option></select></label>",
+      "css": ".ds-note{font-family:\"Curve Manrope\",Manrope,sans-serif;font-size:14px;color:#22283d}.ds-note select{width:100%;min-height:44px;margin-top:8px;border:1px solid #e6e8f1;border-radius:8px;padding:8px 12px;background:#fff;color:#22283d}.ds-note select:focus-visible{outline:3px solid #444ed9;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shared Review Desk",
+    "overview": "The Shared Review Desk places a white document surface and a compact reviewer surface on a cool light canvas. Indigo gives navigation and refresh a consistent emphasis; green and amber distinguish recorded decisions with accompanying text. Manrope supplies a shared reading rhythm within this scoped review area.",
+    "keyCharacteristics": [
+      "Document context leads; reviewer status follows.",
+      "Two visible stage choices describe Product and Technical approval.",
+      "Evidence stays collapsed until requested.",
+      "Styles remain scoped to the document review area."
+    ],
+    "rules": [],
+    "dos": [
+      "Do keep document content before reviewer status on narrow screens.",
+      "Do pair decision colors with explicit status text.",
+      "Do retain visible version context and collapsed evidence.",
+      "Do preserve the surrounding application conventions outside this scoped surface."
+    ],
+    "donts": [
+      "Do not interpret stage selection as approval or authority.",
+      "Do not present connected Technical decisions as completed PRD upload, authoring, typed feedback ingestion or authenticated application acceptance.",
+      "Do not infer full interface acceptance, merge, deployment or a global Plane theme change from this record."
+    ]
+  }
+}

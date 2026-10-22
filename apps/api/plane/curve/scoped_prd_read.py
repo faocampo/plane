@@ -19,7 +19,8 @@ from django.utils import timezone
 from .config import is_curve_enabled_for_workspace
 from .prd_read_context import PrdReadUnavailable, read_prd_review_context
 from .prd_read_views import resolve_prd_read_scope
-from .scoped_prd_contracts import canonical, metadata_digest, validate_scoped_contract
+from .scoped_prd_contracts import canonical, metadata_digest, validate_versioned_scoped_contract
+from .scoped_prd_editions import edition_for_schema
 
 
 def scoped_prd_enabled(workspace_slug):
@@ -39,7 +40,7 @@ def _require(condition):
 def _projection(record, kind):
     """Never sanitize a damaged/open record into an apparently valid closed DTO."""
     value = deepcopy(record)
-    validate_scoped_contract(f"scoped-prd-{kind}-v1", value)
+    validate_versioned_scoped_contract(kind, value)
     _require(value["digest"] == metadata_digest(value))
     members = value["members"]
     ids = [member["source_issue_id"] for member in members]
@@ -47,8 +48,9 @@ def _projection(record, kind):
     if kind == "observation":
         reviewers = value["reviewers"]
         gates = [reviewer["gate_type"] for reviewer in reviewers]
-        _require(gates == sorted({"PRD_APPROVAL", "PLAN_APPROVAL", "CODE_READINESS"}))
-        _require(len({reviewer["gate_assignment_id"] for reviewer in reviewers}) == 3)
+        edition = edition_for_schema(value["schema_version"])
+        _require(gates == list(edition.gates))
+        _require(len({reviewer["gate_assignment_id"] for reviewer in reviewers}) == len(edition.gates))
     return value
 
 

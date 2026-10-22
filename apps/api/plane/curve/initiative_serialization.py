@@ -21,6 +21,8 @@ def serialize_gate_assignment(assignment: GateAssignment) -> dict:
 
 def serialize_initiative(initiative: Initiative) -> dict:
     assignments = initiative.gate_assignments.all().order_by("gate_type", "id")
+    if initiative.schema_version == "1.2":
+        assignments = assignments.filter(gate_type__in=("PRD_APPROVAL", "PLAN_APPROVAL"))
     serialized = {
         "schema_version": initiative.schema_version,
         "id": str(initiative.id),
@@ -45,7 +47,7 @@ def serialize_initiative(initiative: Initiative) -> dict:
         "updated_at": initiative.updated_at.isoformat(),
         "updated_by": initiative.updated_by,
     }
-    if initiative.schema_version == "1.1":
+    if initiative.schema_version in {"1.1", "1.2"}:
         serialized["business_intent"] = initiative.business_intent
     return serialized
 

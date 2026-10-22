@@ -60,3 +60,18 @@ def validate_scoped_contract(name, value):
     except (ValidationError, ValueError, TypeError, UnicodeError, RecursionError):
         raise PrdCommandError("SCOPED_PRD_INVALID", 422) from None
     return value
+
+
+def validate_versioned_scoped_contract(kind, value):
+    """Select only an explicit, known edition; never infer it from reviewer count."""
+    from .scoped_prd_v2_contracts import (
+        SCHEMA_VERSION as V2_SCHEMA_VERSION,
+        validate_scoped_v2_contract,
+    )
+
+    version = value.get("schema_version") if type(value) is dict else None
+    if version == SCHEMA_VERSION:
+        return validate_scoped_contract(f"scoped-prd-{kind.lower()}-v1", value)
+    if version == V2_SCHEMA_VERSION:
+        return validate_scoped_v2_contract(f"scoped-prd-{kind.lower()}-v2", value)
+    raise PrdCommandError("SCOPED_PRD_INVALID", 422)

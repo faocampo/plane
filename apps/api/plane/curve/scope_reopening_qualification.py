@@ -34,6 +34,229 @@ GATE2_SUCCESSOR_DIGEST = "sha256:34661219609b64ae715466aa7a20f756eb85a17365f30a3
 GATE2_SUCCESSOR_PATH = Path(__file__).parent / "manual_gate2_reconstruction_qualification_v2.json"
 HEADER_SUCCESSOR_DIGEST = "sha256:a4086b8d08f918b187b623e56b9d810f2d0834ce723fe120297710db02d6352d"
 HEADER_SUCCESSOR_PATH = Path(__file__).parent / "source_header_qualification_v1.json"
+TWO_STAGE_SUCCESSOR_DIGEST = "sha256:f3dbfa241f6902232d44c1dddc5f96184aaf1307738533c15eeebbd2d80006bd"
+TWO_STAGE_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/runtime-qualification-v1.json"
+_TWO_STAGE_ADDED_MODULES = frozenset(
+    [
+        "local_document_store.py",
+        "local_document_capture.py",
+        "local_document_record.py",
+        "local_document_models.py",
+        "local_document_authority.py",
+        "local_initiative_context.py",
+        "local_prd_new_work.py",
+        "local_new_work_policy.py",
+        "local_document_policy.py",
+        "local_document_services.py",
+        "local_document_views.py",
+        "local_prd_review.py",
+        "local_prd_reopening.py",
+        "local_prd_reopening_models.py",
+        "local_prd_reopening_authority.py",
+        "local_prd_reopening_services.py",
+        "local_prd_reopening_views.py",
+        "local_prd_review_models.py",
+        "local_prd_review_authority.py",
+        "local_prd_review_policy.py",
+        "local_prd_review_services.py",
+        "local_prd_review_views.py",
+        "local_plan_review.py",
+        "local_plan_authority.py",
+        "local_plan_models.py",
+        "local_plan_policy.py",
+        "local_plan_services.py",
+        "local_plan_views.py",
+        "local_plan_review_policy.py",
+        "local_plan_review_services.py",
+        "local_plan_review_views.py",
+        "manual_gate2_v3/__init__.py",
+        "manual_gate2_v3/domain.py",
+        "manual_gate2_v3/contracts.py",
+        "manual_gate2_v3/policy.py",
+        "manual_gate2_v3/repository.py",
+        "manual_gate2_v3/services.py",
+        "manual_gate2_v3/reads.py",
+        "manual_gate2_v3/views.py",
+        "manual_plan_v3/__init__.py",
+        "manual_plan_v3/contracts.py",
+        "manual_plan_v3/policy.py",
+        "manual_plan_v3/reads.py",
+        "manual_plan_v3/repository.py",
+        "manual_plan_v3/services.py",
+        "manual_plan_v3/synthetic.py",
+        "manual_plan_v3/validation.py",
+        "manual_plan_v3/validator_worker.py",
+        "manual_plan_v3/views.py",
+        "scoped_prd_editions.py",
+        "scoped_prd_v2_contracts.py",
+        "two_stage_review/__init__.py",
+    ]
+)
+_TWO_STAGE_REPLACED_MODULES = frozenset(
+    [
+        "manual_gate2_v2/models.py",
+        "manual_gate2_v2/repository.py",
+        "initiative_policy.py",
+        "initiative_serialization.py",
+        "initiative_services.py",
+        "manual_plan_v2/models.py",
+        "manual_plan_v2/synthetic.py",
+        "manual_plan_v2/validation.py",
+        "models.py",
+        "policy_evaluator.py",
+        "policy_manifest.py",
+        "policy_services.py",
+        "prd_policy_context.py",
+        "prd_review_validation.py",
+        "request_privacy.py",
+        "scoped_prd_acceptance.py",
+        "scoped_prd_commands.py",
+        "scoped_prd_completion.py",
+        "scoped_prd_contracts.py",
+        "scoped_prd_models.py",
+        "scoped_prd_observations.py",
+        "scoped_prd_policy.py",
+        "scoped_prd_read.py",
+        "scoped_prd_repository.py",
+        "scoped_prd_views.py",
+        "services.py",
+        "temporal/scoped_prd_relay.py",
+        "urls.py",
+    ]
+)
+_TWO_STAGE_MIGRATIONS = frozenset(
+    {
+        "0026_two_stage_approval_policy.py",
+        "0027_scoped_prd_two_stage.py",
+        "0028_manual_plan_two_stage.py",
+        "0029_technical_review_two_stage.py",
+        "0030_local_prd_source.py",
+        "0031_local_prd_command.py",
+        "0032_local_prd_review.py",
+        "0033_local_prd_lifecycle.py",
+        "0034_local_review_commands.py",
+        "0035_local_plan_revision.py",
+        "0036_local_plan_upload.py",
+        "0037_local_plan_review_records.py",
+        "0038_local_plan_review_commands.py",
+        "0039_local_prd_reopening.py",
+        "0040_local_prd_reopening_lifecycle.py",
+        "0041_local_prd_reopening_command.py",
+        "0042_local_new_work_review.py",
+    }
+)
+_TWO_STAGE_WRITERS = [
+    "TWO_STAGE_INITIATIVE_1_2",
+    "SCOPED_PRD_GATE1_V2",
+    "MANUAL_PLAN_DRAFT_V3",
+    "MANUAL_GATE2_V3",
+    "LOCAL_PRD_SOURCE_V1",
+    "LOCAL_PRD_UPLOAD_COMMAND_V1",
+    "LOCAL_PRD_REVIEW_RECORDS_V1",
+    "LOCAL_PRD_LIFECYCLE_V1",
+    "LOCAL_PRD_REVIEW_COMMAND_V1",
+    "LOCAL_PLAN_REVISION_V1",
+    "LOCAL_PLAN_UPLOAD_V1",
+    "LOCAL_PLAN_REVIEW_RECORDS_V1",
+    "LOCAL_PLAN_REVIEW_COMMANDS_V1",
+    "LOCAL_PRD_REOPENING_RECORDS_V1",
+    "LOCAL_PRD_REOPENING_LIFECYCLE_V1",
+    "LOCAL_PRD_REOPENING_COMMAND_V1",
+    "LOCAL_NEW_INITIATIVE_DOCUMENT_REVIEW_V2",
+]
+_LOCAL_PRD_ADDED_MODELS = [
+    {
+        "model_name": "localprdreopening",
+        "db_table": "curve_local_prd_reopening",
+        "columns": [
+            "decision_id",
+            "digest",
+            "id",
+            "initiative_id",
+            "initiative_version",
+            "payload",
+            "submission_id",
+            "workspace_id",
+        ],
+    },
+    {
+        "model_name": "localplansubmission",
+        "db_table": "curve_local_plan_submission",
+        "columns": [
+            "digest",
+            "id",
+            "initiative_id",
+            "initiative_version",
+            "payload",
+            "plan_revision_id",
+            "workspace_id",
+        ],
+    },
+    {
+        "model_name": "localplandecision",
+        "db_table": "curve_local_plan_decision",
+        "columns": [
+            "digest",
+            "id",
+            "initiative_id",
+            "initiative_version",
+            "payload",
+            "plan_submission_id",
+            "state",
+            "workspace_id",
+        ],
+    },
+    {
+        "model_name": "localplanrevision",
+        "db_table": "curve_local_plan_revision",
+        "columns": [
+            "digest",
+            "id",
+            "initiative_id",
+            "initiative_version",
+            "payload",
+            "prd_decision_id",
+            "prd_submission_id",
+            "predecessor_id",
+            "version",
+            "workspace_id",
+        ],
+    },
+    {
+        "model_name": "localprdsubmission",
+        "db_table": "curve_local_prd_submission",
+        "columns": ["digest", "id", "initiative_id", "initiative_version", "payload", "source_id", "workspace_id"],
+    },
+    {
+        "model_name": "localprddecision",
+        "db_table": "curve_local_prd_decision",
+        "columns": [
+            "digest",
+            "id",
+            "initiative_id",
+            "initiative_version",
+            "payload",
+            "state",
+            "submission_id",
+            "workspace_id",
+        ],
+    },
+] + [
+    {
+        "model_name": "localprdsource",
+        "db_table": "curve_local_prd_source",
+        "columns": [
+            "digest",
+            "id",
+            "initiative_id",
+            "payload",
+            "predecessor_id",
+            "uploaded_by",
+            "version",
+            "workspace_id",
+        ],
+    }
+]
 SOURCE_HEADER = (
     b"# Copyright (c) 2023-present Plane Software, Inc. and contributors\n"
     b"# SPDX-License-Identifier: AGPL-3.0-only\n"
@@ -336,9 +559,14 @@ def _current_qualification(predecessor):
         from .manual_gate2_v2.contracts import validate_manifest
 
         validate_manifest()
-        qualified = validate_source_header_successor(
-            qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
-        )
+        if TWO_STAGE_SUCCESSOR_PATH.exists():
+            qualified = validate_two_stage_successor(
+                qualified, _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)
+            )
+        else:
+            qualified = validate_source_header_successor(
+                qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
+            )
     return qualified
 
 
@@ -378,6 +606,104 @@ def validate_source_header_successor(predecessor, successor):
             raise ValueError("Source delta exceeds the fixed copyright header")
         sources[name] = record["after"]
     return dict(predecessor, runtime_sources=sources)
+
+
+def _retained_header_projection(predecessor):
+    """Project the pinned historical header proof without treating current bytes as old bytes.
+
+    The successor must subsequently verify the complete current source closure.
+    This projection has no independent runtime authorization entry point.
+    """
+    historical = _read_pinned_successor(GATE2_SUCCESSOR_PATH, GATE2_SUCCESSOR_DIGEST)["qualification"]
+    header = _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
+    if predecessor != historical:
+        raise ValueError("Historical qualification changed")
+    if (
+        set(header) != {"schema_version", "predecessor_digest", "header_digest", "replacements"}
+        or header["schema_version"] != "curve.source-header-qualification/v1"
+        or header["predecessor_digest"] != GATE2_SUCCESSOR_DIGEST
+        or header["header_digest"] != "sha256:" + hashlib.sha256(SOURCE_HEADER).hexdigest()
+        or set(header["replacements"]) != _MANUAL_ADDED_MODULES | _GATE2_ADDED_MODULES
+    ):
+        raise ValueError("Historical header proof changed")
+    sources = dict(predecessor["runtime_sources"])
+    for name, record in header["replacements"].items():
+        if (
+            set(record) != {"before", "after"}
+            or record["before"] != sources[name]
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", record["after"]) is None
+        ):
+            raise ValueError("Historical source identity changed")
+        sources[name] = record["after"]
+    return dict(predecessor, runtime_sources=sources)
+
+
+def _two_stage_model_catalog(predecessor):
+    additions = ["current_local_prd_submission_id", "controlling_local_prd_decision_id"]
+    models = [
+        dict(row, columns=sorted(row["columns"] + additions)) if row["model_name"] == "initiative" else row
+        for row in predecessor["models"]
+    ]
+    return sorted(models + _LOCAL_PRD_ADDED_MODELS, key=lambda row: row["model_name"])
+
+
+def validate_two_stage_successor(predecessor, successor):
+    """Accept only the declared two-stage source, storage and writer delta."""
+    predecessor = _retained_header_projection(predecessor)
+    if (
+        type(successor) is not dict
+        or set(successor) != {"schema_version", "predecessor_digest", "qualification"}
+        or successor["schema_version"] != "curve.two-stage-review-runtime-qualification/v1-candidate"
+        or successor["predecessor_digest"] != HEADER_SUCCESSOR_DIGEST
+    ):
+        raise ValueError("Exact two-stage qualification required")
+    qualified = successor["qualification"]
+    if (
+        type(qualified) is not dict
+        or set(qualified) != set(predecessor)
+        or qualified["schema_version"] != predecessor["schema_version"]
+        or qualified["model_edition"] != "CURVE_TWO_STAGE_REVIEW_V1"
+        or qualified["models"] != _two_stage_model_catalog(predecessor)
+        or qualified["excluded_writers"] != predecessor["excluded_writers"]
+        or qualified["runtime_writer_inventory"] != predecessor["runtime_writer_inventory"] + _TWO_STAGE_WRITERS
+        or qualified["physical_catalog_digest"]
+        != import_module("plane.curve.migrations.0042_local_new_work_review").CURRENT_CATALOG_DIGEST
+    ):
+        raise ValueError("Two-stage authority exceeds the qualified delta")
+    migrations = qualified["migration_digests"]
+    old_migrations = predecessor["migration_digests"]
+    if (
+        type(migrations) is not dict
+        or set(migrations) - set(old_migrations) != _TWO_STAGE_MIGRATIONS
+        or any(migrations.get(name) != value for name, value in old_migrations.items())
+    ):
+        raise ValueError("Historical migrations changed")
+    _validate_source_delta(
+        predecessor["runtime_sources"],
+        qualified["runtime_sources"],
+        _TWO_STAGE_ADDED_MODULES,
+        _TWO_STAGE_REPLACED_MODULES,
+    )
+    from .manual_gate2_v3.contracts import validate_manifest as validate_gate2_manifest
+    from .manual_plan_v3.validation import candidate_schemas
+    from .scoped_prd_v2_contracts import require_contract_integrity
+
+    candidate_schemas()
+    validate_gate2_manifest()
+    require_contract_integrity()
+    return qualified
+
+
+def require_manual_gate2_v3_qualification():
+    require_reopening_qualification()
+    if not TWO_STAGE_SUCCESSOR_PATH.exists() or TWO_STAGE_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("MANUAL_GATE2_EDITION_UNAVAILABLE", 503)
+
+
+def require_manual_plan_v3_qualification():
+    require_reopening_qualification()
+    if not TWO_STAGE_SUCCESSOR_PATH.exists() or TWO_STAGE_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("MANUAL_PLAN_DRAFT_EDITION_UNAVAILABLE", 503)
 
 
 def require_manual_plan_v2_qualification():

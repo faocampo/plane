@@ -7,7 +7,13 @@ from dataclasses import dataclass
 import json
 
 from .prd_commands import PrdCommand, PrdCommandError, _object, parse_prd_command
-from .scoped_prd_contracts import SCHEMA_VERSION, MAX_COMMAND_BYTES, canonical, digest, validate_scoped_contract
+from .scoped_prd_contracts import (
+    SCHEMA_VERSION,
+    MAX_COMMAND_BYTES,
+    canonical,
+    digest,
+    validate_versioned_scoped_contract,
+)
 
 EXTRA_FIELDS = frozenset(
     {
@@ -40,7 +46,7 @@ class ScopedPrdCommand(PrdCommand):
     def operation_request_identity(self):
         return canonical(
             {
-                "edition": SCHEMA_VERSION,
+                "edition": self.subject_metadata()["schema_version"],
                 "action": self.action,
                 "expected_version": self.expected_version,
                 "request_digest": self.request_digest,
@@ -48,7 +54,7 @@ class ScopedPrdCommand(PrdCommand):
         )
 
 
-def parse_scoped_prd_command(*, route, body, if_match, idempotency_key):
+def parse_scoped_prd_command(*, route, body, if_match, idempotency_key, edition=SCHEMA_VERSION):
     if route not in {"observe", "submit", "approve", "return-for-revision"}:
         raise PrdCommandError("SCOPED_PRD_COMMAND_UNKNOWN", 404)
     if type(body) is not bytes:
@@ -61,7 +67,11 @@ def parse_scoped_prd_command(*, route, body, if_match, idempotency_key):
             object_pairs_hook=_object,
             parse_constant=lambda _: (_ for _ in ()).throw(ValueError()),
         )
-        validate_scoped_contract(f"scoped-prd-{route}-v1", payload)
+        # The route selects its qualified edition explicitly. A request body
+        # cannot activate a successor persistence path by declaring its version.
+        if type(payload) is not dict or payload.get("schema_version") != edition:
+            raise PrdCommandError("SCOPED_PRD_INVALID")
+        validate_versioned_scoped_contract(route, payload)
         legacy_payload = {key: value for key, value in payload.items() if key not in EXTRA_FIELDS}
         # Reuse exactly the legacy header/rationale validation without modifying its digest.
         if route == "observe":
@@ -77,7 +87,12 @@ def parse_scoped_prd_command(*, route, body, if_match, idempotency_key):
         )
         action = "CURVE.SCOPED_PRD.OBSERVE" if route == "observe" else base.action
         request_digest = digest(
-            {"edition": SCHEMA_VERSION, "action": action, "expected_version": base.expected_version, "payload": payload}
+            {
+                "edition": payload["schema_version"],
+                "action": action,
+                "expected_version": base.expected_version,
+                "payload": payload,
+            }
         )
     except PrdCommandError:
         raise
@@ -93,7 +108,7 @@ def parse_scoped_prd_command(*, route, body, if_match, idempotency_key):
     )
 
 
-def validate_scoped_command(command, *, metadata_only=False):
+def validate_scoped_command(command, *, metadata_only=False, edition=SCHEMA_VERSION):
     """Internal service callers must satisfy the same closed parser as HTTP."""
     if type(command) is not ScopedPrdCommand:
         raise PrdCommandError("SCOPED_PRD_INVALID")
@@ -122,6 +137,7 @@ def validate_scoped_command(command, *, metadata_only=False):
         body=canonical(payload),
         if_match=f'"{command.expected_version}"',
         idempotency_key=command.idempotency_key,
+        edition=edition,
     )
     if (
         parsed.action != command.action

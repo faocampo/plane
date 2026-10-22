@@ -24,11 +24,6 @@ export const initiativeApproverRoles: Array<{ gate: TCurveGateType; label: strin
     label: "Technical Approver",
     responsibility: "Reviews the implementation plan before execution.",
   },
-  {
-    gate: "CODE_READINESS",
-    label: "Code Approver",
-    responsibility: "Reviews code readiness before repository review.",
-  },
 ];
 
 export const initiativeStateLabel: Record<TCurveInitiativeState, string> = {

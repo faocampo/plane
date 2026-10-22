@@ -1,0 +1,27 @@
+{
+  "schema_version": "curve.local-prd-review-policy/v1-candidate",
+  "policy_key": "CURVE_LOCAL_PRD_REVIEW_POLICY",
+  "policy_version": 1,
+  "environment": "LOCAL",
+  "default_effect": "DENY",
+  "production_activation": false,
+  "actions": {
+    "SUBMIT": { "actor": "CURRENT_INITIATIVE_CREATOR", "state": "ALIGNING" },
+    "APPROVE": { "actor": "CURRENT_PRODUCT_REVIEWER", "state": "PRD_REVIEW" },
+    "REQUEST_CHANGES": {
+      "actor": "CURRENT_PRODUCT_REVIEWER",
+      "state": "PRD_REVIEW",
+      "protected_feedback_required": true
+    }
+  },
+  "required_current_checks": [
+    "ACTIVE_NATIVE_MEMBERSHIP_AND_SOURCE_ACCESS",
+    "EXACT_TWO_REVIEWER_ASSIGNMENTS",
+    "EXACT_SOURCE_SCOPE_AND_RISK",
+    "EXACT_INITIATIVE_VERSION",
+    "NO_PENDING_SCOPE_REOPENING",
+    "QUALIFIED_RUNTIME"
+  ],
+  "retry": "EXACT_REQUEST_DIGEST_AND_CURRENT_AUTHORIZED_ROLE_REPLAY_ONLY",
+  "projection": "LOCAL_PRD_REVIEW_METADATA_V1"
+}

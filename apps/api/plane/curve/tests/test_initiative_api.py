@@ -93,7 +93,6 @@ def _gate_payload(*approvers):
     return [
         {"gate_type": GateType.PRD_APPROVAL, "approver_user_id": str(approvers[0].id)},
         {"gate_type": GateType.PLAN_APPROVAL, "approver_user_id": str(approvers[1].id)},
-        {"gate_type": GateType.CODE_READINESS, "approver_user_id": str(approvers[2].id)},
     ]
 
 
@@ -149,6 +148,8 @@ def _mutate(client, initiative, suffix, payload, *, idem):
 def initiative_schema_contracts():
     schema_directory = Path(__file__).parents[1] / "contracts" / "schemas"
     schemas = {path.name: json.loads(path.read_text()) for path in schema_directory.glob("*.schema.json")}
+    successor = Path(__file__).parents[1] / "two_stage_review" / "contract_snapshot"
+    schemas.update({path.name: json.loads(path.read_text()) for path in successor.glob("*.schema.json")})
     registry = Registry().with_resources((schema["$id"], Resource.from_contents(schema)) for schema in schemas.values())
     return {
         name: Draft202012Validator(schema, registry=registry, format_checker=FormatChecker())
@@ -177,9 +178,9 @@ def test_create_is_atomic_contract_valid_and_idempotently_replayed(initiative_sc
     assert created["Location"].endswith(f"{created.json()['id']}/")
     assert created.json()["workspace_id"] == str(workspace.id)
     assert created.json()["creator"] == _actor(creator)
-    initiative_schema_contracts["initiative-v1.1.schema.json"].validate(created.json())
+    initiative_schema_contracts["initiative-v1.2.schema.json"].validate(created.json())
     assert Initiative.objects.filter(workspace_id=workspace.id).count() == 1
-    assert GateAssignment.objects.filter(workspace_id=workspace.id).count() == 3
+    assert GateAssignment.objects.filter(workspace_id=workspace.id).count() == 2
     assert DomainEvent.objects.filter(workspace_id=workspace.id, aggregate_type="INITIATIVE").count() == 1
     assert OutboxEvent.objects.filter(workspace_id=workspace.id, destination="CURVE_INITIATIVE_LOCAL_V1").count() == 1
     assert IdempotencyRecord.objects.filter(workspace_id=workspace.id).count() == 1
@@ -255,7 +256,7 @@ def test_gate_assignment_policy_enforces_active_humans_and_risk_separation():
     )
     rejected_inactive = _create(
         client,
-        _payload(product, (creator, other, inactive), keyword="inactive-approver"),
+        _payload(product, (creator, inactive), keyword="inactive-approver"),
         idem="gate-inactive-member-001",
     )
     accepted_low = _create(
@@ -268,7 +269,7 @@ def test_gate_assignment_policy_enforces_active_humans_and_risk_separation():
     assert rejected_inactive.status_code == 409
     assert accepted_low.status_code == 201
     assert Initiative.objects.filter(workspace_id=workspace.id).count() == 1
-    assert GateAssignment.objects.filter(workspace_id=workspace.id).count() == 3
+    assert GateAssignment.objects.filter(workspace_id=workspace.id).count() == 2
 
 
 def test_draft_update_preserves_mutability_boundary_concurrency_and_replay():
@@ -389,7 +390,7 @@ def test_lifecycle_pins_workflow_and_supports_authorized_pause_resume_cancel():
     )
     initiative.refresh_from_db()
     resumed = _mutate(
-        _client(code_approver),
+        _client(plan_approver),
         initiative,
         "resume/",
         {"reason": "Synthetic resume"},
@@ -556,3 +557,51 @@ def test_database_failure_rolls_back_initiative_assignments_delivery_and_idempot
     assert DomainEvent.objects.filter(workspace_id=workspace.id, aggregate_type="INITIATIVE").count() == 0
     assert OutboxEvent.objects.filter(workspace_id=workspace.id, destination="CURVE_INITIATIVE_LOCAL_V1").count() == 0
     assert IdempotencyRecord.objects.filter(workspace_id=workspace.id).count() == 0
+
+
+def test_new_initiative_rejects_third_approval_stage():
+    creator = _user("two-stage-owner@example.invalid")
+    workspace = _workspace(slug="alpha", owner=creator)
+    technical = _add_member(workspace, email="two-stage-technical@example.invalid")
+    former_code = _add_member(workspace, email="former-code@example.invalid")
+    payload = _payload(_product(workspace, creator), (creator, technical))
+    payload["gate_assignments"].append(
+        {"gate_type": GateType.CODE_READINESS, "approver_user_id": str(former_code.id)}
+    )
+    response = _create(_client(creator), payload)
+    assert response.status_code == 409
+    assert not Initiative.objects.filter(workspace_id=workspace.id).exists()
+    assert not GateAssignment.objects.filter(workspace_id=workspace.id).exists()
+
+
+def test_bot_cannot_be_assigned_to_either_approval_stage():
+    creator = _user("human-owner@example.invalid")
+    workspace = _workspace(slug="alpha", owner=creator)
+    bot = _add_member(workspace, email="automation@example.invalid")
+    bot.is_bot = True
+    bot.save(update_fields=["is_bot"])
+    response = _create(_client(creator), _payload(_product(workspace, creator), (creator, bot)))
+    assert response.status_code == 409
+    assert not Initiative.objects.filter(workspace_id=workspace.id).exists()
+
+
+def test_historical_code_assignment_confers_no_current_lifecycle_authority():
+    creator = _user("historical-owner@example.invalid")
+    workspace = _workspace(slug="alpha", owner=creator)
+    technical = _add_member(workspace, email="historical-technical@example.invalid")
+    former_code = _add_member(workspace, email="historical-code@example.invalid")
+    created = _create(_client(creator), _payload(_product(workspace, creator), (creator, technical)))
+    initiative = Initiative.objects.get(id=created.json()["id"])
+    historical = GateAssignment.objects.create(
+        workspace_id=workspace.id,
+        initiative=initiative,
+        gate_type=GateType.CODE_READINESS,
+        approver_user_id=former_code.id,
+    )
+    denied = _mutate(
+        _client(former_code), initiative, "pause/", {"reason": "Synthetic request"}, idem="former-code-pause"
+    )
+    assert denied.status_code == 403
+    assert GateAssignment.objects.filter(id=historical.id).exists()
+    initiative.refresh_from_db()
+    assert initiative.state == "DRAFT"

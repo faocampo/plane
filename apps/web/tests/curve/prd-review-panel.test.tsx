@@ -33,6 +33,53 @@ describe("protected PRD review panel", () => {
     expect(screen.queryByRole("button", { name: /Approve|Submit|Reject/ })).not.toBeInTheDocument();
     expect(screen.getByText(/separate access/)).toBeInTheDocument();
   });
+  it("keeps detailed evidence collapsed and leads with the waiting reviewer", async () => {
+    render(<PrdReviewPanel viewerId="viewer-1" workspaceSlug="example" initiative={initiative} />);
+    expect(await screen.findByRole("heading", { name: "Awaiting Product review" })).toBeVisible();
+    const summary = screen.getByText("Version and evidence details");
+    expect(summary.closest("details")).not.toHaveAttribute("open");
+    expect(screen.getByText(fixture.checkpoint.metadata.content_digest)).not.toBeVisible();
+    fireEvent.click(summary);
+    expect(screen.getByText(fixture.checkpoint.metadata.content_digest)).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Product approved" })).not.toBeInTheDocument();
+  });
+  it.each([
+    ["APPROVED", "Product approved"],
+    ["CHANGES_REQUESTED", "Changes requested"],
+    ["REJECTED", "PRD rejected"],
+  ])("shows a recorded %s decision with its saved-version scope", async (state, title) => {
+    const data = structuredClone(fixture);
+    data.decision = {
+      availability: "PRESENT",
+      metadata: {
+        state,
+        decided_at: fixture.observed_at,
+        decided_by: fixture.reviewer.identity,
+      },
+    } as never;
+    retrieve.mockResolvedValue(data);
+    render(<PrdReviewPanel viewerId="viewer-1" workspaceSlug="example" initiative={initiative} />);
+    expect(await screen.findByRole("heading", { name: title })).toBeVisible();
+    expect(screen.getByText(/Checkpoint 2/)).toBeVisible();
+  });
+  it("shows neutral recovery when submission metadata is unavailable", async () => {
+    const data = structuredClone(fixture);
+    data.checkpoint = { availability: "UNAVAILABLE", metadata: null } as never;
+    retrieve.mockResolvedValue(data);
+    render(<PrdReviewPanel viewerId="viewer-1" workspaceSlug="example" initiative={initiative} />);
+    expect(await screen.findByRole("heading", { name: "Review status unavailable" })).toBeVisible();
+    expect(screen.getByText("Submission status unavailable")).toBeVisible();
+    expect(screen.queryByText("Ready when you are")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Prepare the PRD" })).not.toBeInTheDocument();
+  });
+  it("shows preparation guidance only for a verified absent submission", async () => {
+    const data = structuredClone(fixture);
+    data.checkpoint = { availability: "ABSENT", metadata: null } as never;
+    retrieve.mockResolvedValue(data);
+    render(<PrdReviewPanel viewerId="viewer-1" workspaceSlug="example" initiative={initiative} />);
+    expect(await screen.findByRole("heading", { name: "Prepare the PRD" })).toBeVisible();
+    expect(screen.getByText("Ready when you are")).toBeVisible();
+  });
   it("distinguishes authoritative absence from unavailability", async () => {
     const data = structuredClone(fixture);
     data.decision = { availability: "UNAVAILABLE", metadata: null } as never;

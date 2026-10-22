@@ -1,3 +1,4 @@
+import { checkTechnicalReviewContracts } from "./check-manual-gate2-v3-contracts.mjs";
 /** Exact backend contracts and browser projection parity; no generated rehash approval. */
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -22,3 +23,5 @@ const expected = Object.fromEntries(
 expected.projection = expected.status.properties.current_record.anyOf[0];
 assert.deepEqual(JSON.parse(readFileSync(new URL("./src/curve/manual-gate2.schemas.json", import.meta.url))), expected);
 console.log("Manual Gate2 pinned backend contracts and browser projections match.");
+
+checkTechnicalReviewContracts();

@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from .scoped_prd_commands import parse_scoped_prd_command
+from .scoped_prd_editions import edition_for_schema
 from .prd_metadata_validation import MAX_SAFE_INTEGER, require_metadata
 from .prd_models import PrdImmutableModel, PrdImmutableQuerySet
 from .prd_review_rationale import RATIONALE_MEDIA_TYPE
@@ -62,7 +63,8 @@ class ScopedPrdAcceptedCommand(ScopedPrdImmutableModel):
         constraints = [
             models.UniqueConstraint(fields=["workspace_id", "initiative", "operation"], name="curve_sprd_cmd_scope_uq"),
             models.CheckConstraint(
-                condition=models.Q(edition="curve.scoped-prd/v1-candidate"), name="curve_sprd_cmd_edition_ck"
+                condition=models.Q(edition__in=["curve.scoped-prd/v1-candidate", "curve.scoped-prd/v2-candidate"]),
+                name="curve_sprd_cmd_edition_ck",
             ),
             models.CheckConstraint(
                 condition=models.Q(
@@ -102,6 +104,7 @@ class ScopedPrdAcceptedCommand(ScopedPrdImmutableModel):
             expected_version=command.expected_version,
             request_digest=command.request_digest,
             subject=command.subject_metadata(),
+            edition=command.subject_metadata()["schema_version"],
         )
         if command.rationale_bytes is None:
             require_metadata(
@@ -157,6 +160,7 @@ class ScopedPrdAcceptedCommand(ScopedPrdImmutableModel):
             body=json.dumps(body).encode(),
             if_match=f'"{self.expected_version}"',
             idempotency_key="internal-verification",
+            edition=self.edition,
         )
         require_metadata(
             parsed.action == self.action and parsed.request_digest == self.request_digest, "PRD_COMMAND_DIGEST_MISMATCH"
@@ -164,7 +168,7 @@ class ScopedPrdAcceptedCommand(ScopedPrdImmutableModel):
         return body
 
     def validate_metadata(self):
-        require_metadata(self.edition == "curve.scoped-prd/v1-candidate", "SCOPED_PRD_EDITION_INVALID")
+        edition_for_schema(self.edition)
         # Validate the closed subject without retaining/reconstructing protected
         # rationale. The full request digest is independently checked on capture/read.
         body = deepcopy(self.subject)
@@ -177,6 +181,7 @@ class ScopedPrdAcceptedCommand(ScopedPrdImmutableModel):
             body=json.dumps(body).encode(),
             if_match=f'"{self.expected_version}"',
             idempotency_key="internal-validation",
+            edition=self.edition,
         )
         require_metadata(
             parsed.action == self.action and parsed.subject_metadata() == self.subject, "PRD_COMMAND_SUBJECT_INVALID"
@@ -229,10 +234,10 @@ class ScopedPrdPayloadModel(ScopedPrdImmutableModel):
         return deepcopy(self.payload)
 
     def validate_metadata(self):
-        from .scoped_prd_contracts import metadata_digest, validate_scoped_contract
+        from .scoped_prd_contracts import metadata_digest, validate_versioned_scoped_contract
 
         record = self.as_record()
-        validate_scoped_contract(self.contract_name, record)
+        validate_versioned_scoped_contract(self.contract_name, record)
         require_metadata(metadata_digest(record) == self.digest == record["digest"], "SCOPED_PRD_DIGEST_INVALID")
         for field in self._meta.concrete_fields:
             if field.name == "payload" or field.name not in record:

@@ -175,8 +175,8 @@ const fillDefinition = () => {
   });
 };
 const continueToReviewers = () => fireEvent.click(screen.getByRole("button", { name: "Continue to reviewers" }));
-const assignReviewers = (ids = ["user-1", "user-2", "user-3"]) => {
-  ["Product Approver", "Technical Approver", "Code Approver"].forEach((label, index) => {
+const assignReviewers = (ids = ["user-1", "user-2"]) => {
+  ["Product Approver", "Technical Approver"].forEach((label, index) => {
     fireEvent.change(screen.getByLabelText(label), { target: { value: ids[index] } });
   });
 };
@@ -292,16 +292,16 @@ describe("Curve Initiative shell", () => {
     await openCreation();
     fillDefinition();
     continueToReviewers();
-    for (const label of ["Product Approver", "Technical Approver", "Code Approver"])
+    for (const label of ["Product Approver", "Technical Approver"])
       expect(screen.getByLabelText(label)).toHaveValue("");
     expect(screen.getByText(/Assigning a reviewer does not approve any work/)).toBeInTheDocument();
     create();
     expect(defaultHookValue.createInitiative).not.toHaveBeenCalled();
-    expect(screen.getAllByText("Choose an active human.")).toHaveLength(3);
+    expect(screen.getAllByText("Choose an active human.")).toHaveLength(2);
     await waitFor(() => expect(screen.getByLabelText("Product Approver")).toHaveFocus());
   });
 
-  it.each(["STANDARD", "HIGH"])("requires three different people at %s risk", async (risk) => {
+  it.each(["STANDARD", "HIGH"])("requires two different people at %s risk", async (risk) => {
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
     await openCreation();
     fillDefinition();
@@ -310,7 +310,7 @@ describe("Curve Initiative shell", () => {
     assignReviewers(["user-1", "user-1", "user-3"]);
     create();
     expect(defaultHookValue.createInitiative).not.toHaveBeenCalled();
-    expect(screen.getAllByText("Choose three distinct active humans for Standard or High risk.")).toHaveLength(3);
+    expect(screen.getAllByText("Choose two different reviewers for Standard or High risk.")).toHaveLength(2);
     expect(screen.getByLabelText("Product Approver")).toHaveAttribute("aria-invalid", "true");
     await waitFor(() => expect(screen.getByLabelText("Product Approver")).toHaveFocus());
   });
@@ -330,7 +330,6 @@ describe("Curve Initiative shell", () => {
           gate_assignments: [
             { gate_type: "PRD_APPROVAL", approver_user_id: "user-1" },
             { gate_type: "PLAN_APPROVAL", approver_user_id: "user-1" },
-            { gate_type: "CODE_READINESS", approver_user_id: "user-1" },
           ],
         })
       )
@@ -359,7 +358,6 @@ describe("Curve Initiative shell", () => {
         gate_assignments: [
           { gate_type: "PRD_APPROVAL", approver_user_id: "user-1" },
           { gate_type: "PLAN_APPROVAL", approver_user_id: "user-2" },
-          { gate_type: "CODE_READINESS", approver_user_id: "user-3" },
         ],
       })
     );
@@ -445,12 +443,12 @@ describe("Curve Initiative shell", () => {
   it("shows unverified readiness honestly and explains review responsibilities", async () => {
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
     expect(await screen.findByText("PRD context unavailable")).toBeInTheDocument();
-    expect(screen.getByText(/Access or current context could not be verified/)).toBeInTheDocument();
+    expect(screen.getByText(/We couldn’t verify access to the current document/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Approve|Submit PRD/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Active assignment")).not.toBeInTheDocument();
-    expect(screen.getByText(/Assignments identify reviewers/)).toBeInTheDocument();
-    fireEvent.click(screen.getByText("What is needed for PRD review?"));
-    expect(screen.getByText(/Readiness alone does not mean approval/)).toBeVisible();
+    fireEvent.click(screen.getByText("Review responsibilities"));
+    expect(screen.getByText("Assigned reviewers for each document stage.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Refresh PRD context" })).toBeEnabled();
     fireEvent.click(screen.getByText("Initiative details and activity"));
     expect(screen.getByText("Links are not loaded in this view")).toBeVisible();
   });
@@ -478,7 +476,7 @@ describe("Curve Initiative shell", () => {
       selectedInitiative: expired,
     });
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
-    expect(screen.getAllByText("No current assignment")).toHaveLength(3);
+    expect(screen.getAllByText("No current assignment")).toHaveLength(2);
   });
 
   it("preserves the real Draft transition and current-version gate", async () => {
@@ -525,8 +523,8 @@ describe("Curve Initiative shell", () => {
     render(<InitiativeWorkspace workspaceSlug="example-workspace" />);
     fireEvent.click(screen.getByRole("button", { name: "Edit Initiative" }));
     const scrollIntoView = vi.fn();
-    HTMLElement.prototype.scrollIntoView = scrollIntoView;
     const field = within(screen.getByRole("dialog")).getByRole("textbox", { name: new RegExp(label) });
+    field.scrollIntoView = scrollIntoView;
     fireEvent.change(field, { target: { value: label === "Keyword" ? "invalid_keyword" : "" } });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     expect(field).toHaveFocus();

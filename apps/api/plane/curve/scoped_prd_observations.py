@@ -19,7 +19,8 @@ from .prd_metadata_validation import instant
 from .prd_policy_context import build_prd_policy_context
 from .product_services import _load_or_create_idempotency
 from .scoped_prd_commands import ScopedPrdCommand, validate_scoped_command
-from .scoped_prd_contracts import SCHEMA_VERSION, POLICY_EDITION, validate_scoped_contract
+from .scoped_prd_contracts import validate_versioned_scoped_contract
+from .scoped_prd_editions import edition_for_initiative, edition_for_schema
 from .scoped_prd_models import ScopedPrdObservation
 from .scoped_prd_policy import require_scoped_current, scope_pins
 from .scoped_prd_repository import scoped_write, entity, sealed
@@ -51,7 +52,7 @@ _ERRORS = (
 
 
 def capture_scoped_prd_observation(*, request, workspace_slug, initiative_id, command):
-    validate_scoped_command(command)
+    validate_scoped_command(command, edition=command.subject_metadata().get("schema_version"))
     if type(command) is not ScopedPrdCommand or command.action != "CURVE.SCOPED_PRD.OBSERVE":
         raise PrdCommandError("SCOPED_PRD_INVALID")
     runtime = getattr(settings, "CURVE_PRD_ACCEPTANCE_RUNTIME", None)
@@ -87,9 +88,12 @@ def capture_scoped_prd_observation(*, request, workspace_slug, initiative_id, co
                 context = require_scoped_current(
                     workspace_id=receipt.workspace_id, initiative_id=initiative_id, actor_id=request.user.id
                 )
+                edition = edition_for_initiative(context.initiative)
+                if edition != edition_for_schema(command.subject_metadata()["schema_version"]):
+                    raise PrdCommandError("SCOPED_PRD_SUBJECT_CHANGED", 409)
                 identity = dict(
                     principal_scope=f"HUMAN:{request.user.id}",
-                    command_scope=f"SCOPED_PRD_V1_OBSERVE:{initiative_id}",
+                    command_scope=f"{edition.command_prefix}OBSERVE:{initiative_id}",
                     key_digest=idempotency_key_digest(command.idempotency_key),
                     request_digest=sha256_digest(command.operation_request_identity()),
                     expires_at=timezone.now() + timedelta(days=1),
@@ -134,15 +138,15 @@ def capture_scoped_prd_observation(*, request, workspace_slug, initiative_id, co
                     with scoped_write(receipt, context, action="CURVE.PRD.SUBMIT"):
                         observation.save()
                     payload = dict(
-                        schema_version=SCHEMA_VERSION,
-                        policy_edition=POLICY_EDITION,
+                        schema_version=edition.schema_version,
+                        policy_edition=edition.policy_edition,
                         event_type="CURVE.SCOPED_PRD.OBSERVATION_RECORDED",
                         observation_id=str(observation.id),
                         observation_digest=observation.digest,
                         initiative_id=str(initiative_id),
                         policy_decision_id=str(receipt.decision_id),
                     )
-                    validate_scoped_contract("scoped-prd-observed-event-v1", payload)
+                    validate_versioned_scoped_contract("observed-event", payload)
                     event = DomainEvent.objects.create(
                         workspace_id=receipt.workspace_id,
                         event_type=payload["event_type"],
@@ -155,12 +159,14 @@ def capture_scoped_prd_observation(*, request, workspace_slug, initiative_id, co
                         correlation_id=correlation,
                         idempotency_key_digest=idem.key_digest,
                         classification="INTERNAL",
-                        payload_schema="https://curve.example.invalid/candidates/scoped-prd-v1/scoped-prd-observed-event-v1.schema.json",
+                        payload_schema=f"https://curve.example.invalid/candidates/scoped-prd-v{edition.number}/scoped-prd-observed-event-v{edition.number}.schema.json",
                         payload=payload,
                         occurred_at=timezone.now(),
                     )
                     OutboxEvent.objects.create(
-                        workspace_id=receipt.workspace_id, event_id=event.id, destination="CURVE_SCOPED_PRD_METADATA_V1"
+                        workspace_id=receipt.workspace_id,
+                        event_id=event.id,
+                        destination=f"CURVE_SCOPED_PRD_METADATA_V{edition.number}",
                     )
                     ref = dict(
                         resource_type="SCOPED_PRD_OBSERVATION", resource_id=str(observation.id), resource_version=1

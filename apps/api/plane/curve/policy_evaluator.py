@@ -243,7 +243,7 @@ def _assignment_denials(action_policy, context) -> list[str]:
         or assignment["assignment_version"] < 1
     ):
         return ["POLICY_CONTEXT_INVALID"]
-    if required_role == "THREE_ACTIVE_HUMANS":
+    if required_role in {"THREE_ACTIVE_HUMANS", "TWO_ACTIVE_HUMANS"}:
         return []  # Exact roles, active humans and risk separation are checked below.
     matches = [
         item
@@ -267,9 +267,11 @@ def _separation_denials(action_policy, context) -> list[str]:
     risk = assignment.get("risk_tier")
     if not isinstance(gates, list) or risk not in {"LOW", "STANDARD", "HIGH"}:
         return ["POLICY_CONTEXT_INVALID"]
-    if action_policy["separation_of_duty"] == "PRD_THREE_ACTIVE_HUMANS":
-        required_roles = {"PRODUCT_APPROVER", "TECHNICAL_APPROVER", "CODE_APPROVER"}
-        if len(gates) != 3 or any(
+    if action_policy["separation_of_duty"] in {"PRD_THREE_ACTIVE_HUMANS", "PRD_TWO_ACTIVE_HUMANS"}:
+        required_roles = {"PRODUCT_APPROVER", "TECHNICAL_APPROVER"}
+        if action_policy["separation_of_duty"] == "PRD_THREE_ACTIVE_HUMANS":
+            required_roles.add("CODE_APPROVER")
+        if len(gates) != len(required_roles) or any(
             not isinstance(gate, dict)
             or gate.get("active") is not True
             or not isinstance(gate.get("role"), str)
@@ -280,7 +282,9 @@ def _separation_denials(action_policy, context) -> list[str]:
             return ["SEPARATION_OF_DUTY_DENIED"]
         if {gate.get("role") for gate in gates} != required_roles:
             return ["SEPARATION_OF_DUTY_DENIED"]
-        if risk in {"STANDARD", "HIGH"} and len({_actor_key(gate["principal"]) for gate in gates}) != 3:
+        if risk in {"STANDARD", "HIGH"} and len({_actor_key(gate["principal"]) for gate in gates}) != len(
+            required_roles
+        ):
             return ["SEPARATION_OF_DUTY_DENIED"]
         return []
     principals = [_actor_key(item.get("principal")) for item in gates if isinstance(item, dict) and item.get("active")]

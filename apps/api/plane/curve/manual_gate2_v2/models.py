@@ -38,9 +38,14 @@ class GuardedRecord(models.Model):
         app_label = "curve"
 
     def save(self, *args, **kwargs):
-        from .repository import assert_exact_write
+        from . import repository as historical
+        from plane.curve.manual_gate2_v3 import repository as current
 
-        assert_exact_write(self)
+        # A present receipt must match exactly; never fall through after rejection.
+        if historical._WRITE.get() is not None:
+            historical.assert_exact_write(self)
+        else:
+            current.assert_exact_write(self)
         if not self._state.adding and type(self) not in {
             ManualGate2ControlV2,
             ManualTaskClaimV2,

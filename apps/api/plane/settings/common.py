@@ -152,6 +152,8 @@ CURVE_LOCAL_PLANE_INSTALLATION_ID = None
 
 # Metadata reads have their own policy and trusted adapter. Configuration alone
 # never enables PRD commands or activates a source/storage provider.
+CURVE_LOCAL_PRD_ENABLED = False
+CURVE_LOCAL_PRD_STORAGE_ROOT = None
 CURVE_PRD_READ_ENABLED = False
 CURVE_PRD_READ_RUNTIME = None
 

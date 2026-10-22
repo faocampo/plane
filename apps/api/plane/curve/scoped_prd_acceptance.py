@@ -31,6 +31,7 @@ from .policy_services import (
 from .scoped_prd_models import ScopedPrdAcceptedCommand as PrdAcceptedCommand
 from .scoped_prd_repository import guard_command, scoped_write
 from .scoped_prd_commands import ScopedPrdCommand, validate_scoped_command
+from .scoped_prd_editions import edition_for_schema
 from .scoped_prd_policy import revalidate_prd_action
 from .prd_acceptance import PrdRuntimeUnavailable, PrdAcceptanceScope, PrdAcceptancePreparation, _CHECKS, _SAFE_ERRORS
 from .prd_commands import PrdCommandError
@@ -76,7 +77,7 @@ def record_accepted_prd_command(
 
 
 def accept_scoped_prd_command(*, request, workspace_slug, initiative_id, command):
-    validate_scoped_command(command)
+    validate_scoped_command(command, edition=command.subject_metadata().get("schema_version"))
     if type(command) is not ScopedPrdCommand or command.action not in {
         "CURVE.PRD.SUBMIT",
         "CURVE.PRD.APPROVE",
@@ -95,7 +96,8 @@ def accept_scoped_prd_command(*, request, workspace_slug, initiative_id, command
     actor = {"actor_type": "HUMAN", "actor_id": str(request.user.id)}
     correlation_id = correlation_id_for_request(request)
     action_suffix = command.action.removeprefix("CURVE.PRD.")
-    command_scope = f"SCOPED_PRD_V1_{action_suffix}:{initiative_id}"
+    edition = edition_for_schema(command.subject_metadata()["schema_version"])
+    command_scope = f"{edition.command_prefix}{action_suffix}:{initiative_id}"
 
     def context():
         return build_prd_policy_context(
@@ -190,7 +192,7 @@ def accept_scoped_prd_command(*, request, workspace_slug, initiative_id, command
                         raw_idempotency_key=command.idempotency_key,
                         canonical_request=command.operation_request_identity(),
                         operation_type="WORKFLOW_COMMAND",
-                        command_type=f"SCOPED_PRD_V1_{action_suffix}",
+                        command_type=f"{edition.command_prefix}{action_suffix}",
                         target=dict(receipt.resource_ref),
                         actor=actor,
                         correlation_id=correlation_id,

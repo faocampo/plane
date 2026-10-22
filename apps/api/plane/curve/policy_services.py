@@ -35,6 +35,7 @@ from plane.curve.policy_evaluator import evaluate_core_policy
 from plane.curve.policy_manifest import (
     CORE_POLICY_MANIFEST_DIGEST,
     PRD_POLICY_MANIFEST_DIGEST,
+    PRD_POLICY_V2_MANIFEST_DIGEST,
     CORE_POLICY_V2_MANIFEST_DIGEST,
     SCOPE_REOPENING_POLICY_MANIFEST_DIGEST,
 )
@@ -75,6 +76,12 @@ _MUTATION_POLICY_BINDINGS = MappingProxyType(
         "CURVE.PRD.APPROVE": (1, PRD_POLICY_MANIFEST_DIGEST),
         "CURVE.PRD.REQUEST_CHANGES": (1, PRD_POLICY_MANIFEST_DIGEST),
         "CURVE.PRD.REJECT": (1, PRD_POLICY_MANIFEST_DIGEST),
+    }
+)
+_MUTATION_SUCCESSOR_BINDINGS = MappingProxyType(
+    {
+        action: (2, PRD_POLICY_V2_MANIFEST_DIGEST)
+        for action in ("CURVE.PRD.SUBMIT", "CURVE.PRD.APPROVE", "CURVE.PRD.REQUEST_CHANGES", "CURVE.PRD.REJECT")
     }
 )
 
@@ -716,7 +723,8 @@ def assert_active_mutation_receipt(
         or receipt.action != action
         or receipt.workspace_id != workspace_id
         or dict(receipt.resource_ref) != resource_ref
-        or (receipt.policy_version, receipt.policy_manifest_digest) != expected_policy_binding
+        or (receipt.policy_version, receipt.policy_manifest_digest)
+        not in (expected_policy_binding, _MUTATION_SUCCESSOR_BINDINGS.get(action))
         or not transaction.get_connection().in_atomic_block
     ):
         raise PermissionError("an active Curve mutation authorization receipt is required")

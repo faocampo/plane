@@ -400,6 +400,8 @@ class Initiative(models.Model):
     first_external_resource_at = models.DateTimeField(null=True, blank=True, editable=False)
     current_prd_checkpoint_id = models.UUIDField(null=True, blank=True, editable=False)
     controlling_prd_decision_id = models.UUIDField(null=True, blank=True, editable=False)
+    current_local_prd_submission_id = models.UUIDField(null=True, blank=True, editable=False)
+    controlling_local_prd_decision_id = models.UUIDField(null=True, blank=True, editable=False)
     pending_scope_reopening_id = models.UUIDField(null=True, blank=True, editable=False)
     version = models.PositiveBigIntegerField(default=1, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
@@ -1374,6 +1376,16 @@ class PolicyDecision(ImmutableRecordModel):
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
                     | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
                     | models.Q(
+                        policy_key="CURVE_INITIATIVE_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:6172fa892cd46d0a869761d22f364e27a2bd019b8adf814b59e5df6a4a7f13cd",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_PRD_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:aa31f1fb698cdd806032c96f07631cfc03dc68011433ddcbc133cf11d0535e40",
+                    )
+                    | models.Q(
                         policy_key="CURVE_PRD_POLICY",
                         policy_version=1,
                         policy_manifest_digest="sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c",
@@ -1387,6 +1399,66 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_key="CURVE.LOCAL_MANUAL_GATE2_RECONSTRUCTION_V2",
                         policy_version=2,
                         policy_manifest_digest="sha256:b77e1c16465b9ebdea65ffa37915bee9239a616f667a72f8e6ad978df8833514",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_MANUAL_PLAN_DRAFT_POLICY_V3",
+                        policy_version=3,
+                        policy_manifest_digest="sha256:84e831c2011a85b83acb8a2d414d586b0d948fbcf76fc666140459e04276f38f",
+                    )
+                    | models.Q(
+                        policy_key="CURVE.LOCAL_MANUAL_GATE2_RECONSTRUCTION_V3",
+                        policy_version=3,
+                        policy_manifest_digest="sha256:16d6a552f604f7b8ce4711e2b0521de7155d0542da3d8eaec7cea6f3e60c337b",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:bfded3fd13b5dd90bb45aa7fc3681b9836b0adf63c7b64d6f7838e8d14ee9c30",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REVIEW_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:94abe4a0334cd7c178bdfac348655bc768fbacf2fa8bb8bdec1b03998bd7296d",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_UPLOAD_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:7bbfdcb956071376e58dd18870613470d1e4a4e75c3ef18d4153400480231937",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_REVIEW_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:09b9ca473a2fb43d90b9e9438c0e22d4bdebd65a7eb769113ef202d0bd45dcfe",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REOPENING_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:ac4466f235b1f0baefe4ea35285f65cfe44e144ee7de3bbf89dda57af17a7616",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:ca91f9a19b2203245c6a70d99305b2a6db3697af13f98c7aeaf6f648a3a97be9",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REVIEW_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:f5a26189960ebb3a5657cb5a7857f4060f44eff3e217e598bb500273718f0c4a",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_UPLOAD_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:5d661c02789d1ecc761adc3864ef670e868aa6cef77f0c7dc9202d64a9df9ae3",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_REVIEW_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:e98a45e07f35cb297a6f7766b05ecea5bd67c2ad91facab2a8f4a37197194b3b",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REOPENING_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:f2021762aef38835aa7e9807cef415293f3ee2cb79705f6a7dc9033d02eee354",
                     )
                 ),
                 name="curve_policy_identity_ck",
@@ -1474,3 +1546,10 @@ from .manual_gate2_v2.models import (
     ManualTaskClaimV2,
     ManualTaskClaimHistoryV2,
 )  # noqa: F401,E402
+
+from .local_document_models import LocalPrdSource  # noqa: E402,F401
+from .local_prd_review_models import LocalPrdSubmission, LocalPrdDecision  # noqa: E402,F401
+
+from .local_plan_models import LocalPlanRevision, LocalPlanSubmission, LocalPlanDecision  # noqa: E402,F401
+
+from .local_prd_reopening_models import LocalPrdReopening  # noqa: E402,F401

@@ -68,3 +68,5 @@ export * from "./curve-existing-work";
 export * from "./curve-scope-reopening-preconditions";
 
 export * from "./curve-project-association-preconditions";
+
+export * from "./curve-scoped-prd-v2";

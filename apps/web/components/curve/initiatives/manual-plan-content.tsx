@@ -4,9 +4,12 @@
 /* eslint-disable unicorn/no-array-sort -- Sort a fresh entries array for ES2022 compatibility. */
 import type { ManualGate2Material } from "@plane/services";
 
+// Rendering consumes content only; transport editions remain validated by their own clients.
+type ReadableMaterial = Pick<ManualGate2Material, "content" | "kind">;
+
 type RecordValue = Record<string, unknown>;
 const record = (value: unknown): value is RecordValue => !!value && typeof value === "object" && !Array.isArray(value);
-export function materialBody(material: ManualGate2Material | null): RecordValue | null {
+export function materialBody(material: ReadableMaterial | null): RecordValue | null {
   if (!material) return null;
   try {
     const value: unknown = JSON.parse(material.content);
@@ -44,6 +47,7 @@ function ReadableValue({ value }: { value: unknown }) {
     return value.length ? (
       <ul className="list-disc space-y-3 pl-4">
         {value.map((item, index) => (
+          // eslint-disable-next-line react/no-array-index-key -- Immutable document items have no identity and hold no local state.
           <li key={index}>
             <ReadableValue value={item} />
           </li>
@@ -81,7 +85,7 @@ function ReadableValue({ value }: { value: unknown }) {
   return <span>{typeof value === "boolean" ? (value ? "Yes" : "No") : String(value)}</span>;
 }
 
-export function materialLabel(material: ManualGate2Material | null): string | null {
+export function materialLabel(material: ReadableMaterial | null): string | null {
   const body = materialBody(material);
   if (!body) return null;
   if (typeof body.text === "string") return body.text.trim().slice(0, 100);
@@ -95,7 +99,7 @@ export function materialLabel(material: ManualGate2Material | null): string | nu
   return null;
 }
 
-export function taskLabel(material: ManualGate2Material | null, installationId: string, issueId: string): string {
+export function taskLabel(material: ReadableMaterial | null, installationId: string, issueId: string): string {
   const body = materialBody(material);
   const slices = Array.isArray(body?.slices) ? body.slices.filter(record) : [];
   const slice = slices.find(
@@ -110,7 +114,13 @@ export function taskLabel(material: ManualGate2Material | null, installationId: 
     : `Task title unavailable · ${issueId}`;
 }
 
-export function MaterialContent({ material }: { material: ManualGate2Material }) {
+export function MaterialContent({
+  material,
+  showRationaleTitle = true,
+}: {
+  material: ReadableMaterial;
+  showRationaleTitle?: boolean;
+}) {
   const body = materialBody(material);
   if (!body)
     return (
@@ -126,7 +136,7 @@ export function MaterialContent({ material }: { material: ManualGate2Material })
     <div className="mt-4 min-w-0 space-y-6 text-14 leading-6 [overflow-wrap:anywhere] text-primary">
       {material.kind === "RATIONALE" ? (
         <>
-          <h4 className="font-semibold">Decision rationale</h4>
+          {showRationaleTitle && <h4 className="font-semibold">Decision rationale</h4>}
           <p className="max-w-prose whitespace-pre-wrap">
             {typeof body.text === "string" ? body.text : "Rationale text not provided."}
           </p>
@@ -138,6 +148,7 @@ export function MaterialContent({ material }: { material: ManualGate2Material })
             {!slices.length && <p>No readable work slices were provided.</p>}
             {slices.map((slice, index) => (
               <section
+                // eslint-disable-next-line react/no-array-index-key -- Retained inert documents can contain unkeyed historical slices.
                 key={typeof slice.slice_key === "string" ? slice.slice_key : index}
                 className="mt-5 border-t border-subtle pt-4"
               >

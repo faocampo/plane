@@ -1,0 +1,148 @@
+@font-face {
+  font-family: "Curve Manrope";
+  src: url("/curve/fonts/manrope-400.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Curve Manrope";
+  src: url("/curve/fonts/manrope-500.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Curve Manrope";
+  src: url("/curve/fonts/manrope-600.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Curve Manrope";
+  src: url("/curve/fonts/manrope-700.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Curve Manrope";
+  src: url("/curve/fonts/manrope-800.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+.curve-document-review {
+  --review-ink: #22283d;
+  --review-muted: #60677c;
+  --review-action: #444ed9;
+  --review-line: #e6e8f1;
+  --review-tint: #eeefff;
+  min-width: 0;
+  font-family: "Curve Manrope", sans-serif;
+  background: #f7f8fc;
+  color: var(--review-ink);
+  padding: 20px;
+  border-radius: 16px;
+}
+.curve-document-review__tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.curve-document-review__tabs button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 88px;
+  padding: 16px;
+  border: 1px solid var(--review-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--review-ink);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+.curve-document-review__tabs button[aria-selected="true"] {
+  border-color: var(--review-action);
+  background: var(--review-tint);
+}
+.curve-document-review__tabs button:hover {
+  border-color: var(--review-action);
+}
+.curve-document-review__tabs button:focus-visible,
+.curve-document-review__panel:focus-visible {
+  outline: 3px solid var(--review-action);
+  outline-offset: 3px;
+}
+.curve-document-review__tabs strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.curve-document-review__tabs strong + span {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--review-muted);
+}
+.curve-document-review__icon {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--review-action);
+}
+.curve-document-review__step {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--review-muted);
+  font-variant-numeric: tabular-nums;
+}
+.curve-document-review__panel {
+  min-width: 0;
+  border-radius: 14px;
+}
+.curve-document-review ::selection {
+  background: #dfe2ff;
+  color: var(--review-ink);
+}
+@media (max-width: 600px) {
+  .curve-document-review__tabs {
+    gap: 8px;
+  }
+  .curve-document-review__tabs button {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+  .curve-document-review__tabs strong {
+    font-size: 14px;
+  }
+  .curve-document-review__step {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .curve-document-review__tabs button {
+    transition: none;
+  }
+}
+
+.curve-document-review__status {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4e5872;
+}
+.curve-document-review__status[data-status="APPROVED"] {
+  color: #28624b;
+}
+.curve-document-review__status[data-status="CHANGES"],
+.curve-document-review__status[data-status="UPDATING"] {
+  color: #8a4b13;
+}

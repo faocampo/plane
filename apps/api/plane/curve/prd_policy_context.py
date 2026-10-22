@@ -19,7 +19,7 @@ from django.utils import timezone
 from plane.db.models import Workspace, WorkspaceMember
 from .config import curve_environment, is_curve_enabled_for_workspace
 from .models import GateAssignment, Initiative
-from .policy_manifest import PRD_POLICY_MANIFEST_DIGEST
+from .policy_manifest import PRD_POLICY_MANIFEST_DIGEST, PRD_POLICY_V2_MANIFEST_DIGEST
 from .prd_metadata_validation import validate_prd_object_acl
 from .policy_services import CurvePolicyResourceNotFound, _human_actor, correlation_id_for_request
 
@@ -104,6 +104,10 @@ def _build_gate_policy_context(
         assignments = GateAssignment.objects.filter(workspace_id=workspace.id, initiative_id=initiative.id).order_by(
             "id"
         )
+        if initiative.schema_version == "1.2":
+            assignments = assignments.filter(gate_type__in=("PRD_APPROVAL", "PLAN_APPROVAL"))
+            if manifest_digest == PRD_POLICY_MANIFEST_DIGEST:
+                manifest_digest = PRD_POLICY_V2_MANIFEST_DIGEST
         if for_update:
             assignments = assignments.select_for_update()
         assignments = list(assignments)

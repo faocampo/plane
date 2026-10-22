@@ -1,0 +1,10 @@
+{
+  "command.schema.json": "sha256:0941a02e4fed9599f0b01c9739fd0df77d7facf7e7d6c2656fc2958b5600e8e2",
+  "event.schema.json": "sha256:cc25b32ae8fa7902c839fe067a9171c0f0607fb28e65eace3c099eaca3157036",
+  "material.schema.json": "sha256:e4871a4173555b40a39cfac30f21ee7581e6e59e010226345e7983e802c77c03",
+  "policy.json": "sha256:16d6a552f604f7b8ce4711e2b0521de7155d0542da3d8eaec7cea6f3e60c337b",
+  "preparation.schema.json": "sha256:66cf7953677bb6221f51a9c946218bfcddbde4c8ab2669c0514fb2ddfca6b47a",
+  "rationale.schema.json": "sha256:1b78a01ad649ac583f8e74f0393baec509a2370b1ddaafdf934c58ee81a714d1",
+  "record.schema.json": "sha256:e871b383c669d2300387c675e78c2964ec8c07fea3b626f6d43286c6769dde0c",
+  "status.schema.json": "sha256:72c14741a339d31d30e3d0a5d53a92fae72e8d9e324af8c4a951ba85b249df67"
+}

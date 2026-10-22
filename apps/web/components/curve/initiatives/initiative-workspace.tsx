@@ -24,8 +24,11 @@ import { calculateTimeAgo, cn } from "@plane/utils";
 import { useUser } from "@/hooks/store/user";
 import { useCurveInitiatives } from "@/hooks/use-curve-initiatives";
 import { InitiativeCreateDrawer } from "./initiative-create-drawer";
+import { LocalDocumentReview } from "./local-document-review";
+import { DocumentReviewStages } from "./document-review-stages";
 import { PrdReviewPanel } from "./prd-review-panel";
 import { ManualControlEntry } from "./manual-control-panel";
+import { TechnicalReviewPanel } from "./technical-review-panel";
 import {
   InitiativeAvatar,
   InitiativeRiskBadge,
@@ -35,6 +38,9 @@ import {
   initiativeBusinessIntentOptions,
   memberDisplayName,
 } from "./initiative-ui";
+
+// oxlint-disable-next-line import/no-unassigned-import -- Load the scoped review styles.
+import "./initiative-workspace.css";
 
 const filterClassName =
   "min-h-10 rounded-md border border-subtle bg-surface-1 px-3 text-12 text-primary outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-subtle";
@@ -167,6 +173,7 @@ function InitiativeDetail({
   onAccept,
   onEdit,
   onAction,
+  onReviewSaved,
 }: {
   workspaceSlug: string;
   viewerId?: string;
@@ -178,10 +185,16 @@ function InitiativeDetail({
   onAccept: () => void;
   onEdit: () => void;
   onAction: (action: TReasonAction) => void;
+  onReviewSaved: () => void;
 }) {
+  const isLocalReview = initiative.schema_version === "1.2" && process.env.VITE_CURVE_LOCAL_PRD_ENABLED === "true";
   const canMutate = !!etag && !isMutating;
   const canEdit = initiative.state === "DRAFT" && !initiative.first_external_resource_at;
   const isDraft = initiative.state === "DRAFT";
+  const technicalAssignment = initiative.gate_assignments.find(
+    (assignment) => assignment.gate_type === "PLAN_APPROVAL" && !assignment.valid_until
+  );
+  const technicalMember = technicalAssignment ? members.get(technicalAssignment.approver.actor_id) : undefined;
   const nextStep = isDraft
     ? initiative.business_intent
       ? "Start alignment"
@@ -196,11 +209,11 @@ function InitiativeDetail({
             ? "Review the submitted PRD"
             : "Check the current lifecycle stage";
   return (
-    <article aria-labelledby="curve-initiative-detail-title" className="min-w-0">
+    <article aria-labelledby="curve-initiative-detail-title" className="curve-initiative-detail min-w-0">
       <header className="border-b border-subtle px-5 py-5 sm:px-6">
         <div className="flex flex-wrap items-center gap-3">
           <InitiativeStateBadge state={initiative.state} />
-          <InitiativeRiskBadge risk={initiative.risk_tier} />
+          {!isLocalReview && <InitiativeRiskBadge risk={initiative.risk_tier} />}
         </div>
         <h2
           id="curve-initiative-detail-title"
@@ -211,91 +224,119 @@ function InitiativeDetail({
         <p className="mt-2 text-12 break-words text-secondary">
           {product?.name ?? "Product unavailable"} · #{initiative.keyword}
         </p>
-        <div className="mt-6">
-          <h3 className="text-13 font-semibold text-primary">{nextStep}</h3>
-          <p className="mt-1 max-w-prose text-12 leading-5 text-secondary">
-            {isDraft
-              ? initiative.business_intent
-                ? "Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver assignments."
-                : "Choose and save a business intent before starting alignment."
-              : initiative.state === "ALIGNING"
-                ? "Complete the Idea Brief and PRD, resolve blockers and identify assumptions before submitting an exact version for review."
-                : initiative.state === "PAUSED"
-                  ? "The last confirmed lifecycle stage is preserved. A reason is required to resume."
-                  : initiative.state === "CANCELLED"
-                    ? "Its history remains available. Cancellation cannot be reversed."
-                    : "Check the authorized PRD context below. Lifecycle state alone does not establish a current approval."}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
-            {isDraft && (
-              <Button
-                size="lg"
-                disabled={!canMutate || !initiative.business_intent}
-                loading={isMutating}
-                onClick={onAccept}
-                variant="primary"
-                stretch="auto"
-                label="Start alignment"
-              />
-            )}
-            {canEdit && (
-              <Button
-                size="lg"
-                variant="secondary"
-                icon={<Pencil />}
-                disabled={!canMutate}
-                onClick={onEdit}
-                stretch="auto"
-                label="Edit Initiative"
-              />
-            )}
-            {initiative.state === "PAUSED" && (
-              <Button
-                size="lg"
-                disabled={!canMutate}
-                loading={isMutating}
-                onClick={() => onAction("resume")}
-                variant="primary"
-                stretch="auto"
-                label="Resume"
-              />
+        {(!isLocalReview || isDraft || ["PAUSED", "CANCELLED"].includes(initiative.state)) && (
+          <div className="mt-6">
+            <h3 className="text-13 font-semibold text-primary">{nextStep}</h3>
+            <p className="mt-1 max-w-prose text-12 leading-5 text-secondary">
+              {isDraft
+                ? initiative.business_intent
+                  ? "Start alignment moves this Initiative from Draft to Aligning and records the current workflow and approver assignments."
+                  : "Choose and save a business intent before starting alignment."
+                : initiative.state === "ALIGNING"
+                  ? "Complete the Idea Brief and PRD, resolve blockers and identify assumptions before submitting an exact version for review."
+                  : initiative.state === "PAUSED"
+                    ? "The last confirmed lifecycle stage is preserved. A reason is required to resume."
+                    : initiative.state === "CANCELLED"
+                      ? "Its history remains available. Cancellation cannot be reversed."
+                      : "Check the authorized PRD context below. Lifecycle state alone does not establish a current approval."}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2" aria-label="Initiative lifecycle actions">
+              {isDraft && (
+                <Button
+                  size="lg"
+                  disabled={!canMutate || !initiative.business_intent}
+                  loading={isMutating}
+                  onClick={onAccept}
+                  variant="primary"
+                  stretch="auto"
+                  label="Start alignment"
+                />
+              )}
+              {canEdit && (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  icon={<Pencil />}
+                  disabled={!canMutate}
+                  onClick={onEdit}
+                  stretch="auto"
+                  label="Edit Initiative"
+                />
+              )}
+              {initiative.state === "PAUSED" && (
+                <Button
+                  size="lg"
+                  disabled={!canMutate}
+                  loading={isMutating}
+                  onClick={() => onAction("resume")}
+                  variant="primary"
+                  stretch="auto"
+                  label="Resume"
+                />
+              )}
+            </div>
+            {!etag && initiative.state !== "CANCELLED" && (
+              <p className="mt-2 text-12 text-secondary" role="status">
+                Loading current version…
+              </p>
             )}
           </div>
-          {!etag && initiative.state !== "CANCELLED" && (
-            <p className="mt-2 text-12 text-secondary" role="status">
-              Loading current version…
-            </p>
-          )}
-        </div>
+        )}
       </header>
       <div className="space-y-7 px-5 py-6 sm:px-6">
-        <section aria-labelledby="curve-initiative-problem-title">
-          <h3 id="curve-initiative-problem-title" className="text-13 font-semibold text-primary">
-            Problem and intended outcome
-          </h3>
-          <p className="mt-2 max-w-prose text-13 leading-6 break-words whitespace-pre-wrap text-secondary">
-            {initiative.description.body}
-          </p>
-        </section>
-        <PrdReviewPanel workspaceSlug={workspaceSlug} initiative={initiative} viewerId={viewerId} />
-        <ManualControlEntry
-          target={{
-            workspaceSlug,
-            workspaceId: initiative.workspace_id,
-            productId: initiative.product_id,
-            initiativeId: initiative.id,
-          }}
-          initiativeVersion={initiative.version}
-          viewerId={viewerId}
-          state={initiative.state}
-        />
-        <section aria-labelledby="curve-initiative-gates-title" className="border-t border-subtle pt-5">
-          <h3 id="curve-initiative-gates-title" className="text-13 font-semibold text-primary">
-            Review responsibilities
-          </h3>
-          <p className="mt-1 text-12 text-secondary">
-            Assignments identify reviewers. They are not approval decisions.
-          </p>
+        {initiative.schema_version === "1.2" && process.env.VITE_CURVE_LOCAL_PRD_ENABLED === "true" ? (
+          <LocalDocumentReview
+            workspaceSlug={workspaceSlug}
+            initiative={initiative}
+            viewerId={viewerId}
+            onReviewSaved={onReviewSaved}
+          />
+        ) : (
+          <DocumentReviewStages
+            key={initiative.id}
+            prd={<PrdReviewPanel workspaceSlug={workspaceSlug} initiative={initiative} viewerId={viewerId} />}
+            plan={
+              !["PLANNING", "PAUSED", "CANCELLED"].includes(initiative.state) ? (
+                <p className="text-13 leading-6 text-secondary">
+                  Product approval comes first. The implementation plan is reviewed after the PRD.
+                </p>
+              ) : (initiative.schema_version === "1.2"
+                  ? process.env.VITE_CURVE_MANUAL_PLAN_V3_ENABLED
+                  : process.env.VITE_CURVE_MANUAL_PLAN_V2_ENABLED) !== "true" ? (
+                <p className="text-13 leading-6 text-secondary" role="status">
+                  Plan review is currently unavailable. Try again later.
+                </p>
+              ) : initiative.schema_version === "1.2" ? (
+                <TechnicalReviewPanel
+                  target={{
+                    workspaceSlug,
+                    workspaceId: initiative.workspace_id,
+                    productId: initiative.product_id,
+                    initiativeId: initiative.id,
+                  }}
+                  initiativeVersion={initiative.version}
+                  viewerId={viewerId}
+                  reviewerName={technicalMember ? memberDisplayName(technicalMember) : undefined}
+                />
+              ) : (
+                <ManualControlEntry
+                  target={{
+                    workspaceSlug,
+                    workspaceId: initiative.workspace_id,
+                    productId: initiative.product_id,
+                    initiativeId: initiative.id,
+                  }}
+                  initiativeVersion={initiative.version}
+                  viewerId={viewerId}
+                  state={initiative.state}
+                />
+              )
+            }
+          />
+        )}
+        <details className="border-t border-subtle pt-5">
+          <summary className="cursor-pointer text-13 font-semibold text-primary">Review responsibilities</summary>
+          <p className="mt-1 text-12 text-secondary">Assigned reviewers for each document stage.</p>
           <ul className="mt-4 divide-y divide-subtle">
             {initiativeApproverRoles.map((role) => {
               const assignment = initiative.gate_assignments.find(
@@ -320,11 +361,20 @@ function InitiativeDetail({
               );
             })}
           </ul>
-        </section>
+        </details>
         <details className="border-t border-subtle pt-4">
           <summary className="focus-visible:outline-accent-primary cursor-pointer rounded-sm py-1 text-12 font-medium text-primary focus-visible:outline-2">
             Initiative details and activity
           </summary>
+          <section aria-labelledby="curve-initiative-problem-title">
+            <h3 id="curve-initiative-problem-title" className="text-13 font-semibold text-primary">
+              Problem and intended outcome
+            </h3>
+            <p className="mt-2 max-w-prose text-13 leading-6 break-words whitespace-pre-wrap text-secondary">
+              {initiative.description.body}
+            </p>
+          </section>
+
           <dl className="mt-4 grid gap-4 text-12 sm:grid-cols-2" aria-label="Initiative metadata">
             <div>
               <dt className="text-secondary">Business intent</dt>
@@ -768,15 +818,12 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 lg:py-10">
+    <div className="curve-initiative-desk mx-auto w-full max-w-7xl px-5 py-6 sm:px-8">
       <p className="sr-only" role="status" aria-live="polite">
         {announcement}
       </p>
       <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-layer-1 px-2 py-1 text-12 font-medium text-secondary">Manual-first</span>
-          </div>
           <h1 className="mt-1 text-32 leading-tight font-semibold tracking-[-0.025em] text-primary">Initiatives</h1>
         </div>
         <div className="flex max-w-sm flex-col items-start gap-2 sm:items-end">
@@ -798,37 +845,6 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
           )}
         </div>
       </header>
-
-      <section className="mt-5 flex flex-wrap gap-2" aria-label="Loaded Initiative portfolio summary">
-        {[
-          { id: "ACTIVE" as const, label: "Draft and aligning", value: activeCount, detail: "Draft or aligning" },
-          { id: "PAUSED" as const, label: "Paused", value: pausedCount, detail: "Explicitly recoverable" },
-          {
-            id: "NEEDS_ATTENTION" as const,
-            label: "High-risk definition work",
-            value: needsAttentionCount,
-            detail: "High-risk Draft and Aligning Initiatives",
-          },
-        ].map(({ id, label, value, detail }) => (
-          <button
-            type="button"
-            key={label}
-            onClick={() => toggleSummaryFilter(id)}
-            className={cn(
-              "min-h-10 rounded-md border border-subtle px-3 py-2 text-left transition-colors hover:bg-layer-1 focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none",
-              summaryFilter === id && "bg-accent-subtle"
-            )}
-            title={detail}
-            aria-label={`Filter Initiatives: ${label}, ${value}`}
-            aria-pressed={summaryFilter === id}
-          >
-            <div className="flex items-baseline gap-2">
-              <p className="text-12 font-semibold text-primary tabular-nums">{value}</p>
-              <p className="text-12 text-secondary">{label}</p>
-            </div>
-          </button>
-        ))}
-      </section>
 
       {problem && (
         <div
@@ -871,80 +887,111 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
         </div>
       )}
 
-      <section className="mt-4 border-b border-subtle" aria-label="Initiative filters">
-        <div className="grid gap-3 pb-4 md:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]">
-          <label className="relative">
-            <span className="sr-only">Search loaded Initiatives</span>
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-placeholder"
-              aria-hidden="true"
-            />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search title, keyword, Product, or description"
-              className={`${filterClassName} w-full pl-9`}
-            />
-          </label>
-          <label>
-            <span className="sr-only">Filter by lifecycle state</span>
-            <select
-              value={stateFilter}
-              onChange={(event) => {
-                setStateFilter(event.target.value as typeof stateFilter);
-                setSummaryFilter(undefined);
-              }}
-              className={`${filterClassName} w-full`}
+      <details className="curve-initiative-directory" open={filtered || !visibleSelected}>
+        <summary>
+          Find an Initiative <span>{initiatives.length} loaded</span>
+        </summary>
+        <section className="mt-5 flex flex-wrap gap-2" aria-label="Loaded Initiative portfolio summary">
+          {[
+            { id: "ACTIVE" as const, label: "Draft and aligning", value: activeCount, detail: "Draft or aligning" },
+            { id: "PAUSED" as const, label: "Paused", value: pausedCount, detail: "Explicitly recoverable" },
+            {
+              id: "NEEDS_ATTENTION" as const,
+              label: "High-risk definition work",
+              value: needsAttentionCount,
+              detail: "High-risk Draft and Aligning Initiatives",
+            },
+          ].map(({ id, label, value, detail }) => (
+            <button
+              type="button"
+              key={label}
+              onClick={() => toggleSummaryFilter(id)}
+              className={cn(
+                "min-h-10 rounded-md border border-subtle px-3 py-2 text-left transition-colors hover:bg-layer-1 focus-visible:ring-2 focus-visible:ring-accent-strong focus-visible:outline-none",
+                summaryFilter === id && "bg-accent-subtle"
+              )}
+              title={detail}
+              aria-label={`Filter Initiatives: ${label}, ${value}`}
+              aria-pressed={summaryFilter === id}
             >
-              <option value="ALL">All states</option>
-              <option value="DRAFT">Draft</option>
-              <option value="ALIGNING">Aligning</option>
-              <option value="PAUSED">Paused</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-          </label>
-          <label>
-            <span className="sr-only">Filter by risk tier</span>
-            <select
-              value={riskFilter}
-              onChange={(event) => {
-                setRiskFilter(event.target.value as typeof riskFilter);
-                setSummaryFilter(undefined);
-              }}
-              className={`${filterClassName} w-full`}
-            >
-              <option value="ALL">All risk tiers</option>
-              <option value="LOW">Low risk</option>
-              <option value="STANDARD">Standard risk</option>
-              <option value="HIGH">High risk</option>
-            </select>
-          </label>
-          <p className="self-center text-12 text-secondary md:text-right" role="status">
-            Showing {visibleInitiatives.length} of {initiatives.length}
-            {nextCursor ? " · more available" : ""}
-            {filtered && (
-              <button
-                type="button"
-                className="focus-visible:outline-accent-primary ml-2 min-h-10 rounded-sm px-1 font-medium text-accent-primary focus-visible:outline-2"
-                onClick={() => {
-                  setSearch("");
-                  setStateFilter("ALL");
-                  setRiskFilter("ALL");
+              <div className="flex items-baseline gap-2">
+                <p className="text-12 font-semibold text-primary tabular-nums">{value}</p>
+                <p className="text-12 text-secondary">{label}</p>
+              </div>
+            </button>
+          ))}
+        </section>
+
+        <section className="mt-4 border-b border-subtle" aria-label="Initiative filters">
+          <div className="grid gap-3 pb-4 md:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]">
+            <label className="relative">
+              <span className="sr-only">Search loaded Initiatives</span>
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-placeholder"
+                aria-hidden="true"
+              />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search title, keyword, Product, or description"
+                className={`${filterClassName} w-full pl-9`}
+              />
+            </label>
+            <label>
+              <span className="sr-only">Filter by lifecycle state</span>
+              <select
+                value={stateFilter}
+                onChange={(event) => {
+                  setStateFilter(event.target.value as typeof stateFilter);
                   setSummaryFilter(undefined);
                 }}
+                className={`${filterClassName} w-full`}
               >
-                Clear filters
-              </button>
-            )}
-          </p>
-        </div>
-      </section>
+                <option value="ALL">All states</option>
+                <option value="DRAFT">Draft</option>
+                <option value="ALIGNING">Aligning</option>
+                <option value="PAUSED">Paused</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">Filter by risk tier</span>
+              <select
+                value={riskFilter}
+                onChange={(event) => {
+                  setRiskFilter(event.target.value as typeof riskFilter);
+                  setSummaryFilter(undefined);
+                }}
+                className={`${filterClassName} w-full`}
+              >
+                <option value="ALL">All risk tiers</option>
+                <option value="LOW">Low risk</option>
+                <option value="STANDARD">Standard risk</option>
+                <option value="HIGH">High risk</option>
+              </select>
+            </label>
+            <p className="self-center text-12 text-secondary md:text-right" role="status">
+              Showing {visibleInitiatives.length} of {initiatives.length}
+              {nextCursor ? " · more available" : ""}
+              {filtered && (
+                <button
+                  type="button"
+                  className="focus-visible:outline-accent-primary ml-2 min-h-10 rounded-sm px-1 font-medium text-accent-primary focus-visible:outline-2"
+                  onClick={() => {
+                    setSearch("");
+                    setStateFilter("ALL");
+                    setRiskFilter("ALL");
+                    setSummaryFilter(undefined);
+                  }}
+                >
+                  Clear filters
+                </button>
+              )}
+            </p>
+          </div>
+        </section>
 
-      <div className="mt-4 grid overflow-hidden rounded-xl border border-subtle bg-surface-1 shadow-raised-100 lg:grid-cols-[minmax(16rem,0.65fr)_minmax(0,1.35fr)]">
-        <section
-          className="min-w-0 border-b border-subtle lg:border-r lg:border-b-0"
-          aria-labelledby="curve-initiative-list-title"
-        >
+        <section className="min-w-0" aria-labelledby="curve-initiative-list-title">
           <div className="flex items-center justify-between gap-3 border-b border-subtle px-4 py-3">
             <h2 id="curve-initiative-list-title" className="text-12 font-semibold text-primary">
               Workspace Initiatives
@@ -981,7 +1028,8 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
             </div>
           )}
         </section>
-
+      </details>
+      <div className="curve-initiative-content">
         <section className="min-w-0" aria-label="Selected Initiative">
           {visibleSelected ? (
             <InitiativeDetail
@@ -996,6 +1044,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
               onAccept={() => void handleAcceptRefinement()}
               onEdit={() => setEditOpen(true)}
               onAction={openReasonAction}
+              onReviewSaved={() => void refreshSelected()}
             />
           ) : (
             <div className="flex min-h-80 items-center justify-center p-8 text-center">

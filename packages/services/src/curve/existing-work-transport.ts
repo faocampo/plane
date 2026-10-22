@@ -92,7 +92,12 @@ export abstract class CurveExistingWorkTransport extends APIService {
     path: string,
     payload: object,
     options: CurveExistingWorkMutation,
-    etag: string
+    etag: string,
+    upload?: {
+      contentType: "application/pdf" | "text/markdown" | "text/plain";
+      sourceVersion: number;
+      planApproval?: { submissionId: string; submissionDigest: string; decisionId: string; decisionDigest: string };
+    }
   ): Promise<AxiosResponse> {
     const { signal, idempotencyKey } = options;
     if (signal?.aborted) throw new CurveExistingWorkError("CANCELLED");
@@ -109,7 +114,18 @@ export abstract class CurveExistingWorkTransport extends APIService {
       const response = await this.post(path, payload, {
         signal,
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": upload?.contentType ?? "application/json",
+          ...(upload?.planApproval
+            ? {
+                "X-Curve-Plan-Version": String(upload.sourceVersion),
+                "X-Curve-Prd-Submission-Id": upload.planApproval.submissionId,
+                "X-Curve-Prd-Submission-Digest": upload.planApproval.submissionDigest,
+                "X-Curve-Prd-Decision-Id": upload.planApproval.decisionId,
+                "X-Curve-Prd-Decision-Digest": upload.planApproval.decisionDigest,
+              }
+            : upload
+              ? { "X-Curve-Source-Version": String(upload.sourceVersion) }
+              : {}),
           "Cache-Control": "no-store",
           "X-CSRFTOKEN": csrfToken,
           "If-Match": etag,

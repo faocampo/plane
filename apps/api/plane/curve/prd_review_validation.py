@@ -135,6 +135,7 @@ def validate_review_subject(
     current_checkpoint_id,
     current_risk_tier,
     current_policy_version_ids,
+    required_gates=("CODE_READINESS", "PLAN_APPROVAL", "PRD_APPROVAL"),
 ):
     """Check exact decision subject against current server-derived observations.
 
@@ -165,12 +166,19 @@ def validate_review_subject(
         and set(decision["policy_version_ids"]) == set(current_policy_version_ids),
         "PRD_REVIEW_POLICY_CHANGED",
     )
-    require_metadata(type(assignments) is list and len(assignments) == 3, "PRD_REVIEW_THREE_GATES_REQUIRED")
+    require_metadata(
+        required_gates in (("CODE_READINESS", "PLAN_APPROVAL", "PRD_APPROVAL"), ("PLAN_APPROVAL", "PRD_APPROVAL")),
+        "PRD_REVIEW_EXACT_GATES_REQUIRED",
+    )
+    require_metadata(
+        type(assignments) is list and len(assignments) == len(required_gates),
+        "PRD_REVIEW_THREE_GATES_REQUIRED" if len(required_gates) == 3 else "PRD_REVIEW_TWO_GATES_REQUIRED",
+    )
     for assignment in assignments:
         validate_gate_record(assignment)
     require_metadata(
-        {assignment["gate_type"] for assignment in assignments} == {"PRD_APPROVAL", "PLAN_APPROVAL", "CODE_READINESS"}
-        and len({assignment["id"] for assignment in assignments}) == 3,
+        {assignment["gate_type"] for assignment in assignments} == set(required_gates)
+        and len({assignment["id"] for assignment in assignments}) == len(required_gates),
         "PRD_REVIEW_EXACT_GATES_REQUIRED",
     )
     require_metadata(
@@ -184,7 +192,7 @@ def validate_review_subject(
     )
     if current_risk_tier in ("STANDARD", "HIGH"):
         require_metadata(
-            len({assignment["approver"]["actor_id"] for assignment in assignments}) == 3,
+            len({assignment["approver"]["actor_id"] for assignment in assignments}) == len(required_gates),
             "PRD_REVIEW_DISTINCT_HUMANS_REQUIRED",
         )
     cutoff, decided = _time(decision["provider_validation_cutoff"]), _time(decision["decided_at"])
