@@ -73,7 +73,7 @@ Curve review metadata, protected document/feedback reads, CSRF acquisition and w
 
 A local browser exercise paused the synthetic API with a 90-second automatic-resume safeguard. The refresh reached the unavailable state with Refresh enabled; after the service resumed, an explicit refresh restored readable PRD content and both Approved statuses. The database and document storage remained running and intact. This proves stalled-read recovery; live mid-mutation response loss remains a separate unverified case.
 
-The full native suite exposed another historical test-target mismatch: a plan migration round trip restored all installed successors and then compared the current physical catalog against the earlier technical-review migration's pin. A correction is prepared to check both historical targets explicitly and verify the restored installed catalog plus current qualification. Its isolated focused rerun is pending; the original full-run failure is retained and no complete native pass is claimed.
+The full native suite exposed another historical test-target mismatch: a plan migration round trip restored all installed successors and then compared the current physical catalog against the earlier technical-review migration's pin. The corrected test checks both historical targets explicitly and verifies the restored installed catalog plus current qualification. Its isolated focused rerun passed in 505.31 seconds, including creation of a separate test database. The original full-run failure is retained, and the continuing complete native run is not reported as a full pass.
 
 ## Integrity-check latency
 
