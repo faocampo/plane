@@ -275,6 +275,16 @@ def test_complete_reverse_refuses_retained_manual_approval(native):
     n = native
     approve(n)
     before = counts()
-    with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-        MigrationExecutor(connection).migrate([("curve", "0028_manual_plan_two_stage")])
+    leaves = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    try:
+        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+            MigrationExecutor(connection).migrate([("curve", "0028_manual_plan_two_stage")])
+    finally:
+        # Newer migrations may have reversed before retained Technical evidence
+        # refuses rollback. Restore them before any current-model fixture runs.
+        MigrationExecutor(connection).migrate(leaves)
     assert counts() == before and ManualTaskClaimV2.objects.get().state == "ACTIVE"
+    with transaction.atomic():
+        from plane.curve.manual_gate2_v3.policy import require_edition
+
+        require_edition()

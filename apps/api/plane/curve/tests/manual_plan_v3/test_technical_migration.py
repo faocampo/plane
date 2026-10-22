@@ -30,14 +30,20 @@ def test_empty_technical_successor_roundtrip_restores_exact_catalogs():
     previous = import_module("plane.curve.migrations.0028_manual_plan_two_stage")
     current = import_module("plane.curve.migrations.0029_technical_review_two_stage")
     leaves = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    with connection.cursor() as cursor:
+        installed_catalog = previous._catalog(cursor)
     try:
         MigrationExecutor(connection).migrate([("curve", "0028_manual_plan_two_stage")])
         with connection.cursor() as cursor:
             assert previous._catalog(cursor) == previous.CURRENT_CATALOG_DIGEST
             cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
+        MigrationExecutor(connection).migrate([("curve", "0029_technical_review_two_stage")])
+        with connection.cursor() as cursor:
+            assert current._catalog(cursor) == current.CURRENT_CATALOG_DIGEST
+            cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
     finally:
         MigrationExecutor(connection).migrate(leaves)
     with transaction.atomic(), connection.cursor() as cursor:
-        assert current._catalog(cursor) == current.CURRENT_CATALOG_DIGEST
+        assert current._catalog(cursor) == installed_catalog
         cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
         require_edition()

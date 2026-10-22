@@ -264,10 +264,12 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
     gate2_raw = qualification.GATE2_SUCCESSOR_PATH.read_bytes()
     assert "sha256:" + hashlib.sha256(gate2_raw).hexdigest() == qualification.GATE2_SUCCESSOR_DIGEST
     installed = qualification.validate_gate2_successor(new, json.loads(gate2_raw))
-    installed = qualification.validate_source_header_successor(
+    # Current bytes belong to the two-stage successor; its validator preserves
+    # the pinned historical header proof before checking the declared new delta.
+    installed = qualification.validate_two_stage_successor(
         installed,
         qualification._read_pinned_successor(
-            qualification.HEADER_SUCCESSOR_PATH, qualification.HEADER_SUCCESSOR_DIGEST
+            qualification.TWO_STAGE_SUCCESSOR_PATH, qualification.TWO_STAGE_SUCCESSOR_DIGEST
         ),
     )
     assert qualification.current_runtime_sources() == installed["runtime_sources"]
