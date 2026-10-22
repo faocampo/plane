@@ -35,63 +35,127 @@
   "actions": [
     {
       "action": "CURVE.PRD.SUBMIT",
-      "allowed_resource_types": ["INITIATIVE"],
-      "allowed_actor_types": ["HUMAN"],
-      "allowed_roles": ["WORKSPACE_MEMBER"],
-      "allowed_classifications": ["INTERNAL", "CONFIDENTIAL", "RESTRICTED"],
-      "allowed_environments": ["LOCAL", "STAGING", "PRODUCTION"],
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "WORKSPACE_MEMBER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
       "object_acl": "REQUIRED",
       "owner_satisfies_acl": true,
       "assignment": "TWO_ACTIVE_HUMANS",
       "separation_of_duty": "PRD_TWO_ACTIVE_HUMANS",
       "target_allowlist": "NOT_APPLICABLE",
       "external_side_effect": false,
-      "permitted_projection": ["NO_BODY"]
+      "permitted_projection": [
+        "NO_BODY"
+      ]
     },
     {
       "action": "CURVE.PRD.APPROVE",
-      "allowed_resource_types": ["INITIATIVE"],
-      "allowed_actor_types": ["HUMAN"],
-      "allowed_roles": ["PRODUCT_APPROVER"],
-      "allowed_classifications": ["INTERNAL", "CONFIDENTIAL", "RESTRICTED"],
-      "allowed_environments": ["LOCAL", "STAGING", "PRODUCTION"],
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "PRODUCT_APPROVER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
       "object_acl": "REQUIRED",
       "owner_satisfies_acl": false,
       "assignment": "PRODUCT_APPROVER",
       "separation_of_duty": "PRD_TWO_ACTIVE_HUMANS",
       "target_allowlist": "NOT_APPLICABLE",
       "external_side_effect": false,
-      "permitted_projection": ["NO_BODY"]
+      "permitted_projection": [
+        "NO_BODY"
+      ]
     },
     {
       "action": "CURVE.PRD.REQUEST_CHANGES",
-      "allowed_resource_types": ["INITIATIVE"],
-      "allowed_actor_types": ["HUMAN"],
-      "allowed_roles": ["PRODUCT_APPROVER"],
-      "allowed_classifications": ["INTERNAL", "CONFIDENTIAL", "RESTRICTED"],
-      "allowed_environments": ["LOCAL", "STAGING", "PRODUCTION"],
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "PRODUCT_APPROVER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
       "object_acl": "REQUIRED",
       "owner_satisfies_acl": false,
       "assignment": "PRODUCT_APPROVER",
       "separation_of_duty": "PRD_TWO_ACTIVE_HUMANS",
       "target_allowlist": "NOT_APPLICABLE",
       "external_side_effect": false,
-      "permitted_projection": ["NO_BODY"]
+      "permitted_projection": [
+        "NO_BODY"
+      ]
     },
     {
       "action": "CURVE.PRD.REJECT",
-      "allowed_resource_types": ["INITIATIVE"],
-      "allowed_actor_types": ["HUMAN"],
-      "allowed_roles": ["PRODUCT_APPROVER"],
-      "allowed_classifications": ["INTERNAL", "CONFIDENTIAL", "RESTRICTED"],
-      "allowed_environments": ["LOCAL", "STAGING", "PRODUCTION"],
+      "allowed_resource_types": [
+        "INITIATIVE"
+      ],
+      "allowed_actor_types": [
+        "HUMAN"
+      ],
+      "allowed_roles": [
+        "PRODUCT_APPROVER"
+      ],
+      "allowed_classifications": [
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "allowed_environments": [
+        "LOCAL",
+        "STAGING",
+        "PRODUCTION"
+      ],
       "object_acl": "REQUIRED",
       "owner_satisfies_acl": false,
       "assignment": "PRODUCT_APPROVER",
       "separation_of_duty": "PRD_TWO_ACTIVE_HUMANS",
       "target_allowlist": "NOT_APPLICABLE",
       "external_side_effect": false,
-      "permitted_projection": ["NO_BODY"]
+      "permitted_projection": [
+        "NO_BODY"
+      ]
     }
   ],
   "supersedes": {

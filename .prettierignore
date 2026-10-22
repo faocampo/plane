@@ -20,3 +20,8 @@ apps/api/plane/curve/*/contract_snapshot/**/*.json
 apps/api/plane/curve/*qualification*.json
 candidates/curve-manual-gate2-v2/overlay/manual_gate2_v2/contract_snapshot/*.json
 candidates/curve-manual-gate2-v2/qualification/proposed-successor.json
+
+# Byte-pinned review policy, schemas and runtime qualification manifests.
+apps/api/plane/curve/prd_candidate_policy/*.json
+apps/api/plane/curve/scoped_prd_v2_candidate/*.json
+apps/api/plane/curve/two_stage_review/*.json

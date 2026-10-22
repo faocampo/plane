@@ -61,7 +61,11 @@
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
     "state": {
-      "enum": ["APPROVED", "CHANGES_REQUESTED", "REJECTED"]
+      "enum": [
+        "APPROVED",
+        "CHANGES_REQUESTED",
+        "REJECTED"
+      ]
     },
     "created_by": {
       "type": "string",

@@ -117,7 +117,10 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
           "purpose": {
-            "enum": ["CONTEXT_EVIDENCE", "PROPOSED_DELIVERY"]
+            "enum": [
+              "CONTEXT_EVIDENCE",
+              "PROPOSED_DELIVERY"
+            ]
           },
           "source_version": {
             "type": "string",
@@ -138,7 +141,11 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["gate_assignment_id", "gate_type", "approver_user_id"],
+        "required": [
+          "gate_assignment_id",
+          "gate_type",
+          "approver_user_id"
+        ],
         "properties": {
           "gate_assignment_id": {
             "type": "string",
@@ -146,7 +153,10 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
           "gate_type": {
-            "enum": ["PRD_APPROVAL", "PLAN_APPROVAL"]
+            "enum": [
+              "PRD_APPROVAL",
+              "PLAN_APPROVAL"
+            ]
           },
           "approver_user_id": {
             "type": "string",

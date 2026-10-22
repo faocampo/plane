@@ -7,6 +7,7 @@
 from importlib import import_module
 from contextlib import contextmanager
 import uuid
+import json
 
 import pytest
 from django.db import connection, transaction
@@ -95,8 +96,16 @@ def assert_retained_reverse_refused():
     with connection.cursor() as cursor:
         cursor.execute(catalog_sql)
         after_catalog = cursor.fetchone()[0]
+    differences = {}
     for section, value in before_catalog.items():
-        assert after_catalog[section] == value, section
+        before_rows = {json.dumps(row, sort_keys=True) for row in value}
+        after_rows = {json.dumps(row, sort_keys=True) for row in after_catalog[section]}
+        if after_catalog[section] != value:
+            differences[section] = {
+                "removed": [row[:500] for row in sorted(before_rows - after_rows)],
+                "added": [row[:500] for row in sorted(after_rows - before_rows)],
+            }
+    assert not differences, differences
     with transaction.atomic():
         require_manual_plan_v2_qualification()
 

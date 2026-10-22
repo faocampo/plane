@@ -160,7 +160,10 @@
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
           "purpose": {
-            "enum": ["CONTEXT_EVIDENCE", "PROPOSED_DELIVERY"]
+            "enum": [
+              "CONTEXT_EVIDENCE",
+              "PROPOSED_DELIVERY"
+            ]
           }
         }
       }

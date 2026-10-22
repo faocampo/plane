@@ -1,7 +1,10 @@
 {
   "predecessor_digest": "sha256:a4086b8d08f918b187b623e56b9d810f2d0834ce723fe120297710db02d6352d",
   "qualification": {
-    "excluded_writers": ["EXECUTION", "COMPLETION_CREDIT"],
+    "excluded_writers": [
+      "EXECUTION",
+      "COMPLETION_CREDIT"
+    ],
     "migration_digests": {
       "0001_initial.py": "sha256:0bf82e2cc24d37052d6f6afabc4b75d93e3c343490a4a6d30b39d21defe79341",
       "0002_initial.py": "sha256:5a67c98c10690d0b94266aea871e1ab9c34d3bddfcad56f24aa5c7aaa18586f4",
@@ -324,7 +327,15 @@
         "model_name": "localprdsource"
       },
       {
-        "columns": ["digest", "id", "initiative_id", "initiative_version", "payload", "source_id", "workspace_id"],
+        "columns": [
+          "digest",
+          "id",
+          "initiative_id",
+          "initiative_version",
+          "payload",
+          "source_id",
+          "workspace_id"
+        ],
         "db_table": "curve_local_prd_submission",
         "model_name": "localprdsubmission"
       },
@@ -370,7 +381,14 @@
         "model_name": "manualgate2recordv2"
       },
       {
-        "columns": ["current_revision_id", "id", "initiative_id", "product_id", "version", "workspace_id"],
+        "columns": [
+          "current_revision_id",
+          "id",
+          "initiative_id",
+          "product_id",
+          "version",
+          "workspace_id"
+        ],
         "db_table": "curve_manual_plan_draft_v2",
         "model_name": "manualplandraftv2"
       },
@@ -399,7 +417,16 @@
         "model_name": "manualplanrevisionv2"
       },
       {
-        "columns": ["claim_id", "generation", "id", "initiative_id", "payload", "record_id", "state", "workspace_id"],
+        "columns": [
+          "claim_id",
+          "generation",
+          "id",
+          "initiative_id",
+          "payload",
+          "record_id",
+          "state",
+          "workspace_id"
+        ],
         "db_table": "curve_manual_task_claim_history_v2",
         "model_name": "manualtaskclaimhistoryv2"
       },
@@ -521,7 +548,13 @@
         "model_name": "prdacceptedcommand"
       },
       {
-        "columns": ["created_at", "current_version_id", "id", "initiative_id", "workspace_id"],
+        "columns": [
+          "created_at",
+          "current_version_id",
+          "id",
+          "initiative_id",
+          "workspace_id"
+        ],
         "db_table": "curve_prd_artifact",
         "model_name": "prdartifact"
       },
@@ -562,7 +595,15 @@
         "model_name": "prdevidenceitemversion"
       },
       {
-        "columns": ["artifact_version_id", "created_at", "digest", "id", "initiative_id", "items", "workspace_id"],
+        "columns": [
+          "artifact_version_id",
+          "created_at",
+          "digest",
+          "id",
+          "initiative_id",
+          "items",
+          "workspace_id"
+        ],
         "db_table": "curve_prd_evidence_snapshot",
         "model_name": "prdevidencesnapshot"
       },
@@ -795,7 +836,14 @@
         "model_name": "scopedprdsubject"
       },
       {
-        "columns": ["current_revision_id", "id", "initiative_id", "product_id", "version", "workspace_id"],
+        "columns": [
+          "current_revision_id",
+          "id",
+          "initiative_id",
+          "product_id",
+          "version",
+          "workspace_id"
+        ],
         "db_table": "curve_scope_proposal",
         "model_name": "scopeproposal"
       },

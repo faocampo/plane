@@ -6,8 +6,14 @@
   "authorization": "CURRENT_ORDINARY_PRD_ACTION_POLICY_PLUS_NATIVE_EACH_MEMBER_BOTH_REVIEWERS",
   "capture_action": "CURVE.PRD.SUBMIT",
   "scope_selection_state": "DRAFT",
-  "capture_states": ["ALIGNING", "PRD_REVIEW"],
-  "submission_states": ["ALIGNING", "PRD_REVIEW"],
+  "capture_states": [
+    "ALIGNING",
+    "PRD_REVIEW"
+  ],
+  "submission_states": [
+    "ALIGNING",
+    "PRD_REVIEW"
+  ],
   "approval_state": "PRD_REVIEW",
   "approval_result_state": "PLANNING",
   "revision_result_state": "ALIGNING",

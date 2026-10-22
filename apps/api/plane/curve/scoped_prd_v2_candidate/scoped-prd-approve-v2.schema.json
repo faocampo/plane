@@ -55,7 +55,11 @@
       "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
     "confirmed_risk_tier": {
-      "enum": ["LOW", "STANDARD", "HIGH"]
+      "enum": [
+        "LOW",
+        "STANDARD",
+        "HIGH"
+      ]
     },
     "rationale": {
       "type": "string",

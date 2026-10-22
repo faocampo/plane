@@ -6,12 +6,18 @@
     "UPLOAD": {
       "actor": "CURRENT_INITIATIVE_CREATOR",
       "exact_initiative_version": true,
-      "states": ["PLANNING"]
+      "states": [
+        "PLANNING"
+      ]
     }
   },
   "default_effect": "DENY",
   "environment": "LOCAL",
-  "file_types": ["application/pdf", "text/markdown", "text/plain"],
+  "file_types": [
+    "application/pdf",
+    "text/markdown",
+    "text/plain"
+  ],
   "maximum_upload_bytes": 10485760,
   "policy_key": "CURVE_LOCAL_PLAN_UPLOAD_POLICY",
   "policy_version": 2,
