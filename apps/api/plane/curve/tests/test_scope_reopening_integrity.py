@@ -290,9 +290,13 @@ def test_application_independently_rejects_compromised_database_coverage_proof(r
             forged_digest = cursor.fetchone()[0]
             # Forge the installed successor's active seal. Historical predecessor
             # seals are separately pinned by the current database verifier.
-            cursor.execute("ALTER TABLE curve_manual_gate2_v2_coverage DISABLE TRIGGER curve_mg2_coverage_immutable")
-            cursor.execute("UPDATE curve_manual_gate2_v2_coverage SET catalog_digest=%s", [forged_digest])
-            cursor.execute("ALTER TABLE curve_manual_gate2_v2_coverage ENABLE TRIGGER curve_mg2_coverage_immutable")
+            cursor.execute(
+                "ALTER TABLE curve_local_new_work_coverage DISABLE TRIGGER curve_local_new_work_coverage_immutable"
+            )
+            cursor.execute("UPDATE curve_local_new_work_coverage SET catalog_digest=%s", [forged_digest])
+            cursor.execute(
+                "ALTER TABLE curve_local_new_work_coverage ENABLE TRIGGER curve_local_new_work_coverage_immutable"
+            )
         cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
         require_reopening_qualification()
     with transaction.atomic():
@@ -380,11 +384,17 @@ def test_reverse_migration_refuses_retained_reopening_and_preserves_exact_histor
     installed_leaves = executor.loader.graph.leaf_nodes("curve")
     before_migrations = set(MigrationRecorder(connection).applied_migrations())
     try:
-        # Exercise the historical reopening step without its empty successors.
-        # Current-source qualification resumes only after all leaves are restored.
-        executor.migrate([latest])
-        with pytest.raises(DatabaseError, match="preservation migration"):
-            MigrationExecutor(connection).migrate([("curve", "0022_scoped_prd")])
+        # Current retained approvals can stop reversal before the historical
+        # reopening migration. Both layers must preserve the same history.
+        with pytest.raises((DatabaseError, RuntimeError), match="preservation migration|RETAINED_EVIDENCE"):
+            executor.migrate([("curve", "0022_scoped_prd")])
+        MigrationExecutor(connection).migrate(installed_leaves)
+        from importlib import import_module
+
+        historical = import_module("plane.curve.migrations.0023_scope_reopening")
+        with pytest.raises(DatabaseError, match="preservation migration"), transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(historical.REVERSE_GUARDS)
         assert latest in MigrationRecorder(connection).applied_migrations()
         assert Initiative.objects.filter(id=reopening.initiative.id).values().get() == before_initiative
         assert ScopeReopening.objects.get(id=result.data["id"]).as_record() == before_ledger
