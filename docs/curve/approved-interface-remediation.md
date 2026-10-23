@@ -1,6 +1,6 @@
 # Approved two-stage interface: remediation record
 
-Status: interface approved; local implementation verified for the main document journeys. The candidate is published in the existing draft PR; hosted validation, latency and remaining recovery acceptance are pending.
+Status: interface approved; local implementation verified for the main document journeys. The candidate is published in the existing draft PR; hosted validation and remaining recovery acceptance are pending.
 
 The owner approved the new interface on 2026-10-22: Product approves the PRD, then Technical approves the implementation plan. This approval establishes the design direction. Application verification and integration evidence are recorded separately below.
 
@@ -89,7 +89,9 @@ The 12 skipped cases needed a local Temporal time-skipping test server. Caching 
 
 A read-only execution-plan comparison identified substantial query-compilation overhead in the physical catalog check. The runtime now disables compilation only around the fresh catalog and database-verifier queries, then restores the caller's query-compilation and schema-search settings. Source hashes, migration hashes, current catalog comparison and database coverage verification still run on every qualification call. Four real-database cases verify both caller compilation settings, successful qualification, rejection of an added schema index, and settings restoration. They passed within the 20-test focused run. Test sessions used compilation disabled by default; the four cases explicitly exercise callers with it enabled and disabled.
 
-Full request and browser latency still require quiet-runtime measurement; isolated query timings under regression load are diagnostic evidence only.
+Quiet authenticated HTTP measurements subsequently identified repeated full authority checks for actions impossible in the current review state. A separately pinned read-performance successor now filters those candidates before checking every action that could be exposed. The initial READ and all command authority checks remain intact; historical proof bytes, migrations, models and catalog pins remain unchanged. All 59 focused native database cases and 56 repository checks passed.
+
+Product status measured 4.983 seconds before the change and a median 0.645 seconds across three quiet after-change samples; Technical status measured 3.592 seconds before and a median 1.065 seconds afterward. All reads returned 200. Browser Refresh restored the readable PRD and both Approved statuses. These are local diagnostic samples with one before sample, not production latency acceptance. See [review-read performance](review-read-performance.md) (scope, additive qualification, sample ranges and verification).
 
 ## Owner UX acceptance
 
@@ -97,9 +99,8 @@ The repository owner accepted the implemented interface on 2026-10-22 against ca
 
 ## Remaining acceptance and delivery
 
-1. Measure local request latency without concurrent regression load and address the observed delay while preserving current authorization and integrity checks. One earlier qualification call took 2.574 seconds, including 1.973 seconds in database execution; that diagnostic is not request-latency acceptance.
-2. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and recovery are verified; a live mid-mutation response-loss exercise has not been performed.
-3. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI remains unavailable while repository Actions is disabled.
+1. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and recovery are verified; a live mid-mutation response-loss exercise has not been performed.
+2. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI remains unavailable while repository Actions is disabled.
 
 Storage initialization is required for the local document directory. Production provider/storage activation, release qualification and later milestones retain their own gates.
 

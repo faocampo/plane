@@ -27,7 +27,11 @@ def test_successor_verifies_complete_runtime_and_preserves_old_authority():
     qualified = root.validate_two_stage_successor(old, new)
     assert old == before
     assert qualified["models"] == root.current_model_catalog()
-    assert qualified["runtime_sources"] == root.current_runtime_sources()
+    installed = root.validate_review_read_successor(
+        qualified, root._read_pinned_successor(root.REVIEW_READ_SUCCESSOR_PATH, root.REVIEW_READ_SUCCESSOR_DIGEST)
+    )
+    assert installed["runtime_sources"] == root.current_runtime_sources()
+    assert {key for key in qualified if qualified[key] != installed[key]} == {"runtime_sources"}
     assert qualified["excluded_writers"] == old["excluded_writers"]
     assert "EXECUTION" in qualified["excluded_writers"]
     for name, value in old["migration_digests"].items():
@@ -99,3 +103,42 @@ def test_fresh_catalog_checks_preserve_caller_settings_and_reject_tampering(init
         cursor.execute("SELECT current_setting('search_path'), current_setting('jit')")
         assert cursor.fetchone() == ("public", initial_jit)
         transaction.set_rollback(True)
+
+
+@pytest.mark.parametrize("damage", ["predecessor", "extra", "missing", "invalid_digest", "unchanged", "authority"])
+def test_review_read_successor_cannot_change_authority_or_other_sources(damage):
+    _, old = records()
+    predecessor = old["qualification"]
+    successor = root._read_pinned_successor(root.REVIEW_READ_SUCCESSOR_PATH, root.REVIEW_READ_SUCCESSOR_DIGEST)
+    if damage == "predecessor":
+        successor["predecessor_digest"] = "sha256:" + "0" * 64
+    elif damage == "extra":
+        successor["replacements"]["local_prd_review_authority.py"] = "sha256:" + "0" * 64
+    elif damage == "missing":
+        successor["replacements"].pop("local_prd_review_views.py")
+    elif damage == "invalid_digest":
+        successor["replacements"]["local_prd_review_views.py"] = "invalid"
+    elif damage == "unchanged":
+        successor["replacements"]["local_prd_review_views.py"] = (
+            predecessor["runtime_sources"]["local_prd_review_views.py"]
+        )
+    else:
+        successor["runtime_writer_inventory"] = ["EXECUTION"]
+    with pytest.raises(ValueError):
+        root.validate_review_read_successor(predecessor, successor)
+
+
+@pytest.mark.parametrize("damage", ["proof", "missing_proof", "symlink"])
+def test_review_read_runtime_rejects_unavailable_or_changed_successor(monkeypatch, damage):
+    target = root.REVIEW_READ_SUCCESSOR_PATH
+    if damage == "proof":
+        original = Path.read_bytes
+        monkeypatch.setattr(Path, "read_bytes", lambda p: original(p) + b" " if p == target else original(p))
+    elif damage == "missing_proof":
+        original = Path.exists
+        monkeypatch.setattr(Path, "exists", lambda p: False if p == target else original(p))
+    else:
+        original = Path.is_symlink
+        monkeypatch.setattr(Path, "is_symlink", lambda p: p == target or original(p))
+    with transaction.atomic(), pytest.raises(PrdCommandError):
+        root.require_reopening_qualification()

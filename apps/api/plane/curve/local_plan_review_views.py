@@ -29,8 +29,13 @@ class CurveLocalPlanReviewEndpoint(LocalPrdEndpoint):
             current = _authority(request, slug, initiative_id, action="READ")
             source = current.current_revision
             actions = []
+            candidates = (
+                ("SUBMIT",) if current.submission is None
+                else ("APPROVE", "REQUEST_CHANGES") if current.decision is None
+                else ()
+            )
             if source and getattr(settings, "CURVE_LOCAL_PRD_STORAGE_ROOT", None):
-                for action in ("SUBMIT", "APPROVE", "REQUEST_CHANGES"):
+                for action in candidates:
                     try:
                         _authority(
                             request,

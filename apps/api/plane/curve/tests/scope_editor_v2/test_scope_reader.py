@@ -272,6 +272,12 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
             qualification.TWO_STAGE_SUCCESSOR_PATH, qualification.TWO_STAGE_SUCCESSOR_DIGEST
         ),
     )
+    installed = qualification.validate_review_read_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.REVIEW_READ_SUCCESSOR_PATH, qualification.REVIEW_READ_SUCCESSOR_DIGEST
+        ),
+    )
     assert qualification.current_runtime_sources() == installed["runtime_sources"]
 
 

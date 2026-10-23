@@ -36,6 +36,9 @@ HEADER_SUCCESSOR_DIGEST = "sha256:a4086b8d08f918b187b623e56b9d810f2d0834ce723fe1
 HEADER_SUCCESSOR_PATH = Path(__file__).parent / "source_header_qualification_v1.json"
 TWO_STAGE_SUCCESSOR_DIGEST = "sha256:f3dbfa241f6902232d44c1dddc5f96184aaf1307738533c15eeebbd2d80006bd"
 TWO_STAGE_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/runtime-qualification-v1.json"
+REVIEW_READ_SUCCESSOR_DIGEST = "sha256:0d0abd1dfc62b987f8a85e68b620934f4d51167dc0f9dae812cb392cf91c88f6"
+REVIEW_READ_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/review-read-qualification-v1.json"
+_REVIEW_READ_REPLACED_MODULES = frozenset({"local_prd_review_views.py", "local_plan_review_views.py"})
 _TWO_STAGE_ADDED_MODULES = frozenset(
     [
         "local_document_store.py",
@@ -563,6 +566,10 @@ def _current_qualification(predecessor):
             qualified = validate_two_stage_successor(
                 qualified, _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)
             )
+            if REVIEW_READ_SUCCESSOR_PATH.exists():
+                qualified = validate_review_read_successor(
+                    qualified, _read_pinned_successor(REVIEW_READ_SUCCESSOR_PATH, REVIEW_READ_SUCCESSOR_DIGEST)
+                )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -692,6 +699,27 @@ def validate_two_stage_successor(predecessor, successor):
     validate_gate2_manifest()
     require_contract_integrity()
     return qualified
+
+
+def validate_review_read_successor(predecessor, successor):
+    """Restrict the read-performance successor to two exact view replacements."""
+    historical = _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)["qualification"]
+    if (
+        predecessor != historical
+        or type(successor) is not dict
+        or set(successor) != {"schema_version", "predecessor_digest", "replacements"}
+        or successor["schema_version"] != "curve.review-read-qualification/v1-candidate"
+        or successor["predecessor_digest"] != TWO_STAGE_SUCCESSOR_DIGEST
+        or type(successor["replacements"]) is not dict
+        or set(successor["replacements"]) != _REVIEW_READ_REPLACED_MODULES
+        or any(
+            type(value) is not str or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+            or value == predecessor["runtime_sources"][name]
+            for name, value in successor["replacements"].items()
+        )
+    ):
+        raise ValueError("Exact review-read qualification required")
+    return dict(predecessor, runtime_sources={**predecessor["runtime_sources"], **successor["replacements"]})
 
 
 def require_manual_gate2_v3_qualification():

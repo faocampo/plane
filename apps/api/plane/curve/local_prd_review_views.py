@@ -30,8 +30,14 @@ class CurveLocalPrdReviewEndpoint(LocalPrdEndpoint):
             doc = current.document
             source = doc.current_source
             actions = []
+            state = doc.context.initiative.state
+            candidates = (
+                ("SUBMIT",) if state == "ALIGNING"
+                else ("APPROVE", "REQUEST_CHANGES") if state == "PRD_REVIEW"
+                else ()
+            )
             if source and getattr(settings, "CURVE_LOCAL_PRD_STORAGE_ROOT", None):
-                for action in ("SUBMIT", "APPROVE", "REQUEST_CHANGES"):
+                for action in candidates:
                     try:
                         _authority(
                             request,
