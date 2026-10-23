@@ -8,7 +8,7 @@ import uuid
 from types import SimpleNamespace
 
 import pytest
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowContinuedAsNewError
 from temporalio.common import WorkflowIDReusePolicy
 from temporalio.exceptions import WorkflowAlreadyStartedError
 from temporalio.testing import WorkflowEnvironment
@@ -594,6 +594,14 @@ def test_m0_s6a_at_08_parent_continues_as_new_after_ten_settled_waves():
         )
         for index, descriptor in enumerate(descriptors):
             current = client.get_workflow_handle(parent_id)
+            if index == 10:
+                # Observe the closed run's continuation before querying its successor.
+                # A query racing the close can time out on the test server.
+                with pytest.raises(WorkflowContinuedAsNewError) as continued:
+                    await handle.result(follow_runs=False)
+                current = client.get_workflow_handle(
+                    parent_id, run_id=continued.value.new_execution_run_id,
+                )
             state = await _wait_for_parent_state(
                 current,
                 lambda value, slice_id=descriptor.slice_id: value.active_slice_ids == (slice_id,),
