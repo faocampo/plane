@@ -103,6 +103,12 @@ Product status measured 4.983 seconds before the change and a median 0.645 secon
 
 The repository owner accepted the implemented interface on 2026-10-22 against candidate `d57397ae06dbd472e64eb1b35049c85d291cd2e4`. The accepted flow is Product approval of the PRD followed by Technical approval of the implementation plan, with no Code Approver stage. The current PR head was verified at that commit after acceptance. This closes the owner UX review gate; the remaining validation and integration requirements below retain their scope.
 
+## Final local delivery checks
+
+The full repository build passed all 15 tasks in 30.347 seconds at `45ff994d34121d3ceb051c52abf80fd1cd0ef767`. The delivery-grant web-test command exercised all 47 web test files: its first run passed 550 assertions but failed with an unhandled font-loader timer after the project-header test environment closed. That test still mocked the former emoji-picker package. Updating the mock to the component's current package restored isolation; the rerun passed all 550 tests across 47 files in 19.46 seconds, with no unhandled errors. This correction changes one test import only. Build and test tooling still emit existing warnings; these results are not warning-free claims.
+
+The branch's available CodeQL analyses refer to older commits. No exact-head hosted CI or CodeQL result is available for this candidate, and old zero-result analyses do not establish current-head clearance.
+
 ## Remaining acceptance and delivery
 
 1. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and post-commit submission response-loss recovery are verified above.

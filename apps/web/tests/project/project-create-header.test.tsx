@@ -12,7 +12,7 @@ import type { IProject } from "@plane/types";
 import ProjectCreateHeader from "@/components/project/create/header";
 
 vi.mock("@plane/i18n", () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock("@plane/propel/emoji-icon-picker", () => ({
+vi.mock("@plane/blocks/emoji-icon-picker", () => ({
   EmojiIconPickerTypes: { EMOJI: "emoji", ICON: "icon" },
   EmojiPicker: () => null,
   Logo: () => null,
