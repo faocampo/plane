@@ -85,6 +85,12 @@ The original 2,774-case native run completed with 2,756 passed, 5 failed, 12 ski
 
 The 12 skipped cases needed a local Temporal time-skipping test server. Caching the SDK-selected server outside the isolated test network and mounting it read-only allowed all cases to execute. The first follow-up passed 22 cases and exposed a query racing the parent workflow's continue-as-new transition. The test now observes the old run's explicit continuation event and queries the identified successor run before asserting its state and final result. The complete 23-case workflow follow-up then passed in 48.54 seconds with no skips, including all 12 originally skipped cases. These follow-up corrections change tests only; runtime source and historical pins remain unchanged. This is combined full-run and focused-correction evidence, not a claim that the original full run passed unchanged.
 
+## Live interrupted-write recovery
+
+A separate synthetic Initiative exercised a lost response after a real Product submission committed. A temporary loopback-only proxy forwarded the normal authenticated command and dropped its successful 201 response after receiving it from the API. The browser displayed the unknown-result explanation and Retry same review. Before retry, the database showed exactly one submission, PRD Review state and Initiative version 4.
+
+The explicit browser retry used the identical request body, idempotency key and version precondition. The server returned 200 with Idempotency-Replayed true; the database still showed exactly one submission at version 4. The interface recovered to In Product review with the normal reviewer actions. Raw response-byte hashes differed, so byte-for-byte response identity is not claimed; the verification establishes exact-command replay and unchanged authoritative state. The original proxy configuration was restored exactly and the temporary proxy stopped. All 20 synthetic stored document files, including the new recovery PRD, were backed up and verified by content hash.
+
 ## Integrity-check latency
 
 A read-only execution-plan comparison identified substantial query-compilation overhead in the physical catalog check. The runtime now disables compilation only around the fresh catalog and database-verifier queries, then restores the caller's query-compilation and schema-search settings. Source hashes, migration hashes, current catalog comparison and database coverage verification still run on every qualification call. Four real-database cases verify both caller compilation settings, successful qualification, rejection of an added schema index, and settings restoration. They passed within the 20-test focused run. Test sessions used compilation disabled by default; the four cases explicitly exercise callers with it enabled and disabled.
@@ -99,7 +105,7 @@ The repository owner accepted the implemented interface on 2026-10-22 against ca
 
 ## Remaining acceptance and delivery
 
-1. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and recovery are verified; a live mid-mutation response-loss exercise has not been performed.
+1. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and post-commit submission response-loss recovery are verified above.
 2. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI remains unavailable while repository Actions is disabled.
 
 Storage initialization is required for the local document directory. Production provider/storage activation, release qualification and later milestones retain their own gates.
