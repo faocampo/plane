@@ -16,6 +16,7 @@ from django.utils import timezone
 
 from plane.curve.config import curve_policy_recorder, is_curve_enabled_for_workspace
 from plane.curve.models import AuditEvent, AuditOutcome, DataClassification, PolicyDecision, Product
+from plane.curve.product_format import require_supported_product_format
 from plane.curve.policy_services import CurvePolicyDenied, CurvePolicyResourceNotFound, correlation_id_for_request
 from plane.db.models import Workspace, WorkspaceMember
 
@@ -380,6 +381,8 @@ def execute_product_mutation(
             token = _ACTIVE_RECEIPT.set(receipt)
             try:
                 try:
+                    if product is not None:
+                        require_supported_product_format(product)
                     result = callback(receipt, workspace, product)
                 except no_effect_exceptions as error:
                     append_product_mutation_audit(

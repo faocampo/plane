@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable
 from contextlib import contextmanager
 
 from plane.curve.models import Initiative, Product, ProductState
+from plane.curve.product_format import require_supported_product_format
 
 
 TERMINAL_INITIATIVE_STATES = frozenset({"READY_FOR_REPOSITORY_REVIEW", "CANCELLED"})
@@ -75,6 +76,7 @@ def assert_product_accepts_new_initiative(*, workspace_id, product_id) -> Produc
     )
     if product is None:
         raise ProductGuardResourceNotFound
+    require_supported_product_format(product)
     if product.state != ProductState.ACTIVE:
         raise ProductArchived
     return product

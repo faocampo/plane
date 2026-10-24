@@ -1,0 +1,15 @@
+{
+  "schema_version": "curve.product-format-qualification/v1-candidate",
+  "predecessor_digest": "sha256:0d0abd1dfc62b987f8a85e68b620934f4d51167dc0f9dae812cb392cf91c88f6",
+  "additions": {
+    "product_format.py": "sha256:b27cd25b8d3fe405d2c1bc9695bfd594390a581f3ca1a71e3949bdb1fbd7a427"
+  },
+  "replacements": {
+    "initiative_services.py": "sha256:0417579ca36875c607a74f8fa50dee3f75eed6cf6eba28026da58295f9efb8b4",
+    "product_guards.py": "sha256:de888d990205a1d6d53257077771d8bd9c30311ce77af0114817e6393eccb372",
+    "product_policy.py": "sha256:3f7e6807a07797c7fcbdbdb6b410a9dddefd28f0e965e38a49bd75c8dfa8d7b7",
+    "product_serialization.py": "sha256:ccd2c6b439bf982ae757c2671d4a359e27164c76fc86b8f73e6b25ce8025f1d9",
+    "product_services.py": "sha256:21c459c6ec929437a33cdc6146f3dd8a54c23bbb98b5665297322515e19ab716",
+    "views.py": "sha256:669453ff41b8fc056980041c744241f258cb46ff0e2cc834eaae404a8c0fb616"
+  }
+}

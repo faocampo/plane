@@ -74,6 +74,7 @@ from plane.curve.policy_services import (
     request_operation_cancellation,
     start_foundation_probe,
 )
+from plane.curve.product_format import ProductFormatUnavailable
 from plane.curve.product_guards import (
     ProductHasNonTerminalInitiative,
     ProductInitiativeGuardUnavailable,
@@ -423,6 +424,13 @@ class CurveAPIView(BaseAPIView):
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 code=exc.code,
                 title="The Initiative command was rejected",
+            )
+        if isinstance(exc, ProductFormatUnavailable):
+            return self.problem(
+                self.request,
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                code=exc.code,
+                title="The Product is temporarily unavailable",
             )
         if isinstance(exc, ProductKeyConflict):
             return self.problem(
