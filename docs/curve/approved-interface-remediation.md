@@ -107,12 +107,14 @@ The repository owner accepted the implemented interface on 2026-10-22 against ca
 
 The full repository build passed all 15 tasks in 30.347 seconds at `45ff994d34121d3ceb051c52abf80fd1cd0ef767`. The delivery-grant web-test command exercised all 47 web test files: its first run passed 550 assertions but failed with an unhandled font-loader timer after the project-header test environment closed. That test still mocked the former emoji-picker package. Updating the mock to the component's current package restored isolation; the rerun passed all 550 tests across 47 files in 19.46 seconds, with no unhandled errors. This correction changes one test import only. Build and test tooling still emit existing warnings; these results are not warning-free claims.
 
-The branch's available CodeQL analyses refer to older commits. No exact-head hosted CI or CodeQL result is available for this candidate, and old zero-result analyses do not establish current-head clearance.
+GitHub Actions was re-enabled by the owner. At commit `90162a6815f50e8bd358e3a21ab8c650707b8f08`, hosted web validation, API lint, host doubles, copyright and React checks passed. Exact-branch CodeQL completed with zero findings for JavaScript and Python. Native scope regression passed 186 tests and manual planning passed 100 tests; both migration checks reported no changes.
+
+The core job collected 2,497 tests and exceeded its 40-minute limit while still progressing. Its result remains incomplete. The CI runner now distributes core test files across four deterministic, disjoint jobs. Migration checks remain in every native job; storage regression runs once. Coverage guards verify that every current and newly discovered file is assigned exactly once. The new candidate requires fresh hosted validation before integration.
 
 ## Remaining acceptance and delivery
 
 1. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and post-commit submission response-loss recovery are verified above.
-2. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI remains unavailable while repository Actions is disabled.
+2. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI is available; complete the sharded backend run and validate the resulting candidate before integration.
 
 Storage initialization is required for the local document directory. Production provider/storage activation, release qualification and later milestones retain their own gates.
 

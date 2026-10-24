@@ -6,7 +6,7 @@ from itertools import combinations
 
 import pytest
 
-from plane.curve.tests.run_ci_suite import GROUPS, MANUAL_DIRECTORIES, ROOT, SCOPE_FILES, partition
+from plane.curve.tests.run_ci_suite import GROUPS, MANUAL_DIRECTORIES, ROOT, SCOPE_FILES, partition, select_shard
 
 
 def test_ci_partitions_cover_every_test_file_exactly_once():
@@ -44,3 +44,30 @@ def test_new_test_files_default_to_core(tmp_path):
 def test_empty_partition_fails_closed(tmp_path):
     with pytest.raises(ValueError, match="must contain test files"):
         partition(tmp_path)
+
+
+def test_core_shards_cover_all_current_and_future_files_exactly_once():
+    paths = partition()["core"] + [ROOT / "test_future_feature.py"]
+    shards = [set(select_shard(paths, index, 4)) for index in range(4)]
+    assert set.union(*shards) == set(paths)
+    assert sum(map(len, shards)) == len(paths)
+    for first, second in combinations(shards, 2):
+        assert first.isdisjoint(second)
+    assert max(map(len, shards)) - min(map(len, shards)) <= 1
+    assert select_shard(reversed(paths), 2, 4) == select_shard(paths, 2, 4)
+
+
+def test_default_shard_preserves_every_file():
+    for paths in partition().values():
+        assert select_shard(paths) == paths
+
+
+@pytest.mark.parametrize("index,count", [(-1, 4), (4, 4), (0, 0), (0, -1)])
+def test_invalid_shard_coordinates_fail_closed(index, count):
+    with pytest.raises(ValueError, match="Shard index"):
+        select_shard([ROOT / "test_example.py"], index, count)
+
+
+def test_empty_shard_fails_closed():
+    with pytest.raises(ValueError, match="must contain test files"):
+        select_shard([ROOT / "test_example.py"], 1, 2)

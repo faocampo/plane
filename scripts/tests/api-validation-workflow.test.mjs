@@ -23,7 +23,22 @@ test("Curve CI preserves the full backend suite, app initialization and migratio
   assert.match(runner, /import plane/);
   assert.match(runner, /pytest\.main/);
   assert.match(workflow, /python plane\/curve\/tests\/run_ci_suite\.py/);
-  assert.match(workflow, /test-group: \[core, manual-planning, scope-regression\]/);
+  const shards = [...workflow.matchAll(/- \{test-group: ([\w-]+), shard-index: (\d+), shard-count: (\d+)\}/g)].map(
+    ([, group, index, count]) => [group, Number(index), Number(count)]
+  );
+  assert.deepEqual(shards, [
+    ["core", 0, 4],
+    ["core", 1, 4],
+    ["core", 2, 4],
+    ["core", 3, 4],
+    ["manual-planning", 0, 1],
+    ["scope-regression", 0, 1],
+  ]);
+  assert.match(
+    workflow,
+    /--shard-index "\$\{\{ matrix.shard-index \}\}" --shard-count "\$\{\{ matrix.shard-count \}\}"/
+  );
+  assert.match(workflow, /if: matrix.test-group == 'core' && matrix.shard-index == 0/);
   assert.match(workflow, /fail-fast: false/);
   assert.match(workflow, /run_ci_suite\.py host-doubles/);
   assert.match(workflow, /python manage\.py makemigrations --check --dry-run/);

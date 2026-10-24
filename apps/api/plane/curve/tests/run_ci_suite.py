@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 """Run disjoint native suites or the separately configured host-only doubles."""
 
+import argparse
 from pathlib import Path
 import sys
 import subprocess
@@ -41,11 +42,29 @@ def partition(root=ROOT):
     return result
 
 
+def select_shard(paths, index=0, count=1):
+    """Split sorted files deterministically, with no omissions or duplicates."""
+    if count < 1 or index < 0 or index >= count:
+        raise ValueError("Shard index must be within a positive shard count")
+    selected = sorted(paths)[index::count]
+    if not selected:
+        raise ValueError("Every shard must contain test files")
+    return selected
+
+
 def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in GROUPS:
-        raise SystemExit("Choose exactly one known Curve CI group")
-    paths = partition()[sys.argv[1]]
-    if sys.argv[1] == "host-doubles":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("group", choices=GROUPS)
+    parser.add_argument("--shard-index", type=int, default=0)
+    parser.add_argument("--shard-count", type=int, default=1)
+    args = parser.parse_args()
+    if args.group == "host-doubles" and (args.shard_index != 0 or args.shard_count != 1):
+        parser.error("Host doubles must run together in their isolated directories")
+    try:
+        paths = select_shard(partition()[args.group], args.shard_index, args.shard_count)
+    except ValueError as error:
+        parser.error(str(error))
+    if args.group == "host-doubles":
         # Their bootstrap configures empty Django apps and requires the complete
         # checkout layout. Keep each host directory in a fresh Python process.
         results = [
