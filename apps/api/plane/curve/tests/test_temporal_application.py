@@ -276,7 +276,7 @@ def test_invalid_cancel_signal_is_rejected_before_state_mutation():
                 client=client,
                 workspace_id=operation.workspace_id,
                 operation_id=operation.id,
-                actor_ref="developer:federico",
+                actor_ref="developer:reviewer-alpha",
                 reason_code="USER_REQUESTED",
                 command_id="contains spaces",
                 correlation_id=operation.correlation_id,

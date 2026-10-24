@@ -11,13 +11,13 @@ import { attachInstruction, extractInstruction } from "@atlaskit/pragmatic-drag-
 import { observer } from "mobx-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { PinOutline, UnpinOutline } from "@makeplane/propel/icons";
+import { DragDropOutline, PinOutline, UnpinOutline } from "@makeplane/propel/icons";
 // plane imports
 import type { IWorkspaceSidebarNavigationItem } from "@plane/constants";
 import { EUserPermissionsLevel } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
-import { DragHandle, DropIndicator } from "@plane/blocks/common";
+import { DropIndicator } from "@plane/blocks/common";
 import { cn } from "@plane/utils";
 // components
 import { SidebarNavItem } from "@/components/sidebar/sidebar-navigation";
@@ -183,8 +183,13 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
                 }
               )}
               ref={dragHandleRef}
+              aria-label={t("drag_to_rearrange")}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
             >
-              <DragHandle className="bg-transparent" />
+              <DragDropOutline aria-hidden="true" className="size-3.5 text-placeholder" />
             </button>
           </Tooltip>
         )}

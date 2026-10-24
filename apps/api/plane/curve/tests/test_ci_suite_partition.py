@@ -1,0 +1,73 @@
+# Copyright (c) 2023-present Plane Software, Inc. and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See the LICENSE file for details.
+
+from itertools import combinations
+
+import pytest
+
+from plane.curve.tests.run_ci_suite import GROUPS, MANUAL_DIRECTORIES, ROOT, SCOPE_FILES, partition, select_shard
+
+
+def test_ci_partitions_cover_every_test_file_exactly_once():
+    groups = partition()
+    assert tuple(groups) == GROUPS
+    sets = [set(paths) for paths in groups.values()]
+    assert set.union(*sets) == set(ROOT.rglob("test_*.py"))
+    for first, second in combinations(sets, 2):
+        assert first.isdisjoint(second)
+
+
+def test_native_group_boundaries_and_coverage_guard_are_preserved():
+    groups = partition()
+    assert {path.relative_to(ROOT).parts[0] for path in groups["manual-planning"]} == MANUAL_DIRECTORIES
+    assert {path.name for path in groups["scope-regression"]} == SCOPE_FILES
+    assert ROOT / "test_ci_suite_partition.py" in groups["core"]
+    assert ROOT / "manual_plan_v2" / "host" / "test_two_stage_gate2_domain.py" in groups["host-doubles"]
+    assert {path.parent for path in groups["host-doubles"]} == {
+        ROOT / "manual_plan_v2" / "host",
+        ROOT / "scope_editor_v2" / "host",
+    }
+
+
+def test_new_test_files_default_to_core(tmp_path):
+    (tmp_path / "manual_plan_v2").mkdir()
+    (tmp_path / "manual_plan_v2" / "test_manual.py").touch()
+    (tmp_path / "manual_plan_v2" / "host").mkdir()
+    (tmp_path / "manual_plan_v2" / "host" / "test_double.py").touch()
+    (tmp_path / "test_scope_proposal_api.py").touch()
+    new_test = tmp_path / "test_future_feature.py"
+    new_test.touch()
+    assert partition(tmp_path)["core"] == [new_test]
+
+
+def test_empty_partition_fails_closed(tmp_path):
+    with pytest.raises(ValueError, match="must contain test files"):
+        partition(tmp_path)
+
+
+def test_core_shards_cover_all_current_and_future_files_exactly_once():
+    paths = partition()["core"] + [ROOT / "test_future_feature.py"]
+    shards = [set(select_shard(paths, index, 4)) for index in range(4)]
+    assert set.union(*shards) == set(paths)
+    assert sum(map(len, shards)) == len(paths)
+    for first, second in combinations(shards, 2):
+        assert first.isdisjoint(second)
+    assert max(map(len, shards)) - min(map(len, shards)) <= 1
+    assert select_shard(reversed(paths), 2, 4) == select_shard(paths, 2, 4)
+
+
+def test_default_shard_preserves_every_file():
+    for paths in partition().values():
+        assert select_shard(paths) == paths
+
+
+@pytest.mark.parametrize("index,count", [(-1, 4), (4, 4), (0, 0), (0, -1)])
+def test_invalid_shard_coordinates_fail_closed(index, count):
+    with pytest.raises(ValueError, match="Shard index"):
+        select_shard([ROOT / "test_example.py"], index, count)
+
+
+def test_empty_shard_fails_closed():
+    with pytest.raises(ValueError, match="must contain test files"):
+        select_shard([ROOT / "test_example.py"], 1, 2)

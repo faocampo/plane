@@ -1,0 +1,9 @@
+{
+  "schema_version": "curve.manual-plan-model-policy/v2-candidate",
+  "id": "20000000-0000-4000-8000-000000000202",
+  "version": 1,
+  "policy_kind": "MODEL",
+  "automatic_model_calls": "DENIED",
+  "automatic_fallback": "DENIED",
+  "allowed_models": []
+}

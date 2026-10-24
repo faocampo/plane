@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/project-association-event-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_type",
+    "association",
+    "policy_decision_id"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "event_type": {
+      "enum": [
+        "curve.project_association.associated",
+        "curve.project_association.ended"
+      ]
+    },
+    "association": {
+      "$ref": "https://curve.example.invalid/candidates/project-association-v1.schema.json"
+    },
+    "policy_decision_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": {
+            "const": "curve.project_association.associated"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "association": {
+            "properties": {
+              "state": {
+                "const": "ACTIVE"
+              },
+              "version": {
+                "const": 1
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "association": {
+            "properties": {
+              "state": {
+                "const": "ENDED"
+              },
+              "version": {
+                "const": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-input-identity-v2.schema.json",
+  "title": "Private retained original-input identities, never a current ACL",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workspace_id",
+    "initiative_id",
+    "approved_subject_ref",
+    "prd_artifact_version_id",
+    "prd_content_digest",
+    "evidence_snapshot_id",
+    "scope_revision_ref",
+    "manual_profile_ref",
+    "definition_ref",
+    "workflow_ref",
+    "quality_policy_ref",
+    "repository_inputs",
+    "protected_inputs",
+    "human_owner_ids",
+    "gate_assignments",
+    "digest"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-input-identity/v2-candidate"
+    },
+    "workspace_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "initiative_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "approved_subject_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+    },
+    "prd_artifact_version_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "prd_content_digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    },
+    "evidence_snapshot_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "scope_revision_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+    },
+    "manual_profile_ref": {
+      "allOf": [
+        {
+          "allOf": [
+            {
+              "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+            }
+          ],
+          "const": {
+            "entity_id": "20000000-0000-4000-8000-000000000201",
+            "digest": "sha256:16ddfbb742fb06e370e1c2db3723eb98c826e1454bf237d97f678656649314a4"
+          }
+        }
+      ],
+      "const": {
+        "entity_id": "20000000-0000-4000-8000-000000000201",
+        "digest": "sha256:16ddfbb742fb06e370e1c2db3723eb98c826e1454bf237d97f678656649314a4"
+      }
+    },
+    "definition_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DefinitionRef"
+    },
+    "workflow_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+    },
+    "quality_policy_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+    },
+    "repository_inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "repository_ref",
+          "base_branch",
+          "base_commit",
+          "repository_policy_ref",
+          "context_input_ref"
+        ],
+        "properties": {
+          "repository_ref": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+          },
+          "base_branch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "\\S"
+          },
+          "base_commit": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/CommitRef"
+          },
+          "repository_policy_ref": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/DigestVersionRef"
+          },
+          "context_input_ref": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/ObjectRef"
+          }
+        }
+      },
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true
+    },
+    "protected_inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object_ref",
+          "material_version_id",
+          "access_envelope_id",
+          "classification",
+          "input_kind"
+        ],
+        "properties": {
+          "object_ref": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/ObjectRef"
+          },
+          "material_version_id": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+          },
+          "access_envelope_id": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+          },
+          "classification": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Classification"
+          },
+          "input_kind": {
+            "type": "string",
+            "enum": [
+              "CONTEXT_INPUT",
+              "ATTACHMENT"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "input_kind": {
+                  "const": "ATTACHMENT"
+                }
+              },
+              "required": [
+                "input_kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "object_ref": {
+                  "properties": {
+                    "size_bytes": {
+                      "maximum": 104857600
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true
+    },
+    "human_owner_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+      },
+      "minItems": 1,
+      "maxItems": 256,
+      "uniqueItems": true
+    },
+    "gate_assignments": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "gate_type",
+                "gate_assignment_id",
+                "approver_user_id"
+              ],
+              "properties": {
+                "gate_type": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/GateType"
+                },
+                "gate_assignment_id": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+                },
+                "approver_user_id": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+                }
+              }
+            },
+            {
+              "properties": {
+                "gate_type": {
+                  "const": "CODE_READINESS"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "gate_type",
+                "gate_assignment_id",
+                "approver_user_id"
+              ],
+              "properties": {
+                "gate_type": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/GateType"
+                },
+                "gate_assignment_id": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+                },
+                "approver_user_id": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+                }
+              }
+            },
+            {
+              "properties": {
+                "gate_type": {
+                  "const": "PLAN_APPROVAL"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "gate_type",
+                "gate_assignment_id",
+                "approver_user_id"
+              ],
+              "properties": {
+                "gate_type": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/GateType"
+                },
+                "gate_assignment_id": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+                },
+                "approver_user_id": {
+                  "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+                }
+              }
+            },
+            {
+              "properties": {
+                "gate_type": {
+                  "const": "PRD_APPROVAL"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "items": false
+    },
+    "digest": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Digest"
+    }
+  }
+}

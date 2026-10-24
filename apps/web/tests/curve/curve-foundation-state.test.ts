@@ -108,7 +108,7 @@ describe("Curve Foundation state projection", () => {
       normalizeCurveProblem({
         status: 409,
         data: {
-          type: "https://curve.x3m.internal/problems/conflict",
+          type: "https://curve.example.invalid/problems/conflict",
           title: "The Operation changed",
           detail: "private stack trace",
           credential: "secret",
@@ -116,7 +116,7 @@ describe("Curve Foundation state projection", () => {
         },
       })
     ).toEqual({
-      type: "https://curve.x3m.internal/problems/conflict",
+      type: "https://curve.example.invalid/problems/conflict",
       title: "The Operation changed",
       status: 409,
       correlation_id: "correlation-1",

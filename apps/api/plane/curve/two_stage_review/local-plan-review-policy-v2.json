@@ -1,0 +1,37 @@
+{
+  "actions": {
+    "APPROVE": {
+      "actor": "CURRENT_TECHNICAL_REVIEWER",
+      "state": "PLANNING"
+    },
+    "REQUEST_CHANGES": {
+      "actor": "CURRENT_TECHNICAL_REVIEWER",
+      "protected_feedback_required": true,
+      "state": "PLANNING"
+    },
+    "SUBMIT": {
+      "actor": "CURRENT_INITIATIVE_CREATOR",
+      "state": "PLANNING"
+    }
+  },
+  "default_effect": "DENY",
+  "environment": "LOCAL",
+  "policy_key": "CURVE_LOCAL_PLAN_REVIEW_POLICY",
+  "policy_version": 2,
+  "production_activation": false,
+  "projection": "LOCAL_PLAN_REVIEW_METADATA_V1",
+  "required_current_checks": [
+    "ACTIVE_NATIVE_MEMBERSHIP_AND_SOURCE_ACCESS",
+    "EXACT_TWO_REVIEWER_ASSIGNMENTS",
+    "EXACT_SOURCE_SCOPE_AND_RISK",
+    "EXACT_INITIATIVE_VERSION",
+    "NO_PENDING_SCOPE_REOPENING",
+    "QUALIFIED_RUNTIME",
+    "EXACT_CURRENT_PRODUCT_APPROVAL",
+    "EXACT_PLAN_REVISION_AND_PENDING_SUBMISSION",
+    "CURRENT_INITIATIVE_ACCESS_FOR_OWNER_ACTOR_AND_BOTH_APPROVERS",
+    "NO_EXISTING_WORK_SCOPE_OR_EXTERNAL_PRD"
+  ],
+  "retry": "EXACT_REQUEST_DIGEST_AND_CURRENT_AUTHORIZED_ROLE_REPLAY_ONLY",
+  "schema_version": "curve.local-plan-review-policy/v2-candidate"
+}

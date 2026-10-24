@@ -1,0 +1,46 @@
+{
+  "schema_version": "curve.manual-plan-current-authority/v2-candidate",
+  "resolver_edition": "FIXED_SYNTHETIC_LOCAL_MANUAL_PLAN_V2",
+  "workspace_id": "30000000-0000-4000-8000-000000000001",
+  "initiative_id": "30000000-0000-4000-8000-000000000002",
+  "initiative_version": 10,
+  "input_identity_digest": "sha256:3c01dc7c09ea99fc64b3ad9796b4b11b0ec50b8c6da3dcd7a677f400b73616e7",
+  "evaluated_at": "2026-10-05T00:00:00.000Z",
+  "principal_checks": [
+    {
+      "principal_id": "30000000-0000-4000-8000-000000000021",
+      "action": "SAVE",
+      "decision": "ALLOW",
+      "acl_generation": 1,
+      "classification_generation": 1,
+      "membership_generation": 1
+    },
+    {
+      "principal_id": "30000000-0000-4000-8000-000000000022",
+      "action": "SAVE",
+      "decision": "ALLOW",
+      "acl_generation": 1,
+      "classification_generation": 1,
+      "membership_generation": 1
+    },
+    {
+      "principal_id": "30000000-0000-4000-8000-000000000023",
+      "action": "SAVE",
+      "decision": "ALLOW",
+      "acl_generation": 1,
+      "classification_generation": 1,
+      "membership_generation": 1
+    },
+    {
+      "principal_id": "30000000-0000-4000-8000-000000000024",
+      "action": "SAVE",
+      "decision": "ALLOW",
+      "acl_generation": 1,
+      "classification_generation": 1,
+      "membership_generation": 1
+    }
+  ],
+  "source_access_generation": 1,
+  "protected_catalog_generation": 1,
+  "fence_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+}

@@ -154,7 +154,7 @@ export const useCurveFoundation = (workspaceSlug: string | undefined, workspaceI
         if (response.status === 410) {
           setConnectionState("STALE");
           setProblem({
-            type: "https://curve.x3m.internal/problems/curve-event-cursor-stale",
+            type: "https://curve.example.invalid/problems/curve-event-cursor-stale",
             title: "Live updates need to be resynchronized",
             status: 410,
           });

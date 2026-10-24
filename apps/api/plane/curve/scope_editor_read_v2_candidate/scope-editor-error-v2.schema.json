@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/scope-editor-read-v2/scope-editor-error-v2.schema.json",
+  "title": "Uniform minimal scope read denial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "const": "SCOPE_EDITOR_PRECONDITION_UNAVAILABLE"
+    }
+  }
+}

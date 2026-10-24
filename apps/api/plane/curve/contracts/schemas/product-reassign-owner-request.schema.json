@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/product-reassign-owner-request.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/product-reassign-owner-request.schema.json",
   "title": "Reassign Curve Product owner request",
   "type": "object",
   "additionalProperties": false,

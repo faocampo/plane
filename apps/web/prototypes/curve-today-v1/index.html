@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Today · Curve prototype</title>
+    <link rel="stylesheet" href="today.css" />
+    <script src="today.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <aside class="sidebar" aria-label="Workspace navigation">
+      <div class="navigation-content">
+        <span class="logo" role="img" aria-label="Curve"
+          ><img src="../../public/curve/curve-logo-dark-v1.png" alt=""
+        /></span>
+        <p class="workspace">Atlas workspace <span>Synthetic</span></p>
+        <nav aria-label="Primary">
+          <h2>Product</h2>
+          <button disabled>Overview <small>Later</small></button>
+          <a href="#plan">Initiatives</a>
+          <button disabled>Roadmaps <small>Later</small></button>
+          <h2>Delivery</h2>
+          <button disabled>Execution <small>Later</small></button>
+          <button disabled>Quality <small>Later</small></button>
+          <button disabled>Evidence <small>Later</small></button>
+          <h2>Work management <span class="foundation">Plane-backed</span></h2>
+          <a href="#today" class="home-link" aria-current="page">Home</a>
+          <button disabled>My work <small>Outside prototype</small></button>
+          <button disabled>Inbox <small>Outside prototype</small></button>
+          <h2>Platform</h2>
+          <button disabled>Settings <small>Outside prototype</small></button>
+        </nav>
+        <a
+          class="source"
+          href="https://github.com/faocampo/plane/tree/a6b0a8db15c42625712d083b8022cd4011eef892"
+          target="_blank"
+          rel="noreferrer"
+          >Plane foundation source
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M10 4H4v16h16v-6" /></svg>
+        </a>
+      </div>
+    </aside>
+    <div class="body">
+      <header class="topbar">
+        <button id="open-nav" class="mobile-only icon-button" aria-label="Open navigation" aria-haspopup="dialog">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        <span id="breadcrumb">Home / Today</span>
+        <span class="prototype-label">Prototype · synthetic data</span>
+      </header>
+      <main id="content" tabindex="-1"></main>
+      <section class="simulation" aria-labelledby="simulation-title">
+        <details>
+          <summary id="simulation-title">Prototype controls</summary>
+          <p>These fixtures change this preview only. No connection to the demo, no approval writes.</p>
+          <div class="controls">
+            <label
+              >Queue state
+              <select id="scenario">
+                <option value="current">Current</option>
+                <option value="loading">Loading</option>
+                <option value="empty">Empty</option>
+                <option value="partial">Partial</option>
+                <option value="stale">Stale</option>
+                <option value="failed">Failed</option>
+                <option value="revoked">Access revoked</option>
+              </select>
+            </label>
+            <label
+              >Example principal
+              <select id="principal">
+                <option value="technical">Technical approver</option>
+                <option value="owner">Product owner</option>
+                <option value="reviewer">Code reviewer</option>
+              </select>
+            </label>
+          </div>
+        </details>
+      </section>
+    </div>
+    <dialog id="navigation" aria-label="Workspace navigation">
+      <button id="close-nav" class="icon-button" aria-label="Close navigation">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" /></svg>
+      </button>
+      <div id="mobile-navigation"></div>
+    </dialog>
+  </body>
+</html>

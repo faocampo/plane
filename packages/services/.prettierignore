@@ -8,3 +8,5 @@ node_modules/
 out/
 pnpm-lock.yaml
 storybook-static/
+# Closed backend contract mirrors are checked by raw-byte parity; never reformat them.
+src/curve/existing-work-contracts/*.schema.json

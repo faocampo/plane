@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/telemetry-manifest.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/telemetry-manifest.schema.json",
   "title": "Curve M0 telemetry manifest",
   "type": "object",
   "additionalProperties": false,

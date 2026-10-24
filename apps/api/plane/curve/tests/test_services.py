@@ -55,7 +55,7 @@ import plane.curve.services as curve_services
 
 pytestmark = [pytest.mark.unit, pytest.mark.django_db(transaction=True)]
 
-ACTOR = {"actor_type": "HUMAN", "actor_id": "federico"}
+ACTOR = {"actor_type": "HUMAN", "actor_id": "reviewer-alpha"}
 SERVICE = {"actor_type": "SERVICE", "actor_id": "curve-worker-test"}
 REQUEST = b'{"command":"CREATE_FOUNDATION_PROBE"}'
 SAFE_ERROR = {"code": "TRANSIENT_TEST", "retryable": True}
@@ -826,7 +826,7 @@ def test_concurrent_workspace_uniqueness_collisions_commit_exactly_one_record():
         ),
         lambda: IdempotencyRecord.objects.create(
             workspace_id=workspace_id,
-            principal_scope="HUMAN:federico",
+            principal_scope="HUMAN:reviewer-alpha",
             command_scope="CURVE_CONCURRENCY_TEST",
             key_digest=idempotency_key_digest("concurrent-key"),
             request_digest=idempotency_key_digest("concurrent-request"),

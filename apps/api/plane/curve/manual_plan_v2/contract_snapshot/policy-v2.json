@@ -1,0 +1,41 @@
+{
+  "schema_version": "curve.manual-plan-draft-policy/v2-candidate",
+  "policy_edition": "LOCAL_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2",
+  "environment": "LOCAL",
+  "resolver_type": "FIXED_SYNTHETIC_LOCAL_MANUAL_PLAN_V2",
+  "default_enabled": false,
+  "initiative_mode": "STANDALONE",
+  "write_state": "PLANNING",
+  "require_exact_scoped_prd_approval": true,
+  "write_authority": [
+    "INITIATIVE_CREATOR",
+    "EXPLICIT_CURRENT_TECHNICAL_CONTRIBUTOR"
+  ],
+  "action_acl": "CURRENT_REQUIRED",
+  "reviewer_source_access": "ALL_THREE_CURRENT_ASSIGNED_HUMANS",
+  "original_input_identity": "RETAINED_IMMUTABLE_PRIVATE_RECEIPT",
+  "freshness": "CURRENT_SEPARATE_FENCE",
+  "replay": "ORIGINAL_REVISION_CURRENT_AUTHORITY",
+  "preplan_observations": "EXACT_CURRENT_SCOPED_SUBJECT_REQUIRED",
+  "excluded_writers": [
+    "PLAN_APPROVAL",
+    "CONTROLLING_WORK_BINDING",
+    "EXECUTION",
+    "COMPLETION_CREDIT"
+  ],
+  "manual_profile_ref": {
+    "entity_id": "20000000-0000-4000-8000-000000000201",
+    "digest": "sha256:16ddfbb742fb06e370e1c2db3723eb98c826e1454bf237d97f678656649314a4"
+  },
+  "command_byte_limit": 65536,
+  "definition_byte_limit": 5242880,
+  "definition_max_depth": 32,
+  "definition_max_nodes": 100000,
+  "worker_cpu_seconds": 15,
+  "worker_wall_seconds": 30,
+  "worker_address_space_bytes": 536870912,
+  "worker_descriptor_limit": 32,
+  "worker_concurrency_per_api_process": 2,
+  "etag_edition": "C1_TYPED_INITIATIVE_SAFE_INTEGER_V2_SELECTION",
+  "workflow_condition_subset_digest": "sha256:e029a6856cd433b4365ffcfffb8e9becc97678defbd8b3bd74cde70565764740"
+}

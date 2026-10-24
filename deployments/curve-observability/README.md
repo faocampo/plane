@@ -130,6 +130,6 @@ Grafana use disposable Docker named volumes with a 24-hour Prometheus
 retention window.
 
 Staging promotion requires a separate infrastructure decision covering the
-X3M-managed Collector/export endpoint, TLS and authentication, Prometheus and
+Example Organization-managed Collector/export endpoint, TLS and authentication, Prometheus and
 Grafana identities, retention, alert routing, secrets, and Platform Operations
 ownership.

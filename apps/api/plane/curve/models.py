@@ -227,6 +227,7 @@ class Operation(WorkspaceScopedModel):
             models.Index(fields=["workspace_id", "status"], name="curve_op_workspace_state_idx"),
         ]
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_operation_scope_uq"),
             models.CheckConstraint(
                 condition=(
                     ~models.Q(
@@ -285,6 +286,7 @@ class Product(models.Model):
     class Meta:
         db_table = "curve_product"
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_product_ws_id_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "key"],
                 name="curve_product_workspace_key_uniq",
@@ -343,6 +345,13 @@ class InitiativeRiskTier(models.TextChoices):
     HIGH = "HIGH", "High"
 
 
+class InitiativeBusinessIntent(models.TextChoices):
+    STRATEGIC = "STRATEGIC", "Strategic"
+    CUSTOMER_COMMITMENT = "CUSTOMER_COMMITMENT", "Customer commitment"
+    BUSINESS_IMPROVEMENT = "BUSINESS_IMPROVEMENT", "Business improvement"
+    MANDATORY = "MANDATORY", "Mandatory"
+
+
 class InitiativeState(models.TextChoices):
     DRAFT = "DRAFT", "Draft"
     ALIGNING = "ALIGNING", "Aligning"
@@ -369,7 +378,7 @@ class Initiative(models.Model):
     objects = models.Manager.from_queryset(InitiativeQuerySet)()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    schema_version = models.CharField(max_length=20, default="1.1", editable=False)
     workspace_id = models.UUIDField(db_index=True, editable=False)
     product_id = models.UUIDField(db_index=True, editable=False)
     mode = models.CharField(max_length=16, choices=InitiativeMode.choices)
@@ -378,11 +387,22 @@ class Initiative(models.Model):
     title = models.CharField(max_length=255)
     description = models.JSONField()
     risk_tier = models.CharField(max_length=16, choices=InitiativeRiskTier.choices)
+    business_intent = models.CharField(
+        max_length=32,
+        choices=InitiativeBusinessIntent.choices,
+        null=True,
+        blank=True,
+    )
     state = models.CharField(max_length=40, choices=InitiativeState.choices, default=InitiativeState.DRAFT)
     paused_from_state = models.CharField(max_length=40, choices=InitiativeState.choices, null=True, blank=True)
     workflow_version_id = models.UUIDField(null=True, blank=True, editable=False)
     creator_user_id = models.UUIDField(editable=False)
     first_external_resource_at = models.DateTimeField(null=True, blank=True, editable=False)
+    current_prd_checkpoint_id = models.UUIDField(null=True, blank=True, editable=False)
+    controlling_prd_decision_id = models.UUIDField(null=True, blank=True, editable=False)
+    current_local_prd_submission_id = models.UUIDField(null=True, blank=True, editable=False)
+    controlling_local_prd_decision_id = models.UUIDField(null=True, blank=True, editable=False)
+    pending_scope_reopening_id = models.UUIDField(null=True, blank=True, editable=False)
     version = models.PositiveBigIntegerField(default=1, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now=True, editable=False)
@@ -396,6 +416,7 @@ class Initiative(models.Model):
             models.Index(fields=["workspace_id", "product_id", "state"], name="curve_init_ws_product_idx"),
         ]
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_init_ws_id_uq"),
             models.UniqueConstraint(
                 models.F("workspace_id"),
                 Lower("keyword"),
@@ -422,6 +443,13 @@ class Initiative(models.Model):
                 name="curve_init_risk_ck",
             ),
             models.CheckConstraint(
+                condition=(
+                    models.Q(business_intent__isnull=True)
+                    | models.Q(business_intent__in=InitiativeBusinessIntent.values)
+                ),
+                name="curve_init_business_intent_ck",
+            ),
+            models.CheckConstraint(
                 condition=models.Q(state__in=InitiativeState.values),
                 name="curve_init_state_ck",
             ),
@@ -430,7 +458,12 @@ class Initiative(models.Model):
                 condition=(
                     models.Q(
                         state=InitiativeState.PAUSED,
-                        paused_from_state__in=[InitiativeState.DRAFT, InitiativeState.ALIGNING],
+                        paused_from_state__in=[
+                            InitiativeState.DRAFT,
+                            InitiativeState.ALIGNING,
+                            InitiativeState.PRD_REVIEW,
+                            InitiativeState.PLANNING,
+                        ],
                     )
                     | (~models.Q(state=InitiativeState.PAUSED) & models.Q(paused_from_state__isnull=True))
                 ),
@@ -439,7 +472,10 @@ class Initiative(models.Model):
             models.CheckConstraint(
                 condition=(
                     models.Q(state=InitiativeState.DRAFT, workflow_version_id__isnull=True)
-                    | models.Q(state=InitiativeState.ALIGNING, workflow_version_id__isnull=False)
+                    | models.Q(
+                        state__in=[InitiativeState.ALIGNING, InitiativeState.PRD_REVIEW, InitiativeState.PLANNING],
+                        workflow_version_id__isnull=False,
+                    )
                     | models.Q(
                         state=InitiativeState.PAUSED,
                         paused_from_state=InitiativeState.DRAFT,
@@ -447,7 +483,11 @@ class Initiative(models.Model):
                     )
                     | models.Q(
                         state=InitiativeState.PAUSED,
-                        paused_from_state=InitiativeState.ALIGNING,
+                        paused_from_state__in=[
+                            InitiativeState.ALIGNING,
+                            InitiativeState.PRD_REVIEW,
+                            InitiativeState.PLANNING,
+                        ],
                         workflow_version_id__isnull=False,
                     )
                     | models.Q(state=InitiativeState.CANCELLED)
@@ -505,6 +545,7 @@ class GateAssignment(models.Model):
     class Meta:
         db_table = "curve_gate_assignment"
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "initiative", "id"], name="curve_gate_scope_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "initiative", "gate_type"],
                 name="curve_gate_ws_init_type_uq",
@@ -563,6 +604,7 @@ class ProviderConnection(WorkspaceScopedModel):
             ),
         ]
         constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_pconn_ws_id_uq"),
             models.UniqueConstraint(
                 fields=["workspace_id", "environment", "adapter_key"],
                 name="curve_pconn_ws_env_adapter_uq",
@@ -679,6 +721,151 @@ class ProviderConnection(WorkspaceScopedModel):
     def save(self, *args, **kwargs):
         self._validate_current_capability_scope()
         return super().save(*args, **kwargs)
+
+
+class DocumentSynchronizationStatus(models.TextChoices):
+    CURRENT = "CURRENT", "Current"
+    CHANGED_SINCE_SUBMISSION = "CHANGED_SINCE_SUBMISSION", "Changed since submission"
+    CHANGED_SINCE_APPROVAL = "CHANGED_SINCE_APPROVAL", "Changed since approval"
+    ACCESS_REVOKED = "ACCESS_REVOKED", "Access revoked"
+    MOVED_OUTSIDE_POLICY = "MOVED_OUTSIDE_POLICY", "Moved outside policy"
+    DELETED = "DELETED", "Deleted"
+    PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE", "Provider unavailable"
+    RECONCILIATION_REQUIRED = "RECONCILIATION_REQUIRED", "Reconciliation required"
+
+
+class DocumentAccessStatus(models.TextChoices):
+    ALLOWED = "ALLOWED", "Allowed"
+    DENIED = "DENIED", "Denied"
+    UNKNOWN = "UNKNOWN", "Unknown"
+
+
+class ExternalDocumentBindingQuerySet(WorkspaceScopedQuerySetMixin, models.QuerySet):
+    def bulk_create(self, objs, *args, **kwargs):
+        raise ImmutableRecordError("Document binding creation requires scoped instance validation")
+
+    def bulk_update(self, objs, fields, *args, **kwargs):
+        raise ImmutableRecordError("Document binding changes require versioned instance updates")
+
+    def update(self, **kwargs):
+        raise ImmutableRecordError("Document binding changes require versioned instance updates")
+
+    def delete(self):
+        raise ImmutableRecordError("Document binding deletion requires a governed successor policy")
+
+
+class ExternalDocumentBinding(models.Model):
+    """External PRD identity and observation metadata; no content or live transport.
+
+    The consuming command must authenticate, authorize, and audit before using
+    this persistence primitive. Stored access status is a projection, never a
+    permission grant. Composite tenant FKs and identity/version triggers are
+    installed by the migration, including for writes outside the ORM.
+    """
+
+    objects = models.Manager.from_queryset(ExternalDocumentBindingQuerySet)()
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=20, default="1.0", editable=False)
+    workspace_id = models.UUIDField(db_index=True, editable=False)
+    initiative = models.ForeignKey(Initiative, on_delete=models.PROTECT, related_name="document_bindings")
+    artifact_kind = models.CharField(max_length=16, default="PRD", editable=False)
+    provider_connection = models.ForeignKey(
+        ProviderConnection, on_delete=models.PROTECT, related_name="document_bindings"
+    )
+    provider_file_id = models.CharField(max_length=512, editable=False)
+    provider_container_id = models.CharField(max_length=512)
+    canonical_url = models.URLField(max_length=2048)
+    current_provider_version = models.CharField(max_length=512)
+    current_revision_id = models.CharField(max_length=512, null=True, blank=True)
+    current_modified_at = models.DateTimeField()
+    synchronization_status = models.CharField(
+        max_length=32,
+        choices=DocumentSynchronizationStatus.choices,
+        default=DocumentSynchronizationStatus.RECONCILIATION_REQUIRED,
+    )
+    access_status = models.CharField(
+        max_length=16, choices=DocumentAccessStatus.choices, default=DocumentAccessStatus.UNKNOWN
+    )
+    last_reconciled_at = models.DateTimeField(null=True, blank=True)
+    version = models.PositiveBigIntegerField(default=1, editable=False)
+    created_by = models.JSONField(editable=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    class Meta:
+        db_table = "curve_external_document_binding"
+        constraints = [
+            models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_doc_ws_id_uq"),
+            models.UniqueConstraint(
+                fields=["workspace_id", "initiative", "artifact_kind"], name="curve_doc_ws_init_kind_uq"
+            ),
+            models.CheckConstraint(condition=models.Q(schema_version="1.0"), name="curve_doc_schema_ck"),
+            models.CheckConstraint(condition=models.Q(artifact_kind="PRD"), name="curve_doc_kind_ck"),
+            models.CheckConstraint(condition=models.Q(version__gte=1), name="curve_doc_version_ck"),
+            models.CheckConstraint(
+                condition=models.Q(synchronization_status__in=DocumentSynchronizationStatus.values),
+                name="curve_doc_sync_ck",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(access_status__in=DocumentAccessStatus.values), name="curve_doc_access_ck"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(canonical_url__regex=r"^https://[^[:space:]]+$"), name="curve_doc_url_ck"
+            ),
+            *[
+                models.CheckConstraint(condition=models.Q(**{f"{field}__regex": r"^[A-Za-z0-9._~-]+$"}), name=name)
+                for field, name in (
+                    ("provider_file_id", "curve_doc_file_ck"),
+                    ("provider_container_id", "curve_doc_container_ck"),
+                    ("current_provider_version", "curve_doc_provider_version_ck"),
+                    ("current_revision_id", "curve_doc_revision_ck"),
+                )
+            ],
+        ]
+
+    def as_record(self):
+        from .prd_metadata_validation import instant
+
+        return {
+            "schema_version": self.schema_version,
+            "id": str(self.id),
+            "workspace_id": str(self.workspace_id),
+            "initiative_id": str(self.initiative_id),
+            "artifact_kind": self.artifact_kind,
+            "provider_connection_id": str(self.provider_connection_id),
+            "provider_file_id": self.provider_file_id,
+            "provider_container_id": self.provider_container_id,
+            "canonical_url": self.canonical_url,
+            "current_provider_version": self.current_provider_version,
+            "current_revision_id": self.current_revision_id,
+            "current_modified_at": instant(self.current_modified_at),
+            "synchronization_status": self.synchronization_status,
+            "access_status": self.access_status,
+            "last_reconciled_at": instant(self.last_reconciled_at) if self.last_reconciled_at else None,
+            "version": self.version,
+            "created_by": dict(self.created_by),
+            "created_at": instant(self.created_at),
+        }
+
+    def save(self, *args, **kwargs):
+        # Scope before loading referenced metadata. The DB repeats these checks
+        # with composite FKs, so concurrent parent changes cannot cross tenants.
+        if not Initiative.objects.filter(id=self.initiative_id, workspace_id=self.workspace_id).exists():
+            raise ValidationError("Document binding Initiative must belong to its workspace")
+        if not ProviderConnection.objects.filter(
+            id=self.provider_connection_id, workspace_id=self.workspace_id
+        ).exists():
+            raise ValidationError("Document binding connection must belong to its workspace")
+        # Force insertion for new IDs: Django's update-then-insert fallback could
+        # otherwise rewrite an existing binding supplied with a colliding UUID.
+        if self._state.adding:
+            kwargs["force_insert"] = True
+        else:
+            kwargs["force_update"] = True
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ImmutableRecordError("Document binding deletion requires a governed successor policy")
 
 
 class ProviderCapability(ImmutableRecordModel):
@@ -1170,9 +1357,109 @@ class PolicyDecision(ImmutableRecordModel):
             ),
             models.CheckConstraint(
                 condition=(
-                    models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
+                    models.Q(
+                        policy_key="CURVE_PROJECT_ASSOCIATION_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:0ea402f3db6a7fb0743a79a45644d79235a685781ad844d3c42230da2c548691",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_SCOPE_PROPOSAL_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:778bdbd6fb82f51482d791d22ae6cf884a8906e91613b07cdafc6b429d24e266",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_SCOPE_REOPENING_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:598e492b7dc23369eaf3029d7e208b4fd338d03d3e3388fcb10305e9c02b0094",
+                    )
+                    | models.Q(policy_key="CURVE_CORE_POLICY", policy_version__in=[1, 2])
                     | models.Q(policy_key="CURVE_PRODUCT_POLICY", policy_version=1)
                     | models.Q(policy_key="CURVE_INITIATIVE_POLICY", policy_version=1)
+                    | models.Q(
+                        policy_key="CURVE_INITIATIVE_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:6172fa892cd46d0a869761d22f364e27a2bd019b8adf814b59e5df6a4a7f13cd",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_PRD_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:aa31f1fb698cdd806032c96f07631cfc03dc68011433ddcbc133cf11d0535e40",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_PRD_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:ad38408f0e4450c615025debdf3361965f3a7361ad392aaf9aeb4219b910cb4c",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_MANUAL_PLAN_DRAFT_POLICY_V2",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:cd960f017b8209b5e4a26a624cfb3549577f946c5a9682c593dec5908d6ab2f0",
+                    )
+                    | models.Q(
+                        policy_key="CURVE.LOCAL_MANUAL_GATE2_RECONSTRUCTION_V2",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:b77e1c16465b9ebdea65ffa37915bee9239a616f667a72f8e6ad978df8833514",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_MANUAL_PLAN_DRAFT_POLICY_V3",
+                        policy_version=3,
+                        policy_manifest_digest="sha256:84e831c2011a85b83acb8a2d414d586b0d948fbcf76fc666140459e04276f38f",
+                    )
+                    | models.Q(
+                        policy_key="CURVE.LOCAL_MANUAL_GATE2_RECONSTRUCTION_V3",
+                        policy_version=3,
+                        policy_manifest_digest="sha256:16d6a552f604f7b8ce4711e2b0521de7155d0542da3d8eaec7cea6f3e60c337b",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:bfded3fd13b5dd90bb45aa7fc3681b9836b0adf63c7b64d6f7838e8d14ee9c30",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REVIEW_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:94abe4a0334cd7c178bdfac348655bc768fbacf2fa8bb8bdec1b03998bd7296d",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_UPLOAD_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:7bbfdcb956071376e58dd18870613470d1e4a4e75c3ef18d4153400480231937",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_REVIEW_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:09b9ca473a2fb43d90b9e9438c0e22d4bdebd65a7eb769113ef202d0bd45dcfe",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REOPENING_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:ac4466f235b1f0baefe4ea35285f65cfe44e144ee7de3bbf89dda57af17a7616",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:ca91f9a19b2203245c6a70d99305b2a6db3697af13f98c7aeaf6f648a3a97be9",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REVIEW_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:f5a26189960ebb3a5657cb5a7857f4060f44eff3e217e598bb500273718f0c4a",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_UPLOAD_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:5d661c02789d1ecc761adc3864ef670e868aa6cef77f0c7dc9202d64a9df9ae3",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PLAN_REVIEW_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:e98a45e07f35cb297a6f7766b05ecea5bd67c2ad91facab2a8f4a37197194b3b",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_LOCAL_PRD_REOPENING_POLICY",
+                        policy_version=2,
+                        policy_manifest_digest="sha256:f2021762aef38835aa7e9807cef415293f3ee2cb79705f6a7dc9033d02eee354",
+                    )
                 ),
                 name="curve_policy_identity_ck",
             ),
@@ -1224,3 +1511,45 @@ class AuditEvent(ImmutableRecordModel):
                 name="curve_audit_sequence_positive_ck",
             ),
         ]
+
+
+# Register the additive PRD model module after the shared bases are defined.
+from .prd_models import (  # noqa: E402,F401
+    PrdArtifact,
+    PrdArtifactVersion,
+    PrdEvidenceItemVersion,
+    PrdEvidenceSnapshot,
+)
+from .prd_checkpoint_models import DocumentCheckpoint  # noqa: E402,F401
+from .prd_review_models import PrdReviewDecision  # noqa: E402,F401
+from .prd_command_models import PrdAcceptedCommand  # noqa: E402,F401
+from .prd_readiness_models import PrdReadinessRecord  # noqa: E402,F401
+from .project_association_models import ProjectAssociation, ProjectAssociationState  # noqa: E402,F401
+
+from .scope_proposal_models import ScopeProposal, ScopeProposalRevision, ScopeProposalItem, ScopePurpose  # noqa: E402,F401
+
+from .scoped_prd_models import (  # noqa: E402,F401
+    ScopedPrdAcceptedCommand,
+    ScopedPrdObservation,
+    ScopedPrdReadiness,
+    ScopedPrdSubject,
+    ScopedPrdDecision,
+)
+
+from .scope_reopening_models import ScopeReopening  # noqa: E402,F401
+
+from .manual_plan_v2.models import ManualPlanDraftV2, ManualPlanRevisionV2  # noqa: E402,F401
+
+from .manual_gate2_v2.models import (
+    ManualGate2ControlV2,
+    ManualGate2RecordV2,
+    ManualTaskClaimV2,
+    ManualTaskClaimHistoryV2,
+)  # noqa: F401,E402
+
+from .local_document_models import LocalPrdSource  # noqa: E402,F401
+from .local_prd_review_models import LocalPrdSubmission, LocalPrdDecision  # noqa: E402,F401
+
+from .local_plan_models import LocalPlanRevision, LocalPlanSubmission, LocalPlanDecision  # noqa: E402,F401
+
+from .local_prd_reopening_models import LocalPrdReopening  # noqa: E402,F401

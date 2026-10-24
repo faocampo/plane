@@ -29,7 +29,7 @@ import { WorkspaceLogo } from "../logo";
 import SidebarDropdownItem from "./dropdown-item";
 
 type WorkspaceMenuRootProps = {
-  variant: "sidebar" | "top-navigation";
+  variant: "sidebar" | "top-navigation" | "curve-sidebar";
 };
 
 export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: WorkspaceMenuRootProps) {
@@ -79,6 +79,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
       className={cn("relative flex h-full w-fit max-w-48 truncate whitespace-nowrap", {
         "w-full justify-center text-center": variant === "sidebar",
         "flex-grow justify-stretch truncate text-left": variant === "top-navigation",
+        "w-full justify-stretch truncate text-left": variant === "curve-sidebar",
       })}
     >
       <Menu open={isWorkspaceMenuOpen} onOpenChange={setIsWorkspaceMenuOpen}>
@@ -108,7 +109,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
             }
           />
         )}
-        {variant === "top-navigation" && (
+        {(variant === "top-navigation" || variant === "curve-sidebar") && (
           <MenuTrigger
             render={
               <button
@@ -138,7 +139,7 @@ export const WorkspaceMenuRoot = observer(function WorkspaceMenuRoot(props: Work
             }
           />
         )}
-        <MenuContent side="bottom" align="start">
+        <MenuContent side={variant === "curve-sidebar" ? "top" : "bottom"} align="start">
           <div className="flex w-[19rem] max-w-full flex-col items-start justify-start">
             <span className="sticky top-0 z-1 w-full flex-shrink-0 truncate bg-layer-2 px-4 pt-3 pb-1 text-left text-13 font-medium text-placeholder">
               {currentUser?.email}

@@ -1,0 +1,6 @@
+{
+  "status": "REVIEWED_PROSPECTIVE_DDL_NOT_RUNTIME_QUALIFIED",
+  "physical_catalog_digest": "sha256:7ad640f869be7d1416131d3f848ebd0da9b071961c0a2015bc36c1ca895096a8",
+  "migration_unpinned_digest": "sha256:ae5bdd7bbdefc1c69c6e16b0a45cda45ddb5900911bf26dcc2ef545bbc2d1023",
+  "boundary": "Four retained models; atomic command graph; stable unique task identity; no execution or completion writer; old seals and migration bytes preserved"
+}

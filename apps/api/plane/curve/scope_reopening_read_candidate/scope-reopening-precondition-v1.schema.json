@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/scope-reopening-precondition-v1/scope-reopening-precondition-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "workspace_id",
+    "initiative_id",
+    "initiative_version",
+    "expected_scope_revision",
+    "eligibility",
+    "pending_reopening"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.scope-reopening-precondition/v1-candidate"
+    },
+    "policy_edition": {
+      "const": "EXPLICIT_SCOPE_REOPENING_PRECONDITION_READ_V1"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "initiative_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "initiative_version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "expected_scope_revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "eligibility": {
+      "enum": [
+        "REOPENABLE",
+        "STATE_BLOCKED"
+      ]
+    },
+    "pending_reopening": {
+      "type": "boolean"
+    }
+  }
+}

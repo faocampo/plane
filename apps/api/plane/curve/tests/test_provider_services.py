@@ -975,7 +975,7 @@ def test_local_drain_is_bounded_to_ten_and_destination_isolated():
         effective_principal=ACTOR,
         correlation_id="temporal-isolation",
         classification=DataClassification.INTERNAL,
-        payload_schema="https://curve.x3m.internal/contracts/schemas/operation-event-v1.schema.json",
+        payload_schema="https://curve.example.invalid/contracts/schemas/operation-event-v1.schema.json",
         payload={"workspace_id": str(workspace.id), "status": "PENDING"},
     )
     temporal_outbox = OutboxEvent.objects.create(

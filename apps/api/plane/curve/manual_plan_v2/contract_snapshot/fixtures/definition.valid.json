@@ -1,0 +1,234 @@
+{
+  "schema_version": "curve.manual-plan-definition/v2-candidate",
+  "workspace_id": "30000000-0000-4000-8000-000000000001",
+  "initiative_id": "30000000-0000-4000-8000-000000000002",
+  "plan_kind": "SDLC_MANUAL",
+  "initiative_mode": "STANDALONE",
+  "approved_subject_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000004",
+    "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "manual_profile_ref": {
+    "entity_id": "20000000-0000-4000-8000-000000000201",
+    "digest": "sha256:16ddfbb742fb06e370e1c2db3723eb98c826e1454bf237d97f678656649314a4"
+  },
+  "workflow_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000008",
+    "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "quality_policy_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000009",
+    "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+  },
+  "scope_revision_ref": {
+    "entity_id": "30000000-0000-4000-8000-000000000005",
+    "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "repositories": [
+    {
+      "repository_ref": {
+        "entity_id": "30000000-0000-4000-8000-000000000006",
+        "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "base_branch": "main",
+      "base_commit": {
+        "algorithm": "sha1",
+        "value": "1111111111111111111111111111111111111111"
+      },
+      "repository_policy_ref": {
+        "entity_id": "30000000-0000-4000-8000-000000000007",
+        "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "context_input_ref": {
+        "object_id": "30000000-0000-4000-8000-000000000010",
+        "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "size_bytes": 1024,
+        "media_type": "application/json"
+      }
+    }
+  ],
+  "slices": [
+    {
+      "slice_key": "alpha",
+      "repository_binding_id": "30000000-0000-4000-8000-000000000006",
+      "user_outcome": "A synthetic user can review the example outcome.",
+      "in_scope": [
+        "Implement the synthetic acceptance criterion."
+      ],
+      "out_of_scope": [
+        "Production activation."
+      ],
+      "requirement_ids": [
+        "FR-008"
+      ],
+      "acceptance_ids": [
+        "AC-10"
+      ],
+      "proposed_delivery_refs": [
+        {
+          "provider_installation_id": "30000000-0000-4000-8000-000000000030",
+          "source_issue_id": "30000000-0000-4000-8000-000000000031"
+        }
+      ],
+      "expected_components": [
+        {
+          "path": "src/alpha.py",
+          "change": "CREATE"
+        }
+      ],
+      "interfaces": [],
+      "migration_impact": {
+        "kind": "NONE",
+        "rationale": "No storage change."
+      },
+      "compatibility_impact": {
+        "kind": "NONE",
+        "rationale": "No public API change."
+      },
+      "verification_steps": [
+        {
+          "check_id": "lint",
+          "command_text": "example-check lint",
+          "expected_result": "Passes the synthetic fixture.",
+          "timeout_seconds": 60,
+          "execution_mode": "INERT_HUMAN_INSTRUCTION"
+        },
+        {
+          "check_id": "security",
+          "command_text": "example-check security",
+          "expected_result": "Passes the synthetic fixture.",
+          "timeout_seconds": 60,
+          "execution_mode": "INERT_HUMAN_INSTRUCTION"
+        },
+        {
+          "check_id": "unit",
+          "command_text": "example-check unit",
+          "expected_result": "Passes the synthetic fixture.",
+          "timeout_seconds": 60,
+          "execution_mode": "INERT_HUMAN_INSTRUCTION"
+        }
+      ],
+      "branch_name": "curve/example-initiative/alpha",
+      "owner": {
+        "actor_type": "HUMAN",
+        "actor_id": "30000000-0000-4000-8000-000000000024"
+      },
+      "code_approver": {
+        "actor_type": "HUMAN",
+        "actor_id": "30000000-0000-4000-8000-000000000023"
+      },
+      "risk_tier": "STANDARD",
+      "budget_policy_ref": {
+        "entity_id": "20000000-0000-4000-8000-000000000204",
+        "digest": "sha256:25bd9129a8d8cca13a81aff51c6f9d16d0bdae18689f968eb82783f95d51bbc8"
+      },
+      "rollback_plan": {
+        "strategy": "REVERT_COMMIT",
+        "instructions": "A human reviews and reverts the example commit.",
+        "verification": "Rerun the documented checks."
+      }
+    },
+    {
+      "slice_key": "beta",
+      "repository_binding_id": "30000000-0000-4000-8000-000000000006",
+      "user_outcome": "A synthetic user can review the example outcome.",
+      "in_scope": [
+        "Implement the synthetic acceptance criterion."
+      ],
+      "out_of_scope": [
+        "Production activation."
+      ],
+      "requirement_ids": [
+        "FR-009"
+      ],
+      "acceptance_ids": [
+        "AC-11"
+      ],
+      "proposed_delivery_refs": [
+        {
+          "provider_installation_id": "30000000-0000-4000-8000-000000000030",
+          "source_issue_id": "30000000-0000-4000-8000-000000000032"
+        }
+      ],
+      "expected_components": [
+        {
+          "path": "src/beta.py",
+          "change": "CREATE"
+        }
+      ],
+      "interfaces": [],
+      "migration_impact": {
+        "kind": "NONE",
+        "rationale": "No storage change."
+      },
+      "compatibility_impact": {
+        "kind": "NONE",
+        "rationale": "No public API change."
+      },
+      "verification_steps": [
+        {
+          "check_id": "lint",
+          "command_text": "example-check lint",
+          "expected_result": "Passes the synthetic fixture.",
+          "timeout_seconds": 60,
+          "execution_mode": "INERT_HUMAN_INSTRUCTION"
+        },
+        {
+          "check_id": "security",
+          "command_text": "example-check security",
+          "expected_result": "Passes the synthetic fixture.",
+          "timeout_seconds": 60,
+          "execution_mode": "INERT_HUMAN_INSTRUCTION"
+        },
+        {
+          "check_id": "unit",
+          "command_text": "example-check unit",
+          "expected_result": "Passes the synthetic fixture.",
+          "timeout_seconds": 60,
+          "execution_mode": "INERT_HUMAN_INSTRUCTION"
+        }
+      ],
+      "branch_name": "curve/example-initiative/beta",
+      "owner": {
+        "actor_type": "HUMAN",
+        "actor_id": "30000000-0000-4000-8000-000000000024"
+      },
+      "code_approver": {
+        "actor_type": "HUMAN",
+        "actor_id": "30000000-0000-4000-8000-000000000023"
+      },
+      "risk_tier": "STANDARD",
+      "budget_policy_ref": {
+        "entity_id": "20000000-0000-4000-8000-000000000204",
+        "digest": "sha256:25bd9129a8d8cca13a81aff51c6f9d16d0bdae18689f968eb82783f95d51bbc8"
+      },
+      "rollback_plan": {
+        "strategy": "REVERT_COMMIT",
+        "instructions": "A human reviews and reverts the example commit.",
+        "verification": "Rerun the documented checks."
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "predecessor_slice_key": "alpha",
+      "successor_slice_key": "beta",
+      "dependency_type": "EXECUTION_ORDER",
+      "required_state": "DRAFT_ELIGIBLE",
+      "artifact_ref": null,
+      "condition_status": "FUTURE_NOT_ASSERTED",
+      "condition_subject": "VERTICAL_SLICE",
+      "condition_source": "PINNED_WORKFLOW_STATE",
+      "workflow_ref": {
+        "entity_id": "30000000-0000-4000-8000-000000000008",
+        "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    }
+  ],
+  "standalone_applicability": {
+    "decision": "NO_FEATURE_DELIVERY_CONTRACT",
+    "rationale": "Standalone synthetic manual work.",
+    "contract_obligation_ids": []
+  },
+  "automatic_execution": "DENIED"
+}

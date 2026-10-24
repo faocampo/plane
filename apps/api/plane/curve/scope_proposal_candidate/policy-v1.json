@@ -1,0 +1,20 @@
+{
+  "policy_key": "CURVE_SCOPE_PROPOSAL_POLICY",
+  "policy_version": 1,
+  "edition": "EXPLICIT_EXISTING_WORK_SCOPE_PROPOSAL_V1",
+  "environment": "LOCAL",
+  "default_enabled": false,
+  "actions": ["CURVE.SCOPE_PROPOSAL.REPLACE", "CURVE.SCOPE_PROPOSAL.READ"],
+  "write_authority": "CURRENT_INITIATIVE_CREATOR_OR_WORKSPACE_ADMINISTRATOR",
+  "write_state": "DRAFT",
+  "initiative_mode": "STANDALONE",
+  "source_visibility": "NATIVE_ORDINARY_ISSUE_EXPLICIT_MEMBER_GUEST_CREATOR_V1",
+  "purposes": ["CONTEXT_EVIDENCE", "PROPOSED_DELIVERY"],
+  "maximum_members": 100,
+  "maximum_request_bytes": 65536,
+  "controlling": false,
+  "source_mutations": false,
+  "implicit_descendants": false,
+  "future_membership": false,
+  "legacy_delivery_prd_bridge": "UNAVAILABLE"
+}

@@ -61,6 +61,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 classmethod-decorators = ["classmethod", "validator", "root_validator"]
 
 [lint.per-file-ignores]
+"plane/curve/models.py" = ["E402", "F401"]
 # Ignore specific rules for tests
 "tests/*" = ["E402", "F401", "F811"]
 # Ignore imported but unused in __init__.py files

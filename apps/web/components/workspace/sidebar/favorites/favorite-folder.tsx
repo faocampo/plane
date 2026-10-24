@@ -34,7 +34,7 @@ import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { IFavorite, InstructionType } from "@plane/types";
 import { Icon } from "@makeplane/propel/components/icon";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { DropIndicator, DragHandle } from "@plane/blocks/common";
+import { DropIndicator } from "@plane/blocks/common";
 // helpers
 import { cn } from "@plane/utils";
 // hooks
@@ -205,7 +205,7 @@ export function FavoriteFolder(props: Props) {
                         }
                       )}
                     >
-                      <DragHandle className="bg-transparent" />
+                      <DragDropOutline aria-hidden="true" className="size-3.5 text-placeholder" />
                     </span>
                   </Tooltip>
                   <div className="grid size-5 flex-shrink-0 place-items-center">

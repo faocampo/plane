@@ -7,23 +7,22 @@
 import React from "react";
 import { observer } from "mobx-react";
 import Link from "next/link";
-import { useTranslation } from "@plane/i18n";
-import { PlaneLockup } from "@plane/blocks/icons";
 import { PageHead } from "@/components/core/page-title";
+import { CURVE_AUTH_COPY, CurveAuthBrand } from "@/components/curve/curve-auth-brand";
 import { EAuthModes } from "@/helpers/authentication.helper";
 import { useInstance } from "@/hooks/store/use-instance";
 
 const authContentMap = {
   [EAuthModes.SIGN_IN]: {
-    pageTitle: "Sign up",
-    text: "auth.common.new_to_plane",
-    linkText: "Sign up",
+    pageTitle: CURVE_AUTH_COPY.signIn.pageTitle,
+    text: CURVE_AUTH_COPY.signIn.prompt,
+    linkText: CURVE_AUTH_COPY.signIn.action,
     linkHref: "/sign-up",
   },
   [EAuthModes.SIGN_UP]: {
-    pageTitle: "Sign in",
-    text: "auth.common.already_have_an_account",
-    linkText: "Sign in",
+    pageTitle: CURVE_AUTH_COPY.signUp.pageTitle,
+    text: CURVE_AUTH_COPY.signUp.prompt,
+    linkText: CURVE_AUTH_COPY.signUp.action,
     linkHref: "/sign-in",
   },
 };
@@ -33,7 +32,6 @@ type AuthHeaderProps = {
 };
 
 export const AuthHeader = observer(function AuthHeader({ type }: AuthHeaderProps) {
-  const { t } = useTranslation();
   // store
   const { config } = useInstance();
   // derived values
@@ -41,16 +39,16 @@ export const AuthHeader = observer(function AuthHeader({ type }: AuthHeaderProps
 
   return (
     <AuthHeaderBase
-      pageTitle={t(authContentMap[type].pageTitle)}
+      pageTitle={authContentMap[type].pageTitle}
       additionalAction={
         enableSignUpConfig && (
           <div className="flex flex-col items-end text-center text-13 font-medium text-tertiary sm:flex-row sm:items-center sm:gap-2">
-            <span className="text-body-sm-regular text-tertiary">{t(authContentMap[type].text)}</span>
+            <span className="text-body-sm-regular text-tertiary">{authContentMap[type].text}</span>
             <Link
               href={authContentMap[type].linkHref}
               className="text-body-sm-semibold text-accent-primary hover:underline"
             >
-              {t(authContentMap[type].linkText)}
+              {authContentMap[type].linkText}
             </Link>
           </div>
         )
@@ -68,10 +66,10 @@ export function AuthHeaderBase(props: TAuthHeaderBase) {
   const { pageTitle, additionalAction } = props;
   return (
     <>
-      <PageHead title={pageTitle + " - Plane"} />
+      <PageHead title={pageTitle + " - Curve"} />
       <div className="sticky top-0 flex w-full flex-shrink-0 items-center justify-between gap-6">
-        <Link href="/">
-          <PlaneLockup height={20} width={95} className="text-primary" />
+        <Link href="/" aria-label="Curve home">
+          <CurveAuthBrand />
         </Link>
         {additionalAction}
       </div>

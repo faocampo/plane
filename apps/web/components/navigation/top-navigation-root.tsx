@@ -18,6 +18,7 @@ import { AppSidebarItem } from "@/components/sidebar/sidebar-item";
 import { InboxOutline } from "@makeplane/propel/icons";
 import useSWR from "swr";
 import { useWorkspaceNotifications } from "@/hooks/store/notifications";
+import { useCurveWorkspaceShell } from "@/hooks/use-curve-workspace-shell";
 // local imports
 import { StarUsOnGitHubLink } from "@/app/(all)/[workspaceSlug]/(projects)/star-us-link";
 
@@ -25,6 +26,7 @@ export const TopNavigationRoot = observer(function TopNavigationRoot() {
   // router
   const { workspaceSlug } = useParams();
   const pathname = usePathname();
+  const { isEnabled: isCurveShell } = useCurveWorkspaceShell(workspaceSlug?.toString());
 
   // store hooks
   const { unreadNotificationsCount, getUnreadNotificationsCount } = useWorkspaceNotifications();
@@ -46,14 +48,13 @@ export const TopNavigationRoot = observer(function TopNavigationRoot() {
 
   return (
     <div
+      data-top-navigation
       className={cn("z-[27] flex min-h-10 w-full items-center bg-canvas px-3.5 transition-all duration-300", {
         "px-2": !showLabel,
       })}
     >
       {/* Workspace Menu */}
-      <div className="flex-1 shrink-0">
-        <WorkspaceMenuRoot variant="top-navigation" />
-      </div>
+      <div className="flex-1 shrink-0">{!isCurveShell && <WorkspaceMenuRoot variant="top-navigation" />}</div>
       {/* Power K Search */}
       <div className="shrink-0">
         <TopNavPowerK />
@@ -77,8 +78,8 @@ export const TopNavigationRoot = observer(function TopNavigationRoot() {
             }}
           />
         </Tooltip>
-        <HelpMenuRoot />
-        <StarUsOnGitHubLink />
+        <HelpMenuRoot showCurveAttribution={isCurveShell} />
+        {!isCurveShell && <StarUsOnGitHubLink />}
         <div className="flex size-8 items-center justify-center rounded-md hover:bg-layer-1-hover">
           <UserMenuRoot />
         </div>

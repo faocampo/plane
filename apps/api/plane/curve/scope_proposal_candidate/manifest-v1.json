@@ -1,0 +1,5 @@
+{
+  "scope-proposal-event-v1.schema.json": "sha256:40795965ab228c7aac876a8e94acbdfb8eabff05a1f37df503a1c75d170fbe9a",
+  "scope-proposal-replace-v1.schema.json": "sha256:09006e1fb18a761ce0568c488ca6fe65edc7f76fb3cd15b35f6aa990175d1530",
+  "scope-proposal-revision-v1.schema.json": "sha256:316b8e8239ecb5d7528b52e2f70a86f9b3b0396928b1850b3e8b760a0dae0665"
+}

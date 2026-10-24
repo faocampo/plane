@@ -1,0 +1,15 @@
+{
+  "common-v3.schema.json": "sha256:bad2af05460e804e6e6e5c7d00044c6c08b5d410efacfb5830a42cd2f6e7f406",
+  "manual-plan-current-authority-v3.schema.json": "sha256:5812288a7bd14101dff2a2897f45cf45f13de74c18ca98fc651ba04efa2dd6aa",
+  "manual-plan-definition-v3.schema.json": "sha256:8d3397df55de08866f8c95110c7b5acd02020dcc766e6c4257568b081ca8967d",
+  "manual-plan-draft-event-v3.schema.json": "sha256:38ab2e91c13a7437b9fd64aae1f3bde29e5e196bd8d6fdcc37d63b2521ed2188",
+  "manual-plan-draft-revision-v3.schema.json": "sha256:ffc35b33c5ce991360f0a94f55f4fb34a1dbfe9779c49ea6da87312c82707ade",
+  "manual-plan-draft-save-v3.schema.json": "sha256:7a48f5b4c89687593e657da62ac10ed18ce23b42545e037866a84e8cd2cc34dd",
+  "manual-plan-draft-status-v3.schema.json": "sha256:7094989871a716e637a03f5af2483f25967f21412307a0669eab3572dca07c80",
+  "manual-plan-error-v3.schema.json": "sha256:1981c567ed3fac5a60a295831494baada17a93b3c4ab67be7333e2ccd672964c",
+  "manual-plan-input-identity-v3.schema.json": "sha256:eb5b33c322949abdcdfe399863955ce823c93251de8b32babc6380d7b7fe51c4",
+  "manual-plan-profile-v3.json": "sha256:fbfaf1ae8608aa580c5d76514a948ef515f8e0795248d180840fb89779f5a1e8",
+  "manual-plan-profile-v3.schema.json": "sha256:9014e382d760185b3bbecced53cdfc0302a68b2a314e990268ceaf0595114ec4",
+  "manual-plan-validation-receipt-v3.schema.json": "sha256:43b8669f68fe95d09767b8dc69522043f155c890087e6aaa11419de5d5ce8c63",
+  "policy-v3.json": "sha256:84e831c2011a85b83acb8a2d414d586b0d948fbcf76fc666140459e04276f38f"
+}

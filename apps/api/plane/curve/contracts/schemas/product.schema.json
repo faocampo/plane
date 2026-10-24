@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/product.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/product.schema.json",
   "title": "Curve Product",
   "type": "object",
   "additionalProperties": false,

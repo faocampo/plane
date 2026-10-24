@@ -128,7 +128,7 @@ export const normalizeCurveProblem = (error: unknown): ICurveProblemDetails => {
   const response = isRecord(error) ? error : {};
   const data = isRecord(response.data) ? response.data : {};
   const status = typeof response.status === "number" ? response.status : 500;
-  const type = typeof data.type === "string" ? data.type : "https://curve.x3m.internal/problems/request-failed";
+  const type = typeof data.type === "string" ? data.type : "https://curve.example.invalid/problems/request-failed";
   const title = typeof data.title === "string" ? data.title : "Curve could not complete the request";
   const correlationId = typeof data.correlation_id === "string" ? data.correlation_id : undefined;
   const errors = Array.isArray(data.errors)

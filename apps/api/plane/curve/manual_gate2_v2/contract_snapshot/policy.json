@@ -1,0 +1,21 @@
+{
+  "edition": "LOCAL_MANUAL_GATE2_RECONSTRUCTION_V2",
+  "lifecycle": "SEPARATE_MANUAL_CONTROL_WHILE_NATIVE_PLANNING",
+  "actions": [
+    "PREPARE",
+    "APPROVE",
+    "REQUEST_CHANGES",
+    "RECONCILE",
+    "RELEASE"
+  ],
+  "approval": "CURRENT_ASSIGNED_TECHNICAL_APPROVER_WITH_EXACT_ORIGINAL_INPUT_ACCESS",
+  "claim_key": [
+    "workspace_id",
+    "installation_id",
+    "issue_id"
+  ],
+  "release": "CURRENT_ASSIGNED_APPROVER_EXACT_GENERATIONS_FRESH_RECONCILIATION_NO_UNRESOLVED_WORK",
+  "holds": "OWNERSHIP_RETAINED_ON_PAUSE_CANCEL_OR_ACCESS_LOSS",
+  "execution": false,
+  "completion_credit": false
+}

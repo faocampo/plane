@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v3/manual-plan-draft-save-v3.schema.json",
+  "title": "Closed manual draft save metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "expected_draft_revision",
+    "approved_subject_ref",
+    "definition_ref",
+    "manual_profile_ref"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-draft.save/v3-candidate"
+    },
+    "policy_edition": {
+      "const": "LOCAL_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V3"
+    },
+    "expected_draft_revision": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v3/common-v3.schema.json#/$defs/ExpectedVersion"
+    },
+    "approved_subject_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v3/common-v3.schema.json#/$defs/DigestVersionRef"
+    },
+    "definition_ref": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v3/common-v3.schema.json#/$defs/DefinitionRef"
+    },
+    "manual_profile_ref": {
+      "allOf": [
+        {
+          "allOf": [
+            {
+              "$ref": "https://curve.example.invalid/candidates/manual-planning-v3/common-v3.schema.json#/$defs/DigestVersionRef"
+            }
+          ],
+          "const": {
+            "entity_id": "20000000-0000-4000-8000-000000000301",
+            "digest": "sha256:fbfaf1ae8608aa580c5d76514a948ef515f8e0795248d180840fb89779f5a1e8"
+          }
+        }
+      ],
+      "const": {
+        "entity_id": "20000000-0000-4000-8000-000000000301",
+        "digest": "sha256:fbfaf1ae8608aa580c5d76514a948ef515f8e0795248d180840fb89779f5a1e8"
+      }
+    }
+  }
+}
