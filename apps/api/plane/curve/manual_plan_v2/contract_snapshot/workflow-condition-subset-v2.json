@@ -1,0 +1,39 @@
+{
+  "schema_version": "curve.manual-plan-workflow-condition-subset/v2-candidate",
+  "status": "NORMATIVE_SUBSET_NOT_RUNTIME_EXECUTION",
+  "normative_sources": [
+    {
+      "path": "docs/curve-ai-native-sdlc-prd.md",
+      "source_commit": "b2d8cb8993ec66a1bf5cb33a038f16751f10fa36",
+      "digest": "sha256:863a368aff621eeb3c9e8a74102fe7c9f2e14a2021afa6ef0df50cdbe87fdd9f"
+    },
+    {
+      "path": "docs/technical/domain-model.md",
+      "source_commit": "b2d8cb8993ec66a1bf5cb33a038f16751f10fa36",
+      "digest": "sha256:cab3f469d951cafdf33c7721fc267026fc6548f912d11a7b275117520310cdbc"
+    },
+    {
+      "path": "docs/technical/workflows-and-sequences.md",
+      "source_commit": "b2d8cb8993ec66a1bf5cb33a038f16751f10fa36",
+      "digest": "sha256:46c5dea8b651952587d26af642e9bfddbc6c8ba1e926e06abd880412a907823d"
+    }
+  ],
+  "allowed_conditions": [
+    {
+      "dependency_type": "EXECUTION_ORDER",
+      "condition_subject": "VERTICAL_SLICE",
+      "required_state": "DRAFT_ELIGIBLE",
+      "condition_source": "PINNED_WORKFLOW_STATE"
+    },
+    {
+      "dependency_type": "MERGE_ORDER",
+      "condition_subject": "PR_MR_BINDING",
+      "required_state": "MERGED",
+      "condition_source": "VCS_OBSERVATION_ONLY"
+    }
+  ],
+  "unsupported_dependency_types": [
+    "PLANNING_ORDER"
+  ],
+  "automatic_execution": false
+}

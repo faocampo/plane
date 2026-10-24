@@ -7,7 +7,7 @@
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts } from "react-router";
 import type { LinksFunction } from "react-router";
-import { ThemeProvider, useTheme } from "next-themes";
+import { ThemeProvider } from "next-themes";
 // plane imports
 import { SITE_DESCRIPTION, SITE_NAME } from "@plane/constants";
 // types
@@ -20,8 +20,6 @@ import icon512 from "@/app/assets/icons/icon-512x512.png?url";
 import ogImage from "@/app/assets/og-image.png?url";
 import globalStyles from "@/styles/globals.css?url";
 import type { Route } from "./+types/root";
-// components
-import { LogoSpinner } from "@/components/common/logo-spinner";
 // lib
 import { isStaleAssetError, recoverFromStaleAsset } from "@/lib/stale-asset-error";
 // local
@@ -116,14 +114,12 @@ export default function Root() {
 }
 
 export function HydrateFallback() {
-  const { resolvedTheme } = useTheme();
-
-  // if we are on the server or the theme is not resolved, return an empty div
-  if (typeof window === "undefined" || resolvedTheme === undefined) return <div />;
-
+  // Keep the initial server and client trees identical regardless of stored theme.
   return (
     <div className="relative flex h-screen w-full items-center justify-center bg-canvas">
-      <LogoSpinner />
+      <p role="status" className="text-14 text-secondary">
+        Loading Curve…
+      </p>
     </div>
   );
 }

@@ -1,0 +1,218 @@
+.curve-local-prd__empty {
+  padding-block: 32px;
+  text-align: center;
+}
+.curve-local-prd__empty svg {
+  color: #444ed9;
+  margin-inline: auto;
+}
+.curve-local-prd__empty h4 {
+  font-size: 24px;
+  margin-block: 16px 8px;
+}
+.curve-local-prd__empty p {
+  color: #60677c;
+  max-width: 48ch;
+  margin-inline: auto;
+}
+.curve-local-prd__text {
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 75ch;
+  margin: 0;
+}
+.curve-local-prd__pdf {
+  width: 100%;
+  min-height: 560px;
+  border: 0;
+  background: #f7f8fc;
+}
+.curve-local-prd__upload {
+  margin-block-start: 24px;
+}
+.curve-local-prd__upload label {
+  display: block;
+  font-weight: 700;
+  margin-block-end: 8px;
+}
+.curve-local-prd__upload input {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+}
+.curve-local-prd__upload input::file-selector-button {
+  background: #444ed9;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-inline-end: 12px;
+  cursor: pointer;
+}
+.curve-local-prd__upload input:hover::file-selector-button {
+  background: #343eb8;
+}
+.curve-local-prd__upload input:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.curve-local-prd__upload input:focus-visible,
+.curve-local-prd a:focus-visible {
+  outline: 3px solid #444ed9;
+  outline-offset: 3px;
+}
+.curve-local-prd__upload p {
+  color: #60677c;
+  margin-block-start: 8px;
+}
+.curve-local-prd__message {
+  margin-block-start: 16px;
+}
+@media (max-width: 640px) {
+  .curve-local-prd {
+    font-size: 16px;
+  }
+  .curve-local-prd__pdf {
+    min-height: 400px;
+  }
+}
+.curve-local-review__icon {
+  color: #444ed9;
+}
+.curve-local-review__approved {
+  color: #227455;
+}
+.curve-local-review__primary,
+.curve-local-review__secondary {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  margin-block-start: 12px;
+}
+.curve-local-review__primary {
+  color: #fff;
+  background: #444ed9;
+  border: 0;
+}
+.curve-local-review__primary:hover {
+  background: #343eb8;
+}
+.curve-local-review__secondary {
+  color: #444ed9;
+  background: #fff;
+  border: 1px solid #e6e8f1;
+}
+.curve-local-review__secondary:hover {
+  background: #eeefff;
+}
+.curve-local-review__primary:disabled,
+.curve-local-review__secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.curve-local-prd button:focus-visible,
+.curve-local-prd textarea:focus-visible {
+  outline: 3px solid #444ed9;
+  outline-offset: 3px;
+}
+.curve-local-prd textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #60677c;
+  border-radius: 8px;
+  background: #fff;
+  color: #22283d;
+  font: inherit;
+  margin-block-start: 8px;
+  caret-color: #444ed9;
+}
+.curve-local-prd form {
+  margin-block-start: 20px;
+}
+.curve-local-prd form label,
+.curve-local-review__feedback h5 {
+  font-weight: 700;
+}
+.curve-local-review__feedback {
+  margin-block: 16px;
+}
+.curve-local-review__feedback p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.curve-local-prd__markdown {
+  max-width: 75ch;
+  overflow-wrap: anywhere;
+}
+.curve-local-prd__markdown h5 {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.025em;
+  margin-block: 28px 12px;
+  text-wrap: balance;
+}
+.curve-local-prd__markdown h6 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-block: 24px 8px;
+}
+.curve-local-prd__markdown > :first-child {
+  margin-block-start: 0;
+}
+.curve-local-prd__markdown p {
+  margin-block: 0 16px;
+}
+.curve-local-prd__markdown ul,
+.curve-local-prd__markdown ol {
+  padding-inline-start: 24px;
+  margin-block: 12px 20px;
+}
+.curve-local-prd__markdown ul {
+  list-style: disc;
+}
+.curve-local-prd__markdown ol {
+  list-style: decimal;
+}
+.curve-local-prd__markdown li {
+  margin-block: 6px;
+}
+.curve-local-prd__markdown a {
+  color: #444ed9;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.curve-local-prd__markdown pre {
+  white-space: pre-wrap;
+  background: #f7f8fc;
+  padding: 16px;
+  border-radius: 8px;
+  margin-block: 16px;
+}
+.curve-local-prd__markdown code {
+  font-family: monospace;
+}
+.curve-local-prd__markdown blockquote {
+  margin-block: 20px;
+  padding-inline-start: 16px;
+  border-inline-start: 1px solid #60677c;
+  color: #60677c;
+}
+.curve-local-prd__markdown hr {
+  border: 0;
+  border-top: 1px solid #e6e8f1;
+  margin-block: 24px;
+}
+.curve-local-prd__image-note {
+  color: #60677c;
+  font-style: italic;
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": "curve.prd-readiness-profile/v1-candidate",
+  "status": "CANDIDATE",
+  "declaration_format": "PARAGRAPH_ID_COLON_TEXT",
+  "requirement_prefixes": ["FR", "REQ"],
+  "acceptance_prefix": "AC",
+  "require_acceptance_coverage": true,
+  "idea_brief_sections": {
+    "problem": "Problem",
+    "affected_users": "Affected users",
+    "desired_outcomes": "Desired outcomes",
+    "non_goals": "Non-goals",
+    "constraints": "Constraints",
+    "assumptions": "Assumptions",
+    "contradictions": "Contradictions",
+    "blockers": "Blockers",
+    "unknowns": "Unknowns"
+  },
+  "prd_sections": {
+    "executive_summary": "Executive summary",
+    "problem_context": "Problem and context",
+    "goals": "Goals",
+    "non_goals": "Non-goals",
+    "personas": "Personas",
+    "workflow": "Workflow",
+    "requirements": "Requirements",
+    "gates": "Gates",
+    "integrations": "Integrations",
+    "data_security": "Data and security",
+    "quality": "Quality",
+    "rollout": "Rollout",
+    "kpis": "KPIs",
+    "acceptance": "Acceptance",
+    "risks": "Risks",
+    "assumptions": "Assumptions",
+    "open_questions": "Open questions"
+  }
+}

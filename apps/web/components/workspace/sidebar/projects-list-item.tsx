@@ -16,6 +16,7 @@ import { createRoot } from "react-dom/client";
 import scrollIntoView from "smooth-scroll-into-view-if-needed";
 import {
   ArchiveOutline,
+  DragDropOutline,
   ChevronRightOutline,
   LinkOutline,
   LogOutOutline,
@@ -33,7 +34,7 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { ControlLink } from "@plane/blocks/layout";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
-import { DropIndicator, DragHandle } from "@plane/blocks/common";
+import { DropIndicator } from "@plane/blocks/common";
 import { cn } from "@plane/utils";
 // components
 import { DEFAULT_TAB_KEY, getTabUrl } from "@/components/navigation/tab-navigation-utils";
@@ -324,8 +325,13 @@ export const SidebarProjectsListItem = observer(function SidebarProjectsListItem
                     }
                   )}
                   ref={dragHandleRef}
+                  aria-label={t("drag_to_rearrange")}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
                 >
-                  <DragHandle className="bg-transparent" />
+                  <DragDropOutline aria-hidden="true" className="size-3.5 text-placeholder" />
                 </button>
               </Tooltip>
             )}

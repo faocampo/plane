@@ -1,0 +1,108 @@
+.curve-technical-review {
+  caret-color: #444ed9;
+}
+.curve-technical-review ::selection {
+  background: #dfe2ff;
+  color: #22283d;
+}
+.curve-technical-review .text-primary {
+  color: #22283d;
+}
+.curve-technical-review .text-secondary {
+  color: #60677c;
+}
+.curve-technical-review .bg-surface-1 {
+  background: #fff;
+}
+.curve-technical-review .border-subtle,
+.curve-technical-review .border-subtle-1 {
+  border-color: #e6e8f1;
+}
+.curve-technical-review button,
+.curve-technical-review select {
+  min-height: 44px;
+}
+.curve-technical-review select {
+  width: 100%;
+  margin-top: 8px;
+  border: 1px solid #e6e8f1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: white;
+  color: #22283d;
+}
+.curve-technical-review select:focus-visible,
+.curve-technical-review input:focus-visible {
+  outline: 3px solid #444ed9;
+  outline-offset: 3px;
+}
+.curve-technical-review__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.curve-technical-review__choices button,
+.curve-technical-review details > button {
+  padding: 8px 12px;
+  border: 1px solid #e6e8f1;
+  border-radius: 8px;
+  cursor: pointer;
+  background: white;
+  color: #444ed9;
+}
+.curve-technical-review__choices button[aria-pressed="true"],
+.curve-technical-review details > button[aria-pressed="true"] {
+  background: #eeefff;
+  border-color: #444ed9;
+}
+.curve-technical-review__choices button:hover {
+  background: #eeefff;
+}
+.curve-technical-review__primary {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #444ed9;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+.curve-technical-review__primary:hover {
+  background: #343eb8;
+}
+.curve-technical-review__primary:disabled {
+  background: #e6e8f1;
+  color: #60677c;
+  cursor: not-allowed;
+}
+.curve-technical-review__feedback {
+  margin-top: 24px;
+}
+.curve-technical-review__feedback h5 {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.curve-technical-review__feedback p {
+  max-width: 65ch;
+}
+.curve-technical-review__task {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+}
+.curve-technical-review__task input {
+  margin-top: 4px;
+  accent-color: #444ed9;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.curve-technical-review fieldset {
+  margin-top: 24px;
+}
+.curve-technical-review dd {
+  overflow-wrap: anywhere;
+}

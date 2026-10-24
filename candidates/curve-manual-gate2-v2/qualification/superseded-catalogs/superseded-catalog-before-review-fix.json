@@ -1,0 +1,6 @@
+{
+  "status": "REVIEWED_PROSPECTIVE_DDL_NOT_RUNTIME_QUALIFIED",
+  "physical_catalog_digest": "sha256:2dd28430ef6ac1a62b4166df2359a331c6eebc688f2c7937e89baef9e65e1fc6",
+  "migration_unpinned_digest": "sha256:3d2d150d46de2aadc9d0ede81e5a778929680c299a918ea428ec9504719ad051",
+  "boundary": "Actual DomainEvent schema; deterministic constraint-name catalog order; all foreign keys retained; original catalog and seals restored on empty reverse"
+}

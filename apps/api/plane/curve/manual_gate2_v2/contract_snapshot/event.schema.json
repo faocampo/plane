@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-gate2-v2/event.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-gate2.event/v2-candidate"
+    },
+    "record_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "record_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "subject_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "action": {
+      "enum": [
+        "PREPARE",
+        "APPROVE",
+        "REQUEST_CHANGES",
+        "RECONCILE",
+        "RELEASE"
+      ]
+    },
+    "policy_decision_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "execution_authorized": {
+      "const": false
+    },
+    "completion_credit": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_id",
+    "record_digest",
+    "subject_digest",
+    "action",
+    "policy_decision_id",
+    "execution_authorized",
+    "completion_credit"
+  ]
+}

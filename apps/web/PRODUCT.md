@@ -8,7 +8,7 @@ web
 
 ## Users
 
-Curve serves X3M product owners, delivery leads, engineers, agent operators,
+Curve serves Example Organization product owners, delivery leads, engineers, agent operators,
 technical approvers, quality approvers, and code approvers. The M0-S4
 (API, SSE, and minimal Curve-first UI implementation packet) surface is for an
 authorized workspace engineer or platform operator validating the local Curve
@@ -16,7 +16,7 @@ control path.
 
 ## Product Purpose
 
-Curve is X3M's AI-native product-development platform. It coordinates product
+Curve is the organization’s AI-native product-development platform. It coordinates product
 definition, planning, implementation, quality, and delivery evidence through
 durable, accountable workflows. The local Foundation status surface lets an
 authorized engineer create one harmless synthetic Operation, follow it through

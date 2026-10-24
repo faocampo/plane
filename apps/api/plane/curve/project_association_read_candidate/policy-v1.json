@@ -1,0 +1,12 @@
+{
+  "schema_version": "curve.project-association-precondition-policy/v1-candidate",
+  "policy_edition": "LOCAL_NATIVE_PROJECT_ASSOCIATION_PRECONDITION_READ_V1",
+  "read_action": "CURVE.PROJECT_ASSOCIATION.READ",
+  "environment": "LOCAL",
+  "authority": "CURRENT_ACTIVE_HUMAN_WORKSPACE_AND_EXACT_NATIVE_PROJECT_MEMBERSHIP",
+  "active_product_required": true,
+  "unarchived_project_required": true,
+  "association_id_projection": "SELECTED_PRODUCT_ONLY",
+  "availability": "ADVISORY_ONLY",
+  "side_effects": []
+}

@@ -10,6 +10,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { ETabIndices } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { EmojiPicker, Logo } from "@plane/blocks/emoji-icon-picker";
+import { Button } from "@makeplane/propel/components/button";
 import { CloseOutline } from "@makeplane/propel/icons";
 // plane types
 import type { IProject } from "@plane/types";
@@ -57,16 +58,31 @@ function ProjectCreateHeader(props: Props) {
           name="cover_image_url"
           control={control}
           render={({ field: { value, onChange } }) => (
-            <ImagePickerPopover
-              label={t("change_cover")}
-              onChange={(data) => {
-                onChange(data);
-                handleFormOnChange?.();
-              }}
-              control={control}
-              value={value ?? null}
-              tabIndex={getIndex("cover_image")}
-            />
+            <div className="flex items-center gap-2">
+              {value && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  stretch="auto"
+                  label="Remove cover"
+                  onClick={() => {
+                    onChange(null);
+                    handleFormOnChange?.();
+                  }}
+                />
+              )}
+              <ImagePickerPopover
+                label={t("change_cover")}
+                onChange={(data) => {
+                  onChange(data);
+                  handleFormOnChange?.();
+                }}
+                control={control}
+                value={value ?? null}
+                tabIndex={getIndex("cover_image")}
+              />
+            </div>
           )}
         />
       </div>

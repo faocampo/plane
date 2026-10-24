@@ -1,0 +1,28 @@
+{
+  "schema_version": "curve.scoped-prd/v1-candidate",
+  "policy_edition": "EXACT_EXISTING_WORK_SCOPED_PRD_V1",
+  "environment": "LOCAL",
+  "activation_default": false,
+  "authorization": "CURRENT_ORDINARY_PRD_ACTION_POLICY_PLUS_NATIVE_EACH_MEMBER_ALL_THREE_REVIEWERS",
+  "capture_action": "CURVE.PRD.SUBMIT",
+  "scope_selection_state": "DRAFT",
+  "capture_states": [
+    "ALIGNING",
+    "PRD_REVIEW"
+  ],
+  "submission_states": [
+    "ALIGNING",
+    "PRD_REVIEW"
+  ],
+  "approval_state": "PRD_REVIEW",
+  "approval_result_state": "PLANNING",
+  "revision_result_state": "ALIGNING",
+  "max_members": 100,
+  "command_max_bytes": 65536,
+  "record_max_bytes": 262144,
+  "task_body_copying": false,
+  "control_binding_creation": false,
+  "source_metadata_change": "CAPTURE_NEW_OBSERVATION_AND_RESUBMIT",
+  "legacy_scope_guard": "ALWAYS_ON",
+  "old_record_backfill": false
+}

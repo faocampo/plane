@@ -1,0 +1,558 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/schemas/external-prd-v1.schema.json",
+  "title": "External PRD candidate API resources and commands",
+  "description": "Candidate wire contracts; activation remains gated by approved child, retention, storage and provider contracts. Bodies are referenced through protected storage; caller identities and source URLs are server-derived.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Binding"
+    },
+    {
+      "$ref": "#/$defs/Checkpoint"
+    },
+    {
+      "$ref": "#/$defs/Decision"
+    }
+  ],
+  "$defs": {
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "id",
+        "workspace_id",
+        "initiative_id",
+        "artifact_kind",
+        "provider_connection_id",
+        "provider_file_id",
+        "provider_container_id",
+        "canonical_url",
+        "current_provider_version",
+        "current_revision_id",
+        "current_modified_at",
+        "synchronization_status",
+        "access_status",
+        "last_reconciled_at",
+        "version",
+        "created_by",
+        "created_at"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "initiative_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "artifact_kind": {
+          "const": "PRD"
+        },
+        "provider_connection_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "provider_container_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "canonical_url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "maxLength": 2048
+        },
+        "current_provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "current_revision_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[A-Za-z0-9._~-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current_modified_at": {
+          "$ref": "common.schema.json#/$defs/Instant"
+        },
+        "synchronization_status": {
+          "enum": [
+            "CURRENT",
+            "CHANGED_SINCE_SUBMISSION",
+            "CHANGED_SINCE_APPROVAL",
+            "ACCESS_REVOKED",
+            "MOVED_OUTSIDE_POLICY",
+            "DELETED",
+            "PROVIDER_UNAVAILABLE",
+            "RECONCILIATION_REQUIRED"
+          ]
+        },
+        "access_status": {
+          "enum": [
+            "ALLOWED",
+            "DENIED",
+            "UNKNOWN"
+          ]
+        },
+        "last_reconciled_at": {
+          "oneOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Instant"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "$ref": "common.schema.json#/$defs/AggregateVersion"
+        },
+        "created_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actor_type",
+            "actor_id"
+          ],
+          "properties": {
+            "actor_type": {
+              "const": "HUMAN"
+            },
+            "actor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        },
+        "created_at": {
+          "$ref": "common.schema.json#/$defs/Instant"
+        }
+      }
+    },
+    "Checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "id",
+        "workspace_id",
+        "initiative_id",
+        "external_document_binding_id",
+        "artifact_version_id",
+        "checkpoint_number",
+        "checkpoint_type",
+        "provider_connection_id",
+        "provider_file_id",
+        "provider_container_id",
+        "provider_version",
+        "revision_id",
+        "normalized_content_ref",
+        "content_digest",
+        "normalization_schema_version",
+        "evidence_snapshot_id",
+        "access_evaluation_id",
+        "completeness_check_id",
+        "retention_policy_version_id",
+        "access_envelope_id",
+        "predecessor_id",
+        "submitted_or_approved_by",
+        "recorded_at"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "initiative_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "external_document_binding_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "artifact_version_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "checkpoint_number": {
+          "$ref": "common.schema.json#/$defs/AggregateVersion"
+        },
+        "checkpoint_type": {
+          "const": "SUBMITTED"
+        },
+        "provider_connection_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "provider_container_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "revision_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[A-Za-z0-9._~-]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "normalized_content_ref": {
+          "$ref": "common.schema.json#/$defs/ObjectRef"
+        },
+        "content_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "normalization_schema_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "evidence_snapshot_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "access_evaluation_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "completeness_check_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "retention_policy_version_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "access_envelope_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "predecessor_id": {
+          "oneOf": [
+            {
+              "$ref": "common.schema.json#/$defs/OpaqueId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "submitted_or_approved_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actor_type",
+            "actor_id"
+          ],
+          "properties": {
+            "actor_type": {
+              "const": "HUMAN"
+            },
+            "actor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        },
+        "recorded_at": {
+          "$ref": "common.schema.json#/$defs/Instant"
+        }
+      }
+    },
+    "Approval": {
+      "allOf": [
+        { "$ref": "#/$defs/Decision" },
+        { "properties": { "state": { "const": "APPROVED" } } }
+      ]
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "id",
+        "workspace_id",
+        "initiative_id",
+        "gate_assignment_id",
+        "checkpoint_id",
+        "artifact_version_id",
+        "content_digest",
+        "provider_version",
+        "evidence_snapshot_id",
+        "access_evaluation_id",
+        "policy_version_ids",
+        "confirmed_risk_tier",
+        "state",
+        "decided_by",
+        "decided_at",
+        "provider_validation_cutoff",
+        "rationale"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "initiative_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "gate_assignment_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "checkpoint_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "artifact_version_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "content_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "evidence_snapshot_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "access_evaluation_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "policy_version_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/OpaqueId"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "confirmed_risk_tier": {
+          "enum": [
+            "LOW",
+            "STANDARD",
+            "HIGH"
+          ]
+        },
+        "state": {
+          "enum": ["APPROVED", "CHANGES_REQUESTED", "REJECTED"]
+        },
+        "decided_by": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actor_type",
+            "actor_id"
+          ],
+          "properties": {
+            "actor_type": {
+              "const": "HUMAN"
+            },
+            "actor_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        },
+        "decided_at": {
+          "$ref": "common.schema.json#/$defs/Instant"
+        },
+        "provider_validation_cutoff": {
+          "$ref": "common.schema.json#/$defs/Instant"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "Link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_connection_id",
+        "provider_file_id",
+        "selection_receipt_id"
+      ],
+      "properties": {
+        "provider_connection_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "provider_file_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "selection_receipt_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        }
+      }
+    },
+    "Create": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_connection_id",
+        "template_configuration_id",
+        "destination_configuration_id"
+      ],
+      "properties": {
+        "provider_connection_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "template_configuration_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "destination_configuration_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        }
+      }
+    },
+    "Submit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "external_document_binding_id",
+        "evidence_snapshot_id",
+        "completeness_check_id"
+      ],
+      "properties": {
+        "external_document_binding_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "evidence_snapshot_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "completeness_check_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        }
+      }
+    },
+    "Approve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_assignment_id",
+        "checkpoint_id",
+        "artifact_version_id",
+        "content_digest",
+        "provider_version",
+        "evidence_snapshot_id",
+        "confirmed_risk_tier",
+        "rationale"
+      ],
+      "properties": {
+        "gate_assignment_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "checkpoint_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "artifact_version_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "content_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "provider_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[A-Za-z0-9._~-]+$"
+        },
+        "evidence_snapshot_id": {
+          "$ref": "common.schema.json#/$defs/OpaqueId"
+        },
+        "confirmed_risk_tier": {
+          "enum": [
+            "LOW",
+            "STANDARD",
+            "HIGH"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "pattern": "\\S"
+        }
+      }
+    },
+    "ReturnForRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gate_assignment_id", "checkpoint_id", "artifact_version_id",
+        "content_digest", "provider_version", "evidence_snapshot_id",
+        "confirmed_risk_tier", "decision", "rationale"
+      ],
+      "properties": {
+        "gate_assignment_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+        "checkpoint_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+        "artifact_version_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+        "content_digest": { "$ref": "common.schema.json#/$defs/Digest" },
+        "provider_version": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "^[A-Za-z0-9._~-]+$" },
+        "evidence_snapshot_id": { "$ref": "common.schema.json#/$defs/OpaqueId" },
+        "confirmed_risk_tier": { "enum": ["LOW", "STANDARD", "HIGH"] },
+        "decision": { "enum": ["CHANGES_REQUESTED", "REJECTED"] },
+        "rationale": { "type": "string", "minLength": 1, "maxLength": 2000, "pattern": "\\S" }
+      }
+    },
+    "Reconcile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {}
+    }
+  }
+}

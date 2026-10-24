@@ -1,0 +1,10 @@
+{
+  "schema_version": "curve.manual-plan-budget-policy/v2-candidate",
+  "id": "20000000-0000-4000-8000-000000000204",
+  "version": 1,
+  "policy_kind": "BUDGET",
+  "automatic_spending": "DENIED",
+  "paid_fallback": "DENIED",
+  "automatic_budget_increase": "DENIED",
+  "financial_allocation": false
+}

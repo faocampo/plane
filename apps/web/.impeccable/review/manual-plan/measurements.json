@@ -1,0 +1,45 @@
+{
+  "errors": [],
+  "measures": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "body": "Example Initiative\n\nPlanning · Synthetic component preview. Backend not connected.\n\nManual plan\n\nDraft saved for review\n\nRefresh\nSave prepared draft\nCurrent revision\nRevision 1\nSaved at\nOct 5, 2026, 12:00 AM UTC\nApproval\nNot approved\nRevision evidence\n\nRevision 1\n\nDefinition digest\n\nsha256:d0a5d25d0f56f2936d1c812f401c39e1e30d5753eed35fc19f3c9a601ff1eda8\n\nA prepared draft is ready to save as revision 2.\n\nSaving retains a draft. Technical approval and task reservations are separate steps. No work starts automatically.",
+      "section": "oklch(1 0 0)",
+      "text": "oklch(0.4377 0.0066 230.87)"
+    },
+    {
+      "name": "mobile",
+      "width": 390,
+      "scrollWidth": 390,
+      "body": "Example Initiative\n\nPlanning · Synthetic component preview. Backend not connected.\n\nManual plan\n\nDraft saved for review\n\nRefresh\nSave prepared draft\nCurrent revision\nRevision 1\nSaved at\nOct 5, 2026, 12:00 AM UTC\nApproval\nNot approved\nRevision evidence\n\nA prepared draft is ready to save as revision 2.\n\nSaving retains a draft. Technical approval and task reservations are separate steps. No work starts automatically.",
+      "section": "oklch(1 0 0)",
+      "text": "oklch(0.4377 0.0066 230.87)"
+    },
+    {
+      "name": "desktop-empty",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "body": "Example Initiative\n\nPlanning · Synthetic component preview. Backend not connected.\n\nManual plan\n\nNo draft saved\n\nRefresh\nSave prepared draft\n\nPrepare a plan from the approved PRD to save your first draft. Work stays in its existing projects.\n\nA prepared draft is ready to save as revision 1.\n\nSaving retains a draft. Technical approval and task reservations are separate steps. No work starts automatically.",
+      "section": "oklch(1 0 0)",
+      "text": "oklch(0.4377 0.0066 230.87)"
+    },
+    {
+      "name": "mobile-unavailable",
+      "width": 390,
+      "scrollWidth": 390,
+      "body": "Example Initiative\n\nPlanning · Synthetic component preview. Backend not connected.\n\nManual plan\n\nDraft unavailable for this view\n\nRefresh\nSave prepared draft\n\nSaving retains a draft. Technical approval and task reservations are separate steps. No work starts automatically.",
+      "section": "oklch(1 0 0)",
+      "text": "oklch(0.4377 0.0066 230.87)"
+    },
+    {
+      "name": "mobile-unknown",
+      "width": 390,
+      "scrollWidth": 390,
+      "body": "Example Initiative\n\nPlanning · Synthetic component preview. Backend not connected.\n\nManual plan\n\nDraft unavailable for this view\n\nRefresh\nRetry same save\n\nThe save result could not be confirmed. Retry the same save to check its outcome.\n\nSaving retains a draft. Technical approval and task reservations are separate steps. No work starts automatically.",
+      "section": "oklch(1 0 0)",
+      "text": "oklch(0.4377 0.0066 230.87)"
+    }
+  ]
+}

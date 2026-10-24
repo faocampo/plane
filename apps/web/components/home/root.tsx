@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
@@ -14,7 +15,9 @@ import { useHome } from "@/hooks/store/use-home";
 import { useUserProfile, useUser } from "@/hooks/store/user";
 // plane web imports
 import { TourRoot } from "@/components/onboarding/tour/root";
+import { useCurveWorkspaceShell } from "@/hooks/use-curve-workspace-shell";
 // local imports
+import { CurveHomeOverview } from "./curve-home-overview";
 import { DashboardWidgets } from "./home-dashboard-widgets";
 import { UserGreetingsView } from "./user-greetings";
 import { HomePeekOverviewsRoot } from "../issues/peek-overview/peek-overviews";
@@ -25,6 +28,13 @@ export const WorkspaceHomeView = observer(function WorkspaceHomeView() {
   const { data: currentUser } = useUser();
   const { data: currentUserProfile, updateTourCompleted } = useUserProfile();
   const { fetchWidgets } = useHome();
+  const slug = workspaceSlug?.toString();
+  const { isEnabled: isCurveShell } = useCurveWorkspaceShell(slug);
+  const [isClientReady, setIsClientReady] = useState(false);
+
+  useEffect(() => setIsClientReady(true), []);
+
+  const showCurveHome = isClientReady && isCurveShell;
 
   useSWR(
     workspaceSlug ? `HOME_DASHBOARD_WIDGETS_${workspaceSlug}` : null,
@@ -55,9 +65,13 @@ export const WorkspaceHomeView = observer(function WorkspaceHomeView() {
       <>
         <HomePeekOverviewsRoot />
         <ContentWrapper className="mx-auto scrollbar-hide gap-6 bg-surface-1 px-page-x">
-          <div className="mx-auto w-full max-w-[800px]">
-            {currentUser && <UserGreetingsView user={currentUser} />}
-            <DashboardWidgets />
+          <div className={showCurveHome ? "mx-auto w-full max-w-6xl" : "mx-auto w-full max-w-[800px]"}>
+            {showCurveHome && slug ? (
+              <CurveHomeOverview workspaceSlug={slug} />
+            ) : (
+              currentUser && <UserGreetingsView user={currentUser} />
+            )}
+            <DashboardWidgets curveMode={showCurveHome} />
           </div>
         </ContentWrapper>
       </>

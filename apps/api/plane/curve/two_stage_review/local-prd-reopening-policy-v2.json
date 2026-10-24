@@ -1,0 +1,33 @@
+{
+  "actions": {
+    "REOPEN": {
+      "actor": "CURRENT_INITIATIVE_CREATOR",
+      "exact_current_product_approval_required": true,
+      "state": "PLANNING"
+    }
+  },
+  "default_effect": "DENY",
+  "effects": [
+    "RETAIN_APPROVED_HISTORY",
+    "RETURN_TO_ALIGNMENT",
+    "REQUIRE_NEW_SOURCE_FOR_RESUBMISSION",
+    "INVALIDATE_DEPENDENT_PLAN_ELIGIBILITY"
+  ],
+  "environment": "LOCAL",
+  "policy_key": "CURVE_LOCAL_PRD_REOPENING_POLICY",
+  "policy_version": 2,
+  "production_activation": false,
+  "projection": "LOCAL_PRD_REOPENING_METADATA_V1",
+  "required_current_checks": [
+    "ACTIVE_NATIVE_MEMBERSHIP_AND_SOURCE_ACCESS",
+    "EXACT_TWO_REVIEWER_ASSIGNMENTS",
+    "EXACT_SOURCE_SCOPE_AND_RISK",
+    "EXACT_INITIATIVE_VERSION",
+    "NO_PENDING_SCOPE_REOPENING",
+    "QUALIFIED_RUNTIME",
+    "CURRENT_INITIATIVE_ACCESS_FOR_OWNER_ACTOR_AND_BOTH_APPROVERS",
+    "NO_EXISTING_WORK_SCOPE_OR_EXTERNAL_PRD"
+  ],
+  "retry": "EXACT_REQUEST_DIGEST_AND_CURRENT_OWNER_REPLAY_ONLY",
+  "schema_version": "curve.local-prd-reopening-policy/v2-candidate"
+}

@@ -14,7 +14,7 @@ describe("Curve mobile navigation", () => {
     const onOpenChange = vi.fn();
     render(
       <CurveMobileNavigation open onOpenChange={onOpenChange}>
-        <a href="/x3m/curve">Foundation status</a>
+        <a href="/example-workspace/curve">Foundation status</a>
       </CurveMobileNavigation>
     );
 

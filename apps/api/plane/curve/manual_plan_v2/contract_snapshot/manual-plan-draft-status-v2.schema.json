@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/candidates/manual-planning-v2/manual-plan-draft-status-v2.schema.json",
+  "title": "Minimal current manual draft recovery status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_edition",
+    "workspace_id",
+    "initiative_id",
+    "initiative_version",
+    "draft_status",
+    "current_revision_id",
+    "expected_draft_revision"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "curve.manual-plan-draft.status/v2-candidate"
+    },
+    "policy_edition": {
+      "const": "LOCAL_MANUAL_PLAN_DRAFT_RECONSTRUCTION_V2"
+    },
+    "workspace_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "initiative_id": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+    },
+    "initiative_version": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Version"
+    },
+    "draft_status": {
+      "type": "string",
+      "enum": [
+        "ABSENT",
+        "CURRENT",
+        "STALE"
+      ]
+    },
+    "current_revision_id": {
+      "anyOf": [
+        {
+          "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expected_draft_revision": {
+      "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/ExpectedVersion"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "draft_status": {
+            "const": "ABSENT"
+          }
+        },
+        "required": [
+          "draft_status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "current_revision_id": {
+            "type": "null"
+          },
+          "expected_draft_revision": {
+            "const": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "current_revision_id": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/OpaqueId"
+          },
+          "expected_draft_revision": {
+            "$ref": "https://curve.example.invalid/candidates/manual-planning-v2/common-v2.schema.json#/$defs/Version"
+          }
+        }
+      }
+    }
+  ]
+}

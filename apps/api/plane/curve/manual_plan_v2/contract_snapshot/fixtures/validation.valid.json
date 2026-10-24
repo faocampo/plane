@@ -1,0 +1,12 @@
+{
+  "schema_version": "curve.manual-plan-validation-receipt/v2-candidate",
+  "validator_edition": "DETERMINISTIC_SDLC_MANUAL_PLAN_V2",
+  "definition_digest": "sha256:d0a5d25d0f56f2936d1c812f401c39e1e30d5753eed35fc19f3c9a601ff1eda8",
+  "input_identity_digest": "sha256:3c01dc7c09ea99fc64b3ad9796b4b11b0ec50b8c6da3dcd7a677f400b73616e7",
+  "result": "VALID",
+  "repository_count": 1,
+  "slice_count": 2,
+  "edge_count": 1,
+  "required_conditions": "FUTURE_NOT_ASSERTED",
+  "digest": "sha256:867debdfe97f754161f208254f4ce3da6490160ca1217c1a9933b2e583d7c959"
+}

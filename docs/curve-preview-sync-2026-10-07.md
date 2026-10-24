@@ -1,5 +1,25 @@
 # Preview synchronization — 2026-10-07
 
+## Latest position — 2026-10-08
+
+- Upstream and fork `preview` now match `bab49bb978ccb56af1d78dec6c6d54dfe8d03c1c`.
+- [PR #47](https://github.com/faocampo/plane/pull/47) (upstream integration and
+  conflict resolutions) merged as `0cc166bc480525a8301535eb392e1708b0c555e7`.
+  All exact-head CI checks passed: 395 backend tests, 10 skips, web
+  format/lint/build/types, API lint, translation sync, copyright and CodeQL.
+- The dependent Initiative candidate incorporates that synchronization locally.
+  Its 36 conflict paths are resolved, including file relocations, Curve branding,
+  navigation, Quicklink validation, image-upload errors, retained CI partitions,
+  and new component APIs. React 19 refs and component-test fixtures are updated.
+- Candidate evidence: 392 frontend tests across 34 files, 22 script regressions,
+  web dependency build and type checking, backend Ruff and public contract
+  integrity pass. Repository lint and strict resolution checks pass.
+- Candidate publication and new exact-head backend CI remain pending. PR #17
+  retains the owner's UX acceptance gate; the component migration requires
+  review on the synchronized candidate. No deployment or storage activation.
+
+The sections below preserve the earlier checkpoint and validation sequence.
+
 ## Scope
 
 Bring upstream `preview` at `7466675e471efe1c96b122615f7a0d30c9b2eb05`

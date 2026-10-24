@@ -5,8 +5,8 @@
 import re
 
 
-OPERATION_EVENT_V1_SCHEMA = "https://curve.x3m.internal/contracts/schemas/operation-event-v1.schema.json"
-OPERATION_EVENT_V2_SCHEMA = "https://curve.x3m.internal/contracts/schemas/operation-event-v2.schema.json"
+OPERATION_EVENT_V1_SCHEMA = "https://curve.example.invalid/contracts/schemas/operation-event-v1.schema.json"
+OPERATION_EVENT_V2_SCHEMA = "https://curve.example.invalid/contracts/schemas/operation-event-v2.schema.json"
 TEMPORAL_TRACE_HEADER = "_curve_traceparent_v1"
 TRACEPARENT_PATTERN = re.compile(r"^00-(?!0{32})[0-9a-f]{32}-(?!0{16})[0-9a-f]{16}-[0-9a-f]{2}$")
 

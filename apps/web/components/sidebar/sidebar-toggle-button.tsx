@@ -34,6 +34,9 @@ export const AppSidebarToggleButton = observer(function AppSidebarToggleButton({
           ? "aria_labels.projects_sidebar.expand_sidebar"
           : "aria_labels.projects_sidebar.collapse_sidebar"
       )}
+      onMouseEnter={() => {
+        if (sidebarCollapsed) toggleSidebarPeek(true);
+      }}
       onClick={() => {
         if (sidebarPeek) toggleSidebarPeek(false);
         toggleSidebar();

@@ -1,0 +1,42 @@
+{
+  "result": "RESTORE_EXERCISE_PASSED",
+  "source_commit": "8aede16b4aee1aa66eb0b9469c4c849b34250f6e",
+  "tables_verified": 151,
+  "objects_verified": 24,
+  "schema_verified": true,
+  "native_catalog_seal_verified": true,
+  "restore_seconds": 103.124,
+  "scope": "Schema DDL, full public-schema row fingerprints and protected bytes; no production activation or RPO/RTO certification",
+  "restored_api": {
+    "result": "RESTORED_HTTP_READ_PASSED",
+    "login": "normal_session_http",
+    "principal_verified": true,
+    "manual_state": "PLAN_REVIEW",
+    "initiative_version": 7,
+    "definition_digest_verified": true,
+    "gate2_commands_sent": 2,
+    "pilot_controls": {
+      "result": "PILOT_CONTROL_CHECKS_PASSED",
+      "cases": [
+        "anonymous_plan_read_denied",
+        "invalid_password_did_not_create_authenticated_session",
+        "owner_cannot_approve_technical_plan",
+        "code_reviewer_cannot_approve_technical_plan",
+        "assigned_technical_approver_retains_current_authority",
+        "wrong_workspace_has_uniform_denial",
+        "operator_disable_fences_status_and_material_reads",
+        "corrupt_protected_object_is_not_served_or_used",
+        "membership_revocation_fences_existing_session",
+        "initiative_draft_control_history_and_claims_preserved"
+      ],
+      "gate2_commands_sent": 2,
+      "gate2_commands_allowed": 0,
+      "operational_acceptance": false,
+      "scope": "Synthetic copy only; role checks, revocation and injected local faults do not approve an operational pilot"
+    }
+  },
+  "exercise_seconds": 141.363,
+  "qualified_at_utc": "2026-10-07",
+  "operational_acceptance": false,
+  "new_publication": false
+}

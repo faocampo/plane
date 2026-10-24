@@ -1,0 +1,451 @@
+{
+  "schema_version": "curve.public-consumer-edition/v1",
+  "edition_id": "curve-plane-public-contracts-v1",
+  "status": "PUBLIC_REFERENCE",
+  "execution_authority": "NONE",
+  "legacy_approval_transfer": "PROHIBITED",
+  "source": {
+    "repository": "https://github.com/faocampo/curve",
+    "revision": "00fb40dad746a4e4ec2aefe9bc0f629e1118d716",
+    "edition_id": "curve-public-contracts-v1",
+    "manifest_sha256": "952c95b463c9613581527a0cf6e7d900893145c824296048d0ea9288e963b7d3"
+  },
+  "files": [
+    {
+      "path": "PUBLIC-EDITION.md",
+      "sha256": "41394a5bff947ddcd8ecc1a3b2b6a446d3488e7db0b84c6515b4ecb4e67825d1"
+    },
+    {
+      "path": "governance/m1-00a-product-core-v1.json",
+      "sha256": "7cad8a1c224d8480f0d4b1fdaf2c0b8f6be6a6d489b7178efc368b30ba4cb1ed"
+    },
+    {
+      "path": "m0-03-context.json",
+      "sha256": "552f749da45320181fec4b8ab96ea6f9a85b48b0dc1c817bf58564b5dbe04ddb"
+    },
+    {
+      "path": "m0-s2-context.json",
+      "sha256": "805b57a0beb67da3cc5529dfa43571c3e9a25ab760a2d6c06fea040c4b184dd7"
+    },
+    {
+      "path": "m0-s3-context.json",
+      "sha256": "e37937cac61111df1376089f896f848a732601c57ba8e81f69455bffce8b3909"
+    },
+    {
+      "path": "m0-s4-context.json",
+      "sha256": "bffdbb1918ad73bda6797c05830e448b2e52f9c021ac4f1b4ae1e82360221a36"
+    },
+    {
+      "path": "m0-s5-context.json",
+      "sha256": "1b7122c77bf92a35fabdeda23c94b3fa1941d89c57c14425b5f6bb6ca1723f14"
+    },
+    {
+      "path": "m0-s5b-context.json",
+      "sha256": "b0b06d933718c685e996eb40121af3cbdee1832815a8236b352c200e58d9d031"
+    },
+    {
+      "path": "m0-s6a-context.json",
+      "sha256": "45ba2be2d8710c3218cf1fb17a16d15325537c8e52d27db4be3afa3d29db5529"
+    },
+    {
+      "path": "m0-s9a-context.json",
+      "sha256": "26dca525fa3f5dcee3d92d896aceacc73bf6b998e0d7a57fa39ab24f8b814eb0"
+    },
+    {
+      "path": "m1-00a-context.json",
+      "sha256": "417292fc07e97207a3fd5b9ed87b173f86dfa9f91e241576b3476455e573e822"
+    },
+    {
+      "path": "m1-01a-context.json",
+      "sha256": "8a6f6f9764af89a67e2ca76faf28f4e622a64c7439251b2dec3a20deb6263a27"
+    },
+    {
+      "path": "observability/m0-s5-telemetry-v1.json",
+      "sha256": "8ba95e5e605188e829df03374114eb2ec0d2cbea0218f1d286198cbbb2d34d9b"
+    },
+    {
+      "path": "observability/obs-bind-001-local-v1.json",
+      "sha256": "79d492585ec7f95f2690f5dbb47a81ab7869fcc922e1296e9a9e69f8c09e37d6"
+    },
+    {
+      "path": "openapi/curve-initiative-v1.1.openapi-overlay.yaml",
+      "sha256": "06bbd0318e8912d5d459b86dc3e1661df82137d1081105fbca5fdacf14dcff22"
+    },
+    {
+      "path": "openapi/curve-v1.openapi.yaml",
+      "sha256": "928993ea6fc8847e7547474418b12b523ff60f5180310c3bc07743d4873cb321"
+    },
+    {
+      "path": "policy/core-policy-v1.json",
+      "sha256": "e0c4a03e27fd2b53b0109856c1599804865469ebebfc480244f4e76f7653cc52"
+    },
+    {
+      "path": "policy/core-policy-v2.json",
+      "sha256": "2895b63392236afa07e6f0572d6ddb1c91aa7f40d37282f250019d2829ed5787"
+    },
+    {
+      "path": "policy/initiative-policy-v1.json",
+      "sha256": "df9aa96d5de46232074abcc51fbb268beda0b73b45906c986f106b2d317adf8b"
+    },
+    {
+      "path": "policy/product-policy-v1.json",
+      "sha256": "37e93b93cf9a3b6e560f5123fc147353127ba8be8aadba7b6c3dbb7a73fbbd06"
+    },
+    {
+      "path": "providers/m0-s9a-provider-registry-v1.json",
+      "sha256": "ac9a7e854b917591f0c747d8ec55a6d051bcf6abe8680bbb341ca3763b368fbb"
+    },
+    {
+      "path": "schemas/README.md",
+      "sha256": "032307e2185cf000d0572abd58dfc08dc47bfabb7b9447bcd01bef201a302473"
+    },
+    {
+      "path": "schemas/audit-event.schema.json",
+      "sha256": "26f8e2d2d6f53b689710f826400c9e1ef559cee7d536ff48bea25a6567fb54fd"
+    },
+    {
+      "path": "schemas/common.schema.json",
+      "sha256": "54b32643ee06d5458934c033a890b639d6c8f8a75346743ba8ef054320bfc3de"
+    },
+    {
+      "path": "schemas/core-policy-manifest-v2.schema.json",
+      "sha256": "a53c68d10a84de64885363e7e236c88d0f07faf3d253678986e6ccd3ebd90f5d"
+    },
+    {
+      "path": "schemas/core-policy-manifest.schema.json",
+      "sha256": "16c0b832107b830c3a1628a49798598dd7d5e316639a46be9b1bc7538eb63d80"
+    },
+    {
+      "path": "schemas/event-envelope.schema.json",
+      "sha256": "80314014208963a0b0c03c11de3ecc9a8c2ba97dc116a6b0e5ac115df1d89fa8"
+    },
+    {
+      "path": "schemas/examples/core-policy-manifest-v2.invalid.json",
+      "sha256": "ac837ffb9a4372d5461453f7d1030bfd75c5628faab513f2b63e93ce1e51ca8f"
+    },
+    {
+      "path": "schemas/examples/core-policy-manifest-v2.valid.json",
+      "sha256": "1db369e879a099af7ce44822c639e489296ab632144f602c5ea0c4f734a482f3"
+    },
+    {
+      "path": "schemas/examples/gate-assignment.invalid.json",
+      "sha256": "a73f9c3fe3a7b69daa8dd124e175355e49f35d55fea2c9723727d3cc9ebfdf20"
+    },
+    {
+      "path": "schemas/examples/gate-assignment.valid.json",
+      "sha256": "865ab7bceaeb3bd803785a90edc80cda430ecd2ebf90edd2dcef51d433941847"
+    },
+    {
+      "path": "schemas/examples/initiative-create-request.invalid.json",
+      "sha256": "3a00916f7222f3f34f4d30dd08e0ccd576d7b9d699db76cd413c4852bfcf5ef7"
+    },
+    {
+      "path": "schemas/examples/initiative-create-request.valid.json",
+      "sha256": "e690da7767bd8f1fffbf5dc87b0cba1421f3f25009dd11c0993e6987f028aa24"
+    },
+    {
+      "path": "schemas/examples/initiative-event-v1.invalid.json",
+      "sha256": "5ec982fa9c87fed28b0bdc47b2d2c40e1a1f1ae3bc5df2d727de70e1fb668681"
+    },
+    {
+      "path": "schemas/examples/initiative-event-v1.valid.json",
+      "sha256": "08e3644f5b237d7353f4fb43aff687b00fab20f860fba915f71ae201cdf51bfb"
+    },
+    {
+      "path": "schemas/examples/initiative-transition-request.invalid.json",
+      "sha256": "b982904a47b33b0f2cc018b5e4bd859426fdb8d04fd8369585e1a78fa3c95a40"
+    },
+    {
+      "path": "schemas/examples/initiative-transition-request.valid.json",
+      "sha256": "8a69409a22d172b7f3f56a39651b6c37fa8963e71840c7328b90bcb1474e6594"
+    },
+    {
+      "path": "schemas/examples/initiative-update-request.invalid.json",
+      "sha256": "27bc31fa021379333dc78ced2a5a68b3006244cbf2abb2e43f63e93172b170fa"
+    },
+    {
+      "path": "schemas/examples/initiative-update-request.valid.json",
+      "sha256": "c7b672a4fa026d50691a97985f4c0ef7cc6e5f0d131f194729df5b1d9e5f468a"
+    },
+    {
+      "path": "schemas/examples/initiative.invalid.json",
+      "sha256": "9f93f9b48136839f755d9cf5c5e1b53c677786ae0950302d507bfa1c0a8a9164"
+    },
+    {
+      "path": "schemas/examples/initiative.valid.json",
+      "sha256": "9d23a8c8790b66cf8a3e070db7e1d4bf28d4eca60cd8535dd6579ecddf8a08f2"
+    },
+    {
+      "path": "schemas/examples/product-core-decision.invalid.json",
+      "sha256": "b786cd7d5dca2e428326819a9906b87b839a0e7c81900e48a8d1f1541a51fc59"
+    },
+    {
+      "path": "schemas/examples/product-core-decision.valid.json",
+      "sha256": "6d5a827e04cc0f946c7a7b2c8fb542d0db303b4c04459a82ece4e89fdc7b195a"
+    },
+    {
+      "path": "schemas/examples/product-create-request.invalid.json",
+      "sha256": "d667af99f04523e752227f68080e62fe15dd3cba1c72563b8345a1391a961d1f"
+    },
+    {
+      "path": "schemas/examples/product-create-request.valid.json",
+      "sha256": "caee71003ed9895a71220f5ff7f42a9a6686c4fb1f3ed42c1f2d0eafca8774cc"
+    },
+    {
+      "path": "schemas/examples/product-event-v1.invalid.json",
+      "sha256": "4c7ec3bebc53f00d7a314bf5b4a47f9675c0504c091075c64b36c70f555ca5f2"
+    },
+    {
+      "path": "schemas/examples/product-event-v1.valid.json",
+      "sha256": "c013d8e8a1e04db7fc27ef1adbd0e1e30f0d8c9ea56dba57d88215f7fa61c22e"
+    },
+    {
+      "path": "schemas/examples/product-policy-manifest.invalid.json",
+      "sha256": "b2e7d76dd6f5158429499ba9a30f989a518282d84c17c7cd4c3c778697fdd7e9"
+    },
+    {
+      "path": "schemas/examples/product-policy-manifest.valid.json",
+      "sha256": "3f725e812111c6291e7aade13630583b8553f8cfe4c06dee20330c27954d1def"
+    },
+    {
+      "path": "schemas/examples/product-reassign-owner-request.invalid.json",
+      "sha256": "3f50a1057fe92a48e0588a01250f5dd8abbd0855e46325a663adbb2798b01533"
+    },
+    {
+      "path": "schemas/examples/product-reassign-owner-request.valid.json",
+      "sha256": "1311cf54a53543e02c8f70b25fc82353673bb4d018108a016a287531b60c844b"
+    },
+    {
+      "path": "schemas/examples/product-update-request.invalid.json",
+      "sha256": "6e7736da21d28e34a67449e4f0209c80e0e82484ec45f920711dfea9de547ea3"
+    },
+    {
+      "path": "schemas/examples/product-update-request.valid.json",
+      "sha256": "80642518ca15b96ce09ed365634884c992d4a735fa44bb55e7e87c2d73be96a7"
+    },
+    {
+      "path": "schemas/examples/product.invalid.json",
+      "sha256": "f4fa0846577b9718e8cf04ad2a2c545569768ea1a2deb5558c9979ef8f59242b"
+    },
+    {
+      "path": "schemas/examples/product.valid.json",
+      "sha256": "06d86d964497a1e4e6a8f6ef194e5878ef8205364e0eeee31f8bc8a1d2f1c487"
+    },
+    {
+      "path": "schemas/examples/provider-capability.invalid.json",
+      "sha256": "4ba9691457bd3f3c4b919e927de34d68929c9045c183dd89dbee174b54a5044f"
+    },
+    {
+      "path": "schemas/examples/provider-capability.valid.json",
+      "sha256": "e402f29c92697837f7a51d364dfd40a247fb9703c459cd30f110a98507e4a3fa"
+    },
+    {
+      "path": "schemas/examples/provider-connection-event-v1.invalid.json",
+      "sha256": "04957aafa9fd614254e1d60483a9ee0bde97cb7a6f8866c88908c48ec1deabc3"
+    },
+    {
+      "path": "schemas/examples/provider-connection-event-v1.valid.json",
+      "sha256": "ff4b883a4f455ad7977ebcb85ebfb0508b5a9d5f7594d60c95ab58e7e18cdc92"
+    },
+    {
+      "path": "schemas/examples/provider-connection.invalid.json",
+      "sha256": "223540eb8a89f59db0dc94d9501ab4094770563a0636dccaf99ab28956f5c2a6"
+    },
+    {
+      "path": "schemas/examples/provider-connection.valid.json",
+      "sha256": "10e5bc9ebb2260b268227e0c08ac5ab4a373c73cc38a8b98642b3b69039535f0"
+    },
+    {
+      "path": "schemas/examples/provider-reconciliation-event-v1.invalid.json",
+      "sha256": "f17f6ac6e19636f9c3235210adddcd7690c42d96f6c236847d94b73d6c11c4ef"
+    },
+    {
+      "path": "schemas/examples/provider-reconciliation-event-v1.valid.json",
+      "sha256": "a5f67491e5e73699ecf83509a3c212dc6f50999b5984207d5cf7000929e4f8f5"
+    },
+    {
+      "path": "schemas/examples/provider-registry-manifest.invalid.json",
+      "sha256": "00065cd18deacc14fb83a96048914fb83039f5969874e0b8fcf4840292895aed"
+    },
+    {
+      "path": "schemas/examples/provider-registry-manifest.valid.json",
+      "sha256": "0ece3e965fe081a57601283979562b18e06a981a2d5dc412d2160ad90418027b"
+    },
+    {
+      "path": "schemas/gate-assignment.schema.json",
+      "sha256": "5b614728e2666698e188eaf325f47f000befa056cc514bd743e12e4807070e97"
+    },
+    {
+      "path": "schemas/idempotency-record.schema.json",
+      "sha256": "96be790daccbf72023c82abd820ed5706899a5d8563790038f9823019853e9d8"
+    },
+    {
+      "path": "schemas/inbox-message.schema.json",
+      "sha256": "6281e36861ae48fa39b0bdccf29b3fe26e46a1a31e2a182400bcc60d2bf85b1f"
+    },
+    {
+      "path": "schemas/initiative-create-request-v1.1.schema.json",
+      "sha256": "f4104a87c93c05491bb7980b85f42887bcc6fc9e4fc82e05d912bcb67faf9bcf"
+    },
+    {
+      "path": "schemas/initiative-create-request.schema.json",
+      "sha256": "a19b13b4aa44bc10cf997c0b280705a38f11d0e69c89d497099344a9d309cacd"
+    },
+    {
+      "path": "schemas/initiative-event-v1.schema.json",
+      "sha256": "762b6f12f6f4b88671e7fb8b1c97cee997a836c8174b5f56f96bc0482e64d8c3"
+    },
+    {
+      "path": "schemas/initiative-transition-request.schema.json",
+      "sha256": "a73aaf0ba546b45da08f9b767263b9ef91329448d3037d5958950adf19bca496"
+    },
+    {
+      "path": "schemas/initiative-update-request-v1.1.schema.json",
+      "sha256": "ac033e1e1b133968d22920a2da8d85b9fc19208a513ba3c6332dca771815e7cc"
+    },
+    {
+      "path": "schemas/initiative-update-request.schema.json",
+      "sha256": "ecaed1c01f41d77236402620be24f51446ff9df29d8b3d4c937292783fa2dace"
+    },
+    {
+      "path": "schemas/initiative-v1.1.schema.json",
+      "sha256": "69d011127f796326c0eb08e8698002e99063fbc4d0a4830fa74ce36a5e7fc9b6"
+    },
+    {
+      "path": "schemas/initiative.schema.json",
+      "sha256": "433a464415669ffb640f15665dc068e94837e0aeefa4928bbaaa1910b84f52d5"
+    },
+    {
+      "path": "schemas/observability-binding.schema.json",
+      "sha256": "6ce1ba05369b0c8670776bdd27186a7fe25892518bdb2b70ee2db791eb010044"
+    },
+    {
+      "path": "schemas/operation-event-v1.schema.json",
+      "sha256": "b71330d5989bb27e62ae9a11ad9d4a1ef3a284f76d2c7ecbaf82c09eb2f8e668"
+    },
+    {
+      "path": "schemas/operation-event-v2.schema.json",
+      "sha256": "23b801c35ad96d8132489b2cf996c24cb892c367e1e06b75b44ec0d3830a8341"
+    },
+    {
+      "path": "schemas/operation-summary.schema.json",
+      "sha256": "6e33c190d6a17633b446485cd1f872ce5b051ddf049e5f615eb37927170ad50b"
+    },
+    {
+      "path": "schemas/operation.schema.json",
+      "sha256": "7c97d0208134f72ae012d844fd69090f9634ae3fb0a4eb2d018b9f85980c48c6"
+    },
+    {
+      "path": "schemas/outbox-event.schema.json",
+      "sha256": "a2aac7224830a70e8fe0b9188f25edea9f59a91315a4f79bcf1fd2cb585a8cb0"
+    },
+    {
+      "path": "schemas/policy-decision.schema.json",
+      "sha256": "2bcedf0aa19d6a84a7b8af45db9e64136da18be883c2b9cc8115ea5919650cad"
+    },
+    {
+      "path": "schemas/policy-evaluation.schema.json",
+      "sha256": "826610d5af15c28b265aa5882b50c23cf94874158a739473c4ac9937219374c7"
+    },
+    {
+      "path": "schemas/product-core-decision.schema.json",
+      "sha256": "119ed1ccddf121437a8d3a835befc9c20e6068b3b256cd4db2ae32fbc2ad5adb"
+    },
+    {
+      "path": "schemas/product-create-request.schema.json",
+      "sha256": "9432ac7d2096d20a0ab48c1ad0d81a2a9d892c0f8285c6b80039f56633a92f3c"
+    },
+    {
+      "path": "schemas/product-event-v1.schema.json",
+      "sha256": "242abb8745dfccf25bd1812fda965a97e472d9dcc6c51417a62d3e527d1c520d"
+    },
+    {
+      "path": "schemas/product-policy-manifest.schema.json",
+      "sha256": "6a5684d00b1573f9a67bb4b6491fcdd6eccb79f1db6d757923e09affba12160e"
+    },
+    {
+      "path": "schemas/product-reassign-owner-request.schema.json",
+      "sha256": "25f33f8f0c2341789ef13aa97d15784b8066b4dd40654986316a8acd53ff8749"
+    },
+    {
+      "path": "schemas/product-update-request.schema.json",
+      "sha256": "67e083d9c99d3cbf76e5eee403a07cc793cce0443e2d79937a7b2a350ad8865f"
+    },
+    {
+      "path": "schemas/product.schema.json",
+      "sha256": "ec4c08fe6c3ac71201ec80f7a5554f9c2161436a32687c5547c50735b1626a47"
+    },
+    {
+      "path": "schemas/provider-capability.schema.json",
+      "sha256": "586cdf823d73dff8b6999218c84c0d22c0a6163c5104ee9d7e4be305ca6cd5b3"
+    },
+    {
+      "path": "schemas/provider-connection-event-v1.schema.json",
+      "sha256": "0e537e74f38dca891ff1f9c5ee299c70853d1907a2f44821d3fdcaf4afbb0639"
+    },
+    {
+      "path": "schemas/provider-connection.schema.json",
+      "sha256": "a583c88673202aa00c773e45f2d604d201fa1ebde1cf1ad8028f9a9406ad72ea"
+    },
+    {
+      "path": "schemas/provider-reconciliation-event-v1.schema.json",
+      "sha256": "4717fdb93e1284514100bbf11f57463d4e34864f21bcc719986e87159d851ad1"
+    },
+    {
+      "path": "schemas/provider-registry-manifest.schema.json",
+      "sha256": "e3d00a8c9453a4a26e3f83e1c3ddbba3299afde9963d061439e58bba86356dac"
+    },
+    {
+      "path": "schemas/semantic-fixtures/observability-binding-external-delivery.invalid.json",
+      "sha256": "611664d2f14a8d9eb265ae7ca6504a4da983f29b77533ca4ddea215d8fbc76c5"
+    },
+    {
+      "path": "schemas/semantic-fixtures/policy-decision-provider-registration-v2.valid.json",
+      "sha256": "42071ddb1a92c8265221aaa27c8409486c615011016972edb27567a47751597a"
+    },
+    {
+      "path": "schemas/semantic-fixtures/policy-decision-provider-registration-v3.invalid.json",
+      "sha256": "d86efaa2748146665dcf898f841cb9200e2da82a55cebbc89cbccb3afb442be1"
+    },
+    {
+      "path": "schemas/semantic-fixtures/provider-connection-active-null.invalid.json",
+      "sha256": "9207c17586bcd8cef2449bfa98be94aab0b1f19b2b5cfd89807cad8eee4f5239"
+    },
+    {
+      "path": "schemas/semantic-fixtures/provider-connection-active.valid.json",
+      "sha256": "b139b2c2812bcda6804f6643503e3cd048914b6318480c3076639a85495255b9"
+    },
+    {
+      "path": "schemas/semantic-fixtures/provider-connection-event-registered.valid.json",
+      "sha256": "15f073f83937859ad632dfb4c31433cbb093f670ce023fb1f40f97a696a5035f"
+    },
+    {
+      "path": "schemas/semantic-fixtures/provider-connection-revoked-next.invalid.json",
+      "sha256": "9bb7a9cb7690c1a4f952a27c43ba332ae895da8a02a04c0738f1c59f242533b6"
+    },
+    {
+      "path": "schemas/sse-event.schema.json",
+      "sha256": "edf29556d2933d23fb2362cad5b8844fe3db4ce903066dfa3c9aba7d84df7087"
+    },
+    {
+      "path": "schemas/telemetry-manifest.schema.json",
+      "sha256": "0eab64dc8ad956fa6b9eff291748f0713f45f7f8f649c0c4ebd0207174f41254"
+    },
+    {
+      "path": "schemas/temporal-orchestration.schema.json",
+      "sha256": "009c06c7499eda05f49e91de336a69a013b0a7776b4a54ed55779ac837707c7f"
+    },
+    {
+      "path": "temporal-supply-chain.json",
+      "sha256": "ec43f7dd6b6d09781aef6d92665cf23b477d47863e659f5ddcbb871951fe1809"
+    },
+    {
+      "path": "temporal/m0-orchestration-v1.json",
+      "sha256": "278b0845e7bf04200903d4cc110931e88b272df9ffb8da91eebf1984109a1374"
+    },
+    {
+      "path": "temporal/m0-s6a-runtime-evidence.json",
+      "sha256": "12b0c2b583fc20890f9db14f19861210cf28baf4af71421f8986dafc155617f9"
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Curve reconstructed scope-editor discovery candidate",
+    "version": "2.0.0-candidate"
+  },
+  "security": [
+    {
+      "sessionAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/workspaces/{slug}/curve/initiatives/{initiative_id}/scope-editor/v2/preconditions/": {
+      "get": {
+        "operationId": "readScopeEditorPreconditionsV2",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "initiative_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "description": "No query parameters. Current creator/admin discovery only; no old task access required and no writes.",
+        "responses": {
+          "200": {
+            "description": "Exact eight-field discovery.",
+            "headers": {
+              "ETag": {
+                "description": "Current typed C1-style Initiative ETag with target UUID and a positive safe-integer version; success only.",
+                "schema": {
+                  "type": "string",
+                  "pattern": "^\"curve-initiative:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}:v[1-9][0-9]{0,15}\"$"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/scope-editor-read-v2/scope-editor-precondition-v2.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Fixed non-enumerating denial.",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://curve.example.invalid/candidates/scope-editor-read-v2/scope-editor-error-v2.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

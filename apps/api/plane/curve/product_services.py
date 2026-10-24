@@ -43,7 +43,7 @@ from plane.curve.services import (
 from plane.db.models import WorkspaceMember
 
 
-PRODUCT_EVENT_SCHEMA = "https://curve.x3m.internal/contracts/schemas/product-event-v1.schema.json"
+PRODUCT_EVENT_SCHEMA = "https://curve.example.invalid/contracts/schemas/product-event-v1.schema.json"
 PRODUCT_OUTBOX_DESTINATION = "CURVE_PRODUCT_LOCAL_V1"
 PRODUCT_KEY_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,49}$")
 PRODUCT_DESCRIPTION_MAX_LENGTH = 10_000

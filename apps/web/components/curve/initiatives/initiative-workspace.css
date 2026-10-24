@@ -1,0 +1,149 @@
+/* The approved review desk owns its route palette, including shared chrome and
+   portalled controls. Navigating away restores the user's existing theme. */
+body:has(.curve-initiative-page) {
+  color-scheme: light;
+  --bg-canvas: #f7f8fc;
+  --bg-surface-1: #ffffff;
+  --bg-surface-2: #f7f8fc;
+  --bg-layer-1: #f0f2f8;
+  --bg-layer-1-hover: #e6e8f1;
+  --bg-layer-1-active: #dfe2ff;
+  --bg-layer-1-selected: #eeefff;
+  --bg-layer-2: #ffffff;
+  --bg-layer-2-hover: #f0f2f8;
+  --bg-layer-2-active: #e6e8f1;
+  --bg-layer-2-selected: #eeefff;
+  --bg-layer-transparent: transparent;
+  --bg-layer-transparent-hover: #f0f2f8;
+  --bg-layer-transparent-selected: #eeefff;
+  --bg-layer-disabled: #e6e8f1;
+  --bg-accent-primary: #444ed9;
+  --bg-accent-primary-hover: #343eb8;
+  --bg-accent-primary-active: #343eb8;
+  --bg-accent-subtle: #eeefff;
+  --bg-accent-subtle-hover: #dfe2ff;
+  --border-subtle: #e6e8f1;
+  --border-subtle-1: #d2d6e4;
+  --border-strong: #8991aa;
+  --border-accent-strong: #444ed9;
+  --txt-primary: #22283d;
+  --txt-secondary: #60677c;
+  --txt-tertiary: #60677c;
+  --txt-placeholder: #60677c;
+  --txt-disabled: #60677c;
+  --txt-accent-primary: #444ed9;
+  --txt-accent-secondary: #444ed9;
+  --txt-on-color: #ffffff;
+  --txt-inverse: #ffffff;
+  --txt-on-color-disabled: #60677c;
+  --txt-icon-primary: #22283d;
+  --txt-icon-secondary: #60677c;
+  --txt-icon-tertiary: #60677c;
+  --txt-icon-placeholder: #60677c;
+  --txt-icon-accent-primary: #444ed9;
+  --bg-warning-subtle: #fff4df;
+  --txt-warning-primary: #85560c;
+  --txt-warning-secondary: #85560c;
+  --bg-success-subtle: #e6f4ed;
+  --txt-success-primary: #227455;
+  --bg-danger-subtle: #fff0f0;
+  --txt-danger-primary: #a32b38;
+  --txt-danger-secondary: #a32b38;
+  --bg-blue-subtle: #eeefff;
+  --txt-blue-primary: #444ed9;
+  --scrollbar-thumb: #8991aa;
+  --scrollbar-thumb-hover: #60677c;
+}
+.curve-initiative-page {
+  background: #f7f8fc;
+}
+.curve-initiative-desk {
+  color: #22283d;
+  font-family: "Curve Manrope", sans-serif;
+  caret-color: #444ed9;
+}
+.curve-initiative-desk ::selection {
+  background: #dfe2ff;
+  color: #22283d;
+}
+.curve-initiative-desk > header h1 {
+  font-size: 20px;
+}
+.curve-initiative-directory {
+  margin-block: 20px 24px;
+  border-bottom: 1px solid #e6e8f1;
+  padding-bottom: 12px;
+}
+.curve-initiative-directory > summary {
+  width: fit-content;
+  min-height: 44px;
+  padding: 12px 4px;
+  color: #444ed9;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.curve-initiative-directory > summary span {
+  margin-left: 12px;
+  color: #60677c;
+  font-size: 12px;
+  font-weight: 500;
+}
+.curve-initiative-directory > section:last-child > div:has(> button) {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.curve-initiative-content {
+  min-width: 0;
+}
+.curve-initiative-detail > header {
+  border: 0;
+  padding: 0 0 24px;
+}
+.curve-initiative-detail > header h2 {
+  font-size: 28px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+.curve-initiative-detail > div {
+  padding: 0;
+}
+.curve-initiative-detail .curve-document-review {
+  padding: 0;
+}
+.curve-initiative-detail details > summary {
+  min-height: 44px;
+  padding-block: 12px;
+}
+.curve-initiative-desk :is(button, summary, input, select, a):focus-visible {
+  outline: 3px solid #444ed9;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .curve-initiative-detail > header h2 {
+    font-size: 24px;
+  }
+  .curve-initiative-desk {
+    padding-inline: 16px;
+  }
+  .curve-initiative-directory {
+    margin-block: 12px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  body:has(.curve-initiative-page) [data-top-navigation] > :first-child {
+    display: none;
+  }
+  body:has(.curve-initiative-page) [data-command-search] {
+    width: calc(100vw - 156px);
+  }
+  body:has(.curve-initiative-page) [data-command-search] > :first-child {
+    width: 100%;
+  }
+  body:has(.curve-initiative-page) [data-command-search] > :nth-child(2) {
+    max-width: calc(100vw - 32px);
+    left: 0;
+    transform: none;
+  }
+}

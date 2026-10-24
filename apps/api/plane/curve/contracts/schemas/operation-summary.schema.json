@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://curve.x3m.internal/contracts/schemas/operation-summary.schema.json",
+  "$id": "https://curve.example.invalid/contracts/schemas/operation-summary.schema.json",
   "title": "Curve Operation API summary",
   "type": "object",
   "additionalProperties": false,

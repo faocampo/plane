@@ -7,6 +7,7 @@ import uuid
 from dataclasses import dataclass
 
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from plane.curve.initiative_policy import append_initiative_mutation_audit, execute_initiative_mutation
@@ -19,6 +20,7 @@ from plane.curve.models import (
     GateType,
     IdempotencyState,
     Initiative,
+    InitiativeBusinessIntent,
     InitiativeMode,
     InitiativeRiskTier,
     InitiativeState,
@@ -48,9 +50,10 @@ from plane.curve.services import (
 from plane.db.models import WorkspaceMember
 
 
-INITIATIVE_EVENT_SCHEMA = "https://curve.x3m.internal/contracts/schemas/initiative-event-v1.schema.json"
+INITIATIVE_EVENT_SCHEMA = "https://curve.example.invalid/contracts/schemas/initiative-event-v1.schema.json"
 INITIATIVE_OUTBOX_DESTINATION = "CURVE_INITIATIVE_LOCAL_V1"
-MANUAL_FIRST_WORKFLOW_VERSION_ID = uuid.UUID("82000000-0000-4000-8000-000000000001")
+MANUAL_FIRST_WORKFLOW_VERSION_ID = uuid.UUID("82000000-0000-4000-8000-000000000002")
+CURRENT_APPROVAL_GATES = (GateType.PRD_APPROVAL, GateType.PLAN_APPROVAL)
 KEYWORD_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{0,49}$")
 DESCRIPTION_KEYS = frozenset({"schema_version", "format", "body"})
 DESCRIPTION_MAX_LENGTH = 20_000
@@ -143,6 +146,14 @@ def _validate_risk_tier(value):
     return value
 
 
+def _validate_business_intent(value, *, allow_unset=False):
+    if allow_unset and value is None:
+        return None
+    if value not in InitiativeBusinessIntent.values:
+        raise InitiativeValidationError(field="business_intent")
+    return value
+
+
 def _validate_uuid(value, *, field):
     try:
         return uuid.UUID(str(value))
@@ -165,35 +176,45 @@ def _translate_keyword_integrity_error(error):
     raise error
 
 
-def _normalize_assignments(*, workspace_id, assignments, risk_tier):
-    if not isinstance(assignments, list) or len(assignments) != 3:
+def _normalize_assignments(*, workspace_id, assignments, risk_tier, legacy_replay=False):
+    gates = GateType.values if legacy_replay else CURRENT_APPROVAL_GATES
+    if not isinstance(assignments, list) or len(assignments) != len(gates):
         raise InitiativeGateAssignmentInvalid
     normalized = []
     for assignment in assignments:
         if not isinstance(assignment, dict) or set(assignment) != {"gate_type", "approver_user_id"}:
             raise InitiativeGateAssignmentInvalid
         gate_type = assignment["gate_type"]
-        if gate_type not in GateType.values:
+        if gate_type not in gates:
             raise InitiativeGateAssignmentInvalid
         approver_id = _validate_uuid(assignment["approver_user_id"], field="approver_user_id")
         normalized.append((gate_type, approver_id))
-    if {gate_type for gate_type, _ in normalized} != set(GateType.values):
+    if {gate_type for gate_type, _ in normalized} != set(gates):
         raise InitiativeGateAssignmentInvalid
     approver_ids = {approver_id for _, approver_id in normalized}
     active_count = WorkspaceMember.objects.filter(
         workspace_id=workspace_id,
         member_id__in=approver_ids,
         is_active=True,
+        member__is_active=True,
+        member__is_bot=False,
     ).count()
     if active_count != len(approver_ids):
         raise InitiativeGateAssignmentInvalid
-    if risk_tier in {InitiativeRiskTier.STANDARD, InitiativeRiskTier.HIGH} and len(approver_ids) != 3:
+    if risk_tier in {InitiativeRiskTier.STANDARD, InitiativeRiskTier.HIGH} and len(approver_ids) != len(gates):
         raise InitiativeGateAssignmentInvalid
     return sorted(normalized, key=lambda value: value[0])
 
 
 def _validate_current_assignments(initiative, *, risk_tier=None):
-    assignments = list(initiative.gate_assignments.all())
+    now = timezone.now()
+    assignments = list(
+        initiative.gate_assignments.filter(
+            Q(valid_until__isnull=True) | Q(valid_until__gt=now),
+            gate_type__in=CURRENT_APPROVAL_GATES,
+            valid_from__lte=now,
+        )
+    )
     return _normalize_assignments(
         workspace_id=initiative.workspace_id,
         assignments=[
@@ -336,6 +357,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
                     "title",
                     "description",
                     "risk_tier",
+                    "business_intent",
                     "gate_assignments",
                 },
                 required={"product_id", "mode", "keyword", "title", "description", "risk_tier", "gate_assignments"},
@@ -349,10 +371,13 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
             title = _validate_title(payload["title"])
             description = _validate_description(payload["description"])
             risk_tier = _validate_risk_tier(payload["risk_tier"])
+            business_intent = _validate_business_intent(payload.get("business_intent"), allow_unset=True)
+            legacy_replay = isinstance(payload["gate_assignments"], list) and len(payload["gate_assignments"]) == 3
             assignments = _normalize_assignments(
                 workspace_id=workspace.id,
                 assignments=payload["gate_assignments"],
                 risk_tier=risk_tier,
+                legacy_replay=legacy_replay,
             )
             _resolve_product(workspace_id=workspace.id, product_id=product_id)
             canonical_request = canonical_json_bytes(
@@ -364,6 +389,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
                     "title": title,
                     "description": description,
                     "risk_tier": risk_tier,
+                    "business_intent": business_intent,
                     "gate_assignments": [
                         {"gate_type": gate_type, "approver_user_id": str(approver_id)}
                         for gate_type, approver_id in assignments
@@ -381,12 +407,15 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
             record, _, replay = _load_or_create_idempotency(workspace_id=workspace.id, identity=identity)
             if replay:
                 return _replay_with_audit(receipt=receipt, record=record)
+            if legacy_replay:
+                raise InitiativeGateAssignmentInvalid
             if Initiative.objects.filter(workspace_id=workspace.id, keyword__iexact=keyword).exists():
                 raise InitiativeKeywordConflict
             actor = dict(receipt.actor)
             try:
                 with transaction.atomic():
                     initiative = Initiative.objects.create(
+                        schema_version="1.2",
                         workspace_id=workspace.id,
                         product_id=product_id,
                         mode=InitiativeMode.STANDALONE,
@@ -395,6 +424,7 @@ def create_initiative(*, request, workspace_slug, payload, raw_idempotency_key):
                         title=title,
                         description=description,
                         risk_tier=risk_tier,
+                        business_intent=business_intent,
                         state=InitiativeState.DRAFT,
                         workflow_version_id=None,
                         creator_user_id=uuid.UUID(receipt.actor["actor_id"]),
@@ -439,7 +469,7 @@ def update_initiative_draft(*, request, workspace_slug, initiative_id, expected_
     def callback(receipt, _workspace, initiative):
         with transaction.atomic():
             _validate_expected_version(expected_version)
-            _validate_keys(payload, {"keyword", "title", "description", "risk_tier"})
+            _validate_keys(payload, {"keyword", "title", "description", "risk_tier", "business_intent"})
             if not payload:
                 raise InitiativeValidationError
             if initiative.state != InitiativeState.DRAFT or initiative.first_external_resource_at is not None:
@@ -454,6 +484,8 @@ def update_initiative_draft(*, request, workspace_slug, initiative_id, expected_
             if "risk_tier" in payload:
                 values["risk_tier"] = _validate_risk_tier(payload["risk_tier"])
                 _validate_current_assignments(initiative, risk_tier=values["risk_tier"])
+            if "business_intent" in payload:
+                values["business_intent"] = _validate_business_intent(payload["business_intent"], allow_unset=True)
             canonical_request = canonical_json_bytes(
                 {
                     "command_type": "UPDATE_INITIATIVE_DRAFT",
@@ -487,8 +519,12 @@ def update_initiative_draft(*, request, workspace_slug, initiative_id, expected_
             ):
                 raise InitiativeKeywordConflict
             before = _before_digest(initiative)
+            if "business_intent" in changed and initiative.schema_version == "1.0":
+                initiative.schema_version = "1.1"
+                changed.append("schema_version")
             for field in changed:
-                setattr(initiative, field, values[field])
+                if field in values:
+                    setattr(initiative, field, values[field])
             initiative.version += 1
             initiative.updated_by = dict(receipt.actor)
             try:
@@ -561,6 +597,8 @@ def _transition(
             if command == "ACCEPT_REFINEMENT":
                 if initiative.state != InitiativeState.DRAFT:
                     raise InitiativeStateConflict
+                if initiative.business_intent is None:
+                    raise InitiativeValidationError(field="business_intent")
                 _resolve_product(workspace_id=workspace.id, product_id=initiative.product_id)
                 _validate_current_assignments(initiative)
                 initiative.state = InitiativeState.ALIGNING

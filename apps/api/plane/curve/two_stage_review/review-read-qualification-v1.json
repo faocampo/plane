@@ -1,0 +1,8 @@
+{
+  "schema_version": "curve.review-read-qualification/v1-candidate",
+  "predecessor_digest": "sha256:f3dbfa241f6902232d44c1dddc5f96184aaf1307738533c15eeebbd2d80006bd",
+  "replacements": {
+    "local_plan_review_views.py": "sha256:b56eecc85e6da82385f6f71b2726c73dd57fd55d85c9df9c5de8eaabaa1b3376",
+    "local_prd_review_views.py": "sha256:8c957ee6710ca7004c581fe37d89613f48ac24cad70a43d63835a370b1747995"
+  }
+}
