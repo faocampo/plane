@@ -111,10 +111,17 @@ GitHub Actions was re-enabled by the owner. At commit `90162a6815f50e8bd358e3a21
 
 The core job collected 2,497 tests and exceeded its 40-minute limit while still progressing. Its result remains incomplete. The CI runner now distributes core test files across four deterministic, disjoint jobs. Migration checks remain in every native job; storage regression runs once. Coverage guards verify that every current and newly discovered file is assigned exactly once. The new candidate requires fresh hosted validation before integration.
 
+## Live membership revocation and shared-cache remediation
+
+The owner authorized temporary revocation and restoration of the synthetic Technical reviewer membership. The first live exercise exposed stale Product document content after the Technical panel received access denial. The server denied protected reads, but the sibling tab retained its previously loaded PRD until separately refreshed.
+
+Both panels now notify their shared parent when a protected read or command returns HTTP 401, 403 or 404. The parent removes both document panels and their cached content, feedback and actions, marks both stages unavailable, and offers an explicit access refresh. Transport failures retain their existing recovery behavior.
+
+The repeated browser exercise passed: Technical Refresh after revocation cleared both stages, switching to Product exposed no cached document or review actions, and restoring membership followed by explicit Refresh recovered both documents and their original approvals. Exact before/after snapshots matched membership, Initiative states, review record counts and all 20 document hashes. This verifies read denial and recovery; no forbidden browser write was attempted. Five new regression cases cover denial from metadata, content and review reads, both directions of shared invalidation, recovery, and transport-error separation. All 555 web tests across 48 files passed.
+
 ## Remaining acceptance and delivery
 
-1. Complete authorized browser recovery checks. Native tests cover current access, revocation during I/O and replay. A temporary membership-revocation test in the synthetic demo awaits specific owner authorization; that mutation has not been performed. Unknown-outcome recovery has automated coverage. Live read interruption and post-commit submission response-loss recovery are verified above.
-2. Complete current-head technical validation before integration. Owner UX review is accepted for the candidate recorded above. The existing draft PR and its description have been updated; the remote head is verified. Hosted CI is available; complete the sharded backend run and validate the resulting candidate before integration.
+Owner UX acceptance and the authorized live recovery exercises are complete. The preceding candidate `287b4702776e836562ef72b9f21c16b02e321d9c` passed hosted API and web validation and exact-branch CodeQL. Native hosted results were 2,778 passed and 12 Temporal skips; a separate exact-head local follow-up passed all 23 workflow tests with zero skips, including those 12 cases. The shared-cache fix requires current-head checks before integration.
 
 Storage initialization is required for the local document directory. Production provider/storage activation, release qualification and later milestones retain their own gates.
 

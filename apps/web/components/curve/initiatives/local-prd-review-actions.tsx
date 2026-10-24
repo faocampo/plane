@@ -19,6 +19,7 @@ type Props = {
   onBusy: (busy: boolean) => void;
   onSaved: () => void;
   onStatus?: (status: DocumentApprovalStatus) => void;
+  onAccessFailure?: (error: unknown) => void;
 };
 type Pending = {
   current: CurveLocalReviewCurrent;
@@ -36,6 +37,7 @@ export function LocalPrdReviewActions({
   onBusy,
   onSaved,
   onStatus,
+  onAccessFailure,
 }: Props) {
   const feedbackId = useId();
   const [current, setCurrent] = useState<CurveLocalReviewCurrent | null>(null);
@@ -109,8 +111,11 @@ export function LocalPrdReviewActions({
           );
           if (active) setSavedNote(text);
         }
-      } catch {
+      } catch (failure) {
         if (active) {
+          setCurrent(null);
+          setSavedNote("");
+          onAccessFailure?.(failure);
           setError("Review details couldn’t be loaded. Refresh to try again.");
           onStatus?.("UNAVAILABLE");
         }
@@ -169,6 +174,7 @@ export function LocalPrdReviewActions({
       onSaved();
     } catch (failure) {
       if (!mounted.current) return;
+      onAccessFailure?.(failure);
       if ((failure as { code?: string }).code === "MUTATION_OUTCOME_UNKNOWN") {
         setUncertain(true);
         setMessage(

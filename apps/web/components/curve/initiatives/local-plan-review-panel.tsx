@@ -23,6 +23,7 @@ type Props = {
   viewerId?: string;
   onReviewSaved?: () => void;
   onStatus?: (status: DocumentApprovalStatus) => void;
+  onAccessFailure?: (error: unknown) => void;
 };
 type Pending = {
   approval: LocalPlanApproval;
@@ -42,7 +43,7 @@ export function LocalPlanReviewPanel(props: Props) {
     />
   );
 }
-function LocalPlanReview({ workspaceSlug, initiative, viewerId, onReviewSaved, onStatus }: Props) {
+function LocalPlanReview({ workspaceSlug, initiative, viewerId, onReviewSaved, onStatus, onAccessFailure }: Props) {
   const heading = useId();
   const inputId = useId();
   const hintId = useId();
@@ -101,8 +102,13 @@ function LocalPlanReview({ workspaceSlug, initiative, viewerId, onReviewSaved, o
             if (active) setDocumentView({ text });
           }
         }
-      } catch {
-        if (active) setReadError("We couldn’t load the current document. Refresh to check your access and try again.");
+      } catch (error) {
+        if (active) {
+          setCurrent(null);
+          setDocumentView(null);
+          setReadError("We couldn’t load the current document. Refresh to check your access and try again.");
+          onAccessFailure?.(error);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -157,6 +163,7 @@ function LocalPlanReview({ workspaceSlug, initiative, viewerId, onReviewSaved, o
       refresh((value) => value + 1);
     } catch (error) {
       if (!mounted.current) return;
+      onAccessFailure?.(error);
       const code = (error as { code?: string }).code;
       if (code === "MUTATION_OUTCOME_UNKNOWN") {
         setUncertain(true);
@@ -281,6 +288,7 @@ function LocalPlanReview({ workspaceSlug, initiative, viewerId, onReviewSaved, o
             disabled={busy || loading || uncertain}
             onBusy={setBusy}
             onStatus={onStatus}
+            onAccessFailure={onAccessFailure}
             onSaved={() => {
               refresh((value) => value + 1);
               onReviewSaved?.();

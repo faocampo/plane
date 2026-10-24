@@ -23,6 +23,7 @@ type Props = {
   viewerId?: string;
   onReviewSaved?: () => void;
   onStatus?: (status: DocumentApprovalStatus) => void;
+  onAccessFailure?: (error: unknown) => void;
 };
 type Pending = { file: File; expectedVersion: number; sourceVersion: number; idempotencyKey: string };
 type DocumentView = { text: string } | { url: string };
@@ -36,7 +37,7 @@ export function LocalPrdReviewPanel(props: Props) {
     />
   );
 }
-function LocalPrdReview({ workspaceSlug, initiative, viewerId, onReviewSaved, onStatus }: Props) {
+function LocalPrdReview({ workspaceSlug, initiative, viewerId, onReviewSaved, onStatus, onAccessFailure }: Props) {
   const heading = useId();
   const inputId = useId();
   const hintId = useId();
@@ -89,8 +90,13 @@ function LocalPrdReview({ workspaceSlug, initiative, viewerId, onReviewSaved, on
             if (active) setDocumentView({ text });
           }
         }
-      } catch {
-        if (active) setReadError("We couldn’t load the current document. Refresh to check your access and try again.");
+      } catch (error) {
+        if (active) {
+          setCurrent(null);
+          setDocumentView(null);
+          setReadError("We couldn’t load the current document. Refresh to check your access and try again.");
+          onAccessFailure?.(error);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -138,6 +144,7 @@ function LocalPrdReview({ workspaceSlug, initiative, viewerId, onReviewSaved, on
       refresh((value) => value + 1);
     } catch (error) {
       if (!mounted.current) return;
+      onAccessFailure?.(error);
       const code = (error as { code?: string }).code;
       if (code === "MUTATION_OUTCOME_UNKNOWN") {
         setUncertain(true);
@@ -263,6 +270,7 @@ function LocalPrdReview({ workspaceSlug, initiative, viewerId, onReviewSaved, on
             disabled={busy || loading || uncertain}
             onBusy={setBusy}
             onStatus={onStatus}
+            onAccessFailure={onAccessFailure}
             onSaved={() => {
               refresh((value) => value + 1);
               onReviewSaved?.();
