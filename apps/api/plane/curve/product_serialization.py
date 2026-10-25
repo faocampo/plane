@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 from plane.curve.models import Product
+from plane.curve.product_format import require_supported_product_format
 
 
 def human_actor(user_id) -> dict[str, str]:
@@ -10,6 +11,7 @@ def human_actor(user_id) -> dict[str, str]:
 
 
 def serialize_product(product: Product) -> dict:
+    require_supported_product_format(product)
     return {
         "schema_version": product.schema_version,
         "id": str(product.id),

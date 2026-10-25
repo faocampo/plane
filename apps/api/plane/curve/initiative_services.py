@@ -26,6 +26,7 @@ from plane.curve.models import (
     InitiativeState,
     OutboxEvent,
 )
+from plane.curve.product_format import ProductFormatUnavailable
 from plane.curve.product_guards import (
     ProductArchived,
     ProductGuardResourceNotFound,
@@ -336,6 +337,7 @@ def _replay_with_audit(*, receipt, record):
 
 INITIATIVE_NO_EFFECT_EXCEPTIONS = (
     InitiativeCommandError,
+    ProductFormatUnavailable,
     IdempotencyConflict,
     CommandAlreadyInProgress,
     OptimisticConcurrencyError,

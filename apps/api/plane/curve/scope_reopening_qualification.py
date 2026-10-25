@@ -39,6 +39,13 @@ TWO_STAGE_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/runtime-qua
 REVIEW_READ_SUCCESSOR_DIGEST = "sha256:0d0abd1dfc62b987f8a85e68b620934f4d51167dc0f9dae812cb392cf91c88f6"
 REVIEW_READ_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/review-read-qualification-v1.json"
 _REVIEW_READ_REPLACED_MODULES = frozenset({"local_prd_review_views.py", "local_plan_review_views.py"})
+PRODUCT_FORMAT_SUCCESSOR_DIGEST = 'sha256:9dec97232698387f0162234927909d40a97587ae5614511b5ab66adae5813244'
+PRODUCT_FORMAT_SUCCESSOR_PATH = Path(__file__).parent / "product-format-qualification-v1.json"
+_PRODUCT_FORMAT_ADDED_MODULES = frozenset({"product_format.py"})
+_PRODUCT_FORMAT_REPLACED_MODULES = frozenset({
+    "initiative_services.py", "product_guards.py", "product_policy.py",
+    "product_serialization.py", "product_services.py", "views.py",
+})
 _TWO_STAGE_ADDED_MODULES = frozenset(
     [
         "local_document_store.py",
@@ -570,6 +577,11 @@ def _current_qualification(predecessor):
                 qualified = validate_review_read_successor(
                     qualified, _read_pinned_successor(REVIEW_READ_SUCCESSOR_PATH, REVIEW_READ_SUCCESSOR_DIGEST)
                 )
+                if PRODUCT_FORMAT_SUCCESSOR_PATH.exists():
+                    qualified = validate_product_format_successor(
+                        qualified,
+                        _read_pinned_successor(PRODUCT_FORMAT_SUCCESSOR_PATH, PRODUCT_FORMAT_SUCCESSOR_DIGEST),
+                    )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -720,6 +732,32 @@ def validate_review_read_successor(predecessor, successor):
     ):
         raise ValueError("Exact review-read qualification required")
     return dict(predecessor, runtime_sources={**predecessor["runtime_sources"], **successor["replacements"]})
+
+
+def validate_product_format_successor(predecessor, successor):
+    """Allow only the application-format guard and its exact integration points."""
+    historical = validate_review_read_successor(
+        _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)["qualification"],
+        _read_pinned_successor(REVIEW_READ_SUCCESSOR_PATH, REVIEW_READ_SUCCESSOR_DIGEST),
+    )
+    if (
+        predecessor != historical
+        or type(successor) is not dict
+        or set(successor) != {"schema_version", "predecessor_digest", "additions", "replacements"}
+        or successor["schema_version"] != "curve.product-format-qualification/v1-candidate"
+        or successor["predecessor_digest"] != REVIEW_READ_SUCCESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != _PRODUCT_FORMAT_ADDED_MODULES
+        or set(successor["replacements"]) != _PRODUCT_FORMAT_REPLACED_MODULES
+    ):
+        raise ValueError("Exact Product format qualification required")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(
+        predecessor["runtime_sources"], sources,
+        _PRODUCT_FORMAT_ADDED_MODULES, _PRODUCT_FORMAT_REPLACED_MODULES,
+    )
+    return dict(predecessor, runtime_sources=sources)
 
 
 def require_manual_gate2_v3_qualification():

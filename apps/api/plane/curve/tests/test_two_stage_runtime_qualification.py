@@ -30,6 +30,10 @@ def test_successor_verifies_complete_runtime_and_preserves_old_authority():
     installed = root.validate_review_read_successor(
         qualified, root._read_pinned_successor(root.REVIEW_READ_SUCCESSOR_PATH, root.REVIEW_READ_SUCCESSOR_DIGEST)
     )
+    installed = root.validate_product_format_successor(
+        installed,
+        root._read_pinned_successor(root.PRODUCT_FORMAT_SUCCESSOR_PATH, root.PRODUCT_FORMAT_SUCCESSOR_DIGEST),
+    )
     assert installed["runtime_sources"] == root.current_runtime_sources()
     assert {key for key in qualified if qualified[key] != installed[key]} == {"runtime_sources"}
     assert qualified["excluded_writers"] == old["excluded_writers"]

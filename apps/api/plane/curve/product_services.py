@@ -21,6 +21,7 @@ from plane.curve.models import (
     Product,
     ProductState,
 )
+from plane.curve.product_format import ProductFormatUnavailable, require_supported_product_format
 from plane.curve.product_guards import (
     ProductHasNonTerminalInitiative,
     ProductInitiativeGuardUnavailable,
@@ -191,6 +192,7 @@ def _resolve_replay(*, workspace_id, record):
     )
     if product is None:
         raise ReplayResourceUnavailable
+    require_supported_product_format(product)
     return ProductCommandResult(
         product=product,
         replayed=True,
@@ -288,6 +290,7 @@ def _before_digest(product):
 
 PRODUCT_NO_EFFECT_EXCEPTIONS = (
     ProductCommandError,
+    ProductFormatUnavailable,
     IdempotencyConflict,
     CommandAlreadyInProgress,
     OptimisticConcurrencyError,
