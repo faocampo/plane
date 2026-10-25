@@ -26,7 +26,7 @@ def test_successor_verifies_complete_runtime_and_preserves_old_authority():
     before = deepcopy(old)
     qualified = root.validate_two_stage_successor(old, new)
     assert old == before
-    assert qualified["models"] == root.current_model_catalog()
+
     installed = root.validate_review_read_successor(
         qualified, root._read_pinned_successor(root.REVIEW_READ_SUCCESSOR_PATH, root.REVIEW_READ_SUCCESSOR_DIGEST)
     )
@@ -34,8 +34,13 @@ def test_successor_verifies_complete_runtime_and_preserves_old_authority():
         installed,
         root._read_pinned_successor(root.PRODUCT_FORMAT_SUCCESSOR_PATH, root.PRODUCT_FORMAT_SUCCESSOR_DIGEST),
     )
-    assert installed["runtime_sources"] == root.current_runtime_sources()
     assert {key for key in qualified if qualified[key] != installed[key]} == {"runtime_sources"}
+    installed = root.validate_roadmap_storage_successor(
+        installed,
+        root._read_pinned_successor(root.ROADMAP_STORAGE_SUCCESSOR_PATH, root.ROADMAP_STORAGE_SUCCESSOR_DIGEST),
+    )
+    assert installed["runtime_sources"] == root.current_runtime_sources()
+    assert installed["models"] == root.current_model_catalog()
     assert qualified["excluded_writers"] == old["excluded_writers"]
     assert "EXECUTION" in qualified["excluded_writers"]
     for name, value in old["migration_digests"].items():
@@ -123,9 +128,9 @@ def test_review_read_successor_cannot_change_authority_or_other_sources(damage):
     elif damage == "invalid_digest":
         successor["replacements"]["local_prd_review_views.py"] = "invalid"
     elif damage == "unchanged":
-        successor["replacements"]["local_prd_review_views.py"] = (
-            predecessor["runtime_sources"]["local_prd_review_views.py"]
-        )
+        successor["replacements"]["local_prd_review_views.py"] = predecessor["runtime_sources"][
+            "local_prd_review_views.py"
+        ]
     else:
         successor["runtime_writer_inventory"] = ["EXECUTION"]
     with pytest.raises(ValueError):
