@@ -249,6 +249,7 @@ def roadmap_storage_test_teardown(local_prd_review_test_teardown):
         active = [(table, name) for table, name in guards if table in tables]
         assert "curve_roadmap_domain_coverage" not in tables
         assert "curve_roadmap_metadata_coverage" not in tables
+        assert "curve_roadmap_command_coverage" not in tables
         result = []
         for statement in statements:
             if statement.lstrip().upper().startswith("TRUNCATE "):

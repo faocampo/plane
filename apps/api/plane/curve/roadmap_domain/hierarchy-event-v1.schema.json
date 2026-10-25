@@ -1,0 +1,600 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/candidates/roadmap-hierarchy-event-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workspace_id", "product_id", "action", "before", "after", "actor", "occurred_at"],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "action": {
+      "enum": [
+        "CREATE_ROADMAP",
+        "UPDATE_ROADMAP",
+        "CREATE_MILESTONE",
+        "UPDATE_MILESTONE",
+        "REORDER_MILESTONES",
+        "MILESTONE_ADDED",
+        "MILESTONE_POSITION_CHANGED"
+      ]
+    },
+    "before": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resource_id",
+                "resource_version",
+                "name",
+                "resource_type",
+                "owner_user_id",
+                "horizon_start",
+                "horizon_end"
+              ],
+              "properties": {
+                "resource_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "resource_version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255,
+                  "pattern": "\\S"
+                },
+                "resource_type": {
+                  "const": "ROADMAP"
+                },
+                "owner_user_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "horizon_start": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "horizon_end": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "resource_id",
+                "resource_version",
+                "name",
+                "resource_type",
+                "type",
+                "position",
+                "target_start",
+                "target_end"
+              ],
+              "properties": {
+                "resource_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "resource_version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255,
+                  "pattern": "\\S"
+                },
+                "resource_type": {
+                  "const": "MILESTONE"
+                },
+                "type": {
+                  "enum": ["RELEASE_VERSION", "CALENDAR_PERIOD", "PRODUCT_OUTCOME", "INTERNAL_DEVELOPMENT_PHASE"]
+                },
+                "position": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "target_start": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "target_end": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "after": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resource_id",
+            "resource_version",
+            "name",
+            "resource_type",
+            "owner_user_id",
+            "horizon_start",
+            "horizon_end"
+          ],
+          "properties": {
+            "resource_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "resource_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "\\S"
+            },
+            "resource_type": {
+              "const": "ROADMAP"
+            },
+            "owner_user_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "horizon_start": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "horizon_end": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resource_id",
+            "resource_version",
+            "name",
+            "resource_type",
+            "type",
+            "position",
+            "target_start",
+            "target_end"
+          ],
+          "properties": {
+            "resource_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "resource_version": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "\\S"
+            },
+            "resource_type": {
+              "const": "MILESTONE"
+            },
+            "type": {
+              "enum": ["RELEASE_VERSION", "CALENDAR_PERIOD", "PRODUCT_OUTCOME", "INTERNAL_DEVELOPMENT_PHASE"]
+            },
+            "position": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "target_start": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "target_end": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {
+          "const": "HUMAN"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": ["CREATE_ROADMAP", "CREATE_MILESTONE"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "before": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "before": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "enum": ["CREATE_MILESTONE", "UPDATE_MILESTONE", "MILESTONE_POSITION_CHANGED"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "after": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "resource_id",
+              "resource_version",
+              "name",
+              "resource_type",
+              "type",
+              "position",
+              "target_start",
+              "target_end"
+            ],
+            "properties": {
+              "resource_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "resource_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "pattern": "\\S"
+              },
+              "resource_type": {
+                "const": "MILESTONE"
+              },
+              "type": {
+                "enum": ["RELEASE_VERSION", "CALENDAR_PERIOD", "PRODUCT_OUTCOME", "INTERNAL_DEVELOPMENT_PHASE"]
+              },
+              "position": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "target_start": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "target_end": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "resource_id",
+                  "resource_version",
+                  "name",
+                  "resource_type",
+                  "type",
+                  "position",
+                  "target_start",
+                  "target_end"
+                ],
+                "properties": {
+                  "resource_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "resource_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "\\S"
+                  },
+                  "resource_type": {
+                    "const": "MILESTONE"
+                  },
+                  "type": {
+                    "enum": ["RELEASE_VERSION", "CALENDAR_PERIOD", "PRODUCT_OUTCOME", "INTERNAL_DEVELOPMENT_PHASE"]
+                  },
+                  "position": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "target_start": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "target_end": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "after": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "resource_id",
+              "resource_version",
+              "name",
+              "resource_type",
+              "owner_user_id",
+              "horizon_start",
+              "horizon_end"
+            ],
+            "properties": {
+              "resource_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "resource_version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "pattern": "\\S"
+              },
+              "resource_type": {
+                "const": "ROADMAP"
+              },
+              "owner_user_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "horizon_start": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "horizon_end": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "before": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "resource_id",
+                  "resource_version",
+                  "name",
+                  "resource_type",
+                  "owner_user_id",
+                  "horizon_start",
+                  "horizon_end"
+                ],
+                "properties": {
+                  "resource_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "resource_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "\\S"
+                  },
+                  "resource_type": {
+                    "const": "ROADMAP"
+                  },
+                  "owner_user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "horizon_start": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "horizon_end": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

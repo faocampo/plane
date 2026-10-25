@@ -101,7 +101,11 @@ def test_metadata_qualification_preserves_models_writers_and_migration_history()
     original = deepcopy(old)
     current = root.validate_roadmap_metadata_successor(old, successor)
     assert old == original
-    assert current["runtime_sources"] == root.current_runtime_sources()
+    installed = root.validate_roadmap_hierarchy_successor(
+        current,
+        root._read_pinned_successor(root.ROADMAP_HIERARCHY_SUCCESSOR_PATH, root.ROADMAP_HIERARCHY_SUCCESSOR_DIGEST),
+    )
+    assert installed["runtime_sources"] == root.current_runtime_sources()
     assert current["models"] == old["models"] == root.current_model_catalog()
     for key in ("runtime_writer_inventory", "excluded_writers"):
         assert current[key] == old[key]

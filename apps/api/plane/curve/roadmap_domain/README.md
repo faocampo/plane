@@ -65,3 +65,52 @@ names while retaining the established JSON payload column. Command integration
 must validate the closed payload contract and current authority, then atomically
 write item state, history, receipt, event, outbox and audit. Runtime command and
 Roadmap UI acceptance remain pending.
+
+## Hierarchy command and API successor
+
+The [hierarchy qualification](hierarchy-qualification-v1.json) (exact command,
+read, route, model and migration source pins) adds only Roadmap and Milestone
+hierarchy operations. The [policy manifest](hierarchy-policy-v1.json) (creation,
+current-owner mutation and active-human requirements) is checked against the
+runtime policy. The additive policy migration preserves all earlier policy
+identities and coverage seals; retained new policy evidence prevents reversal.
+
+Creation by an authorized Product owner or workspace administrator assigns the
+creator as Roadmap owner. Only the current Roadmap owner changes the hierarchy.
+Membership, user activity, Product state and format support are checked before
+returning a retained command result. Concurrent duplicates share one receipt;
+state, events, outbox and audit commit together. Milestone creation and reordering
+advance the parent version. Milestone metadata edits use the milestone version.
+
+The API prefix is `/api/v1/workspaces/{slug}/curve/products/{product_id}/roadmaps/`.
+
+| Relative route                            | Methods    | Behavior                                          |
+| ----------------------------------------- | ---------- | ------------------------------------------------- |
+| Empty suffix                              | GET, POST  | List or create Roadmaps                           |
+| `{roadmap_id}/`                           | GET, PATCH | Read or update Roadmap metadata                   |
+| `{roadmap_id}/milestones/`                | GET, POST  | List or create Milestones                         |
+| `{roadmap_id}/milestones/{milestone_id}/` | GET, PATCH | Read or update Milestone metadata                 |
+| `{roadmap_id}/milestones/reorder/`        | POST       | Submit all current Milestone IDs in desired order |
+
+These session-only routes require `CURVE_ROADMAP_HIERARCHY_ENABLED`, whose
+repository default is false, plus the normal scoped Curve settings. Setting a
+flag supplies no production activation authority. Session writes retain CSRF
+checks. API keys cannot enter this human command lane.
+
+Commands require `Idempotency-Key`; changes also require the exact target ETag in
+`If-Match`. A creation or reorder uses the Roadmap version, while a Milestone
+metadata update uses the Milestone version. Roadmap creation accepts no version.
+Responses contain a stable `resource_ref`, ETag and Location; a replay retains
+the original result version, and clients fetch Location for current metadata.
+All responses use `Cache-Control: no-store`.
+
+Collections support `page_size` from 1 to 100 and an opaque `cursor`, returning
+`results` and `next_cursor`. Roadmaps use an ID keyset. Milestones use position/ID
+order and bind the cursor to the parent version; reordered lists reject an old
+cursor with 412. Detail routes accept no query parameters. Read projections contain
+safe hierarchy metadata and no protected document or scope bodies.
+
+Feature and Item commands, joint Initiative creation, protected references,
+approval supersession, the Roadmap-backed document journey and UI acceptance
+remain separate unfinished parts of M2-01. This hierarchy slice does not complete
+the milestone.
