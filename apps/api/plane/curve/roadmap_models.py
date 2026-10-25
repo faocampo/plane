@@ -238,6 +238,16 @@ class RoadmapItemHistory(ImmutableRecordModel):
                 name="curve_rihist_version_ck",
             ),
             models.CheckConstraint(
-                condition=models.Q(change_type__in=["PROGRESS_CHANGED", "MILESTONE_MOVED"]), name="curve_rihist_type_ck"
+                condition=models.Q(
+                    change_type__in=[
+                        "PROGRESS_CHANGED",
+                        "MILESTONE_MOVED",
+                        "PRIORITY_CHANGED",
+                        "HEALTH_CHANGED",
+                        "CONFIDENCE_CHANGED",
+                        "SCHEDULE_CHANGED",
+                    ]
+                ),
+                name="curve_rihist_type_ck",
             ),
         ]

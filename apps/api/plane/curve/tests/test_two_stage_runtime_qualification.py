@@ -39,6 +39,10 @@ def test_successor_verifies_complete_runtime_and_preserves_old_authority():
         installed,
         root._read_pinned_successor(root.ROADMAP_STORAGE_SUCCESSOR_PATH, root.ROADMAP_STORAGE_SUCCESSOR_DIGEST),
     )
+    installed = root.validate_roadmap_metadata_successor(
+        installed,
+        root._read_pinned_successor(root.ROADMAP_METADATA_SUCCESSOR_PATH, root.ROADMAP_METADATA_SUCCESSOR_DIGEST),
+    )
     assert installed["runtime_sources"] == root.current_runtime_sources()
     assert installed["models"] == root.current_model_catalog()
     assert qualified["excluded_writers"] == old["excluded_writers"]

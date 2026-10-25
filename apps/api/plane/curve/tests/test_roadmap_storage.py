@@ -221,7 +221,7 @@ def test_upgrade_and_empty_reverse_preserve_existing_product_and_historical_seal
             cursor.execute("SELECT * FROM curve_local_new_work_coverage")
             seal = cursor.fetchall()
         for _ in range(2):
-            MigrationExecutor(connection).migrate(leaves)
+            MigrationExecutor(connection).migrate([("curve", "0043_roadmap_domain")])
             assert Product.objects.filter(id=product.id).values().get() == before
             with connection.cursor() as cursor:
                 assert previous._catalog(cursor) == module.CURRENT_CATALOG_DIGEST

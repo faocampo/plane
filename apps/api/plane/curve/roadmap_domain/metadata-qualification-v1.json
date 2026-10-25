@@ -1,0 +1,9 @@
+{
+  "schema_version": "curve.roadmap-metadata-qualification/v1-candidate",
+  "predecessor_digest": "sha256:a5b3ac195c1c71638f520c36fb1208592fe36e8f2db582ccb071e0ab0d20ebf8",
+  "replacements": {
+    "roadmap_models.py": "sha256:f0fa771b522bc0cd1acf657ca30d0bc468f8cbac02c5b480ee04c31af79a4201"
+  },
+  "migration_digest": "sha256:49fcbaaf4e25677a057570b430b49f170938524d1fffffd141bf2a6dd7e85ef3",
+  "physical_catalog_digest": "sha256:01e1603846bd63784c524007ad530d64f9fc5d251081411eb10c959288bc2cca"
+}
