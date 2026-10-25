@@ -418,6 +418,10 @@ class Initiative(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["workspace_id", "id"], name="curve_init_ws_id_uq"),
             models.UniqueConstraint(
+                fields=["workspace_id", "product_id", "id", "roadmap_item_id"],
+                name="curve_init_roadmap_pair_uq",
+            ),
+            models.UniqueConstraint(
                 models.F("workspace_id"),
                 Lower("keyword"),
                 name="curve_init_workspace_keyword_uq",
@@ -1553,3 +1557,5 @@ from .local_prd_review_models import LocalPrdSubmission, LocalPrdDecision  # noq
 from .local_plan_models import LocalPlanRevision, LocalPlanSubmission, LocalPlanDecision  # noqa: E402,F401
 
 from .local_prd_reopening_models import LocalPrdReopening  # noqa: E402,F401
+
+from .roadmap_models import Roadmap, Milestone, Feature, RoadmapItem, RoadmapItemHistory  # noqa: E402,F401

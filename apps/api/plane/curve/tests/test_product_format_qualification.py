@@ -28,7 +28,11 @@ def test_product_format_successor_preserves_history_catalog_and_writer_authority
     before = deepcopy(previous)
     qualified = root.validate_product_format_successor(previous, successor)
     assert previous == before
-    assert qualified["runtime_sources"] == root.current_runtime_sources()
+    installed = root.validate_roadmap_storage_successor(
+        qualified,
+        root._read_pinned_successor(root.ROADMAP_STORAGE_SUCCESSOR_PATH, root.ROADMAP_STORAGE_SUCCESSOR_DIGEST),
+    )
+    assert installed["runtime_sources"] == root.current_runtime_sources()
     assert {key for key in qualified if qualified[key] != previous[key]} == {"runtime_sources"}
     with transaction.atomic():
         root.require_reopening_qualification()

@@ -22,7 +22,7 @@ from rest_framework.test import APIClient
 
 from plane.curve import scope_editor_read_v2 as reader
 from plane.curve import scope_reopening_qualification as qualification
-from plane.curve.models import Initiative, Product
+from plane.curve.models import Initiative, Product, Roadmap, Milestone, Feature, RoadmapItem
 from plane.curve.scope_proposal_models import ScopeProposalRevision
 from plane.curve.tests.test_scope_proposal_api import (
     configuration,
@@ -173,19 +173,45 @@ def test_current_native_lifecycle_denies(scope, condition):
         scope.initiative.save()
     else:
         actor = {"actor_type": "HUMAN", "actor_id": str(scope.user.id)}
-        scope.initiative = Initiative.objects.create(
+        common = dict(
             workspace_id=scope.workspace.id,
             product_id=scope.product.id,
-            mode="ROADMAP",
-            roadmap_item_id=uuid.uuid4(),
-            keyword="roadmap-reader",
-            title="Synthetic roadmap scope",
-            description={},
-            risk_tier="STANDARD",
-            creator_user_id=scope.user.id,
             created_by=actor,
             updated_by=actor,
         )
+        roadmap = Roadmap.objects.create(**common, name="Synthetic Roadmap", owner_user_id=scope.user.id)
+        milestone = Milestone.objects.create(
+            **common, roadmap_id=roadmap.id, name="Synthetic Milestone", type="PRODUCT_OUTCOME", position=0
+        )
+        feature = Feature.objects.create(**common, name="Synthetic Feature")
+        item_id = uuid.uuid4()
+        # Persist a valid reciprocal pair before testing the standalone-only reader.
+        with transaction.atomic():
+            scope.initiative = Initiative.objects.create(
+                **common,
+                mode="ROADMAP",
+                roadmap_item_id=item_id,
+                keyword="roadmap-reader",
+                title="Synthetic roadmap scope",
+                description={},
+                risk_tier="STANDARD",
+                creator_user_id=scope.user.id,
+            )
+            RoadmapItem.objects.create(
+                **common,
+                id=item_id,
+                roadmap_id=roadmap.id,
+                milestone_id=milestone.id,
+                feature_id=feature.id,
+                defining_initiative_id=scope.initiative.id,
+                owner_user_id=scope.user.id,
+                scope_body={},
+                priority="MEDIUM",
+                confidence="MEDIUM",
+                health="ON_TRACK",
+            )
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
     assert_denied(client.get(endpoint(scope)))
 
 
@@ -282,6 +308,12 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
         installed,
         qualification._read_pinned_successor(
             qualification.PRODUCT_FORMAT_SUCCESSOR_PATH, qualification.PRODUCT_FORMAT_SUCCESSOR_DIGEST
+        ),
+    )
+    installed = qualification.validate_roadmap_storage_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ROADMAP_STORAGE_SUCCESSOR_PATH, qualification.ROADMAP_STORAGE_SUCCESSOR_DIGEST
         ),
     )
     assert qualification.current_runtime_sources() == installed["runtime_sources"]

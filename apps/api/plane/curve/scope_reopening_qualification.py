@@ -39,13 +39,120 @@ TWO_STAGE_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/runtime-qua
 REVIEW_READ_SUCCESSOR_DIGEST = "sha256:0d0abd1dfc62b987f8a85e68b620934f4d51167dc0f9dae812cb392cf91c88f6"
 REVIEW_READ_SUCCESSOR_PATH = Path(__file__).parent / "two_stage_review/review-read-qualification-v1.json"
 _REVIEW_READ_REPLACED_MODULES = frozenset({"local_prd_review_views.py", "local_plan_review_views.py"})
-PRODUCT_FORMAT_SUCCESSOR_DIGEST = 'sha256:9dec97232698387f0162234927909d40a97587ae5614511b5ab66adae5813244'
+PRODUCT_FORMAT_SUCCESSOR_DIGEST = "sha256:9dec97232698387f0162234927909d40a97587ae5614511b5ab66adae5813244"
 PRODUCT_FORMAT_SUCCESSOR_PATH = Path(__file__).parent / "product-format-qualification-v1.json"
 _PRODUCT_FORMAT_ADDED_MODULES = frozenset({"product_format.py"})
-_PRODUCT_FORMAT_REPLACED_MODULES = frozenset({
-    "initiative_services.py", "product_guards.py", "product_policy.py",
-    "product_serialization.py", "product_services.py", "views.py",
-})
+_PRODUCT_FORMAT_REPLACED_MODULES = frozenset(
+    {
+        "initiative_services.py",
+        "product_guards.py",
+        "product_policy.py",
+        "product_serialization.py",
+        "product_services.py",
+        "views.py",
+    }
+)
+ROADMAP_STORAGE_SUCCESSOR_DIGEST = "sha256:a5b3ac195c1c71638f520c36fb1208592fe36e8f2db582ccb071e0ab0d20ebf8"
+ROADMAP_STORAGE_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/storage-qualification-v1.json"
+_ROADMAP_MODEL_COLUMNS = {
+    "feature": [
+        "created_at",
+        "created_by",
+        "description",
+        "id",
+        "name",
+        "product_id",
+        "schema_version",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id",
+    ],
+    "milestone": [
+        "created_at",
+        "created_by",
+        "id",
+        "name",
+        "position",
+        "product_id",
+        "roadmap_id",
+        "schema_version",
+        "target_end",
+        "target_start",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "type",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id",
+    ],
+    "roadmap": [
+        "created_at",
+        "created_by",
+        "horizon_end",
+        "horizon_start",
+        "id",
+        "name",
+        "owner_user_id",
+        "product_id",
+        "schema_version",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id",
+    ],
+    "roadmapitem": [
+        "approved_prd_version_id",
+        "confidence",
+        "created_at",
+        "created_by",
+        "declared_progress",
+        "defining_initiative_id",
+        "feature_id",
+        "health",
+        "id",
+        "milestone_id",
+        "owner_user_id",
+        "planned_end",
+        "planned_start",
+        "priority",
+        "product_id",
+        "progress_note",
+        "roadmap_id",
+        "schema_version",
+        "scope_body",
+        "status",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id",
+    ],
+    "roadmapitemhistory": [
+        "after_version",
+        "before_version",
+        "change_type",
+        "id",
+        "payload",
+        "product_id",
+        "recorded_at",
+        "recorded_by",
+        "roadmap_item_id",
+        "sequence",
+        "workspace_id",
+    ],
+}
+
 _TWO_STAGE_ADDED_MODULES = frozenset(
     [
         "local_document_store.py",
@@ -582,6 +689,11 @@ def _current_qualification(predecessor):
                         qualified,
                         _read_pinned_successor(PRODUCT_FORMAT_SUCCESSOR_PATH, PRODUCT_FORMAT_SUCCESSOR_DIGEST),
                     )
+                    if ROADMAP_STORAGE_SUCCESSOR_PATH.exists():
+                        qualified = validate_roadmap_storage_successor(
+                            qualified,
+                            _read_pinned_successor(ROADMAP_STORAGE_SUCCESSOR_PATH, ROADMAP_STORAGE_SUCCESSOR_DIGEST),
+                        )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -725,7 +837,8 @@ def validate_review_read_successor(predecessor, successor):
         or type(successor["replacements"]) is not dict
         or set(successor["replacements"]) != _REVIEW_READ_REPLACED_MODULES
         or any(
-            type(value) is not str or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+            type(value) is not str
+            or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
             or value == predecessor["runtime_sources"][name]
             for name, value in successor["replacements"].items()
         )
@@ -754,10 +867,71 @@ def validate_product_format_successor(predecessor, successor):
         raise ValueError("Exact Product format qualification required")
     sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
     _validate_source_delta(
-        predecessor["runtime_sources"], sources,
-        _PRODUCT_FORMAT_ADDED_MODULES, _PRODUCT_FORMAT_REPLACED_MODULES,
+        predecessor["runtime_sources"],
+        sources,
+        _PRODUCT_FORMAT_ADDED_MODULES,
+        _PRODUCT_FORMAT_REPLACED_MODULES,
     )
     return dict(predecessor, runtime_sources=sources)
+
+
+def validate_roadmap_storage_successor(predecessor, successor):
+    """Permit five storage models and one migration; grant no new command writers."""
+    historical = validate_product_format_successor(
+        validate_review_read_successor(
+            _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)["qualification"],
+            _read_pinned_successor(REVIEW_READ_SUCCESSOR_PATH, REVIEW_READ_SUCCESSOR_DIGEST),
+        ),
+        _read_pinned_successor(PRODUCT_FORMAT_SUCCESSOR_PATH, PRODUCT_FORMAT_SUCCESSOR_DIGEST),
+    )
+    tables = {
+        "feature": "curve_feature",
+        "milestone": "curve_milestone",
+        "roadmap": "curve_roadmap",
+        "roadmapitem": "curve_roadmap_item",
+        "roadmapitemhistory": "curve_roadmap_item_history",
+    }
+    additions = [
+        dict(model_name=name, db_table=tables[name], columns=columns)
+        for name, columns in _ROADMAP_MODEL_COLUMNS.items()
+    ]
+    migration = import_module("plane.curve.migrations.0043_roadmap_domain")
+    if (
+        predecessor != historical
+        or type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "model_additions",
+            "migration_digest",
+            "physical_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.roadmap-storage-qualification/v1-candidate"
+        or successor["predecessor_digest"] != PRODUCT_FORMAT_SUCCESSOR_DIGEST
+        or successor["model_additions"] != additions
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != {"roadmap_models.py"}
+        or set(successor["replacements"]) != {"models.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Roadmap storage qualification required")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, {"roadmap_models.py"}, {"models.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ROADMAP_DOMAIN_STORAGE_V1",
+        models=sorted(predecessor["models"] + additions, key=lambda row: row["model_name"]),
+        migration_digests={**predecessor["migration_digests"], "0043_roadmap_domain.py": successor["migration_digest"]},
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
 
 
 def require_manual_gate2_v3_qualification():

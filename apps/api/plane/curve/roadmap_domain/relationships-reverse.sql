@@ -1,0 +1,15 @@
+DROP TRIGGER curve_roadmap_item_history_retained ON curve_roadmap_item_history;
+DROP TRIGGER curve_roadmap_item_retained ON curve_roadmap_item;
+DROP TRIGGER curve_feature_retained ON curve_feature;
+DROP TRIGGER curve_milestone_retained ON curve_milestone;
+DROP TRIGGER curve_roadmap_retained ON curve_roadmap;
+ALTER TABLE curve_roadmap_item_history DROP CONSTRAINT curve_rihist_item_fk;
+ALTER TABLE curve_initiative DROP CONSTRAINT curve_init_roadmap_item_fk;
+ALTER TABLE curve_roadmap_item DROP CONSTRAINT curve_ritem_initiative_fk;
+ALTER TABLE curve_roadmap_item DROP CONSTRAINT curve_ritem_feature_fk;
+ALTER TABLE curve_roadmap_item DROP CONSTRAINT curve_ritem_milestone_fk;
+ALTER TABLE curve_milestone DROP CONSTRAINT curve_mstone_roadmap_fk;
+ALTER TABLE curve_roadmap_item DROP CONSTRAINT curve_ritem_product_fk;
+ALTER TABLE curve_feature DROP CONSTRAINT curve_feature_product_fk;
+ALTER TABLE curve_milestone DROP CONSTRAINT curve_mstone_product_fk;
+ALTER TABLE curve_roadmap DROP CONSTRAINT curve_rmap_product_fk;

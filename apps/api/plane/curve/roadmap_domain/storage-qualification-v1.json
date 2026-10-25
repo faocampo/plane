@@ -1,0 +1,130 @@
+{
+  "schema_version": "curve.roadmap-storage-qualification/v1-candidate",
+  "predecessor_digest": "sha256:9dec97232698387f0162234927909d40a97587ae5614511b5ab66adae5813244",
+  "additions": {
+    "roadmap_models.py": "sha256:f01f96faa387bff8a5ea65d530deb2a18567c5d272001c5a2a172713c6728adf"
+  },
+  "replacements": {
+    "models.py": "sha256:e274fee1c9fb63b264200e3dbca5d1dd52d815c5d4b8579a113f9b943ac8c2e5"
+  },
+  "model_additions": [
+    {
+      "model_name": "feature",
+      "db_table": "curve_feature",
+      "columns": [
+        "created_at",
+        "created_by",
+        "description",
+        "id",
+        "name",
+        "product_id",
+        "schema_version",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id"
+      ]
+    },
+    {
+      "model_name": "milestone",
+      "db_table": "curve_milestone",
+      "columns": [
+        "created_at",
+        "created_by",
+        "id",
+        "name",
+        "position",
+        "product_id",
+        "roadmap_id",
+        "schema_version",
+        "target_end",
+        "target_start",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "type",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id"
+      ]
+    },
+    {
+      "model_name": "roadmap",
+      "db_table": "curve_roadmap",
+      "columns": [
+        "created_at",
+        "created_by",
+        "horizon_end",
+        "horizon_start",
+        "id",
+        "name",
+        "owner_user_id",
+        "product_id",
+        "schema_version",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id"
+      ]
+    },
+    {
+      "model_name": "roadmapitem",
+      "db_table": "curve_roadmap_item",
+      "columns": [
+        "approved_prd_version_id",
+        "confidence",
+        "created_at",
+        "created_by",
+        "declared_progress",
+        "defining_initiative_id",
+        "feature_id",
+        "health",
+        "id",
+        "milestone_id",
+        "owner_user_id",
+        "planned_end",
+        "planned_start",
+        "priority",
+        "product_id",
+        "progress_note",
+        "roadmap_id",
+        "schema_version",
+        "scope_body",
+        "status",
+        "tombstone_reason",
+        "tombstoned_at",
+        "tombstoned_by",
+        "updated_at",
+        "updated_by",
+        "version",
+        "workspace_id"
+      ]
+    },
+    {
+      "model_name": "roadmapitemhistory",
+      "db_table": "curve_roadmap_item_history",
+      "columns": [
+        "after_version",
+        "before_version",
+        "change_type",
+        "id",
+        "payload",
+        "product_id",
+        "recorded_at",
+        "recorded_by",
+        "roadmap_item_id",
+        "sequence",
+        "workspace_id"
+      ]
+    }
+  ],
+  "migration_digest": "sha256:2f7be120d042942ae15a8f6f6498c26adeef20879334b17e2bee5064cf60a7cf",
+  "physical_catalog_digest": "sha256:f55186f9b065cf1d5685abdc4e1f93921d9789417b12723f75743c4e14edcb0e"
+}
