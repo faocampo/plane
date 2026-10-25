@@ -291,11 +291,11 @@ def test_application_independently_rejects_compromised_database_coverage_proof(r
             # Forge the installed successor's active seal. Historical predecessor
             # seals are separately pinned by the current database verifier.
             cursor.execute(
-                "ALTER TABLE curve_local_new_work_coverage DISABLE TRIGGER curve_local_new_work_coverage_immutable"
+                "ALTER TABLE curve_roadmap_domain_coverage DISABLE TRIGGER curve_roadmap_domain_coverage_immutable"
             )
-            cursor.execute("UPDATE curve_local_new_work_coverage SET catalog_digest=%s", [forged_digest])
+            cursor.execute("UPDATE curve_roadmap_domain_coverage SET catalog_digest=%s", [forged_digest])
             cursor.execute(
-                "ALTER TABLE curve_local_new_work_coverage ENABLE TRIGGER curve_local_new_work_coverage_immutable"
+                "ALTER TABLE curve_roadmap_domain_coverage ENABLE TRIGGER curve_roadmap_domain_coverage_immutable"
             )
         cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
         require_reopening_qualification()
