@@ -54,6 +54,8 @@ _PRODUCT_FORMAT_REPLACED_MODULES = frozenset(
 )
 ROADMAP_STORAGE_SUCCESSOR_DIGEST = "sha256:a5b3ac195c1c71638f520c36fb1208592fe36e8f2db582ccb071e0ab0d20ebf8"
 ROADMAP_STORAGE_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/storage-qualification-v1.json"
+ROADMAP_METADATA_SUCCESSOR_DIGEST = "sha256:aa1aa37f0872ae61702134c9e7046fc568b734fdc67e04721a4ed9722a2b6b14"
+ROADMAP_METADATA_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/metadata-qualification-v1.json"
 _ROADMAP_MODEL_COLUMNS = {
     "feature": [
         "created_at",
@@ -694,6 +696,13 @@ def _current_qualification(predecessor):
                             qualified,
                             _read_pinned_successor(ROADMAP_STORAGE_SUCCESSOR_PATH, ROADMAP_STORAGE_SUCCESSOR_DIGEST),
                         )
+                        if ROADMAP_METADATA_SUCCESSOR_PATH.exists():
+                            qualified = validate_roadmap_metadata_successor(
+                                qualified,
+                                _read_pinned_successor(
+                                    ROADMAP_METADATA_SUCCESSOR_PATH, ROADMAP_METADATA_SUCCESSOR_DIGEST
+                                ),
+                            )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -929,6 +938,48 @@ def validate_roadmap_storage_successor(predecessor, successor):
         model_edition="CURVE_ROADMAP_DOMAIN_STORAGE_V1",
         models=sorted(predecessor["models"] + additions, key=lambda row: row["model_name"]),
         migration_digests={**predecessor["migration_digests"], "0043_roadmap_domain.py": successor["migration_digest"]},
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def validate_roadmap_metadata_successor(predecessor, successor):
+    """Qualify one history constraint expansion, preserving all command authority."""
+    product = validate_product_format_successor(
+        validate_review_read_successor(
+            _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)["qualification"],
+            _read_pinned_successor(REVIEW_READ_SUCCESSOR_PATH, REVIEW_READ_SUCCESSOR_DIGEST),
+        ),
+        _read_pinned_successor(PRODUCT_FORMAT_SUCCESSOR_PATH, PRODUCT_FORMAT_SUCCESSOR_DIGEST),
+    )
+    historical = validate_roadmap_storage_successor(
+        product, _read_pinned_successor(ROADMAP_STORAGE_SUCCESSOR_PATH, ROADMAP_STORAGE_SUCCESSOR_DIGEST)
+    )
+    migration = import_module("plane.curve.migrations.0044_roadmap_metadata_history")
+    if (
+        predecessor != historical
+        or type(successor) is not dict
+        or set(successor)
+        != {"schema_version", "predecessor_digest", "replacements", "migration_digest", "physical_catalog_digest"}
+        or successor["schema_version"] != "curve.roadmap-metadata-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ROADMAP_STORAGE_SUCCESSOR_DIGEST
+        or not _hashes(successor["replacements"])
+        or set(successor["replacements"]) != {"roadmap_models.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Roadmap metadata qualification required")
+    sources = {**predecessor["runtime_sources"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, set(), {"roadmap_models.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ROADMAP_METADATA_STORAGE_V1",
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0044_roadmap_metadata_history.py": successor["migration_digest"],
+        },
         physical_catalog_digest=successor["physical_catalog_digest"],
         runtime_sources=sources,
     )

@@ -36,3 +36,32 @@ invalid links, schedules, progress, deferred ordering and immutable history.
 Full milestone acceptance additionally requires concurrent commands, replay,
 current membership and ownership, protected references, approval supersession,
 UI acceptance and completion projections.
+
+## Metadata history successor
+
+The [metadata qualification](metadata-qualification-v1.json) (exact model,
+additive migration and catalog pins) qualifies priority, health, confidence and
+schedule history types. The [metadata migration](../migrations/0044_roadmap_metadata_history.py)
+(constraint expansion and retained-history rollback guard) preserves the original
+storage migration and qualification. Its source delta replaces only the Roadmap
+model module; model columns and command writer authorities remain identical.
+
+The [metadata coverage SQL](metadata-coverage-forward.sql) (new immutable seal and
+full predecessor-chain checks) retains the original Roadmap seal. Reversal takes
+an exclusive history-table lock and refuses if any new-type history exists.
+When only legacy history exists, reversal preserves every row and restores the
+original constraint and verifier. Installation and reversal run atomically.
+
+The [metadata tests](../tests/test_roadmap_metadata_storage.py) (new-type roundtrips,
+immutability, loss-preventing reverse, legacy preservation and proof tampering)
+exercise native PostgreSQL boundaries. The existing storage migration roundtrip
+test continues to target its original migration explicitly; independent attack
+fixtures target the current seal so application-level rejection remains tested.
+
+Exact before/after payload semantics remain defined by
+[Curve PR #177](https://github.com/faocampo/curve/pull/177) (metadata history
+contracts and semantic validation). This storage successor permits those type
+names while retaining the established JSON payload column. Command integration
+must validate the closed payload contract and current authority, then atomically
+write item state, history, receipt, event, outbox and audit. Runtime command and
+Roadmap UI acceptance remain pending.
