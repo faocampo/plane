@@ -28,10 +28,15 @@ def test_storage_successor_preserves_history_and_adds_no_command_authority():
     before = deepcopy(previous)
     qualified = root.validate_roadmap_storage_successor(previous, successor)
     assert previous == before
-    current = root.current_runtime_sources()
-    assert {k: v for k, v in qualified["runtime_sources"].items() if k != "roadmap_models.py"} == {
-        k: v for k, v in current.items() if k != "roadmap_models.py"
-    }
+    installed = root.validate_roadmap_metadata_successor(
+        qualified,
+        root._read_pinned_successor(root.ROADMAP_METADATA_SUCCESSOR_PATH, root.ROADMAP_METADATA_SUCCESSOR_DIGEST),
+    )
+    installed = root.validate_roadmap_hierarchy_successor(
+        installed,
+        root._read_pinned_successor(root.ROADMAP_HIERARCHY_SUCCESSOR_PATH, root.ROADMAP_HIERARCHY_SUCCESSOR_DIGEST),
+    )
+    assert installed["runtime_sources"] == root.current_runtime_sources()
     assert qualified["runtime_sources"]["roadmap_models.py"] == successor["additions"]["roadmap_models.py"]
     assert qualified["models"] == root.current_model_catalog()
     for key in ("runtime_writer_inventory", "excluded_writers"):

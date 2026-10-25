@@ -56,6 +56,8 @@ ROADMAP_STORAGE_SUCCESSOR_DIGEST = "sha256:a5b3ac195c1c71638f520c36fb1208592fe36
 ROADMAP_STORAGE_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/storage-qualification-v1.json"
 ROADMAP_METADATA_SUCCESSOR_DIGEST = "sha256:aa1aa37f0872ae61702134c9e7046fc568b734fdc67e04721a4ed9722a2b6b14"
 ROADMAP_METADATA_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/metadata-qualification-v1.json"
+ROADMAP_HIERARCHY_SUCCESSOR_DIGEST = "sha256:3a44d32b23b9ce8841585fa3b732093fe5d06756da14e2a4fae1703593238f64"
+ROADMAP_HIERARCHY_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/hierarchy-qualification-v1.json"
 _ROADMAP_MODEL_COLUMNS = {
     "feature": [
         "created_at",
@@ -703,6 +705,13 @@ def _current_qualification(predecessor):
                                     ROADMAP_METADATA_SUCCESSOR_PATH, ROADMAP_METADATA_SUCCESSOR_DIGEST
                                 ),
                             )
+                            if ROADMAP_HIERARCHY_SUCCESSOR_PATH.exists():
+                                qualified = validate_roadmap_hierarchy_successor(
+                                    qualified,
+                                    _read_pinned_successor(
+                                        ROADMAP_HIERARCHY_SUCCESSOR_PATH, ROADMAP_HIERARCHY_SUCCESSOR_DIGEST
+                                    ),
+                                )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -983,6 +992,74 @@ def validate_roadmap_metadata_successor(predecessor, successor):
         physical_catalog_digest=successor["physical_catalog_digest"],
         runtime_sources=sources,
     )
+
+
+def validate_roadmap_hierarchy_successor(predecessor, successor):
+    """Add only hierarchy command writers and their exact policy identity."""
+    product = validate_product_format_successor(
+        validate_review_read_successor(
+            _read_pinned_successor(TWO_STAGE_SUCCESSOR_PATH, TWO_STAGE_SUCCESSOR_DIGEST)["qualification"],
+            _read_pinned_successor(REVIEW_READ_SUCCESSOR_PATH, REVIEW_READ_SUCCESSOR_DIGEST),
+        ),
+        _read_pinned_successor(PRODUCT_FORMAT_SUCCESSOR_PATH, PRODUCT_FORMAT_SUCCESSOR_DIGEST),
+    )
+    historical = validate_roadmap_storage_successor(
+        product, _read_pinned_successor(ROADMAP_STORAGE_SUCCESSOR_PATH, ROADMAP_STORAGE_SUCCESSOR_DIGEST)
+    )
+    historical = validate_roadmap_metadata_successor(
+        historical, _read_pinned_successor(ROADMAP_METADATA_SUCCESSOR_PATH, ROADMAP_METADATA_SUCCESSOR_DIGEST)
+    )
+
+    migration = import_module("plane.curve.migrations.0045_roadmap_hierarchy_commands")
+    if (
+        predecessor != historical
+        or type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.roadmap-hierarchy-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ROADMAP_METADATA_SUCCESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"])
+        != {"roadmap_policy.py", "roadmap_services.py", "roadmap_read.py", "roadmap_views.py"}
+        or set(successor["replacements"]) != {"models.py", "urls.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Roadmap hierarchy qualification required")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(
+        predecessor["runtime_sources"],
+        sources,
+        {"roadmap_policy.py", "roadmap_services.py", "roadmap_read.py", "roadmap_views.py"},
+        {"models.py", "urls.py"},
+    )
+    return dict(
+        predecessor,
+        model_edition="CURVE_ROADMAP_HIERARCHY_COMMANDS_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["ROADMAP_HIERARCHY_COMMANDS"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0045_roadmap_hierarchy_commands.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def require_roadmap_hierarchy_qualification():
+    require_reopening_qualification()
+    if not ROADMAP_HIERARCHY_SUCCESSOR_PATH.exists() or ROADMAP_HIERARCHY_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("ROADMAP_HIERARCHY_UNAVAILABLE", 503)
 
 
 def require_manual_gate2_v3_qualification():

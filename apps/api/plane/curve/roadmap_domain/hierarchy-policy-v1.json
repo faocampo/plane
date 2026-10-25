@@ -1,0 +1,10 @@
+{
+  "policy_key": "CURVE_ROADMAP_HIERARCHY_POLICY",
+  "policy_version": 1,
+  "create": ["PRODUCT_OWNER", "WORKSPACE_ADMINISTRATOR"],
+  "mutate": ["ROADMAP_OWNER"],
+  "active_human_required": true,
+  "active_product_required": true,
+  "initial_owner": "AUTHENTICATED_CREATOR",
+  "actions": ["CREATE_MILESTONE", "CREATE_ROADMAP", "REORDER_MILESTONES", "UPDATE_MILESTONE", "UPDATE_ROADMAP"]
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "curve.roadmap-hierarchy-qualification/v1-candidate",
+  "predecessor_digest": "sha256:aa1aa37f0872ae61702134c9e7046fc568b734fdc67e04721a4ed9722a2b6b14",
+  "additions": {
+    "roadmap_policy.py": "sha256:9598f01980eebf727c703df2500d2ed0f5836b10c463bf7721c051b119e859b7",
+    "roadmap_services.py": "sha256:d451ff3cd9389a7d0ec0f07d784ff3e122462258c33f5c779404d266c6f69f96",
+    "roadmap_read.py": "sha256:76abb619b102f81c26fcf055b36042b1611071d81e832650609aab327881928c",
+    "roadmap_views.py": "sha256:4dc3958f9ea03e5c2ac7dbe2ee907a9c19dc9005092bc6cc802113894ac11593"
+  },
+  "replacements": {
+    "models.py": "sha256:b6c616b689c8e5b9c284bacb1e82942cc020ae50fdfeec7b11d4f7f35f353e62",
+    "urls.py": "sha256:7a43c3b77137fd0b8078fb13a2402bc91ab960b93e706be626e6f57a13a4373e"
+  },
+  "migration_digest": "sha256:1a8fe5f0d98ff5a82483bced46ad78ed1a7a31e1c24ca5936470151ef560b841",
+  "physical_catalog_digest": "sha256:bc85b48c76b9d83462078cd09e57f9c2e27434d4bd338c42935503c55ef40c59"
+}

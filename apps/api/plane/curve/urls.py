@@ -66,7 +66,40 @@ from .local_plan_review_views import (
     CurveLocalPlanReviewRecordEndpoint,
 )
 
+from plane.curve.roadmap_views import (
+    RoadmapListEndpoint,
+    RoadmapDetailEndpoint,
+    MilestoneListEndpoint,
+    MilestoneDetailEndpoint,
+    MilestoneOrderEndpoint,
+)
+
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/",
+        RoadmapListEndpoint.as_view(),
+        name="curve-roadmaps",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/",
+        RoadmapDetailEndpoint.as_view(),
+        name="curve-roadmap-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/milestones/",
+        MilestoneListEndpoint.as_view(),
+        name="curve-milestones",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/milestones/reorder/",
+        MilestoneOrderEndpoint.as_view(),
+        name="curve-milestones-order",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/milestones/<uuid:milestone_id>/",
+        MilestoneDetailEndpoint.as_view(),
+        name="curve-milestone-detail",
+    ),
     path(
         "workspaces/<str:slug>/curve/initiatives/<uuid:initiative_id>/local-plan/v1/review/current/",
         CurveLocalPlanReviewEndpoint.as_view(),
