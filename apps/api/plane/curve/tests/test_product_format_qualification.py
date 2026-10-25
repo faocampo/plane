@@ -32,6 +32,10 @@ def test_product_format_successor_preserves_history_catalog_and_writer_authority
         qualified,
         root._read_pinned_successor(root.ROADMAP_STORAGE_SUCCESSOR_PATH, root.ROADMAP_STORAGE_SUCCESSOR_DIGEST),
     )
+    installed = root.validate_roadmap_metadata_successor(
+        installed,
+        root._read_pinned_successor(root.ROADMAP_METADATA_SUCCESSOR_PATH, root.ROADMAP_METADATA_SUCCESSOR_DIGEST),
+    )
     assert installed["runtime_sources"] == root.current_runtime_sources()
     assert {key for key in qualified if qualified[key] != previous[key]} == {"runtime_sources"}
     with transaction.atomic():
