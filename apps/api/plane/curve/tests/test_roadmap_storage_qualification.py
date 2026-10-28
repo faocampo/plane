@@ -48,6 +48,10 @@ def test_storage_successor_preserves_history_and_adds_no_command_authority():
             root.FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH, root.FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST
         ),
     )
+    installed = root.validate_feature_command_successor(
+        installed,
+        root._read_pinned_successor(root.FEATURE_COMMAND_SUCCESSOR_PATH, root.FEATURE_COMMAND_SUCCESSOR_DIGEST),
+    )
     assert installed["runtime_sources"] == root.current_runtime_sources()
     assert qualified["runtime_sources"]["roadmap_models.py"] == successor["additions"]["roadmap_models.py"]
     assert qualified["models"] == root.current_model_catalog()

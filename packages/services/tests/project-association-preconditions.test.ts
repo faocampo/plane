@@ -57,7 +57,7 @@ describe("closed native association prerequisite read", () => {
     expect(mirror).toEqual(source);
     expect(createHash("sha256").update(mirror).digest("hex")).toBe(entry.sha256);
   });
-  it("uses only exact GET, no-store and cancellation, without CSRF or mutation", async () => {
+  it("uses exact GET, a bounded timeout, no-store and cancellation, without CSRF or mutation", async () => {
     const service = new CurveProjectAssociationPreconditionsService();
     const get = vi.spyOn(service, "get").mockResolvedValue(response(fixture()));
     const post = vi.spyOn(service, "post");
@@ -70,7 +70,7 @@ describe("closed native association prerequisite read", () => {
     });
     expect(get).toHaveBeenCalledExactlyOnceWith(
       `/api/v1/workspaces/example%2Fworkspace/curve/products/${scope.productId}/project-association-preconditions/?source_project_id=${sourceId}`,
-      { signal, headers: { "Cache-Control": "no-store" } }
+      { signal, headers: { "Cache-Control": "no-store" }, timeout: 60_000 }
     );
     expect(post).not.toHaveBeenCalled();
     expect(patch).not.toHaveBeenCalled();

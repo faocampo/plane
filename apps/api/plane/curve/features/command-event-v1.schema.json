@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/candidates/feature-command-event-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workspace_id", "product_id", "action", "before", "after", "actor", "occurred_at"],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "action": {
+      "enum": ["CREATE_FEATURE", "UPDATE_FEATURE"]
+    },
+    "before": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/record"
+        }
+      ]
+    },
+    "after": {
+      "$ref": "#/$defs/record"
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {
+          "const": "HUMAN"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource_type", "resource_id", "resource_version", "name", "description"],
+      "properties": {
+        "resource_type": {
+          "const": "FEATURE"
+        },
+        "resource_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "resource_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "\\S"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["object_id", "digest", "size_bytes", "media_type", "editor_schema_version"],
+              "properties": {
+                "object_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^sha256:[a-f0-9]{64}$"
+                },
+                "size_bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "media_type": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "editor_schema_version": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "const": "CREATE_FEATURE"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "before": {
+            "type": "null"
+          },
+          "after": {
+            "properties": {
+              "resource_version": {
+                "const": 1
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "before": {
+            "$ref": "#/$defs/record"
+          },
+          "after": {
+            "properties": {
+              "resource_version": {
+                "minimum": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
