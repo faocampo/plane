@@ -1,0 +1,10 @@
+{
+  "schema_version": "curve.feature-editor-storage-qualification/v1-candidate",
+  "predecessor_digest": "sha256:3a44d32b23b9ce8841585fa3b732093fe5d06756da14e2a4fae1703593238f64",
+  "additions": {
+    "feature_editor_rules.py": "sha256:26483bab37142a2ed4dae4e4ef7c4a240d2617ecaf393bfd0203806839b7a7bd"
+  },
+  "migration_digest": "sha256:a66ac68096efa168782377d78f03a0ad59bb7fb1f6bea2e099030d27e27e8342",
+  "physical_catalog_digest": "sha256:0180f41f0af33c6da885bba573793f5b19d927464c857977dd70579a7a78ee22",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}
