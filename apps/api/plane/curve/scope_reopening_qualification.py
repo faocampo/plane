@@ -60,6 +60,8 @@ ROADMAP_HIERARCHY_SUCCESSOR_DIGEST = "sha256:3a44d32b23b9ce8841585fa3b732093fe5d
 ROADMAP_HIERARCHY_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/hierarchy-qualification-v1.json"
 FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST = "sha256:36b72ae6b3629089786d4aa71b40afaa3a737e49e8306302cfb35969e322a682"
 FEATURE_EDITOR_STORAGE_SUCCESSOR_PATH = Path(__file__).parent / "feature_editors/storage-qualification-v1.json"
+FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST = "sha256:518470fe9f39ea33b0bf075714866df1a000f1655cf762edd8a16b6948b2e5fc"
+FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH = Path(__file__).parent / "feature_editors/command-qualification-v1.json"
 _ROADMAP_MODEL_COLUMNS = {
     "feature": [
         "created_at",
@@ -722,6 +724,14 @@ def _current_qualification(predecessor):
                                             FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST,
                                         ),
                                     )
+                                    if FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH.exists():
+                                        qualified = validate_feature_editor_command_successor(
+                                            qualified,
+                                            _read_pinned_successor(
+                                                FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH,
+                                                FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST,
+                                            ),
+                                        )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -1110,6 +1120,77 @@ def validate_feature_editor_storage_successor(predecessor, successor):
         external_catalog_digest=successor["external_catalog_digest"],
         runtime_sources=sources,
     )
+
+
+def validate_feature_editor_command_successor(predecessor, successor):
+    """Add only exact editor-management writers, retaining earlier authority."""
+    migration = import_module("plane.curve.migrations.0047_feature_editor_commands")
+    additions = {
+        "feature_editor_input.py",
+        "feature_editor_events.py",
+        "feature_editor_policy.py",
+        "feature_editor_services.py",
+        "feature_editor_views.py",
+        "feature_editor_read.py",
+    }
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.feature-editor-command-qualification/v1-candidate"
+        or successor["predecessor_digest"] != FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_FEATURE_EDITOR_STORAGE_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0046_feature_editor_storage.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != {"models.py", "urls.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Feature editor command qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    contracts = {
+        "command-policy-v1.json": "ba25ea05f1236657dd753aa8e9c3ba6b205fe48b1c8b7344186fc139f0d3509d",
+        "command-event-v1.schema.json": "1f2ddeb982b2a8554027174dc83d5051ea21cde1c48a35b70cb0004b25f50048",
+    }
+    for name, expected in contracts.items():
+        path = Path(__file__).parent / "feature_editors" / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Feature editor command contract changed")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, {"models.py", "urls.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_FEATURE_EDITOR_COMMANDS_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["FEATURE_EDITOR_COMMANDS"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0047_feature_editor_commands.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def require_feature_editor_command_qualification():
+    require_reopening_qualification()
+    if not FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH.exists() or FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("FEATURE_EDITOR_COMMAND_UNAVAILABLE", 503)
 
 
 def require_roadmap_hierarchy_qualification():

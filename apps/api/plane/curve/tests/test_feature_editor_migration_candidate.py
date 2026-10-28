@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from django.db import connection, DatabaseError, transaction
+from django.db.migrations.executor import MigrationExecutor
 
 from plane.curve.tests.test_feature_editor_grant_storage import scope as grant_scope, grant, revoke, rows
 from plane.curve.tests.test_feature_membership_lifetime import sql, membership as membership_fixture
@@ -50,8 +51,9 @@ def test_reverse_preserves_any_retained_grant(scope, revoked):
 def test_empty_reverse_restores_exact_predecessor_catalog(scope):
     install_external()
     sql("SET CONSTRAINTS ALL IMMEDIATE")
-    sql((ROOT / "coverage-reverse.sql").read_text())
-    sql((ROOT / "storage-reverse.sql").read_text())
+    # Reverse the installed successor chain before testing the storage boundary.
+    # Later command migrations also extend the catalog and must reverse first.
+    MigrationExecutor(connection).migrate([("curve", "0045_roadmap_hierarchy_commands")])
     predecessor = import_module("plane.curve.migrations.0045_roadmap_hierarchy_commands")
     assert catalog() == predecessor.CURRENT_CATALOG_DIGEST
     sql("SELECT curve_scope_reopening_verify_coverage()")
@@ -107,7 +109,6 @@ def test_runtime_rejects_unavailable_membership_tracking(scope, operation):
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("active", [True, False])
 def test_registered_migration_backfills_existing_memberships_without_changing_them(membership, active):
-    from django.db.migrations.executor import MigrationExecutor
     from plane.curve.tests.test_feature_membership_lifetime import generation
     from plane.db.models import WorkspaceMember
 

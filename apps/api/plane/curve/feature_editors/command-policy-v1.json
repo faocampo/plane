@@ -1,0 +1,12 @@
+{
+  "policy_key": "CURVE_FEATURE_EDITOR_POLICY",
+  "policy_version": 1,
+  "actions": ["GRANT_FEATURE_EDITOR", "REVOKE_FEATURE_EDITOR"],
+  "manage": ["PRODUCT_OWNER", "WORKSPACE_ADMINISTRATOR"],
+  "active_human_required": true,
+  "active_membership_required": true,
+  "active_product_required": true,
+  "target_active_human_membership_required_for_grant": true,
+  "membership_restoration_requires_fresh_grant": true,
+  "replay_requires_current_authority": true
+}

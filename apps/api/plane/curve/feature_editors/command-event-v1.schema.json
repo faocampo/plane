@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/candidates/feature-editor-event-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "workspace_id", "product_id", "action", "before", "after", "actor", "occurred_at"],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "action": {
+      "enum": ["GRANT_FEATURE_EDITOR", "REVOKE_FEATURE_EDITOR"]
+    },
+    "before": {},
+    "after": {},
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {
+          "const": "HUMAN"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_type",
+        "resource_id",
+        "resource_version",
+        "member_id",
+        "membership_id",
+        "membership_generation",
+        "granted_by",
+        "granted_at",
+        "revoked_by",
+        "revoked_at"
+      ],
+      "properties": {
+        "resource_type": {
+          "const": "FEATURE_EDITOR_GRANT"
+        },
+        "resource_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "resource_version": {
+          "enum": [1, 2]
+        },
+        "member_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "membership_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "membership_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "granted_by": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "granted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revoked_by": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revoked_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "active": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/record"
+        },
+        {
+          "properties": {
+            "resource_version": {
+              "const": 1
+            },
+            "revoked_by": {
+              "type": "null"
+            },
+            "revoked_at": {
+              "type": "null"
+            }
+          }
+        }
+      ]
+    },
+    "revoked": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/record"
+        },
+        {
+          "properties": {
+            "resource_version": {
+              "const": 2
+            },
+            "revoked_by": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "revoked_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "action": {
+          "const": "GRANT_FEATURE_EDITOR"
+        },
+        "before": {
+          "type": "null"
+        },
+        "after": {
+          "$ref": "#/$defs/active"
+        }
+      }
+    },
+    {
+      "properties": {
+        "action": {
+          "const": "REVOKE_FEATURE_EDITOR"
+        },
+        "before": {
+          "$ref": "#/$defs/active"
+        },
+        "after": {
+          "$ref": "#/$defs/revoked"
+        }
+      }
+    }
+  ]
+}
