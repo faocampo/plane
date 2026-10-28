@@ -265,3 +265,45 @@ def roadmap_storage_test_teardown(local_prd_review_test_teardown):
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(DatabaseOperations, "sql_flush", sql_flush)
         yield
+
+
+@pytest.fixture(scope="session", autouse=True)
+def feature_editor_storage_fixture_cleanup(roadmap_storage_test_teardown):
+    """Narrow test-only cleanup for grants cascaded from Product truncation."""
+    from django.db.backends.postgresql.operations import DatabaseOperations
+
+    original = DatabaseOperations.sql_flush
+
+    def guard(disable):
+        action = "DISABLE" if disable else "ENABLE"
+        verify = (
+            "IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE "
+            "tgrelid='curve_feature_editor_grant'::regclass "
+            "AND tgname='curve_feature_editor_grant_truncate_guard' AND tgenabled='O') "
+            "THEN RAISE EXCEPTION 'Feature editor retention guard missing during fixture cleanup'; END IF; "
+        )
+        alter = f"ALTER TABLE curve_feature_editor_grant {action} TRIGGER curve_feature_editor_grant_truncate_guard; "
+        body = verify + alter if disable else alter + verify
+        return "DO $$ BEGIN IF to_regclass('curve_feature_editor_grant') IS NOT NULL THEN " + body + "END IF; END $$;"
+
+    def sql_flush(operations, style, tables, *, reset_sequences=False, allow_cascade=False):
+        if "curve_product" in tables and "curve_feature_editor_grant" not in tables:
+            with operations.connection.cursor() as cursor:
+                cursor.execute("SELECT to_regclass('curve_feature_editor_grant')")
+                if cursor.fetchone()[0] is not None:
+                    tables = [*tables, "curve_feature_editor_grant"]
+        statements = original(operations, style, tables, reset_sequences=reset_sequences, allow_cascade=allow_cascade)
+        assert "curve_feature_editor_coverage" not in tables
+        if "curve_product" not in tables:
+            return statements
+        result = []
+        for statement in statements:
+            if statement.lstrip().upper().startswith("TRUNCATE "):
+                result.extend([guard(True), statement, guard(False)])
+            else:
+                result.append(statement)
+        return result
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(DatabaseOperations, "sql_flush", sql_flush)
+        yield

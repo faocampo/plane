@@ -58,6 +58,8 @@ ROADMAP_METADATA_SUCCESSOR_DIGEST = "sha256:aa1aa37f0872ae61702134c9e7046fc568b7
 ROADMAP_METADATA_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/metadata-qualification-v1.json"
 ROADMAP_HIERARCHY_SUCCESSOR_DIGEST = "sha256:3a44d32b23b9ce8841585fa3b732093fe5d06756da14e2a4fae1703593238f64"
 ROADMAP_HIERARCHY_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_domain/hierarchy-qualification-v1.json"
+FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST = "sha256:36b72ae6b3629089786d4aa71b40afaa3a737e49e8306302cfb35969e322a682"
+FEATURE_EDITOR_STORAGE_SUCCESSOR_PATH = Path(__file__).parent / "feature_editors/storage-qualification-v1.json"
 _ROADMAP_MODEL_COLUMNS = {
     "feature": [
         "created_at",
@@ -712,6 +714,14 @@ def _current_qualification(predecessor):
                                         ROADMAP_HIERARCHY_SUCCESSOR_PATH, ROADMAP_HIERARCHY_SUCCESSOR_DIGEST
                                     ),
                                 )
+                                if FEATURE_EDITOR_STORAGE_SUCCESSOR_PATH.exists():
+                                    qualified = validate_feature_editor_storage_successor(
+                                        qualified,
+                                        _read_pinned_successor(
+                                            FEATURE_EDITOR_STORAGE_SUCCESSOR_PATH,
+                                            FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST,
+                                        ),
+                                    )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
@@ -1056,6 +1066,52 @@ def validate_roadmap_hierarchy_successor(predecessor, successor):
     )
 
 
+def validate_feature_editor_storage_successor(predecessor, successor):
+    """Add storage and pure decisions while preserving all command authority."""
+    migration = import_module("plane.curve.migrations.0046_feature_editor_storage")
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.feature-editor-storage-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ROADMAP_HIERARCHY_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_ROADMAP_HIERARCHY_COMMANDS_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0045_roadmap_hierarchy_commands.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or set(successor["additions"]) != {"feature_editor_rules.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or migration.EXTERNAL_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Feature editor storage qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    sources = {**predecessor["runtime_sources"], **successor["additions"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, {"feature_editor_rules.py"}, set())
+    return dict(
+        predecessor,
+        model_edition="CURVE_FEATURE_EDITOR_STORAGE_V1",
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0046_feature_editor_storage.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        external_catalog_digest=successor["external_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
 def require_roadmap_hierarchy_qualification():
     require_reopening_qualification()
     if not ROADMAP_HIERARCHY_SUCCESSOR_PATH.exists() or ROADMAP_HIERARCHY_SUCCESSOR_DIGEST is None:
@@ -1234,6 +1290,14 @@ def require_reopening_qualification():
                 cursor.execute("SELECT set_config('search_path', %s, true)", [previous_path])
                 if physical != qualification["physical_catalog_digest"]:
                     raise ValueError
+                if "external_catalog_digest" in qualification:
+                    migration = import_module("plane.curve.migrations.0046_feature_editor_storage")
+                    external_query = migration._sql("external-catalog.sql").split("$catalog$")[1].strip().rstrip(";")
+                    cursor.execute(
+                        "SELECT 'sha256:' || encode(sha256(convert_to((" + external_query + ")::text, 'UTF8')), 'hex')"
+                    )
+                    if cursor.fetchone()[0] != qualification["external_catalog_digest"]:
+                        raise ValueError
                 cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
             finally:
                 cursor.execute(

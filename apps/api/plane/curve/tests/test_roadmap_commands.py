@@ -381,22 +381,27 @@ def test_policy_evidence_blocks_migration_reversal(scope):
     from django.db.migrations.executor import MigrationExecutor
 
     command(scope)
-    with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
-        MigrationExecutor(connection).migrate([("curve", "0044_roadmap_metadata_history")])
-    assert ("curve", "0045_roadmap_hierarchy_commands") in MigrationExecutor(connection).loader.applied_migrations
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
+    latest = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
+    try:
+        with pytest.raises(RuntimeError, match="RETAINED_EVIDENCE_PREVENTS_REVERSE"):
+            MigrationExecutor(connection).migrate([("curve", "0044_roadmap_metadata_history")])
+        assert ("curve", "0045_roadmap_hierarchy_commands") in MigrationExecutor(connection).loader.applied_migrations
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
+    finally:
+        MigrationExecutor(connection).migrate(latest)
 
 
 def test_empty_policy_migration_roundtrip_preserves_previous_seal():
     from django.db.migrations.executor import MigrationExecutor
 
+    latest = MigrationExecutor(connection).loader.graph.leaf_nodes("curve")
     try:
         MigrationExecutor(connection).migrate([("curve", "0044_roadmap_metadata_history")])
         with connection.cursor() as cursor:
             cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
     finally:
-        MigrationExecutor(connection).migrate([("curve", "0045_roadmap_hierarchy_commands")])
+        MigrationExecutor(connection).migrate(latest)
     with connection.cursor() as cursor:
         cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
 

@@ -328,6 +328,13 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
             qualification.ROADMAP_HIERARCHY_SUCCESSOR_PATH, qualification.ROADMAP_HIERARCHY_SUCCESSOR_DIGEST
         ),
     )
+    installed = qualification.validate_feature_editor_storage_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.FEATURE_EDITOR_STORAGE_SUCCESSOR_PATH,
+            qualification.FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST,
+        ),
+    )
     assert qualification.current_runtime_sources() == installed["runtime_sources"]
 
 
