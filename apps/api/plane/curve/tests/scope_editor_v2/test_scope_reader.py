@@ -341,6 +341,12 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
             qualification.FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH, qualification.FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST
         ),
     )
+    installed = qualification.validate_feature_command_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.FEATURE_COMMAND_SUCCESSOR_PATH, qualification.FEATURE_COMMAND_SUCCESSOR_DIGEST
+        ),
+    )
     assert qualification.current_runtime_sources() == installed["runtime_sources"]
 
 

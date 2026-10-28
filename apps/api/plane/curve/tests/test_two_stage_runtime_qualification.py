@@ -59,6 +59,10 @@ def test_successor_verifies_complete_runtime_and_preserves_old_authority():
             root.FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH, root.FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST
         ),
     )
+    installed = root.validate_feature_command_successor(
+        installed,
+        root._read_pinned_successor(root.FEATURE_COMMAND_SUCCESSOR_PATH, root.FEATURE_COMMAND_SUCCESSOR_DIGEST),
+    )
     assert installed["runtime_sources"] == root.current_runtime_sources()
     assert installed["models"] == root.current_model_catalog()
     assert qualified["excluded_writers"] == old["excluded_writers"]

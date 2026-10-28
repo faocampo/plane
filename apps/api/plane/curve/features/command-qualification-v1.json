@@ -1,0 +1,22 @@
+{
+  "schema_version": "curve.feature-command-qualification/v1-candidate",
+  "predecessor_digest": "sha256:518470fe9f39ea33b0bf075714866df1a000f1655cf762edd8a16b6948b2e5fc",
+  "additions": {
+    "feature_input.py": "sha256:bf0ca953196a33bc9cb1b068bcf67281cb0cee7f6e6260fa642f0e8e46932d56",
+    "feature_events.py": "sha256:11e25cea5254114f5484106c1732fc3f0fffbbd322c65e2ea27ff7de89ece510",
+    "feature_material.py": "sha256:51b264ccc4425fb3085cd85bb6b942554984d0edcd067aa9a523ac38b67589ad",
+    "feature_authority_facts.py": "sha256:1fd3141b20546790c39b3836e53d5674c1a898de86528a3869016b33ff453527",
+    "feature_local_material.py": "sha256:8b84875b3f54dc00509d3be567f4385acf647b4d3a6ce8ad565d979396a1e351",
+    "feature_policy.py": "sha256:b4c2ffe992f4be6b23156ff2c5c5720aad7e8a70e1a85b3786c7e5cb2eae232e",
+    "feature_services.py": "sha256:ae47b0faa16ec93b76725c037d3fb3c296bc43b95e0a61e58a3d1d2678621ee6",
+    "feature_views.py": "sha256:e96666430bf98831da65067c3350db328590e848ba24d82d81fd4080f9958986",
+    "feature_read.py": "sha256:72a92a37c78bfbb271a0b7ca4147c1a0902920742e3b2d939d1171c3bb4b86c7"
+  },
+  "replacements": {
+    "models.py": "sha256:a957b4c9b46e686e8b860d12d01e2b31f00c234b6224fa6e0673141a8ac26f55",
+    "urls.py": "sha256:4aa02ebc373aefd4ce8e9194c768205bc2a25c94436a20b725456ae59ec073b8"
+  },
+  "migration_digest": "sha256:d5ec77bbc002f2b9598a5c66cf81b8bce5d6c2e0b02a345a3d9f2fe9743ee26e",
+  "physical_catalog_digest": "sha256:dcda7c3e47343807439ed6b3b7de50510bb77bcf6a74e19d62a7b499f376469c",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}
