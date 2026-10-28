@@ -12,6 +12,12 @@ scope = roadmap_scope
 pytestmark = [pytest.mark.contract, pytest.mark.django_db(transaction=True)]
 
 
+@pytest.fixture(autouse=True)
+def api_settings(settings):
+    # Exercise installed routes independently of main URL import-time enablement.
+    settings.ROOT_URLCONF = "plane.curve.tests.urls"
+
+
 def endpoint(scope, grant_id=None):
     kwargs = {"slug": scope.workspace.slug, "product_id": scope.product.id}
     if grant_id:
