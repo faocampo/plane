@@ -1469,6 +1469,11 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_version=1,
                         policy_manifest_digest="sha256:c2eec4116b63c49b40d1bacad0985fedc850f243c5da1ef1b5bfa7bdaca98598",
                     )
+                    | models.Q(
+                        policy_key="CURVE_FEATURE_EDITOR_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:aba8328b6eca11c095b1529faed962c96708a79c03e69c6db020a54bd7d2bf4e",
+                    )
                 ),
                 name="curve_policy_identity_ck",
             ),

@@ -66,6 +66,8 @@ from .local_plan_review_views import (
     CurveLocalPlanReviewRecordEndpoint,
 )
 
+from plane.curve.feature_editor_views import FeatureEditorListEndpoint, FeatureEditorDetailEndpoint
+
 from plane.curve.roadmap_views import (
     RoadmapListEndpoint,
     RoadmapDetailEndpoint,
@@ -75,6 +77,16 @@ from plane.curve.roadmap_views import (
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/feature-editors/",
+        FeatureEditorListEndpoint.as_view(),
+        name="curve-feature-editors",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/feature-editors/<uuid:grant_id>/",
+        FeatureEditorDetailEndpoint.as_view(),
+        name="curve-feature-editor-detail",
+    ),
     path(
         "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/",
         RoadmapListEndpoint.as_view(),

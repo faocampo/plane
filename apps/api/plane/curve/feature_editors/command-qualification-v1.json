@@ -1,0 +1,19 @@
+{
+  "schema_version": "curve.feature-editor-command-qualification/v1-candidate",
+  "predecessor_digest": "sha256:36b72ae6b3629089786d4aa71b40afaa3a737e49e8306302cfb35969e322a682",
+  "additions": {
+    "feature_editor_input.py": "sha256:ae782791d7afdcc150f233fc65e38821f668bb8cd7332044e04d450b68aa455a",
+    "feature_editor_events.py": "sha256:23229d48d47b8c4d7d584cc908ebc8069db52c8296d3d0329c7b588235127bbf",
+    "feature_editor_policy.py": "sha256:aba683e4bf999ff517f428ed21ceca36357723b1b687b2dfdacb70d6fa563c56",
+    "feature_editor_services.py": "sha256:25b5f391b2562d947e3109e6b83e84af0f001a8246537c44a6b1fcb84232e5ce",
+    "feature_editor_views.py": "sha256:05c3f45c9cc5852f9a996f04f41b62b9414ff9ad631dcefc37f57a7a6280d215",
+    "feature_editor_read.py": "sha256:f8bc9a8c4c4178a8f6ad2f94bb89646060a0d84c4e645dd269d3883083deda83"
+  },
+  "replacements": {
+    "models.py": "sha256:3568021c0aec8c7dc46d3a64cec470f9d8e574e8197b2a9a5285e90ef8b5ae2e",
+    "urls.py": "sha256:7c95caf4daf2519c884b7071c58477f974940dd686bfb8cb5afb5f4f594e7f67"
+  },
+  "migration_digest": "sha256:e67aa62a1c15ee94c0dffc0029646aff17a5a15c5037928beae5edb5886e044f",
+  "physical_catalog_digest": "sha256:4a8fee9e5ad38955807064e53668509319474c13812e1011a46ea00c1555d134",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

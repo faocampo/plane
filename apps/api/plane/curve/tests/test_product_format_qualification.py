@@ -46,6 +46,12 @@ def test_product_format_successor_preserves_history_catalog_and_writer_authority
             root.FEATURE_EDITOR_STORAGE_SUCCESSOR_PATH, root.FEATURE_EDITOR_STORAGE_SUCCESSOR_DIGEST
         ),
     )
+    installed = root.validate_feature_editor_command_successor(
+        installed,
+        root._read_pinned_successor(
+            root.FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH, root.FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST
+        ),
+    )
     assert installed["runtime_sources"] == root.current_runtime_sources()
     assert {key for key in qualified if qualified[key] != previous[key]} == {"runtime_sources"}
     with transaction.atomic():

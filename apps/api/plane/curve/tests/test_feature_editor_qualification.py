@@ -35,7 +35,13 @@ def test_storage_successor_preserves_models_writers_and_historical_pins():
     for key in ("models", "runtime_writer_inventory", "excluded_writers"):
         assert current[key] == previous[key]
     assert all(current["migration_digests"][key] == value for key, value in previous["migration_digests"].items())
-    assert current["runtime_sources"] == root.current_runtime_sources()
+    installed = root.validate_feature_editor_command_successor(
+        current,
+        root._read_pinned_successor(
+            root.FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH, root.FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST
+        ),
+    )
+    assert installed["runtime_sources"] == root.current_runtime_sources()
     root.require_reopening_qualification()
 
 
