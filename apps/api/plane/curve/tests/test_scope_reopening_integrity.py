@@ -291,11 +291,11 @@ def test_application_independently_rejects_compromised_database_coverage_proof(r
             # Forge the installed successor's active seal. Historical predecessor
             # seals are separately pinned by the current database verifier.
             cursor.execute(
-                "ALTER TABLE curve_feature_command_coverage DISABLE TRIGGER curve_feature_command_coverage_immutable"
+                "ALTER TABLE curve_roadmap_review_coverage DISABLE TRIGGER curve_roadmap_review_coverage_immutable"
             )
-            cursor.execute("UPDATE curve_feature_command_coverage SET catalog_digest=%s", [forged_digest])
+            cursor.execute("UPDATE curve_roadmap_review_coverage SET catalog_digest=%s", [forged_digest])
             cursor.execute(
-                "ALTER TABLE curve_feature_command_coverage ENABLE TRIGGER curve_feature_command_coverage_immutable"
+                "ALTER TABLE curve_roadmap_review_coverage ENABLE TRIGGER curve_roadmap_review_coverage_immutable"
             )
         cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
         require_reopening_qualification()
@@ -304,16 +304,19 @@ def test_application_independently_rejects_compromised_database_coverage_proof(r
     no_reopening(reopening)
 
 
-def test_database_rejects_forged_historical_metadata_seal(reopening):
-    with pytest.raises(DatabaseError, match="ROADMAP_COMMAND_PREDECESSOR_INVALID"):
+@pytest.mark.parametrize(
+    "table,error",
+    [
+        ("curve_roadmap_metadata_coverage", "ROADMAP_COMMAND_PREDECESSOR_INVALID"),
+        ("curve_feature_command_coverage", "ITEM_CREATION_PREDECESSOR_INVALID"),
+    ],
+)
+def test_database_rejects_forged_historical_metadata_seal(reopening, table, error):
+    with pytest.raises(DatabaseError, match=error):
         with transaction.atomic(), connection.cursor() as cursor:
-            cursor.execute(
-                "ALTER TABLE curve_roadmap_metadata_coverage DISABLE TRIGGER curve_roadmap_metadata_coverage_immutable"
-            )
-            cursor.execute("UPDATE curve_roadmap_metadata_coverage SET catalog_digest='sha256:forged'")
-            cursor.execute(
-                "ALTER TABLE curve_roadmap_metadata_coverage ENABLE TRIGGER curve_roadmap_metadata_coverage_immutable"
-            )
+            cursor.execute(f"ALTER TABLE {table} DISABLE TRIGGER {table}_immutable")
+            cursor.execute(f"UPDATE {table} SET catalog_digest='sha256:forged'")
+            cursor.execute(f"ALTER TABLE {table} ENABLE TRIGGER {table}_immutable")
             cursor.execute("SELECT curve_scope_reopening_verify_coverage()")
     with transaction.atomic():
         require_reopening_qualification()
