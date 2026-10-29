@@ -653,6 +653,11 @@ function InitiativeEditDialog({
 }
 
 export const InitiativeWorkspace = observer(function InitiativeWorkspace({ workspaceSlug }: { workspaceSlug: string }) {
+  const [requestedInitiativeId] = useState(() =>
+    typeof window === "undefined"
+      ? undefined
+      : (new URLSearchParams(window.location.search).get("initiative") ?? undefined)
+  );
   const userStore = useUser();
   const viewerId = userStore.isAuthenticated ? userStore.data?.id : undefined;
   const {
@@ -678,7 +683,7 @@ export const InitiativeWorkspace = observer(function InitiativeWorkspace({ works
     cancelInitiative,
     refreshSelected,
     refresh,
-  } = useCurveInitiatives(workspaceSlug);
+  } = useCurveInitiatives(workspaceSlug, requestedInitiativeId);
   const [search, setSearch] = useState("");
   const [stateFilter, setStateFilter] = useState<"ALL" | TCurveInitiativeListState>(() =>
     initialInitiativeFilter("state", ["ALL", "DRAFT", "ALIGNING", "PAUSED", "CANCELLED"] as const, "ALL")

@@ -1,0 +1,17 @@
+{
+  "schema_version": "curve.item-cancellation-qualification/v1-candidate",
+  "predecessor_digest": "sha256:a2af0d3d5e51e3136946b1614e64c2422ce78e9e1d215f68a7dc1f41203c6854",
+  "additions": {
+    "item_cancellation_results.py": "sha256:981f62b2c1d0eff52edfa5e603643da26aba6e16039cdcd452c00e712b58fc6e",
+    "item_cancellation_services.py": "sha256:d1cabf56537ea8c298d9747f7707657eb3cccbc4ab3ea32a33e965acd1cd0e89",
+    "item_cancellation_views.py": "sha256:c1c9b7b2d13a1cd3784aa0db538b8ac55dc5ecdbad519c10c3cdd1b052d3c8e3",
+    "item_cancellation_events.py": "sha256:df0f2c3e4a2fef70912132c4dfcd94341513e1041306303d0e6de64fac63a5c2"
+  },
+  "replacements": {
+    "models.py": "sha256:11da5349835143a6c95e0ff138aa9a0257677d458e27b0444d0974b46afe60af",
+    "urls.py": "sha256:4443733df8e09b8fe71b7bb31c95e80a7a27b0a9bfe8ddf0f2f3c9c2640316a6"
+  },
+  "migration_digest": "sha256:fa8d079de77de79a35886cb8f29d8f45f1b4950f0820634a654a5894ef52d7f1",
+  "physical_catalog_digest": "sha256:16de58e10fd25809de012e328db46086993a88800c12189d3600ef2666b10e57",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

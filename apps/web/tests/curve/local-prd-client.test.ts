@@ -487,3 +487,54 @@ describe("new Initiative Product submission", () => {
     await expect(decode(overrides)).rejects.toThrow();
   });
 });
+
+describe("Roadmap Product submission", () => {
+  const reference = {
+    object_id: id(30),
+    digest: "sha256:" + "a".repeat(64),
+    size_bytes: 20,
+    media_type: "text/markdown",
+    editor_schema_version: "markdown-v1",
+  };
+  async function record(overrides: Record<string, unknown> = {}) {
+    const data: Record<string, unknown> = { ...subject() };
+    for (const key of ["digest", "scope_revision_id", "scope_revision", "membership_digest"]) delete data[key];
+    Object.assign(
+      data,
+      {
+        schema_version: "curve.local-prd-submission/v3-roadmap-candidate",
+        product_id: scope.productId,
+        product_version: 1,
+        business_intent: "STRATEGIC",
+        roadmap_item_id: id(31),
+        roadmap_item_scope: reference,
+      },
+      overrides
+    );
+    return { ...data, digest: hash(canonical(data)) };
+  }
+  it("accepts the exact Roadmap edition and includes Item scope in digest validation", async () => {
+    const { decodeLocalSubmission } =
+      await import("../../../../packages/services/src/curve/local-prd-review.validation");
+    const value = await record();
+    expect(await decodeLocalSubmission(value, scope)).toEqual(value);
+    await expect(decodeLocalSubmission({ ...value, roadmap_item_id: id(32) }, scope)).rejects.toThrow();
+  });
+  it.each([
+    { roadmap_item_id: "invalid" },
+    { product_id: id(99) },
+    { scope_revision_id: id(11) },
+    { schema_version: "curve.local-prd-submission/v2-candidate" },
+    { roadmap_item_scope: { ...reference, size_bytes: -1 } },
+    { roadmap_item_scope: { ...reference, size_bytes: true } },
+    { roadmap_item_scope: { ...reference, object_id: "invalid" } },
+    { roadmap_item_scope: { ...reference, digest: "invalid" } },
+    { roadmap_item_scope: { ...reference, media_type: "" } },
+    { roadmap_item_scope: { ...reference, editor_schema_version: " " } },
+    { roadmap_item_scope: { ...reference, extra: true } },
+  ])("rejects invalid or mixed Roadmap subjects %j", async (overrides) => {
+    const { decodeLocalSubmission } =
+      await import("../../../../packages/services/src/curve/local-prd-review.validation");
+    await expect(decodeLocalSubmission(await record(overrides), scope)).rejects.toThrow();
+  });
+});

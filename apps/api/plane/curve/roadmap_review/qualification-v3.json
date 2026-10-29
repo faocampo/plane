@@ -1,0 +1,17 @@
+{
+  "schema_version": "curve.roadmap-review-qualification/v3-candidate",
+  "predecessor_digest": "sha256:d97d9a1f3e08043f672d3caf34c86a2d7766d5575c0fb697bbb9bee60aafc0ab",
+  "additions": {
+    "local_prd_roadmap.py": "sha256:b70a45825e8baf2f34d353d57e8c953f0a7938f12d58d0e7af286833b9235fe1",
+    "roadmap_local_context.py": "sha256:55d69e34beb4f22df5a633be4665785f66b4eb00be6df172e91f728d3e6de4cf"
+  },
+  "replacements": {
+    "local_initiative_context.py": "sha256:650ca4f2294527213f9d3a690de3fb378a3154582ba5b27ae3e0a31943331491",
+    "local_prd_review.py": "sha256:d68d63af1e9db2aed4e78d012c65d3c835b24a04e47f0d74d1479ec45f9b43eb",
+    "local_prd_review_authority.py": "sha256:21d7b1b76a5c815341aab9bbee809d89eb2e3b7f7689b7c1af9074577ca5836a",
+    "local_plan_authority.py": "sha256:5d85e4b85b14ca93863927cff5e8bb3012744164e7fbafc9c946dc0fba5df930"
+  },
+  "migration_digest": "sha256:e753b07212abb124f4521b7a2e7d161284be085fdbe4746cdda1a949cceeae16",
+  "physical_catalog_digest": "sha256:03ff9bcb3f59e4767fca837cea1a5499e3a67c0649cf2ffe7858aba8d4ba96fb",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

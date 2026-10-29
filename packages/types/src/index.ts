@@ -70,3 +70,7 @@ export * from "./curve-scope-reopening-preconditions";
 export * from "./curve-project-association-preconditions";
 
 export * from "./curve-scoped-prd-v2";
+
+export * from "./curve-roadmap-items";
+
+export * from "./curve-roadmap-hierarchy";

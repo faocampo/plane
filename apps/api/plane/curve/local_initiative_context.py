@@ -37,7 +37,12 @@ def require_local_initiative_context(*, workspace_id, initiative_id, actor_id):
     workspace = Workspace.objects.select_for_update().filter(id=workspace_id).first()
     _require(workspace is not None)
     initiative = Initiative.objects.find_by_id(workspace_id=workspace_id, record_id=initiative_id, for_update=True)
-    _require(initiative is not None and initiative.schema_version == "1.2" and initiative.mode == "STANDALONE")
+    _require(initiative is not None and initiative.schema_version == "1.2")
+    if initiative.mode == "ROADMAP":
+        from .roadmap_local_context import require_roadmap_local_context
+
+        return require_roadmap_local_context(workspace_id=workspace_id, initiative_id=initiative_id, actor_id=actor_id)
+    _require(initiative.mode == "STANDALONE")
     # A retained scope always retains its original per-source authorization.
     if (
         ScopeProposal.objects.select_for_update()

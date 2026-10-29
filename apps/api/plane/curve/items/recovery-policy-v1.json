@@ -1,0 +1,23 @@
+{
+  "policy_key": "CURVE_ITEM_RECOVERY_POLICY",
+  "policy_version": 1,
+  "actions": [
+    "READ_ITEM_CREATION_RECEIPT"
+  ],
+  "read": [
+    "ORIGINAL_ACTOR_WITH_CURRENT_PRODUCT_READ_ACCESS"
+  ],
+  "active_membership_required": true,
+  "active_product_required": true,
+  "supported_formats_required": true,
+  "live_scoped_roadmap_required": true,
+  "reciprocal_initiative_link_required": true,
+  "projection": [
+    "ORIGINAL_ITEM_INITIATIVE_REFERENCE",
+    "UNRESOLVED_OUTCOME"
+  ],
+  "protected_scope_and_document_references_excluded": true,
+  "missing_receipt_does_not_prove_non_commit": true,
+  "recovery_cannot_execute_creation": true,
+  "local_profile_only": true
+}

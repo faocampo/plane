@@ -1,0 +1,16 @@
+{
+  "policy_key": "CURVE_ITEM_READ_POLICY",
+  "policy_version": 1,
+  "actions": ["LIST_ROADMAP_ITEMS"],
+  "read": ["ACTIVE_HUMAN_PRODUCT_READER"],
+  "active_membership_required": true,
+  "active_product_required": true,
+  "supported_formats_required": true,
+  "live_scoped_roadmap_required": true,
+  "reciprocal_initiative_link_required": true,
+  "projection": ["ROADMAP_ITEM_METADATA", "INITIATIVE_STAGE_ASSIGNMENTS"],
+  "protected_scope_and_document_references_excluded": true,
+  "approval_results_not_inferred_from_lifecycle_state": true,
+  "page_size_maximum": 100,
+  "local_profile_only": true
+}

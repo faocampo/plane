@@ -319,3 +319,20 @@ describe("useCurveInitiatives", () => {
     unmount();
   });
 });
+
+it("opens the exact Roadmap Initiative link even beyond the first listing page", async () => {
+  vi.clearAllMocks();
+  workspaceMemberStore.getWorkspaceMemberIds.mockReturnValue([]);
+  workspaceMemberStore.fetchWorkspaceMembers.mockResolvedValue(undefined);
+  const target = "99000000-0000-4000-8000-000000000009";
+  mockedCurveService.listProducts.mockResolvedValue({ results: [product("product-1")], next_cursor: null });
+  mockedCurveService.listInitiatives.mockResolvedValue({ results: [initiative("first")], next_cursor: null });
+  mockedCurveService.retrieveInitiative.mockImplementation(async (_slug, id) => ({
+    initiative: initiative(id),
+    etag: `"initiative:${id}:v1"`,
+  }));
+  const { result } = renderHook(() => useCurveInitiatives("alpha", target));
+  await waitFor(() => expect(result.current.selectedInitiative?.id).toBe(target));
+  expect(mockedCurveService.retrieveInitiative).toHaveBeenCalledWith("alpha", target);
+  expect(result.current.initiatives.some(({ id }) => id === target)).toBe(true);
+});

@@ -105,6 +105,10 @@ def _reviewers(value, risk):
 
 
 def validate_submission(value):
+    if type(value) is dict and value.get("schema_version") == "curve.local-prd-submission/v3-roadmap-candidate":
+        from .local_prd_roadmap import validate_roadmap_submission
+
+        return validate_roadmap_submission(value)
     if type(value) is dict and value.get("schema_version") == "curve.local-prd-submission/v2-candidate":
         from .local_prd_new_work import validate_new_work_submission
 

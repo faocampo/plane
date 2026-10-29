@@ -276,3 +276,33 @@ def test_missing_hierarchy_qualification_has_safe_unavailable_response(scope, mo
     assert response.json()["type"].endswith("/roadmap-integrity-unavailable")
     assert response["Cache-Control"] == "no-store"
     assert not Roadmap.objects.exists()
+
+
+def test_browser_gzip_read_retains_usable_strong_write_precondition(scope):
+    api = client(scope.owner)
+    created = create(scope, api)
+    detail = api.get(created["Location"], HTTP_ACCEPT_ENCODING="gzip, deflate, br")
+    assert detail.status_code == 200
+    assert len(detail.content) > 200
+    assert detail["ETag"] == created["ETag"]
+    assert "Content-Encoding" not in detail
+    changed = api.patch(
+        created["Location"],
+        {"name": "Updated from browser version"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="synthetic-browser-version-update",
+        HTTP_IF_MATCH=detail["ETag"],
+        HTTP_ACCEPT_ENCODING="gzip, deflate, br",
+    )
+    assert changed.status_code == 200
+    assert changed["ETag"] == f'"curve-roadmap:{Roadmap.objects.get().id}:v2"'
+    assert "Content-Encoding" not in changed
+    stale = api.patch(
+        created["Location"],
+        {"name": "Stale write must fail"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="synthetic-browser-stale-update",
+        HTTP_IF_MATCH=detail["ETag"],
+    )
+    assert stale.status_code == 412
+    assert Roadmap.objects.get().name == "Updated from browser version"

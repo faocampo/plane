@@ -1,6 +1,6 @@
 /* The approved review desk owns its route palette, including shared chrome and
    portalled controls. Navigating away restores the user's existing theme. */
-body:has(.curve-initiative-page) {
+body:has(.curve-initiative-page, .curve-roadmap-page) {
   color-scheme: light;
   --bg-canvas: #f7f8fc;
   --bg-surface-1: #ffffff;
@@ -54,7 +54,8 @@ body:has(.curve-initiative-page) {
   --scrollbar-thumb: #8991aa;
   --scrollbar-thumb-hover: #60677c;
 }
-.curve-initiative-page {
+.curve-initiative-page,
+.curve-roadmap-page {
   background: #f7f8fc;
 }
 .curve-initiative-desk {
@@ -132,16 +133,16 @@ body:has(.curve-initiative-page) {
 }
 
 @media (max-width: 640px) {
-  body:has(.curve-initiative-page) [data-top-navigation] > :first-child {
+  body:has(.curve-initiative-page, .curve-roadmap-page) [data-top-navigation] > :first-child {
     display: none;
   }
-  body:has(.curve-initiative-page) [data-command-search] {
+  body:has(.curve-initiative-page, .curve-roadmap-page) [data-command-search] {
     width: calc(100vw - 156px);
   }
-  body:has(.curve-initiative-page) [data-command-search] > :first-child {
+  body:has(.curve-initiative-page, .curve-roadmap-page) [data-command-search] > :first-child {
     width: 100%;
   }
-  body:has(.curve-initiative-page) [data-command-search] > :nth-child(2) {
+  body:has(.curve-initiative-page, .curve-roadmap-page) [data-command-search] > :nth-child(2) {
     max-width: calc(100vw - 32px);
     left: 0;
     transform: none;

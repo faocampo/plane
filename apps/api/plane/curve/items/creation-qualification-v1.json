@@ -1,0 +1,23 @@
+{
+  "schema_version": "curve.item-creation-qualification/v1-candidate",
+  "predecessor_digest": "sha256:2106f2e4c9767ada3346940032d939a0758a74014fe2ed0295af82f980e0d7c4",
+  "additions": {
+    "item_creation_input.py": "sha256:61cb662c0b7a5214c8c625db338caa9a4631586beb17eee9d9afd9d316c50f7c",
+    "item_creation_facts.py": "sha256:23c96462a83584f9196847567e7c8f6bd7c455029953885eedf7345177e65533",
+    "item_creation_rules.py": "sha256:d6edcb0ce1fc20ed51571fd0e9694f77c0d88127a270edbb1190f8279a14f0d8",
+    "item_creation_material.py": "sha256:ffebe2887079292c46246d9f28b46e495d1ea56c7cc9b295fdc87175330b96ff",
+    "item_local_material.py": "sha256:5bfbdff258b887b55803e11db6db488536f83fb204d5ce5dc45d55d6eadbaf63",
+    "item_creation_events.py": "sha256:5cf995b4ddb1639c8ec8fd0cad5b81a44808277116dbb1775391799fa4fede01",
+    "item_creation_policy.py": "sha256:f3e0430d26481591a1d8212b9c33c36009b746a56d83b92dbaf29fcde236e382",
+    "item_creation_results.py": "sha256:88e06028e81bef17111c80f1bbb70543ea7b356e4d9847a0eeeef0289cd45fee",
+    "item_creation_services.py": "sha256:729ac3be4b6a8d1eb5a561d6609c162b098ca70d45d5d2509b5a7b30254a0312",
+    "item_creation_views.py": "sha256:a8e1cb4e1be1616d8f9e9914edc179f4d05e9a7f748f10ca8d29a1f86db6a319"
+  },
+  "replacements": {
+    "models.py": "sha256:e88e5d3ba4f86ba7d0289421ba2183e5c774b87a4d3073f7cb0aad22c6b5c03f",
+    "urls.py": "sha256:d01fc46cc2b3eb8115ba1f6b52f9b1a590fafb11b95b65b1ba055456eaa8be87"
+  },
+  "migration_digest": "sha256:cebb825cc3a676c913f34c4880e06ab29182b9862979d7bd32b7d3ad71791d72",
+  "physical_catalog_digest": "sha256:83018280344e20ff40ad57927bdb3001c4e5252f3086e61dc27dbdc69d07de9d",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

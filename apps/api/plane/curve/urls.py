@@ -68,6 +68,10 @@ from .local_plan_review_views import (
 
 from plane.curve.feature_editor_views import FeatureEditorListEndpoint, FeatureEditorDetailEndpoint
 from plane.curve.feature_views import FeatureListEndpoint, FeatureDetailEndpoint
+from plane.curve.item_creation_views import RoadmapItemCreationEndpoint
+from plane.curve.item_scope_views import RoadmapItemScopeEndpoint
+from plane.curve.item_recovery_views import RoadmapItemRecoveryEndpoint
+from plane.curve.item_cancellation_views import RoadmapItemCancellationEndpoint
 
 from plane.curve.roadmap_views import (
     RoadmapListEndpoint,
@@ -78,6 +82,26 @@ from plane.curve.roadmap_views import (
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/item-creation-receipts/cancel/",
+        RoadmapItemCancellationEndpoint.as_view(),
+        name="curve-roadmap-item-cancellation",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/item-creation-receipts/",
+        RoadmapItemRecoveryEndpoint.as_view(),
+        name="curve-roadmap-item-recovery",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/item-scopes/",
+        RoadmapItemScopeEndpoint.as_view(),
+        name="curve-roadmap-item-scope",
+    ),
+    path(
+        "workspaces/<str:slug>/curve/products/<uuid:product_id>/roadmaps/<uuid:roadmap_id>/items/",
+        RoadmapItemCreationEndpoint.as_view(),
+        name="curve-roadmap-item-create",
+    ),
     path(
         "workspaces/<str:slug>/curve/products/<uuid:product_id>/features/",
         FeatureListEndpoint.as_view(),

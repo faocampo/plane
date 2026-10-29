@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/candidates/item-creation-event-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "action",
+    "workspace_id",
+    "product_id",
+    "roadmap_id",
+    "milestone_id",
+    "feature_id",
+    "owner_id",
+    "result",
+    "actor",
+    "occurred_at",
+    "initial_item_status",
+    "initial_initiative_state",
+    "approval_stages"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "action": {
+      "const": "CREATE_ROADMAP_ITEM_INITIATIVE"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "roadmap_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "milestone_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "feature_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "owner_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resource_type", "resource_id", "resource_version", "initiative_ref"],
+      "properties": {
+        "resource_type": {
+          "const": "ROADMAP_ITEM"
+        },
+        "resource_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "resource_version": {
+          "const": 1,
+          "type": "integer"
+        },
+        "initiative_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["resource_type", "resource_id", "resource_version"],
+          "properties": {
+            "resource_type": {
+              "const": "INITIATIVE"
+            },
+            "resource_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "resource_version": {
+              "const": 1,
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {
+          "const": "HUMAN"
+        },
+        "actor_id": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "initial_item_status": {
+      "const": "PROPOSED"
+    },
+    "initial_initiative_state": {
+      "const": "DRAFT"
+    },
+    "approval_stages": {
+      "const": ["PRD_APPROVAL", "PLAN_APPROVAL"]
+    }
+  }
+}

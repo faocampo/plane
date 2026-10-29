@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://curve.example.invalid/contracts/candidates/item-creation-cancelled-v1.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "workspace_id",
+    "product_id",
+    "roadmap_id",
+    "result"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "workspace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "product_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "roadmap_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resource_type",
+        "resource_id",
+        "resource_version"
+      ],
+      "properties": {
+        "resource_type": {
+          "const": "ROADMAP_ITEM_CREATION_CANCELLATION"
+        },
+        "resource_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "resource_version": {
+          "const": 1
+        }
+      }
+    }
+  }
+}
