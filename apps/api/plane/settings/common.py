@@ -150,6 +150,10 @@ CURVE_MANUAL_GATE2_V2_ENABLED = False
 CURVE_ROADMAP_HIERARCHY_ENABLED = False
 CURVE_FEATURE_EDITOR_COMMANDS_ENABLED = False
 CURVE_FEATURE_COMMANDS_ENABLED = False
+CURVE_ITEM_CREATION_ENABLED = False
+CURVE_ITEM_READ_ENABLED = False
+CURVE_LOCAL_ITEM_MATERIAL_ENABLED = False
+CURVE_LOCAL_ITEM_MATERIAL_ROOT = ""
 CURVE_LOCAL_FEATURE_MATERIAL_ENABLED = False
 CURVE_LOCAL_FEATURE_MATERIAL_ROOT = ""
 CURVE_MANUAL_PLAN_V2_SYNTHETIC_ROOT = ""
@@ -183,7 +187,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "crum.CurrentRequestUserMiddleware",
-    "django.middleware.gzip.GZipMiddleware",
+    "plane.middleware.curve_gzip.CurveAwareGZipMiddleware",
     "plane.middleware.request_body_size.RequestBodySizeLimitMiddleware",
     "plane.middleware.logger.APITokenLogMiddleware",
     "plane.middleware.logger.RequestLoggerMiddleware",
@@ -626,3 +630,10 @@ if ENABLE_DRF_SPECTACULAR:
     REST_FRAMEWORK["DEFAULT_SCHEMA_CLASS"] = "drf_spectacular.openapi.AutoSchema"
     INSTALLED_APPS.append("drf_spectacular")
     from .openapi import SPECTACULAR_SETTINGS  # noqa: F401
+
+# Protected Item scope preparation remains off until explicitly enabled locally.
+CURVE_ITEM_SCOPE_PREPARATION_ENABLED = False
+
+CURVE_ITEM_RECOVERY_ENABLED = False
+
+CURVE_ITEM_CANCELLATION_ENABLED = False

@@ -347,6 +347,42 @@ def test_separate_closed_successor_preserves_predecessor_and_storage(scope):
             qualification.FEATURE_COMMAND_SUCCESSOR_PATH, qualification.FEATURE_COMMAND_SUCCESSOR_DIGEST
         ),
     )
+    installed = qualification.validate_item_creation_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ITEM_CREATION_SUCCESSOR_PATH, qualification.ITEM_CREATION_SUCCESSOR_DIGEST
+        ),
+    )
+    installed = qualification.validate_item_read_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ITEM_READ_SUCCESSOR_PATH, qualification.ITEM_READ_SUCCESSOR_DIGEST
+        ),
+    )
+    installed = qualification.validate_item_scope_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ITEM_SCOPE_SUCCESSOR_PATH, qualification.ITEM_SCOPE_SUCCESSOR_DIGEST
+        ),
+    )
+    installed = qualification.validate_item_recovery_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ITEM_RECOVERY_SUCCESSOR_PATH, qualification.ITEM_RECOVERY_SUCCESSOR_DIGEST
+        ),
+    )
+    installed = qualification.validate_item_cancellation_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ITEM_CANCELLATION_SUCCESSOR_PATH, qualification.ITEM_CANCELLATION_SUCCESSOR_DIGEST
+        ),
+    )
+    installed = qualification.validate_roadmap_review_successor(
+        installed,
+        qualification._read_pinned_successor(
+            qualification.ROADMAP_REVIEW_SUCCESSOR_PATH, qualification.ROADMAP_REVIEW_SUCCESSOR_DIGEST
+        ),
+    )
     assert qualification.current_runtime_sources() == installed["runtime_sources"]
 
 

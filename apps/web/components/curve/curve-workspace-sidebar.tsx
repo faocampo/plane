@@ -114,8 +114,10 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
   const { toggleSidebar } = useAppTheme();
   const foundationHref = `/${slug}/curve`;
   const initiativesHref = `${foundationHref}/initiatives`;
+  const roadmapsHref = `${foundationHref}/roadmaps`;
   const projectsHref = `${foundationHref}/projects`;
-  const isReviewDesk = pathname === initiativesHref || pathname.startsWith(`${initiativesHref}/`);
+  const isReviewDesk =
+    pathname === initiativesHref || pathname.startsWith(`${initiativesHref}/`) || pathname === roadmapsHref;
   const closeMobileNavigation = () => {
     if (window.innerWidth < 768) toggleSidebar(true);
   };
@@ -158,7 +160,13 @@ export const CurveWorkspaceSidebar = observer(function CurveWorkspaceSidebar() {
               active={pathname === initiativesHref || pathname.startsWith(`${initiativesHref}/`)}
               onNavigate={closeMobileNavigation}
             />
-            <CurveUpcomingItem label="Roadmaps" icon={<Route className="size-4" />} />
+            <CurveLink
+              href={roadmapsHref}
+              label="Roadmaps"
+              icon={<Route className="size-4" />}
+              active={pathname === roadmapsHref}
+              onNavigate={closeMobileNavigation}
+            />
           </CurveNavSection>
 
           <CurveNavSection label="Delivery">

@@ -74,12 +74,16 @@ export abstract class CurveExistingWorkTransport extends APIService {
     this.checkCancellation(signal);
     return data;
   }
-  protected async read(path: string, signal?: AbortSignal): Promise<AxiosResponse> {
+  protected async read(
+    path: string,
+    signal?: AbortSignal,
+    headers: Record<string, string> = {}
+  ): Promise<AxiosResponse> {
     if (signal?.aborted) throw new CurveExistingWorkError("CANCELLED");
     const response = await this.get(path, {
       signal,
       timeout: this.requestTimeoutMs,
-      headers: { "Cache-Control": "no-store" },
+      headers: { ...headers, "Cache-Control": "no-store" },
     });
     if (signal?.aborted) throw new CurveExistingWorkError("CANCELLED");
     requireCurve(response.status === 200);
@@ -98,8 +102,8 @@ export abstract class CurveExistingWorkTransport extends APIService {
   protected async mutate(
     path: string,
     payload: object,
-    options: CurveExistingWorkMutation,
-    etag: string,
+    options: Pick<CurveExistingWorkMutation, "idempotencyKey" | "signal">,
+    etag?: string,
     upload?: {
       contentType: "application/pdf" | "text/markdown" | "text/plain";
       sourceVersion: number;
@@ -137,7 +141,7 @@ export abstract class CurveExistingWorkTransport extends APIService {
               : {}),
           "Cache-Control": "no-store",
           "X-CSRFTOKEN": csrfToken,
-          "If-Match": etag,
+          ...(etag === undefined ? {} : { "If-Match": etag }),
           "Idempotency-Key": idempotencyKey,
         },
       });

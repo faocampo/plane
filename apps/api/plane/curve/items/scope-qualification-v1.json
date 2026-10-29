@@ -1,0 +1,18 @@
+{
+  "schema_version": "curve.item-scope-qualification/v1-candidate",
+  "predecessor_digest": "sha256:9dba7b243c63017103127581df400ca87e5309da1511a73c7726bc99f3326d6a",
+  "additions": {
+    "item_scope_preparation.py": "sha256:a2aa1a7b2dd5f711060df1fbba9309243039b11e5a3119d016c3cf8c44663ec6",
+    "item_scope_authority.py": "sha256:c9c29e508eb9045b83c3306f7a13063e7fb3376596a5ef5f421237ee9b171f10",
+    "item_scope_results.py": "sha256:c15fe417fdbcdc4c8acfe9b438add0badae21a691a2e2bdbd0f4ee6a3f226639",
+    "item_scope_services.py": "sha256:39b4223974743575e8d365ec8c2bfddd788f7fccea74cba81d80ed232cb3e84f",
+    "item_scope_views.py": "sha256:074b81fa78a6efa7a02e5db3449848953ecdd0d35cc6cd4ea1047425eac7e527"
+  },
+  "replacements": {
+    "models.py": "sha256:2e46f3d36d4c0b1959a42358ea829e744166bc141b2f58fd5a82ed6ea08a4ac9",
+    "urls.py": "sha256:b847a698863d36525051cea8c1a23e7b76181f015e17434466621b5a9494ad1a"
+  },
+  "migration_digest": "sha256:562e9f0cff0dbb816ef5869f2c2ae8c0369554d601187acb03e2860524e00a4a",
+  "physical_catalog_digest": "sha256:5961483b36ffaecec9778afb77e64232b11ebb8763886f9dd9d1107e527382fe",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "curve.item-recovery-qualification/v1-candidate",
+  "predecessor_digest": "sha256:2e316911533c3f8de297a18eb47114efce6475e151cd0473e422f3ce133ac982",
+  "additions": {
+    "item_recovery_rules.py": "sha256:b7eedcb27cad3b554fd13c1ea767956da40e4c5bfb8f597c6962ccb49e02b5d3",
+    "item_recovery_services.py": "sha256:bd68991738b28dcbb4a7310773ce54825813bd640d9c6a66c0f9f8598f006541",
+    "item_recovery_views.py": "sha256:cdb709d22b2c033b1d4e03a4f9c7314cef330b83f137cd609a52a45c90bdd34d"
+  },
+  "replacements": {
+    "models.py": "sha256:a8687360b0617b5ab926d33a25a46af6de63abd7c4e720239ad61126f0cb72e9",
+    "urls.py": "sha256:16d4fa019ce60e8411f005beca024d27f7b207958e3040717370d62ea353fc90"
+  },
+  "migration_digest": "sha256:258c588dd431706e3748a04b419e86d13bbebd5fb4bc11e17c3d54f16ebb4656",
+  "physical_catalog_digest": "sha256:7bc2177e1c6d7b6a9a49545e45912cf73eb434377eab5e21b8770ce09014e5a3",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

@@ -1479,6 +1479,31 @@ class PolicyDecision(ImmutableRecordModel):
                         policy_version=1,
                         policy_manifest_digest="sha256:ace52edc89c7c788a31c3665ff081fc026f2bf9fda242900a4b47d580812da98",
                     )
+                    | models.Q(
+                        policy_key="CURVE_ITEM_CREATION_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:c2818ca8b74dcd89c4ae8ae91acb0195d8dce9714a17ab2248477637bd7b2adc",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_ITEM_READ_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:81e01d779aa6b6fe5a5fce8633a35b7a2d8f9f1ab2cbc7ca0a4af5ac971c3937",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_ITEM_SCOPE_PREPARATION_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:581156a46abc16e9591007d9695f2627405778c2338a8e119d406fe0b8a0320a",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_ITEM_RECOVERY_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:25446da54a7142beba837842006c182b27f76fcdf02ed35c5999863af18e16ff",
+                    )
+                    | models.Q(
+                        policy_key="CURVE_ITEM_CANCELLATION_POLICY",
+                        policy_version=1,
+                        policy_manifest_digest="sha256:33ee9e2610ffde77961f8101099374ffe3617f758ad8cd5d5cde301d544d862c",
+                    )
                 ),
                 name="curve_policy_identity_ck",
             ),

@@ -1,0 +1,14 @@
+{
+  "schema_version": "curve.item-read-qualification/v1-candidate",
+  "predecessor_digest": "sha256:f929ed566ed7406f3460fe688e4d013012dbe225a2e61659448ac6a62a0d7e13",
+  "additions": {
+    "item_read.py": "sha256:ecce9a086e02dedb5d114605f6630d7bca10216292072964bd83b316eacbbb02"
+  },
+  "replacements": {
+    "models.py": "sha256:b3cc64576bd64475007f63a938960191fc3b9b221b6c6140dad6313babc7885e",
+    "item_creation_views.py": "sha256:49998e5cfdc94dc8e695c8257311e0c4dccb172acf5e01809fb6a5e7507b2801"
+  },
+  "migration_digest": "sha256:5cf8b99c900bd818b87ef2b4250034fab293e5e36dba3ecd4ec99e399b65d8c7",
+  "physical_catalog_digest": "sha256:c84fca16d4636516d613189efc569b1ed1c091b4cb9749570924c551d2ca72b0",
+  "external_catalog_digest": "sha256:1a6ad37d77588a211aed0eddd2c023e8b0fe8380af30456138fb27520a8146ae"
+}

@@ -28,3 +28,7 @@ export * from "./scoped-prd-v2.service";
 
 export * from "./local-prd.service";
 export * from "./local-plan.service";
+
+export * from "./roadmap-items.service";
+
+export * from "./roadmap-hierarchy.service";

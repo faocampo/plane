@@ -37,6 +37,19 @@ def _require(condition, code="LOCAL_REVIEW_UNAVAILABLE", status=404):
 
 def submission_inputs(document):
     context = document.context
+    if context.initiative.mode == "ROADMAP":
+        item = getattr(context, "roadmap_item", None)
+        _require(item is not None and context.head is None)
+        return dict(
+            source=document.current_source.as_record(),
+            product_id=str(context.product.id),
+            product_version=context.product.version,
+            business_intent=context.initiative.business_intent,
+            reviewers=[dict(item) for item in context.reviewers],
+            risk_tier=context.initiative.risk_tier,
+            roadmap_item_id=str(item.id),
+            roadmap_item_scope=item.scope_body,
+        )
     if context.head is None:
         return dict(
             source=document.current_source.as_record(),
@@ -57,6 +70,10 @@ def submission_inputs(document):
 
 
 def require_current_document_submission(submission, document):
+    if document.context.initiative.mode == "ROADMAP":
+        from .local_prd_roadmap import require_current_roadmap_submission
+
+        return require_current_roadmap_submission(submission, **submission_inputs(document))
     if document.context.head is None:
         from .local_prd_new_work import require_current_new_work_submission
 
@@ -65,6 +82,10 @@ def require_current_document_submission(submission, document):
 
 
 def create_document_submission(document, **metadata):
+    if document.context.initiative.mode == "ROADMAP":
+        from .local_prd_roadmap import create_roadmap_submission
+
+        return create_roadmap_submission(**submission_inputs(document), **metadata)
     if document.context.head is None:
         from .local_prd_new_work import create_new_work_submission
 

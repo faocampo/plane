@@ -1,0 +1,26 @@
+{
+  "policy_key": "CURVE_ITEM_CANCELLATION_POLICY",
+  "policy_version": 1,
+  "actions": [
+    "CANCEL_ITEM_CREATION_ATTEMPT"
+  ],
+  "allow": [
+    "ORIGINAL_PRINCIPAL_WITH_CURRENT_PRODUCT_READ_ACCESS"
+  ],
+  "active_human_membership_required": true,
+  "active_product_and_roadmap_required": true,
+  "original_creation_identity_required": true,
+  "native_workspace_lock_required": true,
+  "completed_creation_returned_without_mutation": true,
+  "missing_creation_identity_reserved_terminally": true,
+  "existing_unfinished_receipt_never_rewritten": true,
+  "terminal_receipt_immutable": true,
+  "late_creation_prevented_before_effects": true,
+  "local_profile_only": true,
+  "projection": [
+    "CANCELLED_OUTCOME",
+    "ORIGINAL_ITEM_INITIATIVE_REFERENCE",
+    "UNRESOLVED_OUTCOME"
+  ],
+  "protected_document_material_excluded": true
+}

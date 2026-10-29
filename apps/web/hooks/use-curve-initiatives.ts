@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { isCurveUuid } from "@plane/services";
 import type {
   ICurveInitiative,
   ICurveInitiativeCreateRequest,
@@ -47,7 +48,8 @@ const canonicalizeMutationValue = (value: unknown): unknown => {
 
 const mutationFingerprint = (intent: Record<string, unknown>) => JSON.stringify(canonicalizeMutationValue(intent));
 
-export const useCurveInitiatives = (workspaceSlug?: string) => {
+export const useCurveInitiatives = (workspaceSlug?: string, requestedInitiativeId?: string) => {
+  const initialId = isCurveUuid(requestedInitiativeId) ? requestedInitiativeId : undefined;
   const { workspace: workspaceMemberStore } = useMember();
   const requestGeneration = useRef(0);
   const mutationInFlight = useRef(false);
@@ -149,7 +151,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
       setProducts(loadedProducts);
       setInitiatives(initiativePage.results);
       setNextCursor(initiativePage.next_cursor ?? undefined);
-      setSelectedId(initiativePage.results[0]?.id);
+      setSelectedId(initialId ?? initiativePage.results[0]?.id);
     } catch (error) {
       if (generation !== requestGeneration.current) return;
       const safeProblem = toSafeCurveProblem(error, "Initiatives could not be loaded");
@@ -158,7 +160,7 @@ export const useCurveInitiatives = (workspaceSlug?: string) => {
     } finally {
       if (generation === requestGeneration.current) setIsLoading(false);
     }
-  }, [loadActiveProducts, workspaceMemberStore, workspaceSlug]);
+  }, [loadActiveProducts, workspaceMemberStore, workspaceSlug, initialId]);
 
   useEffect(() => {
     void loadInitial();

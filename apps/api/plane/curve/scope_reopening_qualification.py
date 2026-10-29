@@ -64,6 +64,14 @@ FEATURE_EDITOR_COMMAND_SUCCESSOR_DIGEST = "sha256:518470fe9f39ea33b0bf075714866d
 FEATURE_EDITOR_COMMAND_SUCCESSOR_PATH = Path(__file__).parent / "feature_editors/command-qualification-v1.json"
 FEATURE_COMMAND_SUCCESSOR_DIGEST = "sha256:2106f2e4c9767ada3346940032d939a0758a74014fe2ed0295af82f980e0d7c4"
 FEATURE_COMMAND_SUCCESSOR_PATH = Path(__file__).parent / "features/command-qualification-v1.json"
+ITEM_CREATION_SUCCESSOR_DIGEST = "sha256:f929ed566ed7406f3460fe688e4d013012dbe225a2e61659448ac6a62a0d7e13"
+ITEM_CREATION_SUCCESSOR_PATH = Path(__file__).parent / "items/creation-qualification-v1.json"
+ITEM_READ_SUCCESSOR_DIGEST = "sha256:9dba7b243c63017103127581df400ca87e5309da1511a73c7726bc99f3326d6a"
+ITEM_READ_SUCCESSOR_PATH = Path(__file__).parent / "items/read-qualification-v1.json"
+ITEM_SCOPE_SUCCESSOR_DIGEST = "sha256:2e316911533c3f8de297a18eb47114efce6475e151cd0473e422f3ce133ac982"
+ITEM_SCOPE_SUCCESSOR_PATH = Path(__file__).parent / "items/scope-qualification-v1.json"
+ITEM_RECOVERY_SUCCESSOR_DIGEST = "sha256:a2af0d3d5e51e3136946b1614e64c2422ce78e9e1d215f68a7dc1f41203c6854"
+ITEM_RECOVERY_SUCCESSOR_PATH = Path(__file__).parent / "items/recovery-qualification-v1.json"
 _ROADMAP_MODEL_COLUMNS = {
     "feature": [
         "created_at",
@@ -742,10 +750,48 @@ def _current_qualification(predecessor):
                                                     FEATURE_COMMAND_SUCCESSOR_DIGEST,
                                                 ),
                                             )
+                                            if ITEM_CREATION_SUCCESSOR_PATH.exists():
+                                                qualified = validate_item_creation_successor(
+                                                    qualified,
+                                                    _read_pinned_successor(
+                                                        ITEM_CREATION_SUCCESSOR_PATH,
+                                                        ITEM_CREATION_SUCCESSOR_DIGEST,
+                                                    ),
+                                                )
+                                                if ITEM_READ_SUCCESSOR_PATH.exists():
+                                                    qualified = validate_item_read_successor(
+                                                        qualified,
+                                                        _read_pinned_successor(
+                                                            ITEM_READ_SUCCESSOR_PATH, ITEM_READ_SUCCESSOR_DIGEST
+                                                        ),
+                                                    )
+                                                    if ITEM_SCOPE_SUCCESSOR_PATH.exists():
+                                                        qualified = validate_item_scope_successor(
+                                                            qualified,
+                                                            _read_pinned_successor(
+                                                                ITEM_SCOPE_SUCCESSOR_PATH, ITEM_SCOPE_SUCCESSOR_DIGEST
+                                                            ),
+                                                        )
+                                                        if ITEM_RECOVERY_SUCCESSOR_PATH.exists():
+                                                            qualified = validate_item_recovery_successor(
+                                                                qualified,
+                                                                _read_pinned_successor(
+                                                                    ITEM_RECOVERY_SUCCESSOR_PATH,
+                                                                    ITEM_RECOVERY_SUCCESSOR_DIGEST,
+                                                                ),
+                                                            )
         else:
             qualified = validate_source_header_successor(
                 qualified, _read_pinned_successor(HEADER_SUCCESSOR_PATH, HEADER_SUCCESSOR_DIGEST)
             )
+    if qualified["model_edition"] == "CURVE_ITEM_RECOVERY_V1" and ITEM_CANCELLATION_SUCCESSOR_PATH.exists():
+        qualified = validate_item_cancellation_successor(
+            qualified, _read_pinned_successor(ITEM_CANCELLATION_SUCCESSOR_PATH, ITEM_CANCELLATION_SUCCESSOR_DIGEST)
+        )
+    if qualified["model_edition"] == "CURVE_ITEM_CANCELLATION_V1" and ROADMAP_REVIEW_SUCCESSOR_PATH.exists():
+        qualified = validate_roadmap_review_successor(
+            qualified, _read_pinned_successor(ROADMAP_REVIEW_SUCCESSOR_PATH, ROADMAP_REVIEW_SUCCESSOR_DIGEST)
+        )
     return qualified
 
 
@@ -1265,6 +1311,273 @@ def validate_feature_command_successor(predecessor, successor):
     )
 
 
+def validate_item_creation_successor(predecessor, successor):
+    """Add the exact joint Item creation boundary while preserving historical authority."""
+    migration = import_module("plane.curve.migrations.0049_item_creation")
+    additions = {
+        "item_creation_input.py",
+        "item_creation_facts.py",
+        "item_creation_rules.py",
+        "item_creation_material.py",
+        "item_local_material.py",
+        "item_creation_events.py",
+        "item_creation_policy.py",
+        "item_creation_results.py",
+        "item_creation_services.py",
+        "item_creation_views.py",
+    }
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.item-creation-qualification/v1-candidate"
+        or successor["predecessor_digest"] != FEATURE_COMMAND_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_FEATURE_COMMANDS_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0048_feature_commands.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != {"models.py", "urls.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Item creation qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    contracts = {
+        "creation-policy-v1.json": "9a1975106794892d3c975b45b6e2d7ef6ed917975c59346c43eee2cac88d54e7",
+        "creation-event-v1.schema.json": "32f14b6a44545acd9ccddb32cba991189e91b5801c08c2d52f8b3f1fc6a1fc79",
+    }
+    for name, expected in contracts.items():
+        path = Path(__file__).parent / "items" / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Item creation contract changed")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, {"models.py", "urls.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ITEM_CREATION_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["ITEM_CREATION"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0049_item_creation.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def validate_item_read_successor(predecessor, successor):
+    """Add exact Item metadata reads while preserving command authority."""
+    migration = import_module("plane.curve.migrations.0050_item_read")
+    additions = {"item_read.py"}
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.item-read-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ITEM_CREATION_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_ITEM_CREATION_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0049_item_creation.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != {"models.py", "item_creation_views.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Item read qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    contracts = {"read-policy-v1.json": "fa9c1455ce237c586d3d1da9882433333d7f5c6d633b4e867bf6c48c0b7a45d3"}
+    for name, expected in contracts.items():
+        path = Path(__file__).parent / "items" / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Item read contract changed")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, {"models.py", "item_creation_views.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ITEM_READ_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0050_item_read.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def validate_item_scope_successor(predecessor, successor):
+    """Add current-owner scope preparation while preserving historical authority."""
+    migration = import_module("plane.curve.migrations.0051_item_scope")
+    additions = {
+        "item_scope_preparation.py",
+        "item_scope_authority.py",
+        "item_scope_results.py",
+        "item_scope_services.py",
+        "item_scope_views.py",
+    }
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.item-scope-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ITEM_READ_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_ITEM_READ_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0050_item_read.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != {"models.py", "urls.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Item scope qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    contracts = {
+        "scope-preparation-policy-v1.json": "5a65fa9ae8eef2c9316adb646e7aeecbc8a18f3c36b3bfd14e1c000cbc0c56f4",
+        "scope-prepared-v1.schema.json": "063ca50b7eed68346631d09ce807083299d489e5d598f83128f2d22f25d3fba2",
+    }
+    for name, expected in contracts.items():
+        path = Path(__file__).parent / "items" / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Item scope contract changed")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, {"models.py", "urls.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ITEM_SCOPE_PREPARATION_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["ITEM_SCOPE_PREPARATION"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0051_item_scope.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def validate_item_recovery_successor(predecessor, successor):
+    """Add current-authorized receipt reads while preserving historical authority."""
+    migration = import_module("plane.curve.migrations.0052_item_recovery")
+    additions = {"item_recovery_rules.py", "item_recovery_services.py", "item_recovery_views.py"}
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.item-recovery-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ITEM_SCOPE_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_ITEM_SCOPE_PREPARATION_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0051_item_scope.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != {"models.py", "urls.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Item recovery qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    contracts = {"recovery-policy-v1.json": "d64e4262a2b958e4ccaa828b50095021b9ff3ae372f7dd327127505b2d418616"}
+    for name, expected in contracts.items():
+        path = Path(__file__).parent / "items" / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Item recovery contract changed")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, {"models.py", "urls.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ITEM_RECOVERY_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["ITEM_CREATION_RECEIPT_READ"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0052_item_recovery.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def require_item_recovery_qualification():
+    require_reopening_qualification()
+    if not ITEM_RECOVERY_SUCCESSOR_PATH.exists() or ITEM_RECOVERY_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("ITEM_RECOVERY_UNAVAILABLE", 503)
+
+
+def require_item_scope_qualification():
+    require_reopening_qualification()
+    if not ITEM_SCOPE_SUCCESSOR_PATH.exists() or ITEM_SCOPE_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("ITEM_SCOPE_PREPARATION_UNAVAILABLE", 503)
+
+
+def require_item_read_qualification():
+    require_reopening_qualification()
+    if not ITEM_READ_SUCCESSOR_PATH.exists() or ITEM_READ_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("ITEM_READ_UNAVAILABLE", 503)
+
+
+def require_item_creation_qualification():
+    require_reopening_qualification()
+    if not ITEM_CREATION_SUCCESSOR_PATH.exists() or ITEM_CREATION_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("ITEM_CREATION_UNAVAILABLE", 503)
+
+
 def require_feature_command_qualification():
     require_reopening_qualification()
     if not FEATURE_COMMAND_SUCCESSOR_PATH.exists() or FEATURE_COMMAND_SUCCESSOR_DIGEST is None:
@@ -1471,3 +1784,136 @@ def require_reopening_qualification():
                 )
     except Exception:
         raise PrdCommandError("SCOPE_REOPENING_EDITION_UNAVAILABLE", 503) from None
+
+
+ITEM_CANCELLATION_SUCCESSOR_DIGEST = "sha256:d97d9a1f3e08043f672d3caf34c86a2d7766d5575c0fb697bbb9bee60aafc0ab"
+ITEM_CANCELLATION_SUCCESSOR_PATH = Path(__file__).parent / "items/cancellation-qualification-v1.json"
+
+
+def validate_item_cancellation_successor(predecessor, successor):
+    """Add current-authorized receipt reads while preserving historical authority."""
+    migration = import_module("plane.curve.migrations.0053_item_cancellation")
+    additions = {
+        "item_cancellation_results.py",
+        "item_cancellation_services.py",
+        "item_cancellation_views.py",
+        "item_cancellation_events.py",
+    }
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.item-cancellation-qualification/v1-candidate"
+        or successor["predecessor_digest"] != ITEM_RECOVERY_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_ITEM_RECOVERY_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0052_item_recovery.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != {"models.py", "urls.py"}
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Item cancellation qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    contracts = {
+        "cancellation-policy-v1.json": "4395e921a8579dd08d09cb847bd41803ecd54822a80c88d49962865007504c53",
+        "item-creation-cancelled-v1.schema.json": "b085ee2a736fa4431b1d73aa4f014fadd755012898dd4f7e35bbcd434596a3c5",
+    }
+    for name, expected in contracts.items():
+        path = Path(__file__).parent / "items" / name
+        if path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("Item cancellation contract changed")
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, {"models.py", "urls.py"})
+    return dict(
+        predecessor,
+        model_edition="CURVE_ITEM_CANCELLATION_V1",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["ITEM_CREATION_ATTEMPT_CANCELLATION"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0053_item_cancellation.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )
+
+
+def require_item_cancellation_qualification():
+    require_reopening_qualification()
+    if not ITEM_CANCELLATION_SUCCESSOR_PATH.exists() or ITEM_CANCELLATION_SUCCESSOR_DIGEST is None:
+        raise PrdCommandError("ITEM_CANCELLATION_UNAVAILABLE", 503)
+
+
+ROADMAP_REVIEW_SUCCESSOR_DIGEST = "sha256:5c2dd40e772bf4a4c7939f11d80c45b507d43c1b20167e8d6b5457b8afbe4b36"
+ROADMAP_REVIEW_SUCCESSOR_PATH = Path(__file__).parent / "roadmap_review/qualification-v3.json"
+
+
+def validate_roadmap_review_successor(predecessor, successor):
+    """Qualify Roadmap document review while retaining prior approval editions."""
+    migration = import_module("plane.curve.migrations.0054_roadmap_review")
+    additions = {"local_prd_roadmap.py", "roadmap_local_context.py"}
+    replacements = {
+        "local_initiative_context.py",
+        "local_prd_review.py",
+        "local_prd_review_authority.py",
+        "local_plan_authority.py",
+    }
+    if (
+        type(successor) is not dict
+        or set(successor)
+        != {
+            "schema_version",
+            "predecessor_digest",
+            "additions",
+            "replacements",
+            "migration_digest",
+            "physical_catalog_digest",
+            "external_catalog_digest",
+        }
+        or successor["schema_version"] != "curve.roadmap-review-qualification/v3-candidate"
+        or successor["predecessor_digest"] != ITEM_CANCELLATION_SUCCESSOR_DIGEST
+        or predecessor["model_edition"] != "CURVE_ITEM_CANCELLATION_V1"
+        or predecessor["physical_catalog_digest"] != migration.BASELINE_CATALOG_DIGEST
+        or predecessor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+        or predecessor["migration_digests"].get("0053_item_cancellation.py") != migration.PREDECESSOR_DIGEST
+        or not _hashes(successor["additions"])
+        or not _hashes(successor["replacements"])
+        or set(successor["additions"]) != additions
+        or set(successor["replacements"]) != replacements
+        or type(successor["migration_digest"]) is not str
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", successor["migration_digest"]) is None
+        or migration.CURRENT_CATALOG_DIGEST is None
+        or successor["physical_catalog_digest"] != migration.CURRENT_CATALOG_DIGEST
+        or successor["external_catalog_digest"] != migration.EXTERNAL_CATALOG_DIGEST
+    ):
+        raise ValueError("Exact Roadmap review qualification required")
+    for name in migration.SQL_DIGESTS:
+        migration._sql(name)
+    sources = {**predecessor["runtime_sources"], **successor["additions"], **successor["replacements"]}
+    _validate_source_delta(predecessor["runtime_sources"], sources, additions, replacements)
+    return dict(
+        predecessor,
+        model_edition="CURVE_ROADMAP_REVIEW_V3",
+        runtime_writer_inventory=predecessor["runtime_writer_inventory"] + ["ROADMAP_LOCAL_DOCUMENT_REVIEW"],
+        migration_digests={
+            **predecessor["migration_digests"],
+            "0054_roadmap_review.py": successor["migration_digest"],
+        },
+        physical_catalog_digest=successor["physical_catalog_digest"],
+        runtime_sources=sources,
+    )

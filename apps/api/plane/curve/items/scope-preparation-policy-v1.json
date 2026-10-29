@@ -1,0 +1,20 @@
+{
+  "policy_key": "CURVE_ITEM_SCOPE_PREPARATION_POLICY",
+  "policy_version": 1,
+  "actions": ["PREPARE_ITEM_SCOPE"],
+  "write": ["CURRENT_ROADMAP_OWNER"],
+  "active_human_membership_required": true,
+  "active_product_and_roadmap_required": true,
+  "supported_formats_required": true,
+  "current_membership_lifetime_required": true,
+  "parent_version_required_for_new_preparation": true,
+  "replay_requires_current_owner_and_original_scope_access": true,
+  "object_identity_and_access_envelope_server_generated": true,
+  "classification": "RESTRICTED",
+  "destination": "CURVE_ITEM_LOCAL_V1",
+  "initial_grant": "UPLOADER_CURRENT_MEMBERSHIP_ONLY",
+  "existing_grants_unchanged": true,
+  "input": "BOUNDED_MARKDOWN_BODY",
+  "projection": ["PREPARED_ITEM_SCOPE_REFERENCE"],
+  "local_profile_only": true
+}

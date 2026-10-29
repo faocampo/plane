@@ -1,7 +1,7 @@
 // Copyright (c) 2023-present Plane Software, Inc. and contributors
 // SPDX-License-Identifier: AGPL-3.0-only
 // See the LICENSE file for details.
-import type { CurveExistingWorkInitiativeScope } from "@plane/types";
+import type { CurveExistingWorkInitiativeScope, CurveItemScopeReference } from "@plane/types";
 import {
   requireCurve,
   requireCurveDigest,
@@ -38,6 +38,14 @@ export type LocalSubmission = LocalSubmissionCommon &
         product_id: string;
         product_version: number;
         business_intent: "STRATEGIC" | "CUSTOMER_COMMITMENT" | "BUSINESS_IMPROVEMENT" | "MANDATORY";
+      }
+    | {
+        schema_version: "curve.local-prd-submission/v3-roadmap-candidate";
+        product_id: string;
+        product_version: number;
+        business_intent: "STRATEGIC" | "CUSTOMER_COMMITMENT" | "BUSINESS_IMPROVEMENT" | "MANDATORY";
+        roadmap_item_id: string;
+        roadmap_item_scope: CurveItemScopeReference;
       }
   );
 export type LocalDecision = {
@@ -77,11 +85,15 @@ export async function decodeLocalSubmission(
   validateCurveScope(scope);
   const data: unknown = structuredClone(input);
   requireCurve(typeof data === "object" && data !== null && !Array.isArray(data));
-  const newWork = (data as Record<string, unknown>).schema_version === "curve.local-prd-submission/v2-candidate";
+  const roadmap =
+    (data as Record<string, unknown>).schema_version === "curve.local-prd-submission/v3-roadmap-candidate";
+  const newWork =
+    roadmap || (data as Record<string, unknown>).schema_version === "curve.local-prd-submission/v2-candidate";
   localReviewExact(
     data,
     "schema_version,id,workspace_id,initiative_id,initiative_version,source_id,source_version,source_digest,content_digest,reviewers,risk_tier,submitted_by,submitted_at,digest," +
-      (newWork ? "product_id,product_version,business_intent" : "scope_revision_id,scope_revision,membership_digest")
+      (newWork ? "product_id,product_version,business_intent" : "scope_revision_id,scope_revision,membership_digest") +
+      (roadmap ? ",roadmap_item_id,roadmap_item_scope" : "")
   );
   requireCurve(newWork || data.schema_version === "curve.local-prd-submission/v1-candidate");
   requireCurve(data.workspace_id === scope.workspaceId && data.initiative_id === scope.initiativeId);
@@ -99,6 +111,20 @@ export async function decodeLocalSubmission(
     requireCurve(
       isCurveUuid(data.scope_revision_id) && isCurveVersion(data.scope_revision) && digest(data.membership_digest)
     );
+  }
+  if (roadmap) {
+    requireCurve(isCurveUuid(data.roadmap_item_id));
+    const reference = data.roadmap_item_scope;
+    localReviewExact(reference, "object_id,digest,size_bytes,media_type,editor_schema_version");
+    requireCurve(isCurveUuid(reference.object_id) && digest(reference.digest));
+    requireCurve(Number.isSafeInteger(reference.size_bytes) && Number(reference.size_bytes) >= 0);
+    for (const [field, limit] of [
+      ["media_type", 255],
+      ["editor_schema_version", 100],
+    ] as const) {
+      const value = reference[field];
+      requireCurve(typeof value === "string" && value.trim() === value && value.length > 0 && value.length <= limit);
+    }
   }
   instant(data.submitted_at);
   requireCurve(["LOW", "STANDARD", "HIGH"].includes(String(data.risk_tier)));

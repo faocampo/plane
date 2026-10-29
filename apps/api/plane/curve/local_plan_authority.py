@@ -52,7 +52,7 @@ def require_local_plan_authority(
     context = review.document.context
     init = context.initiative
     if (
-        init.mode != "STANDALONE"
+        init.mode not in {"STANDALONE", "ROADMAP"}
         or init.state != "PLANNING"
         or not review.submission_is_current
         or review.submission is None
